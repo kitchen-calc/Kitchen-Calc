@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Изготовление кухонь</title>
+  <title>Конструктор кухонь</title>
   
-  <!-- Подключение библиотеки для генерации PDF -->
+  <!-- Библиотека для генерации PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
@@ -22,72 +22,142 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 60px 20px;
+      padding: 40px 20px;
     }
 
     .block {
       background: rgba(18, 18, 18, 0.85);
       backdrop-filter: blur(10px);
-      border: 2px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
-      padding: 30px;
-      margin-bottom: 40px;
+      padding: 25px;
+      margin-bottom: 30px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      position: relative;
-      transition: all 0.3s ease;
     }
 
-    /* Эффект при выборе карточки */
-    .block.selected {
-      border-color: #f3e5ab;
-      box-shadow: 0 0 20px rgba(243, 229, 171, 0.3);
-    }
-
-    .block img {
-      width: 100%;
-      height: auto;
-      border-radius: 8px;
-      margin-top: 15px;
-      display: block;
-    }
-
-    h1, h2 {
+    h1, h2, h3 {
       margin-top: 0;
       color: #f3e5ab;
     }
 
     p {
-      line-height: 1.6;
+      line-height: 1.5;
       color: #e0e0e0;
+      font-size: 0.95rem;
     }
 
-    /* Стилизация галочки выбора */
-    .checkbox-container {
+    /* ОСНОВНАЯ СЕТКА: СБОКУ ЧЕРТЕЖИ, ПО ЦЕНТРУ 4 ВЫБОРА */
+    .calculator-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+
+    /* Боковая колонка с 2 чертежами */
+    .sidebar-schemes {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .scheme-card {
+      background: rgba(18, 18, 18, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .scheme-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: contain;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+
+    /* Центральная сетка на 4 выбора (2х2) */
+    .center-choices {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .choice-card {
+      background: rgba(18, 18, 18, 0.85);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .choice-card:hover, .choice-card.selected {
+      border-color: #f3e5ab;
+      box-shadow: 0 0 15px rgba(243, 229, 171, 0.25);
+    }
+
+    .choice-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+
+    /* Галочки выбора */
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: #f3e5ab;
+      cursor: pointer;
+      user-select: none;
+      margin-top: 5px;
+    }
+
+    .checkbox-label input {
+      width: 20px;
+      height: 20px;
+      accent-color: #d4af37;
+    }
+
+    /* СТИЛИ ДЛЯ ДАЛЬНЕЙШИХ ПУНКТОВ */
+    .step-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-top: 15px;
-      cursor: pointer;
-      font-weight: 600;
-      color: #f3e5ab;
-      user-select: none;
+      margin-bottom: 15px;
     }
 
-    .checkbox-container input[type="checkbox"] {
-      width: 22px;
-      height: 22px;
-      accent-color: #d4af37;
-      cursor: pointer;
+    .step-number {
+      background: #d4af37;
+      color: #000;
+      font-weight: bold;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
     }
 
-    /* Поля ввода и кнопка */
     .form-group {
       margin-bottom: 15px;
     }
 
-    .form-group input {
+    .form-group input, .form-group select, .form-group textarea {
       width: 100%;
       padding: 12px 15px;
       background: rgba(255, 255, 255, 0.08);
@@ -117,26 +187,28 @@
       transform: translateY(-2px);
     }
 
-    /* Шаблон PDF страницы (скрыт от глаз на сайте) */
+    /* Адаптивность для мобильных устройств */
+    @media (max-width: 900px) {
+      .calculator-layout {
+        grid-template-columns: 1fr;
+      }
+      .center-choices {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Скрытый шаблон PDF */
     #pdf-template {
       display: none;
       background: #ffffff;
       color: #000000;
-      padding: 40px;
+      padding: 30px;
       font-family: Arial, sans-serif;
-    }
-
-    #pdf-template h1 { color: #111; }
-    #pdf-template .pdf-item {
-      margin-bottom: 25px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 15px;
     }
     #pdf-template img {
       max-width: 100%;
-      height: 200px;
+      height: 180px;
       object-fit: cover;
-      border-radius: 6px;
       margin-top: 10px;
     }
   </style>
@@ -144,60 +216,128 @@
 <body>
 
   <div class="container">
+    
+    <!-- ЗАГОЛОВОК -->
     <div class="block">
       <h1>Дизайнерские кухни премиум-класса</h1>
-      <p>Выберите понравившиеся планировки ниже, укажите контакты и скачайте персональный КП в формате PDF.</p>
+      <p>Сконструируйте ваш проект: выберите планировку, укажите параметры и скачайте персональный КП в формате PDF.</p>
     </div>
 
-    <!-- Блок: Прямая кухня -->
-    <div class="block" id="block-1">
-      <h2>Прямая кухня</h2>
-      <p>Лаконичное решение в одну линию.</p>
-      <img src="прямая.jfif" alt="Прямая кухня">
-      <label class="checkbox-container">
-        <input type="checkbox" class="kitchen-select" value="Прямая кухня" data-img="прямая.jfif" data-desc="Лаконичное решение в одну линию." onchange="toggleSelect('block-1')">
-        Выбрать этот вариант
-      </label>
-    </div>
-
-    <!-- Блок: Г-образная кухня -->
-    <div class="block" id="block-2">
-      <h2>Г-образная кухня</h2>
-      <p>Универсальная угловая планировка с подсветкой.</p>
-      <img src="Г образный.jfif" alt="Г-образная кухня">
-      <label class="checkbox-container">
-        <input type="checkbox" class="kitchen-select" value="Г-образная кухня" data-img="Г образный.jfif" data-desc="Универсальная угловая планировка с подсветкой." onchange="toggleSelect('block-2')">
-        Выбрать этот вариант
-      </label>
-    </div>
-
-    <!-- Блок: П-образная кухня -->
-    <div class="block" id="block-3">
-      <h2>П-образная кухня</h2>
-      <p>Просторная зона готовки, задействующая три стены.</p>
-      <img src="П образный.jfif" alt="П-образная кухня">
-      <label class="checkbox-container">
-        <input type="checkbox" class="kitchen-select" value="П-образная кухня" data-img="П образный.jfif" data-desc="Просторная зона готовки, задействующая три стены." onchange="toggleSelect('block-3')">
-        Выбрать этот вариант
-      </label>
-    </div>
-
-    <!-- Блок: Кухня с островом -->
-    <div class="block" id="block-4">
-      <h2>Кухня с островом</h2>
-      <p>Премиальное решение с отдельно стоящим островом.</p>
-      <img src="остров.jfif" alt="Кухня с островом">
-      <label class="checkbox-container">
-        <input type="checkbox" class="kitchen-select" value="Кухня с островом" data-img="остров.jfif" data-desc="Премиальное решение с отдельно стоящим островом." onchange="toggleSelect('block-4')">
-        Выбрать этот вариант
-      </label>
-    </div>
-
-    <!-- Блок оформления и скачивания PDF -->
-    <div class="block">
-      <h2>Получить коммерческое предложение в PDF</h2>
-      <p>Заполните форму и нажмите кнопку для генерации документа с выбранными моделями.</p>
+    <!-- МАКЕТ: СБОКУ 2 ЧЕРТЕЖА, ПО ЦЕНТРУ 4 ВЫБОРА -->
+    <div class="calculator-layout">
       
+      <!-- ЛЕВАЯ КОЛОНКА: 2 ЧЕРТЕЖА -->
+      <div class="sidebar-schemes">
+        <div class="scheme-card">
+          <h3>Схема 1</h3>
+          <p>Замеры и технические зоны</p>
+          <img src="chertezh1.jfif" alt="Чертеж 1">
+        </div>
+        <div class="scheme-card">
+          <h3>Схема 2</h3>
+          <p>Размещение коммуникаций</p>
+          <img src="chertezh2.jfif" alt="Чертеж 2">
+        </div>
+      </div>
+
+      <!-- ЦЕНТРАЛЬНАЯ ЧАСТЬ: 4 ВЫБОРА -->
+      <div class="center-choices">
+        
+        <!-- Выбор 1: Прямая -->
+        <div class="choice-card" id="card-1">
+          <div>
+            <h3>Прямая кухня</h3>
+            <p>Компактное решение в один ряд.</p>
+            <img src="прямая.jfif" alt="Прямая кухня">
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" class="kitchen-select" value="Прямая кухня" data-img="прямая.jfif" onchange="toggleCard('card-1')">
+            Выбрать
+          </label>
+        </div>
+
+        <!-- Выбор 2: Г-образная -->
+        <div class="choice-card" id="card-2">
+          <div>
+            <h3>Г-образная кухня</h3>
+            <p>Угловая планировка с витриной.</p>
+            <img src="Г образный.jfif" alt="Г-образная кухня">
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" class="kitchen-select" value="Г-образная кухня" data-img="Г образный.jfif" onchange="toggleCard('card-2')">
+            Выбрать
+          </label>
+        </div>
+
+        <!-- Выбор 3: П-образная -->
+        <div class="choice-card" id="card-3">
+          <div>
+            <h3>П-образная кухня</h3>
+            <p>Максимум рабочей поверхности.</p>
+            <img src="П образный.jfif" alt="П-образная кухня">
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" class="kitchen-select" value="П-образная кухня" data-img="П образный.jfif" onchange="toggleCard('card-3')">
+            Выбрать
+          </label>
+        </div>
+
+        <!-- Выбор 4: Остров -->
+        <div class="choice-card" id="card-4">
+          <div>
+            <h3>Кухня с островом</h3>
+            <p>Премиальный островной модуль.</p>
+            <img src="остров.jfif" alt="Кухня с островом">
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" class="kitchen-select" value="Кухня с островом" data-img="остров.jfif" onchange="toggleCard('card-4')">
+            Выбрать
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ДАЛЕЕ ПО ПУНКТАМ -->
+    
+    <!-- Пункт 1: Материалы фасадов -->
+    <div class="block">
+      <div class="step-header">
+        <div class="step-number">1</div>
+        <h2>Выберите материал фасадов</h2>
+      </div>
+      <div class="form-group">
+        <select id="facadeMaterial">
+          <option value="MDF Эмаль (Матовый / Глянец)">MDF Эмаль (Матовый / Глянец)</option>
+          <option value="Массив дерева / Шпон">Массив дерева / Шпон</option>
+          <option value="Акрил премиум">Акрил премиум</option>
+          <option value="ЛДСП Egger">ЛДСП Egger</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Пункт 2: Фурнитура и столешница -->
+    <div class="block">
+      <div class="step-header">
+        <div class="step-number">2</div>
+        <h2>Столешница и фурнитура</h2>
+      </div>
+      <div class="form-group">
+        <select id="countertopType">
+          <option value="Кварцевый агломерат / Мрамор">Кварцевый агломерат / Мрамор</option>
+          <option value="Искусственный камень">Искусственный камень</option>
+          <option value="Компакт-плита">Компакт-плита</option>
+          <option value="Влагостойкий пластик">Влагостойкий пластик</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Пункт 3: Оформление заказа и расчет в PDF -->
+    <div class="block">
+      <div class="step-header">
+        <div class="step-number">3</div>
+        <h2>Данные для получения расчёта в PDF</h2>
+      </div>
       <form id="pdfForm" onsubmit="generatePDF(event)">
         <div class="form-group">
           <input type="text" id="clientName" placeholder="Ваше имя" required>
@@ -205,87 +345,82 @@
         <div class="form-group">
           <input type="tel" id="clientPhone" placeholder="Ваш телефон" required>
         </div>
-        <button type="submit" class="btn-pdf">Скачать выбранные варианты (PDF)</button>
+        <div class="form-group">
+          <textarea id="clientComment" rows="3" placeholder="Примерные размеры помещения или пожелания..."></textarea>
+        </div>
+        <button type="submit" class="btn-pdf">Скачать предложение (PDF)</button>
       </form>
     </div>
+
   </div>
 
-  <!-- СКРЫТЫЙ МАКЕТ ДЛЯ ГЕНЕРАЦИИ PDF -->
+  <!-- СКРЫТЫЙ МАКЕТ PDF -->
   <div id="pdf-template">
-    <h1 style="text-align: center; color: #333;">Коммерческое предложение</h1>
-    <hr style="margin: 20px 0;">
+    <h1 style="text-align: center; color: #111;">Коммерческое предложение</h1>
+    <hr style="margin: 15px 0;">
     <p><strong>Клиент:</strong> <span id="pdf-client-name"></span></p>
     <p><strong>Телефон:</strong> <span id="pdf-client-phone"></span></p>
-    <p><strong>Дата:</strong> <span id="pdf-date"></span></p>
-    <h2 style="margin-top: 30px; color: #333;">Выбранные варианты планировок:</h2>
+    <p><strong>Материал фасадов:</strong> <span id="pdf-facade"></span></p>
+    <p><strong>Столешница:</strong> <span id="pdf-countertop"></span></p>
+    <p><strong>Комментарий:</strong> <span id="pdf-comment"></span></p>
+    <h3 style="margin-top: 20px;">Выбранные варианты планировок:</h3>
     <div id="pdf-items"></div>
   </div>
 
   <script>
-    // Подсветка блока при выборе галочки
-    function toggleSelect(blockId) {
-      const block = document.getElementById(blockId);
-      const checkbox = block.querySelector('input[type="checkbox"]');
-      if (checkbox.checked) {
-        block.classList.add('selected');
+    function toggleCard(cardId) {
+      const card = document.getElementById(cardId);
+      const cb = card.querySelector('input[type="checkbox"]');
+      if (cb.checked) {
+        card.classList.add('selected');
       } else {
-        block.classList.remove('selected');
+        card.classList.remove('selected');
       }
     }
 
-    // Генерация и скачивание PDF
     function generatePDF(event) {
       event.preventDefault();
 
       const checkboxes = document.querySelectorAll('.kitchen-select:checked');
       if (checkboxes.length === 0) {
-        alert('Пожалуйста, выберите хотя бы один вариант кухни!');
+        alert('Пожалуйста, выберите хотя бы один вариант кухни из 4 предложенных!');
         return;
       }
 
-      const name = document.getElementById('clientName').value;
-      const phone = document.getElementById('clientPhone').value;
+      document.getElementById('pdf-client-name').innerText = document.getElementById('clientName').value;
+      document.getElementById('pdf-client-phone').innerText = document.getElementById('clientPhone').value;
+      document.getElementById('pdf-facade').innerText = document.getElementById('facadeMaterial').value;
+      document.getElementById('pdf-countertop').innerText = document.getElementById('countertopType').value;
+      document.getElementById('pdf-comment').innerText = document.getElementById('clientComment').value || '—';
 
-      // Заполняем данные клиента в макет PDF
-      document.getElementById('pdf-client-name').innerText = name;
-      document.getElementById('pdf-client-phone').innerText = phone;
-      document.getElementById('pdf-date').innerText = new Date().toLocaleDateString('ru-RU');
-
-      // Формируем список выбранных кухонь
       const pdfItemsContainer = document.getElementById('pdf-items');
       pdfItemsContainer.innerHTML = '';
 
       checkboxes.forEach(cb => {
         const title = cb.value;
-        const desc = cb.getAttribute('data-desc');
         const imgSrc = cb.getAttribute('data-img');
 
-        const itemHtml = `
-          <div class="pdf-item">
-            <h3>${title}</h3>
-            <p>${desc}</p>
+        pdfItemsContainer.innerHTML += `
+          <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+            <h4>${title}</h4>
             <img src="${imgSrc}">
           </div>
         `;
-        pdfItemsContainer.innerHTML += itemHtml;
       });
 
-      // Отображаем шаблон для снимка
       const element = document.getElementById('pdf-template');
       element.style.display = 'block';
 
-      // Настройки генерации PDF
       const opt = {
         margin:       10,
-        filename:     `Кухни_Расчет_${name}.pdf`,
+        filename:     `КП_Кухня_${document.getElementById('clientName').value}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      // Генерируем и автоматически скачиваем PDF
       html2pdf().set(opt).from(element).save().then(() => {
-        element.style.display = 'none'; // Скрываем обратно
+        element.style.display = 'none';
       });
     }
   </script>
