@@ -3,39 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Калькулятор и Конструктор Кухонь | Ташкент</title>
+  <title>Конструктор Кухонной Мебели | Ташкент</title>
 
   <!-- Библиотека для генерации PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     :root {
-      --bg-color: #f4f6f8;
-      --card-bg: #ffffff;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --primary: #1e3a8a;
-      --accent-gold: #d97706;
-      --border-color: #cbd5e1;
-      --shadow: 0 4px 12px rgba(0,0,0,0.06);
+      --bg-dark: #090d16;
+      --card-bg: rgba(15, 23, 42, 0.88);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-gold: #fbbf24;
+      --border-gold: rgba(251, 191, 36, 0.3);
+      --border-dark: #334155;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background-color: var(--bg-color);
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #090d16 100%);
+      background-attachment: fixed;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       color: var(--text-main);
       line-height: 1.5;
       padding-bottom: 60px;
     }
 
-    /* ШАПКА И КОНТАКТЫ МАСТЕРА */
+    /* ШАПКА */
     .header {
-      background: #ffffff;
-      border-bottom: 2px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border-gold);
       padding: 15px 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
     }
 
     .header-container {
@@ -49,9 +52,10 @@
     }
 
     .brand h1 {
-      font-size: 1.5rem;
-      color: var(--primary);
+      font-size: 1.4rem;
+      color: var(--accent-gold);
       font-weight: 800;
+      letter-spacing: 0.5px;
     }
 
     .brand p {
@@ -60,22 +64,22 @@
     }
 
     .master-contacts {
-      background: #f8fafc;
-      border: 1px solid var(--border-color);
-      padding: 10px 18px;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--border-gold);
+      padding: 8px 16px;
       border-radius: 10px;
       text-align: right;
     }
 
     .master-contacts .phone {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 700;
-      color: var(--primary);
+      color: var(--accent-gold);
     }
 
     .master-contacts .telegram {
-      font-size: 0.9rem;
-      color: #0284c7;
+      font-size: 0.88rem;
+      color: #38bdf8;
       font-weight: 600;
       text-decoration: none;
       display: inline-block;
@@ -97,7 +101,7 @@
 
     .sticky-sidebar {
       position: sticky;
-      top: 20px;
+      top: 85px;
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -105,32 +109,34 @@
 
     .card {
       background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
+      border: 1px solid var(--border-gold);
+      border-radius: 14px;
       padding: 20px;
-      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
 
     .price-box {
-      background: linear-gradient(135deg, #1e3a8a, #0f172a);
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(15, 23, 42, 0.9));
+      border: 1.5px solid var(--accent-gold);
       color: #ffffff;
       text-align: center;
       padding: 22px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(30, 58, 138, 0.25);
+      border-radius: 14px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
     }
 
     .price-title {
       font-size: 0.85rem;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #cbd5e1;
+      color: var(--text-muted);
     }
 
     .price-value {
       font-size: 2.2rem;
       font-weight: 800;
-      color: #fbbf24;
+      color: var(--accent-gold);
       margin: 6px 0;
     }
 
@@ -142,7 +148,7 @@
     .drawing-title {
       font-size: 0.95rem;
       font-weight: 700;
-      color: var(--primary);
+      color: var(--accent-gold);
       margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
@@ -151,8 +157,8 @@
     .svg-container {
       width: 100%;
       height: 190px;
-      background: #f8fafc;
-      border: 1px dashed var(--border-color);
+      background: #020617;
+      border: 1px stroke var(--border-gold);
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -164,7 +170,7 @@
     .section-title {
       font-size: 1.1rem;
       font-weight: 700;
-      color: var(--primary);
+      color: var(--accent-gold);
       margin-bottom: 15px;
       display: flex;
       align-items: center;
@@ -173,7 +179,7 @@
 
     .step-badge {
       background: var(--accent-gold);
-      color: #ffffff;
+      color: #0f172a;
       font-weight: bold;
       width: 26px;
       height: 26px;
@@ -192,8 +198,8 @@
     }
 
     .type-btn {
-      background: #f1f5f9;
-      border: 2px solid var(--border-color);
+      background: rgba(30, 41, 59, 0.6);
+      border: 1.5px solid var(--border-dark);
       border-radius: 8px;
       padding: 12px 8px;
       text-align: center;
@@ -203,11 +209,11 @@
       transition: all 0.2s;
     }
 
-    .type-btn:hover { border-color: var(--primary); }
+    .type-btn:hover { border-color: var(--accent-gold); }
     .type-btn.active {
-      border-color: var(--primary);
-      background: #eff6ff;
-      color: var(--primary);
+      border-color: var(--accent-gold);
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--accent-gold);
     }
 
     .inputs-grid {
@@ -226,13 +232,14 @@
     .field-group label {
       font-size: 0.85rem;
       font-weight: 600;
-      color: var(--text-main);
+      color: var(--text-muted);
     }
 
+    /* Гарантирует четкий белые текст на темном фоне выпадающих списков */
     .field-group input, .field-group select, .field-group textarea {
-      background: #ffffff !important;
-      color: #0f172a !important;
-      border: 1px solid var(--border-color);
+      background: #1e293b !important;
+      color: #f8fafc !important;
+      border: 1px solid var(--border-dark);
       border-radius: 8px;
       padding: 10px 12px;
       font-size: 0.95rem;
@@ -240,18 +247,17 @@
     }
 
     .field-group select option {
-      background-color: #ffffff !important;
-      color: #0f172a !important;
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
     }
 
     .field-group input:focus, .field-group select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+      border-color: var(--accent-gold);
     }
 
     .toggle-box {
-      background: #f8fafc;
-      border: 1px solid var(--border-color);
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid var(--border-dark);
       border-radius: 8px;
       padding: 12px;
       margin-top: 10px;
@@ -269,13 +275,13 @@
     .checkbox-label input[type="checkbox"] {
       width: 18px;
       height: 18px;
-      accent-color: var(--primary);
+      accent-color: var(--accent-gold);
     }
 
     .sub-options {
       margin-top: 12px;
       padding-top: 12px;
-      border-top: 1px dashed var(--border-color);
+      border-top: 1px dashed var(--border-dark);
       display: none;
     }
 
@@ -283,7 +289,7 @@
 
     .btn-submit {
       width: 100%;
-      background: linear-gradient(135deg, #1e3a8a, #1e40af);
+      background: linear-gradient(135deg, #d97706, #b45309);
       color: #ffffff;
       border: none;
       padding: 16px;
@@ -293,19 +299,23 @@
       cursor: pointer;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      transition: background 0.2s, transform 0.1s;
+      transition: all 0.2s;
       margin-top: 10px;
     }
 
     .btn-submit:hover {
-      background: linear-gradient(135deg, #1e40af, #1d4ed8);
+      background: linear-gradient(135deg, #f59e0b, #d97706);
       transform: translateY(-1px);
     }
 
+    /* ШАБЛОН PDF ДОГОВОРА (НАХОДИТСЯ В РАБОЧЕЙ ЗОНЕ ЗА ЭКРАНОМ, ЧТОБЫ БЫТЬ 100% ВИДИМЫМ ДЛЯ HTML2CANVAS) */
     #pdf-contract {
-      display: none;
-      background: #ffffff;
-      color: #000000;
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      width: 750px;
+      background: #ffffff !important;
+      color: #000000 !important;
       padding: 30px;
       font-family: 'Times New Roman', Times, serif;
       font-size: 11pt;
@@ -332,20 +342,23 @@
       font-size: 10pt;
     }
 
-    .signatures {
+    .sig-table {
+      width: 100%;
       margin-top: 35px;
-      display: flex;
-      justify-content: space-between;
+      border: none;
     }
 
-    .sig-block {
-      width: 45%;
+    .sig-table td {
+      border: none;
+      vertical-align: top;
+      width: 50%;
       font-size: 10pt;
     }
 
     .sig-line {
       margin-top: 40px;
       border-bottom: 1px solid #000000;
+      width: 80%;
     }
 
     @media (max-width: 960px) {
@@ -470,7 +483,7 @@
           </div>
         </div>
 
-        <!-- 3. Наполнение, полки и системы открывания -->
+        <!-- 3. Наполнение, полки и механизмы -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">3</span>
@@ -589,7 +602,7 @@
             <div class="inputs-grid">
               <div class="field-group">
                 <label>ФИО Заказчика</label>
-                <input type="text" id="clientName" placeholder="Например: Икромов Алишер" required>
+                <input type="text" id="clientName" placeholder="Например: Малюк Аркадий" required>
               </div>
               <div class="field-group">
                 <label>Номер телефона Заказчика</label>
@@ -609,29 +622,29 @@
     </div>
   </div>
 
-  <!-- МАКЕТ PDF ДОГОВОРА -->
+  <!-- РАБОЧИЙ МАКЕТ PDF ДОГОВОРА (РАСПОЛОЖЕН OFF-SCREEN ДЛЯ 100% РЕНДЕРА HTML2CANVAS) -->
   <div id="pdf-contract">
     <div class="contract-header">
       ДОГОВОР ПОДРЯДА № <span id="pdfDocNum"></span><br>
       НА ИЗГОТОВЛЕНИЕ И МОНТАЖ КУХОННОЙ МЕБЕЛИ
     </div>
 
-    <p style="text-align: right; margin-bottom: 15px;">г. Ташкент &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Дата: <span id="pdfDate"></span> г.</p>
+    <p style="text-align: right; margin-bottom: 12px;">г. Ташкент &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Дата: <span id="pdfDate"></span> г.</p>
 
     <p style="margin-bottom: 10px;">
       <strong>Исполнитель:</strong> Мастер (А), тел: +998(92)093-45-10, Telegram: @Kitchencalc, с одной стороны, и<br>
       <strong>Заказчик:</strong> <span id="pdfClientName"></span>, тел: <span id="pdfClientPhone"></span>, с другой стороны, заключили настоящий Договор о нижеследующем:
     </p>
 
-    <p><strong>1. ПРЕДМЕТ ДОГОВОРА</strong><br>
+    <p style="margin-bottom: 8px;"><strong>1. ПРЕДМЕТ ДОГОВОРА</strong><br>
     Исполнитель обязуется изготовить, доставить и установить кухонный гарнитур согласно согласованной спецификации и чертежу, а Заказчик обязуется принять и оплатить выполненную работу.</p>
 
-    <h4 style="margin-top: 12px; margin-bottom: 5px;">2. СПЕЦИФИКАЦИЯ И РАСЧЕТ СТОИМОСТИ</h4>
+    <h4 style="margin-top: 10px; margin-bottom: 5px;">2. СПЕЦИФИКАЦИЯ И РАСЧЕТ СТОИМОСТИ</h4>
     <table class="contract-table">
       <thead>
         <tr>
-          <th>Параметр / Наименование</th>
-          <th>Выбранная конфигурация</th>
+          <th style="width: 45%;">Параметр / Наименование</th>
+          <th style="width: 55%;">Выбранная конфигурация</th>
         </tr>
       </thead>
       <tbody>
@@ -648,27 +661,29 @@
       </tbody>
     </table>
 
-    <p><strong>3. ПОРУЧЕНИЕ И ПОРЯДОК РАСЧЕТОВ</strong><br>
+    <p style="margin-top: 10px; margin-bottom: 8px;"><strong>3. ПОРУЧЕНИЕ И ПОРЯДОК РАСЧЕТОВ</strong><br>
     3.1. Заказчик вносит предоплату в размере 70% от общей стоимости для закупа материалов.<br>
     3.2. Оставшиеся 30% выплачиваются Заказчиком после завершения монтажа и проверки качества мебели.<br>
     3.3. Срок изготовления составляет от 10 до 20 рабочих дней с момента внесения предоплаты.</p>
 
-    <div class="signatures">
-      <div class="sig-block">
-        <strong>ИСПОЛНИТЕЛЬ:</strong><br>
-        Мастер (А)<br>
-        Тел: +998(92)093-45-10<br>
-        Telegram: @Kitchencalc<br>
-        <div class="sig-line">Подпись: __________________</div>
-      </div>
-      <div class="sig-block">
-        <strong>ЗАКАЗЧИК:</strong><br>
-        <span id="pdfSigClientName"></span><br>
-        Тел: <span id="pdfSigClientPhone"></span><br>
-        Адрес: <span id="pdfAddress"></span><br>
-        <div class="sig-line">Подпись: __________________</div>
-      </div>
-    </div>
+    <table class="sig-table">
+      <tr>
+        <td>
+          <strong>ИСПОЛНИТЕЛЬ:</strong><br>
+          Мастер (А)<br>
+          Тел: +998(92)093-45-10<br>
+          Telegram: @Kitchencalc<br>
+          <div class="sig-line">Подпись: __________________</div>
+        </td>
+        <td>
+          <strong>ЗАКАЗЧИК:</strong><br>
+          <span id="pdfSigClientName"></span><br>
+          Тел: <span id="pdfSigClientPhone"></span><br>
+          Адрес: <span id="pdfAddress"></span><br>
+          <div class="sig-line">Подпись: __________________</div>
+        </td>
+      </tr>
+    </table>
   </div>
 
   <script>
@@ -735,7 +750,6 @@
       const topPriceM = parseFloat(document.getElementById('countertopMaterial').value);
       const hardwarePriceM = parseFloat(document.getElementById('hardwareType').value);
 
-      // Наполнение
       const shelves = parseFloat(document.getElementById('countShelves').value) || 0;
       const drawers = parseFloat(document.getElementById('countDrawers').value) || 0;
       const gasLifts = (upperMode !== 'none') ? (parseFloat(document.getElementById('countGasLifts').value) || 0) : 0;
@@ -745,7 +759,6 @@
       const islW = parseFloat(document.getElementById('islandWidth').value) || 80;
       const islAccess = document.getElementById('islandAccess').value;
 
-      // Расчет погонных метров
       let meters = mainW / 100;
       if (currentType === 'l-shape') {
         meters += (leftW - 60) / 100;
@@ -760,12 +773,10 @@
       let costPerMeter = (facadePriceM * upperFactor) + topPriceM + hardwarePriceM;
       let totalPrice = meters * costPerMeter;
 
-      // Прибавляем наценки на наполнение
       totalPrice += (shelves * 50000);
       totalPrice += (drawers * 110000);
       totalPrice += (gasLifts * 120000);
 
-      // Остров
       if (hasIsland) {
         let islandMeters = islL / 100;
         let islandBase = islandMeters * (facadePriceM + topPriceM + hardwarePriceM);
@@ -802,25 +813,25 @@
 
       let html = '';
 
-      html += `<rect x="${startX}" y="${startY + kH - baseH}" width="${kW}" height="${baseH}" fill="#cbd5e1" stroke="#1e3a8a" stroke-width="1.5" />`;
+      html += `<rect x="${startX}" y="${startY + kH - baseH}" width="${kW}" height="${baseH}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
 
       const numSec = Math.max(2, Math.round(w / 60));
       const secW = kW / numSec;
       for (let i = 1; i < numSec; i++) {
-        html += `<line x1="${startX + i*secW}" y1="${startY + kH - baseH}" x2="${startX + i*secW}" y2="${startY + kH}" stroke="#1e3a8a" stroke-width="1" stroke-dasharray="2,2"/>`;
+        html += `<line x1="${startX + i*secW}" y1="${startY + kH - baseH}" x2="${startX + i*secW}" y2="${startY + kH}" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2"/>`;
       }
 
-      html += `<rect x="${startX}" y="${startY + Math.max(0, topH)}" width="${kW}" height="${apronH}" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" />`;
+      html += `<rect x="${startX}" y="${startY + Math.max(0, topH)}" width="${kW}" height="${apronH}" fill="#0f172a" stroke="#475569" stroke-width="1" />`;
 
       if (upperMode !== 'none' && topH > 5) {
-        html += `<rect x="${startX}" y="${startY}" width="${kW}" height="${topH}" fill="#e2e8f0" stroke="#1e3a8a" stroke-width="1.5" />`;
+        html += `<rect x="${startX}" y="${startY}" width="${kW}" height="${topH}" fill="#334155" stroke="#fbbf24" stroke-width="1.5" />`;
         for (let i = 1; i < numSec; i++) {
-          html += `<line x1="${startX + i*secW}" y1="${startY}" x2="${startX + i*secW}" y2="${startY + topH}" stroke="#1e3a8a" stroke-width="1" stroke-dasharray="2,2"/>`;
+          html += `<line x1="${startX + i*secW}" y1="${startY}" x2="${startX + i*secW}" y2="${startY + topH}" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2"/>`;
         }
       }
 
-      html += `<text x="${svgW/2}" y="${startY + kH + 14}" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">${w} см</text>`;
-      html += `<text x="${startX - 6}" y="${startY + kH/2}" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="end">${h} см</text>`;
+      html += `<text x="${svgW/2}" y="${startY + kH + 14}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">${w} см</text>`;
+      html += `<text x="${startX - 6}" y="${startY + kH/2}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="end">${h} см</text>`;
 
       svg.innerHTML = html;
     }
@@ -847,18 +858,18 @@
       const mainX = cx - mainDrawW / 2;
       const mainY = cy;
 
-      html += `<rect x="${mainX}" y="${mainY}" width="${mainDrawW}" height="${mainDrawD}" fill="#cbd5e1" stroke="#1e3a8a" stroke-width="1.5" />`;
-      html += `<text x="${mainX + mainDrawW/2}" y="${mainY - 6}" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">${mainW} см</text>`;
+      html += `<rect x="${mainX}" y="${mainY}" width="${mainDrawW}" height="${mainDrawD}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
+      html += `<text x="${mainX + mainDrawW/2}" y="${mainY - 6}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">${mainW} см</text>`;
 
       if (currentType === 'l-shape') {
         const sideD = (leftW - depth) * scale;
         const xPos = (lDir === 'right') ? (mainX + mainDrawW - mainDrawD) : mainX;
-        html += `<rect x="${xPos}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${sideD}" fill="#cbd5e1" stroke="#1e3a8a" stroke-width="1.5" />`;
+        html += `<rect x="${xPos}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${sideD}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
       } else if (currentType === 'u-shape') {
         const leftSideD = (leftW - depth) * scale;
         const rightSideD = (rightW - depth) * scale;
-        html += `<rect x="${mainX}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${leftSideD}" fill="#cbd5e1" stroke="#1e3a8a" stroke-width="1.5" />`;
-        html += `<rect x="${mainX + mainDrawW - mainDrawD}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${rightSideD}" fill="#cbd5e1" stroke="#1e3a8a" stroke-width="1.5" />`;
+        html += `<rect x="${mainX}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${leftSideD}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
+        html += `<rect x="${mainX + mainDrawW - mainDrawD}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${rightSideD}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
       }
 
       if (hasIsland) {
@@ -867,8 +878,8 @@
         const iX = cx - iW / 2;
         const iY = mainY + totalY * scale - iD;
 
-        html += `<rect x="${iX}" y="${iY}" width="${iW}" height="${iD}" fill="#e2e8f0" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4,2" />`;
-        html += `<text x="${iX + iW/2}" y="${iY + iD/2 + 3}" fill="#d97706" font-size="9" font-weight="bold" text-anchor="middle">Остров ${islL}x${islW}</text>`;
+        html += `<rect x="${iX}" y="${iY}" width="${iW}" height="${iD}" fill="#334155" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,2" />`;
+        html += `<text x="${iX + iW/2}" y="${iY + iD/2 + 3}" fill="#fbbf24" font-size="9" font-weight="bold" text-anchor="middle">Остров ${islL}x${islW}</text>`;
       }
 
       svg.innerHTML = html;
@@ -902,11 +913,10 @@
       const upperSel = document.getElementById('upperCabinetsMode');
       document.getElementById('pdfUpperMode').innerText = upperSel.options[upperSel.selectedIndex].text;
 
-      // Наполнение
       const shelves = document.getElementById('countShelves').value;
       const drawers = document.getElementById('countDrawers').value;
       const gasLifts = (upperSel.value !== 'none') ? document.getElementById('countGasLifts').value : 0;
-      document.getElementById('pdfFittings').innerText = `Полки: ${shelves} шт., Выдвижные ящики: ${drawers} шт., Газлифты: ${gasLifts} шт.`;
+      document.getElementById('pdfFittings').innerText = `Полки: ${shelves} шт., Выдвижные ящики: ${drawers} шт., Газовые лифты: ${gasLifts} шт.`;
 
       const doorTypeSel = document.getElementById('doorOpenType');
       document.getElementById('pdfDoorType').innerText = doorTypeSel.options[doorTypeSel.selectedIndex].text;
@@ -926,19 +936,16 @@
       document.getElementById('pdfTotalPrice').innerText = document.getElementById('totalPriceDisplay').innerText;
 
       const element = document.getElementById('pdf-contract');
-      element.style.display = 'block';
 
       const opt = {
-        margin:       12,
+        margin:       10,
         filename:     `Договор_Кухня_${name}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
+        html2canvas:  { scale: 2, logging: false },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      html2pdf().set(opt).from(element).save().then(() => {
-        element.style.display = 'none';
-      });
+      html2pdf().set(opt).from(element).save();
     }
 
     window.onload = function() {
