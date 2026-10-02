@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Конструктор Кухонной Мебели | Ташкент</title>
 
-  <!-- Библиотека html2pdf -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
   <style>
     :root {
       --bg-dark: #090d16;
@@ -30,7 +27,6 @@
       padding-bottom: 60px;
     }
 
-    /* ШАПКА */
     .header {
       background: rgba(15, 23, 42, 0.95);
       border-bottom: 1px solid var(--border-gold);
@@ -51,17 +47,8 @@
       gap: 15px;
     }
 
-    .brand h1 {
-      font-size: 1.4rem;
-      color: var(--accent-gold);
-      font-weight: 800;
-      letter-spacing: 0.5px;
-    }
-
-    .brand p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
+    .brand h1 { font-size: 1.4rem; color: var(--accent-gold); font-weight: 800; }
+    .brand p { font-size: 0.85rem; color: var(--text-muted); }
 
     .master-contacts {
       background: rgba(30, 41, 59, 0.8);
@@ -71,41 +58,12 @@
       text-align: right;
     }
 
-    .master-contacts .phone {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--accent-gold);
-    }
+    .master-contacts .phone { font-size: 1.05rem; font-weight: 700; color: var(--accent-gold); }
+    .master-contacts .telegram { font-size: 0.88rem; color: #38bdf8; text-decoration: none; font-weight: 600; }
 
-    .master-contacts .telegram {
-      font-size: 0.88rem;
-      color: #38bdf8;
-      font-weight: 600;
-      text-decoration: none;
-      display: inline-block;
-      margin-top: 2px;
-    }
-
-    .container {
-      max-width: 1280px;
-      margin: 25px auto;
-      padding: 0 20px;
-    }
-
-    .app-layout {
-      display: grid;
-      grid-template-columns: 420px 1fr;
-      gap: 25px;
-      align-items: start;
-    }
-
-    .sticky-sidebar {
-      position: sticky;
-      top: 85px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+    .container { max-width: 1280px; margin: 25px auto; padding: 0 20px; }
+    .app-layout { display: grid; grid-template-columns: 420px 1fr; gap: 25px; align-items: start; }
+    .sticky-sidebar { position: sticky; top: 85px; display: flex; flex-direction: column; gap: 20px; }
 
     .card {
       background: var(--card-bg);
@@ -117,443 +75,81 @@
     }
 
     .sub-section-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--accent-gold);
-      margin: 10px 0 8px 0;
-      padding-bottom: 4px;
-      border-bottom: 1px dashed var(--border-dark);
+      font-size: 0.95rem; font-weight: 700; color: var(--accent-gold);
+      margin: 10px 0 8px 0; padding-bottom: 4px; border-bottom: 1px dashed var(--border-dark);
     }
 
     .price-box {
       background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(15, 23, 42, 0.9));
-      border: 1.5px solid var(--accent-gold);
-      color: #ffffff;
-      text-align: center;
-      padding: 22px;
-      border-radius: 14px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+      border: 1.5px solid var(--accent-gold); color: #ffffff; text-align: center;
+      padding: 22px; border-radius: 14px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
     }
 
-    .price-title {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-    }
+    .price-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); }
+    .price-value { font-size: 2.2rem; font-weight: 800; color: var(--accent-gold); margin: 6px 0; }
+    .price-currency { color: #f8fafc; font-size: 0.95rem; }
 
-    .price-value {
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: var(--accent-gold);
-      margin: 6px 0;
-    }
-
-    .price-currency {
-      color: #f8fafc;
-      font-size: 0.95rem;
-    }
-
-    .drawing-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--accent-gold);
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .svg-container {
-      width: 100%;
-      height: 190px;
-      background: #020617;
-      border: 1px solid var(--border-gold);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
+    .drawing-title { font-size: 0.95rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 10px; display: flex; justify-content: space-between; }
+    .svg-container { width: 100%; height: 190px; background: #020617; border: 1px solid var(--border-gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
     svg { width: 100%; height: 100%; }
 
-    .section-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--accent-gold);
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .section-title { font-size: 1.1rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    .step-badge { background: var(--accent-gold); color: #0f172a; font-weight: bold; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
 
-    .step-badge {
-      background: var(--accent-gold);
-      color: #0f172a;
-      font-weight: bold;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.85rem;
-      flex-shrink: 0;
-    }
-
-    .type-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    .type-btn {
-      background: rgba(30, 41, 59, 0.6);
-      border: 1.5px solid var(--border-dark);
-      border-radius: 8px;
-      padding: 12px 8px;
-      text-align: center;
-      cursor: pointer;
-      font-weight: 600;
-      color: var(--text-main);
-      transition: all 0.2s;
-    }
-
+    .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+    .type-btn { background: rgba(30, 41, 59, 0.6); border: 1.5px solid var(--border-dark); border-radius: 8px; padding: 12px 8px; text-align: center; cursor: pointer; font-weight: 600; color: var(--text-main); transition: all 0.2s; }
     .type-btn:hover { border-color: var(--accent-gold); }
-    .type-btn.active {
-      border-color: var(--accent-gold);
-      background: rgba(251, 191, 36, 0.15);
-      color: var(--accent-gold);
-    }
+    .type-btn.active { border-color: var(--accent-gold); background: rgba(251, 191, 36, 0.15); color: var(--accent-gold); }
 
-    .inputs-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .field-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .field-group label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-
+    .inputs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+    .field-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
     .field-group input, .field-group select, .field-group textarea {
-      background: #1e293b !important;
-      color: #f8fafc !important;
-      border: 1px solid var(--border-dark);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 15px !important;
-      outline: none;
+      background: #1e293b !important; color: #f8fafc !important; border: 1px solid var(--border-dark); border-radius: 8px; padding: 10px 12px; font-size: 15px !important; outline: none;
     }
+    .field-group select option { background-color: #0f172a !important; color: #f8fafc !important; }
+    .field-group input:focus, .field-group select:focus { border-color: var(--accent-gold); }
 
-    .field-group select option {
-      background-color: #0f172a !important;
-      color: #f8fafc !important;
-    }
-
-    .field-group input:focus, .field-group select:focus {
-      border-color: var(--accent-gold);
-    }
-
-    .number-stepper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
+    .number-stepper { display: flex; align-items: center; gap: 6px; }
     .btn-step {
-      background: #334155;
-      color: var(--accent-gold);
-      border: 1px solid var(--border-gold);
-      border-radius: 8px;
-      width: 44px;
-      height: 44px;
-      font-size: 1.3rem;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-      transition: all 0.2s;
-      flex-shrink: 0;
+      background: #334155; color: var(--accent-gold); border: 1px solid var(--border-gold); border-radius: 8px; width: 44px; height: 44px; font-size: 1.3rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
     }
+    .btn-step:hover { background: var(--accent-gold); color: #0f172a; }
+    .number-stepper input { text-align: center; width: 100%; }
 
-    .btn-step:hover {
-      background: var(--accent-gold);
-      color: #0f172a;
-    }
-
-    .number-stepper input {
-      text-align: center;
-      width: 100%;
-      -moz-appearance: textfield;
-    }
-
-    .number-stepper input::-webkit-outer-spin-button,
-    .number-stepper input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    .toggle-box {
-      background: rgba(30, 41, 59, 0.4);
-      border: 1px solid var(--border-dark);
-      border-radius: 8px;
-      padding: 12px;
-      margin-top: 10px;
-    }
-
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .checkbox-label input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--accent-gold);
-    }
-
-    .sub-options {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px dashed var(--border-dark);
-      display: block;
-    }
+    .toggle-box { background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border-dark); border-radius: 8px; padding: 12px; margin-top: 10px; }
+    .checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; color: var(--text-main); }
+    .checkbox-label input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-gold); }
+    .sub-options { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-dark); display: block; }
 
     .info-badge {
-      background: rgba(251, 191, 36, 0.1);
-      border: 1px solid var(--border-gold);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 0.88rem;
-      color: var(--accent-gold);
-      font-weight: 600;
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      background: rgba(251, 191, 36, 0.1); border: 1px solid var(--border-gold); border-radius: 8px; padding: 8px 12px; font-size: 0.88rem; color: var(--accent-gold); font-weight: 600; margin-top: 10px; display: flex; justify-content: space-between; align-items: center;
     }
 
-    /* СТИЛИ ДЛЯ КОНФИГУРАТОРА ОТСЕКОВ */
-    .section-card-item {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--border-dark);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
-
-    .section-card-header {
-      font-weight: bold;
-      color: var(--accent-gold);
-      font-size: 0.9rem;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    .section-card-item { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-dark); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+    .section-card-header { font-weight: bold; color: var(--accent-gold); font-size: 0.9rem; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
 
     .btn-submit {
-      width: 100%;
-      background: linear-gradient(135deg, #d97706, #b45309);
-      color: #ffffff;
-      border: none;
-      padding: 16px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transition: all 0.2s;
-      margin-top: 10px;
+      width: 100%; background: linear-gradient(135deg, #d97706, #b45309); color: #ffffff; border: none; padding: 16px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; margin-top: 10px;
     }
+    .btn-submit:hover { background: linear-gradient(135deg, #f59e0b, #d97706); transform: translateY(-1px); }
 
-    .btn-submit:hover {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      transform: translateY(-1px);
-    }
-
-    /* АДАПТИВНЫЙ МОБИЛЬНЫЙ СТИЛЬ */
     @media (max-width: 768px) {
-      .header-container {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-        gap: 10px;
-      }
-
-      .master-contacts {
-        text-align: center;
-      }
-
-      .container {
-        padding: 0 10px;
-        margin: 15px auto;
-      }
-
-      .app-layout {
-        grid-template-columns: 1fr;
-        gap: 15px;
-      }
-
-      .sticky-sidebar {
-        position: static;
-      }
-
-      .card {
-        padding: 14px;
-        border-radius: 12px;
-      }
-
-      .inputs-grid {
-        grid-template-columns: 1fr !important;
-      }
-
-      .type-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
-      }
-
-      .type-btn {
-        padding: 10px 4px;
-        font-size: 0.85rem;
-      }
-
-      .price-value {
-        font-size: 1.8rem;
-      }
-
-      .svg-container {
-        height: 160px;
-      }
-    }
-
-    /* ЧЁТКИЙ ДВУХСТРАНИЧНЫЙ МАКЕТ PDF (2 СТРАНИЦЫ A4) */
-    #pdf-wrapper {
-      position: absolute;
-      left: -9999px;
-      top: 0;
-      width: 794px;
-      background: #ffffff !important;
-      opacity: 1 !important;
-      pointer-events: none;
-    }
-
-    .pdf-page {
-      width: 794px;
-      height: 1122px; /* Стандартная высота A4 */
-      box-sizing: border-box;
-      padding: 25px 30px;
-      background: #ffffff !important;
-      color: #000000 !important;
-      page-break-after: always;
-      position: relative;
-      font-family: 'Times New Roman', Times, serif;
-      font-size: 8.5pt;
-      line-height: 1.22;
-    }
-
-    .pdf-page * {
-      color: #000000 !important;
-      border-color: #000000 !important;
-    }
-
-    .pdf-header {
-      text-align: center;
-      font-weight: bold;
-      font-size: 11pt;
-      margin-bottom: 4px;
-      text-transform: uppercase;
-    }
-
-    .pdf-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 4px 0;
-    }
-
-    .pdf-table th, .pdf-table td {
-      border: 1px solid #000000 !important;
-      padding: 3px 5px;
-      font-size: 8.2pt;
-    }
-
-    .pdf-table th {
-      background-color: #f0f0f0 !important;
-      font-weight: bold;
-    }
-
-    .pdf-section-title {
-      font-weight: bold;
-      margin-top: 6px;
-      margin-bottom: 3px;
-      text-transform: uppercase;
-      font-size: 9pt;
-      border-bottom: 1px solid #000000 !important;
-    }
-
-    .sig-section {
-      margin-top: 8px;
-      border: 1px solid #000000 !important;
-      padding: 6px;
-      background-color: #ffffff !important;
-    }
-
-    .sig-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .sig-table td {
-      border: none !important;
-      vertical-align: top;
-      padding: 2px 4px;
-      font-size: 8pt;
-    }
-
-    .sig-line {
-      margin-top: 16px;
-      border-bottom: 1px solid #000000 !important;
-      width: 85%;
-    }
-
-    .pdf-drawings-grid-p2 {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 8px;
-    }
-
-    .pdf-drawing-box-p2 {
-      border: 1px solid #000000 !important;
-      background-color: #ffffff !important;
-      height: 220px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 5px;
+      .header-container { flex-direction: column; align-items: stretch; text-align: center; gap: 10px; }
+      .master-contacts { text-align: center; }
+      .container { padding: 0 10px; margin: 15px auto; }
+      .app-layout { grid-template-columns: 1fr; gap: 15px; }
+      .sticky-sidebar { position: static; }
+      .card { padding: 14px; border-radius: 12px; }
+      .inputs-grid { grid-template-columns: 1fr !important; }
+      .type-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .price-value { font-size: 1.8rem; }
+      .svg-container { height: 160px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ШАПКА -->
   <header class="header">
     <div class="header-container">
       <div class="brand">
@@ -570,16 +166,13 @@
   <div class="container">
     <div class="app-layout">
       
-      <!-- ЛЕВАЯ КОЛОНКА -->
       <div class="sticky-sidebar">
-        
         <div class="price-box">
           <div class="price-title">Итоговая стоимость гарнитура</div>
           <div class="price-value" id="totalPriceDisplay">0</div>
           <div class="price-currency">Узбекских сум (UZS)</div>
         </div>
 
-        <!-- 3D ПРЕВЬЮ ПЛИТЫ И КРОМКИ -->
         <div class="card">
           <div class="drawing-title">
             <span>Образец фасада и кромки (3D)</span>
@@ -610,13 +203,10 @@
             <svg id="svgTop" viewBox="0 0 400 200"></svg>
           </div>
         </div>
-
       </div>
 
-      <!-- ПРАВАЯ КОЛОНКА -->
       <div style="display: flex; flex-direction: column; gap: 20px;">
         
-        <!-- 1. Форма и размеры -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">1</span>
@@ -659,7 +249,6 @@
           </div>
         </div>
 
-        <!-- 2. НОВЫЙ КОНФИГУРАТОР ОТСЕКОВ (МОДУЛЕЙ И ШКАФОВ) -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">2</span>
@@ -677,12 +266,9 @@
             </div>
           </div>
 
-          <div id="sectionsListContainer">
-            <!-- Сданами динамические блоки отсеков -->
-          </div>
+          <div id="sectionsListContainer"></div>
         </div>
 
-        <!-- 3. КАЛЬКУЛЯТОР ВЕРХНЕГО ЯРУСА -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">3</span>
@@ -730,7 +316,6 @@
           </div>
         </div>
 
-        <!-- 4. Наполнение, полки и механизмы -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">4</span>
@@ -775,7 +360,6 @@
           </div>
         </div>
 
-        <!-- 5. РАЗДЕЛЕНИЕ: ФАСАДЫ, КОРПУС, КРОМКИ И СТОЛЕШНИЦА -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">5</span>
@@ -797,28 +381,18 @@
             </div>
 
             <div class="field-group">
-              <label>Цвет фасада (20 вариантов)</label>
+              <label>Цвет фасада</label>
               <select id="facadeColor" onchange="updateCalculator()">
-                <option value="#f8fafc" selected>1. Белый Матовый / Альпийский</option>
-                <option value="#ffffff">2. Белый Глянец / Бриллиант</option>
-                <option value="#fef3c7">3. Слоновая Кость / Ваниль</option>
-                <option value="#e5e7eb">4. Серый Светлый / Матовый</option>
-                <option value="#334155">5. Антрацит / Серый Графит</option>
-                <option value="#090d16">6. Чёрный Глубокий Матовый</option>
-                <option value="#1e293b">7. Чёрный Глянец</option>
-                <option value="#d97706">8. Дуб Сонома Светлый</option>
-                <option value="#b45309">9. Дуб Натуральный / Вотан</option>
-                <option value="#78350f">10. Орех Тёмный Премиум</option>
-                <option value="#451a03">11. Венге Афро</option>
-                <option value="#a16207">12. Ясень Светлый</option>
-                <option value="#94a3b8">13. Бетон Светлый Лофт</option>
-                <option value="#475569">14. Бетон Тёмный Индустриал</option>
-                <option value="#f1f5f9">15. Мрамор Белый Калакатта</option>
-                <option value="#0f172a">16. Мрамор Чёрный Марквина</option>
-                <option value="#065f46">17. Изумруд Тёмный Матовый</option>
-                <option value="#1e3a8a">18. Синий Океан / Нави</option>
-                <option value="#9a3412">19. Терракот / Какао</option>
-                <option value="#ca8a04">20. Золотой Латунный Металлик</option>
+                <option value="#f8fafc" selected>Белый Матовый / Альпийский</option>
+                <option value="#ffffff">Белый Глянец / Бриллиант</option>
+                <option value="#fef3c7">Слоновая Кость / Ваниль</option>
+                <option value="#e5e7eb">Серый Светлый / Матовый</option>
+                <option value="#334155">Антрацит / Серый Графит</option>
+                <option value="#090d16">Чёрный Глубокий Матовый</option>
+                <option value="#d97706">Дуб Сонома Светлый</option>
+                <option value="#b45309">Дуб Натуральный / Вотан</option>
+                <option value="#78350f">Орех Тёмный Премиум</option>
+                <option value="#94a3b8">Бетон Светлый Лофт</option>
               </select>
             </div>
 
@@ -828,106 +402,52 @@
                 <option value="pvc04">ПВХ 0.4 мм (Защитная)</option>
                 <option value="pvc20" selected>ПВХ 2.0 мм (Противоударная)</option>
                 <option value="pur">PUR-кромка (Лазерный влагостойкий шов)</option>
-                <option value="abs">Алюминиевый ABS-профиль</option>
               </select>
             </div>
 
             <div class="field-group">
-              <label>Цвет кромки фасада (20 вариантов)</label>
+              <label>Цвет кромки фасада</label>
               <select id="facadeEdgeColor" onchange="updateCalculator()">
-                <option value="#fbbf24" selected>1. Золотой / Латунь (Акцент)</option>
-                <option value="#f8fafc">2. Белый Матовый</option>
-                <option value="#ffffff">3. Белый Глянец</option>
-                <option value="#fef3c7">4. Слоновая Кость</option>
-                <option value="#e5e7eb">5. Серый Светлый</option>
-                <option value="#334155">6. Антрацит / Графит</option>
-                <option value="#000000">7. Чёрный Контрастный</option>
-                <option value="#d97706">8. Дуб Сонома</option>
-                <option value="#b45309">9. Дуб Вотан</option>
-                <option value="#78350f">10. Орех Тёмный</option>
-                <option value="#451a03">11. Венге</option>
-                <option value="#a16207">12. Ясень Светлый</option>
-                <option value="#94a3b8">13. Бетон Светлый</option>
-                <option value="#475569">14. Бетон Тёмный</option>
-                <option value="#e2e8f0">15. Алюминий Серебристый</option>
-                <option value="#0f172a">16. Чёрный Мрамор</option>
-                <option value="#065f46">17. Изумрудный</option>
-                <option value="#1e3a8a">18. Синий Нави</option>
-                <option value="#9a3412">19. Терракотовый</option>
-                <option value="#38bdf8">20. Светло-голубой Металлик</option>
+                <option value="#fbbf24" selected>Золотой / Латунь (Акцент)</option>
+                <option value="#f8fafc">Белый Матовый</option>
+                <option value="#334155">Антрацит / Графит</option>
+                <option value="#000000">Чёрный Контрастный</option>
+                <option value="#d97706">Дуб Сонома</option>
               </select>
             </div>
           </div>
 
-          <div class="sub-section-title">5.2. Параметры и Кромка Корпуса (Каркаса)</div>
+          <div class="sub-section-title">5.2. Параметры и Кромка Корпуса</div>
           <div class="inputs-grid">
             <div class="field-group">
               <label>Материал корпуса</label>
               <select id="bodyMaterial" onchange="updateCalculator()">
-                <option value="0" selected>ЛДСП Стандарт (Узбекистан / Россия)</option>
+                <option value="0" selected>ЛДСП Стандарт</option>
                 <option value="300000">ЛДСП Премиум Egger / Влагостойкий</option>
-                <option value="600000">ЛМДФ Влагостойкий плиточный</option>
+                <option value="600000">ЛМДФ Влагостойкий</option>
               </select>
             </div>
-
             <div class="field-group">
-              <label>Цвет корпуса (20 вариантов)</label>
+              <label>Цвет корпуса</label>
               <select id="bodyColor" onchange="updateCalculator()">
-                <option value="Белый Стандарт" selected>1. Белый Матовый (Классика)</option>
-                <option value="Белый Глянец">2. Белый Глянец</option>
-                <option value="Бежевый">3. Бежевый / Ваниль</option>
-                <option value="Серый Светлый">4. Серый Светлый</option>
-                <option value="Серый Графит">5. Антрацит / Серый Графит</option>
-                <option value="Чёрный Матовый">6. Чёрный Матовый</option>
-                <option value="Чёрный Глянец">7. Чёрный Глянец</option>
-                <option value="Дуб Сонома">8. Дуб Сонома Светлый</option>
-                <option value="Дуб Вотан">9. Дуб Вотан Натуральный</option>
-                <option value="Орех Тёмный">10. Орех Тёмный</option>
-                <option value="Венге">11. Венге Афро</option>
-                <option value="Ясень Светлый">12. Ясень Светлый</option>
-                <option value="Бетон Светлый">13. Бетон Светлый</option>
-                <option value="Бетон Тёмный">14. Бетон Тёмный</option>
-                <option value="Мрамор Белый">15. Мрамор Белый</option>
-                <option value="Мрамор Чёрный">16. Мрамор Чёрный</option>
-                <option value="Изумруд">17. Изумруд Тёмный</option>
-                <option value="Синий Нави">18. Синий Нави</option>
-                <option value="Терракот">19. Терракот</option>
-                <option value="Титан / Серебро">20. Титан / Серебро</option>
+                <option value="Белый Стандарт" selected>Белый Матовый (Классика)</option>
+                <option value="Серый Графит">Антрацит / Серый Графит</option>
+                <option value="Дуб Вотан">Дуб Вотан Натуральный</option>
               </select>
             </div>
-
             <div class="field-group">
               <label>Тип кромки корпуса</label>
               <select id="bodyEdgeType" onchange="updateCalculator()">
-                <option value="pvc04" selected>ПВХ 0.4 мм (Стандартная)</option>
-                <option value="pvc20">ПВХ 2.0 мм (Усиленная)</option>
-                <option value="pur">PUR-кромка (Влагостойкая)</option>
+                <option value="pvc04" selected>ПВХ 0.4 мм</option>
+                <option value="pvc20">ПВХ 2.0 мм</option>
               </select>
             </div>
-
             <div class="field-group">
-              <label>Цвет кромки корпуса (20 вариантов)</label>
+              <label>Цвет кромки корпуса</label>
               <select id="bodyEdgeColor" onchange="updateCalculator()">
-                <option value="В тон корпуса" selected>1. В тон цвета корпуса</option>
-                <option value="Белый">2. Белый</option>
-                <option value="Серый Светлый">3. Серый Светлый</option>
-                <option value="Графит">4. Графит / Антрацит</option>
-                <option value="Чёрный">5. Чёрный Контраст</option>
-                <option value="Дуб Сонома">6. Дуб Сонома</option>
-                <option value="Дуб Вотан">7. Дуб Вотан</option>
-                <option value="Орех">8. Орех Тёмный</option>
-                <option value="Венге">9. Венге</option>
-                <option value="Бетон Светлый">10. Бетон Светлый</option>
-                <option value="Бетон Тёмный">11. Бетон Тёмный</option>
-                <option value="Серебро / Алюминий">12. Серебро / Алюминий</option>
-                <option value="Золото">13. Золото</option>
-                <option value="Бежевый">14. Бежевый</option>
-                <option value="Ваниль">15. Ваниль</option>
-                <option value="Изумрудный">16. Изумрудный</option>
-                <option value="Синий">17. Синий</option>
-                <option value="Терракотовый">18. Терракотовый</option>
-                <option value="Шоколадный">19. Шоколадный</option>
-                <option value="Прозрачный / Лазер">20. Прозрачный / Лазерный шов</option>
+                <option value="В тон корпуса" selected>В тон цвета корпуса</option>
+                <option value="Белый">Белый</option>
+                <option value="Графит">Графит</option>
               </select>
             </div>
           </div>
@@ -937,27 +457,24 @@
             <div class="field-group">
               <label>Варианты столешниц (Ташкент)</label>
               <select id="countertopMaterial" onchange="updateCalculator()">
-                <option value="200000">ЛДСП Влагостойкая 28 мм (Эконом)</option>
-                <option value="350000">ЛДСП Влагостойкая 38 мм (Классика)</option>
-                <option value="1100000">Компакт-плита HPL 12 мм (Супертонкая водостойкая)</option>
+                <option value="200000">ЛДСП 28 мм</option>
+                <option value="350000">ЛДСП 38 мм</option>
                 <option value="1500000" selected>Искусственный акриловый камень</option>
                 <option value="2800000">Кварцевый агломерат (Кварц)</option>
-                <option value="3500000">Натуральный Гранит / Мрамор</option>
               </select>
             </div>
 
             <div class="field-group">
               <label>Комплект фурнитуры</label>
               <select id="hardwareType" onchange="updateCalculator()">
-                <option value="0">Эконом (Boyard / Китай без доводчиков)</option>
-                <option value="400000" selected>Стандарт (GTV / DTC / Samet с доводчиками)</option>
-                <option value="1200000">Премиум / Платинум (Blum / Hettich)</option>
+                <option value="0">Эконом (Boyard)</option>
+                <option value="400000" selected>Стандарт (GTV / Samet с доводчиками)</option>
+                <option value="1200000">Премиум (Blum / Hettich)</option>
               </select>
             </div>
           </div>
         </div>
 
-        <!-- 6. Островной модуль -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">6</span>
@@ -981,213 +498,61 @@
                   <input type="number" id="islandWidth" value="80" min="50" max="150" oninput="updateCalculator()">
                 </div>
               </div>
-
-              <div class="field-group" style="margin-top: 10px;">
-                <label>Доступ и фасады острова</label>
-                <select id="islandAccess" onchange="updateCalculator()">
-                  <option value="one">Фасады / дверцы только с 1 стороны</option>
-                  <option value="two">Вид и фасады с 2-х сторон (двусторонний доступ)</option>
-                </select>
-              </div>
             </div>
           </div>
         </div>
 
-        <!-- 7. Оформление Договора -->
+        <!-- КНОПКА ИТОГ (СПЕЦИФИКАЦИЯ) -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">7</span>
-            <span>Формирование Договора в PDF</span>
+            <span>Формирование Спецификации и Итогов</span>
           </div>
 
-          <form id="pdfForm" onsubmit="generateContractPDF(event)">
+          <form id="summaryForm" action="/summary" method="POST" target="_blank">
             <div class="inputs-grid">
               <div class="field-group">
                 <label>ФИО Заказчика</label>
-                <input type="text" id="clientName" placeholder="Например: Ислямов Айдер">
+                <input type="text" id="clientName" name="clientName" placeholder="Например: Ислямов Айдер">
               </div>
               <div class="field-group">
                 <label>Номер телефона Заказчика</label>
-                <input type="tel" id="clientPhone" placeholder="+998 (90) 123-45-67">
+                <input type="tel" id="clientPhone" name="clientPhone" placeholder="+998 (90) 123-45-67">
               </div>
             </div>
             <div class="field-group" style="margin-top: 10px;">
               <label>Адрес объекта / Примечания</label>
-              <textarea id="clientNotes" rows="2" placeholder="Адрес установки, этаж, особенности стен..."></textarea>
+              <textarea id="clientNotes" name="clientNotes" rows="2" placeholder="Адрес установки, этаж..."></textarea>
             </div>
-            <button type="submit" class="btn-submit">Скачать Официальный Договор (PDF - 2 Страницы)</button>
+
+            <!-- Скрытые поля для передачи параметров на страницу Итога -->
+            <input type="hidden" id="inpTotalPrice" name="totalPrice" value="0">
+            <input type="hidden" id="inpKitchenType" name="kitchenType" value="">
+            <input type="hidden" id="inpDimensionsText" name="dimensionsText" value="">
+            <input type="hidden" id="inpUpperModeText" name="upperModeText" value="">
+            <input type="hidden" id="inpFittingsText" name="fittingsText" value="">
+            <input type="hidden" id="inpDoorTypeText" name="doorTypeText" value="">
+            <input type="hidden" id="inpFacadeText" name="facadeText" value="">
+            <input type="hidden" id="inpFacadeEdgeText" name="facadeEdgeText" value="">
+            <input type="hidden" id="inpBodyText" name="bodyText" value="">
+            <input type="hidden" id="inpBodyEdgeText" name="bodyEdgeText" value="">
+            <input type="hidden" id="inpCountertopText" name="countertopText" value="">
+            <input type="hidden" id="inpHardwareText" name="hardwareText" value="">
+            <input type="hidden" id="inpIslandText" name="islandText" value="">
+            <input type="hidden" id="inpSectionsJson" name="sectionsJson" value="[]">
+
+            <button type="submit" class="btn-submit" onclick="prepareSummaryData()">📋 Итог (Спецификация заказа)</button>
           </form>
         </div>
 
       </div>
-
     </div>
-  </div>
-
-  <!-- ДВУХСТРАНИЧНЫЙ МАКЕТ PDF ДОГОВОРА (СТРОГО 2 СТРАНИЦЫ A4) -->
-  <div id="pdf-wrapper">
-    
-    <!-- СТРАНИЦА 1: ДОГОВОР, ТЕХСПЕЦИФИКАЦИЯ И ПОДПИСИ -->
-    <div class="pdf-page" id="pdf-page-1">
-      <div class="pdf-header">
-        ДОГОВОР ПОДРЯДА № <span id="pdfDocNum"></span>________<br>
-        НА ИЗГОТОВЛЕНИЕ И МОНТАЖ КУХОННОЙ МЕБЕЛИ
-      </div>
-
-      <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 8.5pt;">
-        <span>г. Ташкент</span>
-        <span>Дата: «____» _________ 20___ г.</span>
-      </div>
-
-      <!-- БЛОК С ПОЛЯМИ ИСПОЛНИТЕЛЯ И ЗАКАЗЧИКА И ПОДПИСЯМИ В СКОБКАХ -->
-      <div style="margin-bottom: 6px; font-size: 8.5pt; line-height: 1.3;">
-        <div style="display: flex; align-items: flex-end; margin-bottom: 0px;">
-          <strong style="width: 90px; flex-shrink: 0;">Исполнитель:</strong>
-          <div style="flex: 1; border-bottom: 1px solid #000 !important; text-align: center; height: 14px;"></div>
-        </div>
-        <div style="text-align: center; font-size: 7pt; margin-bottom: 4px; margin-left: 90px;">(Ф.И.О серия номер паспорт)</div>
-
-        <div style="display: flex; align-items: flex-end; margin-bottom: 0px;">
-          <strong style="width: 90px; flex-shrink: 0;">Заказчик:</strong>
-          <div style="flex: 1; border-bottom: 1px solid #000 !important; text-align: center; height: 14px;">
-            <span id="pdfClientName"></span>
-          </div>
-        </div>
-        <div style="text-align: center; font-size: 7pt; margin-bottom: 4px; margin-left: 90px;">(Ф.И.О серия номер паспорт)</div>
-
-        <div style="margin-top: 3px;">
-          <strong>Тел. Заказчика:</strong> <span id="pdfClientPhone">____________________</span> &nbsp;&nbsp;|&nbsp;&nbsp;
-          <strong>Адрес объекта:</strong> <span id="pdfAddress">____________________</span> &nbsp;&nbsp;|&nbsp;&nbsp;
-          <strong>Мастер (Исполнитель):</strong> +998(92)093-45-10
-        </div>
-      </div>
-
-      <div class="pdf-section-title">1. Размеры кухни и техническая спецификация</div>
-      
-      <table class="pdf-table">
-        <thead>
-          <tr>
-            <th style="width: 36%;">Параметр / Деталь</th>
-            <th style="width: 64%;">Точные значения и конфигурация</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="background-color: #f8fafc !important;">
-            <td><strong>ТОЧНЫЕ РАЗМЕРЫ КУХНИ</strong></td>
-            <td><strong id="pdfDimensions" style="font-size: 8.5pt;"></strong></td>
-          </tr>
-          <tr><td>Форма гарнитура</td><td id="pdfType"></td></tr>
-          <tr style="background-color: #f1f5f9 !important;"><td><strong>ВЕРХНИЙ ЯРУС (ГАБАРИТЫ)</strong></td><td id="pdfUpperMode"></td></tr>
-          <tr><td>Количество отсеков (модулей)</td><td id="pdfSectionsSummary"></td></tr>
-          <tr><td>Наполнение и механизмы</td><td id="pdfFittings"></td></tr>
-          <tr><td>Система открывания</td><td id="pdfDoorType"></td></tr>
-          <tr><td><strong>Фасад (Материал / Цвет)</strong></td><td id="pdfFacade"></td></tr>
-          <tr><td><strong>Кромка Фасада (Тип / Цвет)</strong></td><td id="pdfFacadeEdge"></td></tr>
-          <tr><td><strong>Корпус (Материал / Цвет)</strong></td><td id="pdfBody"></td></tr>
-          <tr><td><strong>Кромка Корпуса (Тип / Цвет)</strong></td><td id="pdfBodyEdge"></td></tr>
-          <tr><td>Столешница</td><td id="pdfCountertop"></td></tr>
-          <tr><td>Фурнитура</td><td id="pdfHardware"></td></tr>
-          <tr><td>Кухонный остров</td><td id="pdfIsland"></td></tr>
-          <tr style="background-color: #fdf2e9 !important;">
-            <td><strong>ОБЩАЯ СУММА ДОГОВОРА</strong></td>
-            <td><strong id="pdfTotalPrice" style="font-size: 9.5pt;"></strong> <strong>UZS</strong></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="pdf-section-title">2. Порядок расчетов, оплаты и сроки</div>
-      <p style="margin-bottom: 4px;">
-        2.1. Первоначальная оплата (Аванс) составляет <strong>75%</strong>: <strong id="pdfAdvanceAmount">0</strong> UZS.<br>
-        2.2. Окончательный расчет <strong>25%</strong>: <strong id="pdfFinalAmount">0</strong> UZS выплачивается в день завершения установки.<br>
-        2.3. Срок выполнения работ: <strong>_____________________</strong> рабочих дней с момента получения аванса (75%).
-      </p>
-
-      <div class="pdf-section-title">3. Условия одностороннего отказа и возврата</div>
-      <p style="margin-bottom: 4px;">
-        3.1. При отказе Заказчика до сдачи работ, Исполнитель возвращает <strong>50% от суммы внесенного аванса (75%)</strong>. Оставшиеся 50% аванса удерживаются Исполнителем на закуп и раскрой материалов.
-      </p>
-
-      <!-- БЛОК ИЗ 3 ПОДПИСЕЙ -->
-      <div class="sig-section">
-        <div style="font-weight: bold; text-align: center; margin-bottom: 3px; font-size: 8.2pt;">ПОДТВЕРЖДЕНИЕ ПЛАТЕЖЕЙ И ПРИЕМКИ РАБОТ</div>
-        <table class="sig-table">
-          <tr>
-            <td style="width: 50%; border-right: 1px dashed #000000 !important; padding-right: 6px;">
-              <strong>1. Передача первоначального аванса (75%):</strong><br>
-              Аванс в размере <span id="pdfAdvanceAmountSig"></span> UZS передан Исполнителю.<br>
-              <strong>Подпись Заказчика №1 (Передал):</strong><br>
-              <div class="sig-line">___________________________</div>
-            </td>
-            <td style="width: 50%; padding-left: 6px;">
-              <strong>2. Сдача-приемка оказанной услуги:</strong><br>
-              Кухонный гарнитур смонтирован, претензий не имею.<br>
-              <strong>Подпись Заказчика №2 (Принял работу):</strong><br>
-              <div class="sig-line">___________________________</div>
-            </td>
-          </tr>
-          <tr>
-            <td colspan="2" style="border-top: 1px solid #000000 !important; margin-top: 3px; padding-top: 3px;">
-              <strong>3. Подтверждение Исполнителя (Мастера):</strong><br>
-              Подтверждаю получение первоначального аванса (75%) и расчет 25%. Полная сумма получена.<br>
-              <strong>Подпись Мастера (Исполнителя):</strong> ___________________________ (Мастер А, +998(92)093-45-10)
-            </td>
-          </tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- СТРАНИЦА 2: ЧЕРТЕЖИ С НУМЕРАЦИЕЙ И ДЕТАЛИЗАЦИЯ КАЖДОГО ОТСЕКА -->
-    <div class="pdf-page" id="pdf-page-2">
-      <div class="pdf-header" style="font-size: 11pt; border-bottom: 1.5px solid #000 !important; padding-bottom: 4px; margin-bottom: 8px;">
-        ПРИЛОЖЕНИЕ №1 К ДОГОВОРУ № <span id="pdfDocNum2"></span><br>
-        ЧЕРТЕЖИ И ДЕТАЛИЗАЦИЯ ОТСЕКОВ (МОДУЛЕЙ) ГАРНИТУРА
-      </div>
-
-      <div class="pdf-drawings-grid-p2">
-        <div>
-          <div style="font-weight:bold; font-size: 8.5pt; margin-bottom: 3px;">
-            Чертеж 1: Вид спереди с нумерацией отсеков [1], [2], [3]...
-          </div>
-          <div class="pdf-drawing-box-p2" id="pdfSvgFrontContainer"></div>
-        </div>
-
-        <div>
-          <div style="font-weight:bold; font-size: 8.5pt; margin-bottom: 3px;">
-            Чертеж 2: Вид сверху (Планировка и глубина)
-          </div>
-          <div class="pdf-drawing-box-p2" style="height: 150px;" id="pdfSvgTopContainer"></div>
-        </div>
-      </div>
-
-      <div class="pdf-section-title" style="margin-top: 12px;">3. Подробная спецификация отсеков (модулей) слева направо</div>
-      <table class="pdf-table" id="pdfSectionsTable">
-        <thead>
-          <tr>
-            <th style="width: 8%; text-align: center;">№</th>
-            <th style="width: 32%;">Назначение / Тип отсека</th>
-            <th style="width: 18%; text-align: center;">Ярус</th>
-            <th style="width: 14%; text-align: center;">Ширина (см)</th>
-            <th style="width: 14%; text-align: center;">Глубина (см)</th>
-            <th style="width: 14%; text-align: center;">Расположение</th>
-          </tr>
-        </thead>
-        <tbody id="pdfSectionsTableBody">
-          <!-- Сюда динамически генерируются строки отсеков -->
-        </tbody>
-      </table>
-
-      <div style="margin-top: 15px; font-size: 8pt; font-style: italic;">
-        * Примечание: Нумерация отсеков на Чертеже 1 соответствует номерам в таблице спецификации отсеков.
-      </div>
-    </div>
-
   </div>
 
   <script>
     let currentType = 'straight';
     let sectionsData = [];
 
-    // Инициализация отсеков по умолчанию
     function initDefaultSections() {
       const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
       let count = 5;
@@ -1214,18 +579,11 @@
 
       if (val > sectionsData.length) {
         for (let i = sectionsData.length + 1; i <= val; i++) {
-          sectionsData.push({
-            id: i,
-            name: `Модуль / Шкаф №${i}`,
-            tier: 'lower',
-            width: defaultW,
-            depth: 60
-          });
+          sectionsData.push({ id: i, name: `Модуль / Шкаф №${i}`, tier: 'lower', width: defaultW, depth: 60 });
         }
       } else if (val < sectionsData.length) {
         sectionsData = sectionsData.slice(0, val);
       }
-
       renderSectionsConfigurator();
       updateCalculator();
     }
@@ -1243,23 +601,11 @@
     function renderSectionsConfigurator() {
       const container = document.getElementById('sectionsListContainer');
       let html = '';
-
-      const sectionTypes = [
-        'Модуль под мойку',
-        'Модуль с ящиками (3 шт)',
-        'Под духовой шкаф / плиту',
-        'Шкаф распашной с полкой',
-        'Бутылочница / Карго',
-        'Сушка для посуды',
-        'Пенал / Колонка для техники',
-        'Открытые полки'
-      ];
-
       sectionsData.forEach((sec, idx) => {
         html += `
           <div class="section-card-item">
             <div class="section-card-header">
-              <span>Отсек №${sec.id} (Слева направо №${sec.id})</span>
+              <span>Отсек №${sec.id} (Слева направо)</span>
               <small style="color:var(--text-muted)">Ярус: ${sec.tier === 'lower' ? 'Нижний' : sec.tier === 'upper' ? 'Верхний' : 'Пенал'}</small>
             </div>
             <div class="inputs-grid" style="margin-bottom:0;">
@@ -1282,14 +628,13 @@
                 <select onchange="updateSectionField(${idx}, 'tier', this.value)">
                   <option value="lower" ${sec.tier === 'lower' ? 'selected' : ''}>Нижняя тумба</option>
                   <option value="upper" ${sec.tier === 'upper' ? 'selected' : ''}>Верхний шкаф</option>
-                  <option value="tall" ${sec.tier === 'tall' ? 'selected' : ''}>Пенал (на всю высоту)</option>
+                  <option value="tall" ${sec.tier === 'tall' ? 'selected' : ''}>Пенал</option>
                 </select>
               </div>
             </div>
           </div>
         `;
       });
-
       container.innerHTML = html;
       document.getElementById('countSectionsInput').value = sectionsData.length;
     }
@@ -1329,15 +674,12 @@
         groupLeft.style.display = 'flex';
         groupRight.style.display = 'none';
         groupLSideDir.style.display = 'block';
-        groupLeft.querySelector('label').innerText = "Боковая стена (см)";
       } else if (type === 'u-shape') {
         sideWallsContainer.style.display = 'grid';
         groupLeft.style.display = 'flex';
         groupRight.style.display = 'flex';
         groupLSideDir.style.display = 'none';
-        groupLeft.querySelector('label').innerText = "Левая сторона стены (см)";
       }
-
       updateCalculator();
     }
 
@@ -1348,43 +690,24 @@
 
     function toggleUpperTierControls() {
       const hasUpper = document.getElementById('hasUpperTier').checked;
-      const ctrlBlock = document.getElementById('upperTierControls');
-      const gasGroup = document.getElementById('gasLiftGroup');
-      const gasInput = document.getElementById('countGasLifts');
-      const btnMinus = document.getElementById('btnGasMinus');
-      const btnPlus = document.getElementById('btnGasPlus');
-
-      if (hasUpper) {
-        ctrlBlock.style.display = 'block';
-        gasGroup.style.opacity = '1';
-        gasInput.disabled = false;
-        btnMinus.disabled = false;
-        btnPlus.disabled = false;
-      } else {
-        ctrlBlock.style.display = 'none';
-        gasGroup.style.opacity = '0.4';
-        gasInput.disabled = true;
-        btnMinus.disabled = true;
-        btnPlus.disabled = true;
-      }
+      document.getElementById('upperTierControls').style.display = hasUpper ? 'block' : 'none';
       updateCalculator();
     }
 
     function toggleIslandOptions() {
       const hasIsland = document.getElementById('hasIsland').checked;
-      const optBlock = document.getElementById('islandOptions');
-      optBlock.style.display = hasIsland ? 'block' : 'none';
+      document.getElementById('islandOptions').style.display = hasIsland ? 'block' : 'none';
       updateCalculator();
     }
+
+    let calculatedTotalPriceNumber = 0;
 
     function updateCalculator() {
       const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
       const totalH = parseFloat(document.getElementById('totalHeight').value) || 240;
       const leftW = parseFloat(document.getElementById('leftWall').value) || 150;
       const rightW = parseFloat(document.getElementById('rightWall').value) || 150;
-      const lDir = document.getElementById('lAngleDir').value;
 
-      // Параметры верхнего яруса
       const hasUpper = document.getElementById('hasUpperTier').checked;
       const upperL = parseFloat(document.getElementById('upperLength').value) || 0;
       const upperH = parseFloat(document.getElementById('upperHeight').value) || 72;
@@ -1403,14 +726,10 @@
       const hasIsland = document.getElementById('hasIsland').checked;
       const islL = parseFloat(document.getElementById('islandLength').value) || 140;
       const islW = parseFloat(document.getElementById('islandWidth').value) || 80;
-      const islAccess = document.getElementById('islandAccess').value;
 
       let lowerMeters = mainW / 100;
-      if (currentType === 'l-shape') {
-        lowerMeters += (leftW - 60) / 100;
-      } else if (currentType === 'u-shape') {
-        lowerMeters += (leftW - 60) / 100 + (rightW - 60) / 100;
-      }
+      if (currentType === 'l-shape') lowerMeters += (leftW - 60) / 100;
+      else if (currentType === 'u-shape') lowerMeters += (leftW - 60) / 100 + (rightW - 60) / 100;
 
       let lowerCostPerMeter = (facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + hardwarePriceM;
       let lowerTotalPrice = lowerMeters * lowerCostPerMeter;
@@ -1418,326 +737,110 @@
       let upperTierPrice = 0;
       if (hasUpper && upperL > 0) {
         let upperMeters = upperL / 100;
-        let heightRatio = upperH / 72;
-        let depthRatio = upperD / 35;
-        
         let upperCostPerMeter = (facadePriceM * 0.45) + (bodyPriceM * 0.4);
-        upperTierPrice = upperMeters * upperCostPerMeter * heightRatio * depthRatio * upperTierTypeFactor;
+        upperTierPrice = upperMeters * upperCostPerMeter * (upperH / 72) * (upperD / 35) * upperTierTypeFactor;
       }
 
       document.getElementById('upperTierPriceBadge').innerText = Math.round(upperTierPrice).toLocaleString('ru-RU') + ' UZS';
 
-      let totalPrice = lowerTotalPrice + upperTierPrice;
-      totalPrice += (shelves * 50000);
-      totalPrice += (drawers * 110000);
-      totalPrice += (gasLifts * 120000);
+      calculatedTotalPriceNumber = lowerTotalPrice + upperTierPrice + (shelves * 50000) + (drawers * 110000) + (gasLifts * 120000);
+      if (hasIsland) calculatedTotalPriceNumber += (islL / 100) * (facadePriceM + topPriceM + hardwarePriceM);
 
-      if (hasIsland) {
-        let islandMeters = islL / 100;
-        let islandBase = islandMeters * (facadePriceM + topPriceM + hardwarePriceM);
-        if (islAccess === 'two') islandBase *= 1.30;
-        totalPrice += islandBase;
-      }
-
-      document.getElementById('totalPriceDisplay').innerText = Math.round(totalPrice).toLocaleString('ru-RU');
+      document.getElementById('totalPriceDisplay').innerText = Math.round(calculatedTotalPriceNumber).toLocaleString('ru-RU');
 
       drawFrontView(mainW, totalH, hasUpper, upperL, upperH);
-      drawTopView(mainW, leftW, rightW, lDir, hasIsland, islL, islW);
+      drawTopView(mainW, leftW, rightW, hasIsland, islL, islW);
       drawPanelSample();
     }
 
     function drawPanelSample() {
       const svg = document.getElementById('svgPanelSample');
       svg.innerHTML = '';
-
       const faceFill = document.getElementById('facadeColor').value;
       const edgeFill = document.getElementById('facadeEdgeColor').value;
-      
       const facadeMatText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text.split('(')[0];
-      const facadeColText = document.getElementById('facadeColor').options[document.getElementById('facadeColor').selectedIndex].text.split('.')[1];
-      const edgeTypeVal = document.getElementById('facadeEdgeType').value.toUpperCase();
 
-      let html = '';
-
-      html += `<polygon points="70,45 250,15 310,65 130,95" fill="${faceFill}" stroke="#fbbf24" stroke-width="1.5" />`;
-      html += `<polygon points="70,45 250,15 280,40 100,70" fill="rgba(255,255,255,0.15)" />`;
-
+      let html = `<polygon points="70,45 250,15 310,65 130,95" fill="${faceFill}" stroke="#fbbf24" stroke-width="1.5" />`;
       html += `<polygon points="130,95 310,65 310,90 130,120" fill="${edgeFill}" stroke="#fbbf24" stroke-width="1.5" />`;
-
       html += `<polygon points="70,45 130,95 130,120 70,70" fill="#78350f" stroke="#fbbf24" stroke-width="1.5" />`;
-      html += `<text x="82" y="86" fill="#f8fafc" font-size="8.5" font-weight="bold" transform="rotate(38 82,86)">Основа МДФ/ЛДСП</text>`;
-
-      html += `<line x1="220" y1="80" x2="250" y2="130" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2" />`;
-      html += `<text x="255" y="135" fill="#fbbf24" font-size="9.5" font-weight="bold">Кромка: ${edgeTypeVal}</text>`;
-
       svg.innerHTML = html;
-
-      document.getElementById('panelSampleBadge').innerText = `${facadeMatText.trim()} | Цвет:${facadeColText}`;
+      document.getElementById('panelSampleBadge').innerText = `${facadeMatText.trim()}`;
     }
 
     function drawFrontView(w, h, hasUpper, upperL, upperH) {
       const svg = document.getElementById('svgFront');
       svg.innerHTML = '';
-
       const svgW = 400, svgH = 200, padding = 25;
-      const drawW = svgW - padding * 2;
-      const drawH = svgH - padding * 2;
+      const drawW = svgW - padding * 2, drawH = svgH - padding * 2;
+      const scale = Math.min(drawW / Math.max(w, 200), drawH / Math.max(h, 200));
+      const kW = w * scale, kH = h * scale;
+      const startX = (svgW - kW) / 2, startY = (svgH - kH) / 2 + 5;
+      const baseH = kH * (85 / h), apronH = kH * (60 / h);
 
-      const scaleX = drawW / Math.max(w, 200);
-      const scaleY = drawH / Math.max(h, 200);
-      const scale = Math.min(scaleX, scaleY);
-
-      const kW = w * scale;
-      const kH = h * scale;
-      const startX = (svgW - kW) / 2;
-      const startY = (svgH - kH) / 2 + 5;
-
-      const baseH = kH * (85 / h);
-      const apronH = kH * (60 / h);
-      
-      let html = '';
-
-      // Фартук
-      html += `<rect x="${startX}" y="${startY + Math.max(0, kH - baseH - apronH)}" width="${kW}" height="${apronH}" fill="#0f172a" stroke="#475569" stroke-width="1" />`;
-
-      // ОТСЕКИ (НИЖНИЙ ЯРУС С НУМЕРАЦИЕЙ [1], [2], [3]...)
+      let html = `<rect x="${startX}" y="${startY + Math.max(0, kH - baseH - apronH)}" width="${kW}" height="${apronH}" fill="#0f172a" stroke="#475569" stroke-width="1" />`;
       let totalSectionsW = sectionsData.reduce((sum, s) => sum + (s.width || 0), 0) || w;
       let currX = startX;
 
-      sectionsData.forEach((sec, idx) => {
+      sectionsData.forEach((sec) => {
         let secW = (sec.width / totalSectionsW) * kW;
         html += `<rect x="${currX}" y="${startY + kH - baseH}" width="${secW}" height="${baseH}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
-        
-        // Нумерация отсека на чертеже
         html += `<text x="${currX + secW/2}" y="${startY + kH - baseH/2 + 4}" fill="#fbbf24" font-size="11" font-weight="bold" text-anchor="middle">[${sec.id}]</text>`;
-        
         currX += secW;
       });
 
-      // Верхние шкафчики по точным размерам
       if (hasUpper && upperL > 0 && upperH > 0) {
-        const topW = upperL * scale;
-        const topH = upperH * scale;
+        const topW = upperL * scale, topH = upperH * scale;
         const topY = startY + kH - baseH - apronH - topH;
-
         html += `<rect x="${startX}" y="${Math.max(startY, topY)}" width="${topW}" height="${topH}" fill="#334155" stroke="#fbbf24" stroke-width="1.5" />`;
-        
-        const topSec = sectionsData.length;
-        const topSecW = topW / topSec;
-        for (let i = 1; i < topSec; i++) {
-          html += `<line x1="${startX + i*topSecW}" y1="${Math.max(startY, topY)}" x2="${startX + i*topSecW}" y2="${Math.max(startY, topY) + topH}" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2"/>`;
-        }
-
-        html += `<text x="${startX + topW/2}" y="${Math.max(startY + 10, topY - 4)}" fill="#38bdf8" font-size="9" font-weight="bold" text-anchor="middle">Верх: ${upperL}х${upperH} см</text>`;
       }
-
-      // Размеры кухни
-      html += `<text x="${svgW/2}" y="${startY + kH + 14}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">${w} см</text>`;
-      html += `<text x="${startX - 6}" y="${startY + kH/2}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="end">${h} см</text>`;
-
       svg.innerHTML = html;
     }
 
-    function drawTopView(mainW, leftW, rightW, lDir, hasIsland, islL, islW) {
+    function drawTopView(mainW, leftW, rightW, hasIsland, islL, islW) {
       const svg = document.getElementById('svgTop');
       svg.innerHTML = '';
+      const svgW = 400, depth = 60;
+      const scale = 280 / Math.max(mainW, 200);
+      const cx = svgW / 2, cy = 25;
+      const mainDrawW = mainW * scale, mainDrawD = depth * scale;
+      const mainX = cx - mainDrawW / 2, mainY = cy;
 
-      const svgW = 400, svgH = 200, depth = 60;
-      let totalX = mainW;
-      let totalY = depth;
-
-      if (currentType === 'l-shape') totalY = Math.max(depth, leftW);
-      if (currentType === 'u-shape') totalY = Math.max(depth, leftW, rightW);
-      if (hasIsland) totalY += islW + 70;
-
-      const scale = Math.min(280 / Math.max(totalX, 200), 130 / Math.max(totalY, 120));
-      const cx = svgW / 2;
-      const cy = 25;
-
-      let html = '';
-      const mainDrawW = mainW * scale;
-      const mainDrawD = depth * scale;
-      const mainX = cx - mainDrawW / 2;
-      const mainY = cy;
-
-      html += `<rect x="${mainX}" y="${mainY}" width="${mainDrawW}" height="${mainDrawD}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
-      html += `<text x="${mainX + mainDrawW/2}" y="${mainY - 6}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">${mainW} см</text>`;
-
+      let html = `<rect x="${mainX}" y="${mainY}" width="${mainDrawW}" height="${mainDrawD}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
       if (currentType === 'l-shape') {
-        const sideD = (leftW - depth) * scale;
-        const xPos = (lDir === 'right') ? (mainX + mainDrawW - mainDrawD) : mainX;
-        html += `<rect x="${xPos}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${sideD}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
-      } else if (currentType === 'u-shape') {
-        const leftSideD = (leftW - depth) * scale;
-        const rightSideD = (rightW - depth) * scale;
-        html += `<rect x="${mainX}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${leftSideD}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
-        html += `<rect x="${mainX + mainDrawW - mainDrawD}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${rightSideD}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
+        html += `<rect x="${mainX}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${(leftW - depth)*scale}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
       }
-
-      if (hasIsland) {
-        const iW = islL * scale;
-        const iD = islW * scale;
-        const iX = cx - iW / 2;
-        const iY = mainY + totalY * scale - iD;
-
-        html += `<rect x="${iX}" y="${iY}" width="${iW}" height="${iD}" fill="#334155" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,2" />`;
-        html += `<text x="${iX + iW/2}" y="${iY + iD/2 + 3}" fill="#fbbf24" font-size="9" font-weight="bold" text-anchor="middle">Остров ${islL}x${islW}</text>`;
-      }
-
       svg.innerHTML = html;
     }
 
-    function preparePdfDrawings() {
-      function convertSvgForPaper(svgElementId) {
-        const origSvg = document.getElementById(svgElementId);
-        if (!origSvg) return '';
-        let svgCloned = origSvg.cloneNode(true);
-        svgCloned.setAttribute('width', '100%');
-        svgCloned.setAttribute('height', '100%');
-        
-        let allElems = svgCloned.querySelectorAll('*');
-        allElems.forEach(el => {
-          let fill = el.getAttribute('fill');
-          let stroke = el.getAttribute('stroke');
-          
-          if (fill && fill !== 'none') {
-            if (fill === '#1e293b' || fill === '#334155' || fill === '#0f172a' || fill === '#020617') {
-              el.setAttribute('fill', '#f1f5f9');
-            } else if (fill === '#fbbf24' || fill === '#38bdf8' || fill === '#f8fafc') {
-              el.setAttribute('fill', '#000000');
-            }
-          }
-          if (stroke) {
-            el.setAttribute('stroke', '#000000');
-            el.setAttribute('stroke-width', '1.5');
-          }
-          if (el.tagName.toLowerCase() === 'text') {
-            el.setAttribute('fill', '#000000');
-            el.setAttribute('font-weight', 'bold');
-          }
-        });
-        return svgCloned.outerHTML;
-      }
-
-      document.getElementById('pdfSvgFrontContainer').innerHTML = convertSvgForPaper('svgFront');
-      document.getElementById('pdfSvgTopContainer').innerHTML = convertSvgForPaper('svgTop');
-    }
-
-    function renderPdfSectionsTable() {
-      const tbody = document.getElementById('pdfSectionsTableBody');
-      let html = '';
-
-      sectionsData.forEach((sec) => {
-        const tierName = sec.tier === 'lower' ? 'Нижняя тумба' : sec.tier === 'upper' ? 'Верхний шкаф' : 'Пенал (Колонка)';
-        html += `
-          <tr>
-            <td style="text-align: center; font-weight: bold;">[${sec.id}]</td>
-            <td>${sec.name}</td>
-            <td style="text-align: center;">${tierName}</td>
-            <td style="text-align: center; font-weight: bold;">${sec.width} см</td>
-            <td style="text-align: center;">${sec.depth} см</td>
-            <td style="text-align: center;">№${sec.id} слева направо</td>
-          </tr>
-        `;
-      });
-
-      tbody.innerHTML = html;
-      document.getElementById('pdfSectionsSummary').innerText = `${sectionsData.length} отсеков (размеры приведены на Странице 2)`;
-    }
-
-    function generateContractPDF(e) {
-      e.preventDefault();
-
-      const name = document.getElementById('clientName').value || '';
-      const phone = document.getElementById('clientPhone').value || '____________________';
-      const notes = document.getElementById('clientNotes').value || '____________________';
-
-      const docNum = Math.floor(1000 + Math.random() * 9000);
-      document.getElementById('pdfDocNum').innerText = docNum;
-      document.getElementById('pdfDocNum2').innerText = docNum;
+    function prepareSummaryData() {
+      document.getElementById('inpTotalPrice').value = Math.round(calculatedTotalPriceNumber).toLocaleString('ru-RU');
       
-      document.getElementById('pdfClientName').innerText = name;
-      document.getElementById('pdfClientPhone').innerText = phone;
-      document.getElementById('pdfAddress').innerText = notes;
-
       const typeNames = { 'straight': 'Прямая кухня', 'l-shape': 'Г-образная кухня', 'u-shape': 'П-образная кухня' };
-      document.getElementById('pdfType').innerText = typeNames[currentType];
+      document.getElementById('inpKitchenType').value = typeNames[currentType];
 
-      const mainW = document.getElementById('mainWall').value;
-      let dims = `Основная стена: ${mainW} см, Высота помещения: ${document.getElementById('totalHeight').value} см`;
-      if (currentType === 'l-shape') dims += `, Боковая стена: ${document.getElementById('leftWall').value} см`;
-      if (currentType === 'u-shape') dims += `, Левая: ${document.getElementById('leftWall').value} см, Правая: ${document.getElementById('rightWall').value} см`;
-      document.getElementById('pdfDimensions').innerText = dims;
+      let dims = `Основная стена: ${document.getElementById('mainWall').value} см, Высота: ${document.getElementById('totalHeight').value} см`;
+      document.getElementById('inpDimensionsText').value = dims;
 
-      // Верхний ярус
       const hasUpper = document.getElementById('hasUpperTier').checked;
       if (hasUpper) {
-        const uL = document.getElementById('upperLength').value;
-        const uH = document.getElementById('upperHeight').value;
-        const uD = document.getElementById('upperDepth').value;
-        const uBadgeText = document.getElementById('upperTierPriceBadge').innerText;
-        document.getElementById('pdfUpperMode').innerText = `Длина: ${uL} см, Высота: ${uH} см, Глубина: ${uD} см (${uBadgeText})`;
+        document.getElementById('inpUpperModeText').value = `Длина: ${document.getElementById('upperLength').value} см, Высота: ${document.getElementById('upperHeight').value} см`;
       } else {
-        document.getElementById('pdfUpperMode').innerText = 'Без верхнего яруса (только нижние тумбы)';
+        document.getElementById('inpUpperModeText').value = 'Без верхнего яруса';
       }
 
-      const shelves = document.getElementById('countShelves').value;
-      const drawers = document.getElementById('countDrawers').value;
-      const gasLifts = hasUpper ? document.getElementById('countGasLifts').value : 0;
-      document.getElementById('pdfFittings').innerText = `Полки: ${shelves} шт., Выдвижные ящики: ${drawers} шт., Газлифты: ${gasLifts} шт.`;
-
-      const doorTypeSel = document.getElementById('doorOpenType');
-      document.getElementById('pdfDoorType').innerText = doorTypeSel.options[doorTypeSel.selectedIndex].text;
-
-      const facadeSel = document.getElementById('facadeMaterial');
-      const facadeColSel = document.getElementById('facadeColor');
-      document.getElementById('pdfFacade').innerText = `${facadeSel.options[facadeSel.selectedIndex].text} (${facadeColSel.options[facadeColSel.selectedIndex].text})`;
-
-      const facadeEdgeTypeSel = document.getElementById('facadeEdgeType');
-      const facadeEdgeColSel = document.getElementById('facadeEdgeColor');
-      document.getElementById('pdfFacadeEdge').innerText = `${facadeEdgeTypeSel.options[facadeEdgeTypeSel.selectedIndex].text} / Цвет: ${facadeEdgeColSel.options[facadeEdgeColSel.selectedIndex].text}`;
-
-      const bodySel = document.getElementById('bodyMaterial');
-      const bodyColSel = document.getElementById('bodyColor');
-      document.getElementById('pdfBody').innerText = `${bodySel.options[bodySel.selectedIndex].text} (${bodyColSel.value})`;
-
-      const bodyEdgeTypeSel = document.getElementById('bodyEdgeType');
-      const bodyEdgeColSel = document.getElementById('bodyEdgeColor');
-      document.getElementById('pdfBodyEdge').innerText = `${bodyEdgeTypeSel.options[bodyEdgeTypeSel.selectedIndex].text} / Цвет: ${bodyEdgeColSel.value}`;
-
-      const topSel = document.getElementById('countertopMaterial');
-      document.getElementById('pdfCountertop').innerText = topSel.options[topSel.selectedIndex].text;
-
-      const hardSel = document.getElementById('hardwareType');
-      document.getElementById('pdfHardware').innerText = hardSel.options[hardSel.selectedIndex].text;
-
+      document.getElementById('inpFittingsText').value = `Полки: ${document.getElementById('countShelves').value}, Ящики: ${document.getElementById('countDrawers').value}`;
+      document.getElementById('inpDoorTypeText').value = document.getElementById('doorOpenType').options[document.getElementById('doorOpenType').selectedIndex].text;
+      document.getElementById('inpFacadeText').value = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text;
+      document.getElementById('inpFacadeEdgeText').value = document.getElementById('facadeEdgeType').options[document.getElementById('facadeEdgeType').selectedIndex].text;
+      document.getElementById('inpBodyText').value = document.getElementById('bodyMaterial').options[document.getElementById('bodyMaterial').selectedIndex].text;
+      document.getElementById('inpBodyEdgeText').value = document.getElementById('bodyEdgeType').options[document.getElementById('bodyEdgeType').selectedIndex].text;
+      document.getElementById('inpCountertopText').value = document.getElementById('countertopMaterial').options[document.getElementById('countertopMaterial').selectedIndex].text;
+      document.getElementById('inpHardwareText').value = document.getElementById('hardwareType').options[document.getElementById('hardwareType').selectedIndex].text;
+      
       const hasIsland = document.getElementById('hasIsland').checked;
-      document.getElementById('pdfIsland').innerText = hasIsland ? `Да (${document.getElementById('islandLength').value}x${document.getElementById('islandWidth').value} см)` : 'Нет';
+      document.getElementById('inpIslandText').value = hasIsland ? `Да (${document.getElementById('islandLength').value}x${document.getElementById('islandWidth').value} см)` : 'Нет';
 
-      const totalNum = parseFloat(document.getElementById('totalPriceDisplay').innerText.replace(/\s/g, '')) || 0;
-      const advanceNum = Math.round(totalNum * 0.75);
-      const finalNum = totalNum - advanceNum;
-
-      document.getElementById('pdfTotalPrice').innerText = totalNum.toLocaleString('ru-RU');
-      document.getElementById('pdfAdvanceAmount').innerText = advanceNum.toLocaleString('ru-RU');
-      document.getElementById('pdfAdvanceAmountSig').innerText = advanceNum.toLocaleString('ru-RU');
-      document.getElementById('pdfFinalAmount').innerText = finalNum.toLocaleString('ru-RU');
-
-      preparePdfDrawings();
-      renderPdfSectionsTable();
-
-      const element = document.getElementById('pdf-wrapper');
-
-      const opt = {
-        margin:       0,
-        filename:     `Договор_Кухня_${name || 'Заказ'}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['css', 'legacy'] }
-      };
-
-      html2pdf().set(opt).from(element).save();
+      document.getElementById('inpSectionsJson').value = JSON.stringify(sectionsData);
     }
 
     window.onload = function() {
