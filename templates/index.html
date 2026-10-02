@@ -251,7 +251,7 @@
       border: 1px solid var(--border-dark);
       border-radius: 8px;
       padding: 10px 12px;
-      font-size: 16px !important;
+      font-size: 15px !important;
       outline: none;
     }
 
@@ -275,9 +275,9 @@
       color: var(--accent-gold);
       border: 1px solid var(--border-gold);
       border-radius: 8px;
-      width: 46px;
-      height: 46px;
-      font-size: 1.4rem;
+      width: 44px;
+      height: 44px;
+      font-size: 1.3rem;
       font-weight: bold;
       cursor: pointer;
       display: flex;
@@ -332,10 +332,41 @@
       margin-top: 12px;
       padding-top: 12px;
       border-top: 1px dashed var(--border-dark);
-      display: none;
+      display: block;
     }
 
-    .sub-options.active { display: block; }
+    .info-badge {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid var(--border-gold);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      color: var(--accent-gold);
+      font-weight: 600;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* СТИЛИ ДЛЯ КОНФИГУРАТОРА ОТСЕКОВ */
+    .section-card-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-dark);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .section-card-header {
+      font-weight: bold;
+      color: var(--accent-gold);
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
     .btn-submit {
       width: 100%;
@@ -413,13 +444,7 @@
       }
     }
 
-    @media (max-width: 480px) {
-      .type-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* ИДЕАЛЬНЫЙ СТРОГО 1-СТРАНИЧНЫЙ МАКЕТ PDF ДОГОВОРА (A4) */
+    /* ЧЁТКИЙ ДВУХСТРАНИЧНЫЙ МАКЕТ PDF (2 СТРАНИЦЫ A4) */
     #pdf-wrapper {
       position: absolute;
       left: -9999px;
@@ -430,18 +455,21 @@
       pointer-events: none;
     }
 
-    #pdf-contract {
+    .pdf-page {
       width: 794px;
+      height: 1122px; /* Стандартная высота A4 */
+      box-sizing: border-box;
+      padding: 25px 30px;
       background: #ffffff !important;
       color: #000000 !important;
-      padding: 18px 25px;
+      page-break-after: always;
+      position: relative;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 8.2pt;
-      line-height: 1.2;
-      box-sizing: border-box;
+      font-size: 8.5pt;
+      line-height: 1.22;
     }
 
-    #pdf-contract * {
+    .pdf-page * {
       color: #000000 !important;
       border-color: #000000 !important;
     }
@@ -463,7 +491,7 @@
     .pdf-table th, .pdf-table td {
       border: 1px solid #000000 !important;
       padding: 3px 5px;
-      font-size: 8pt;
+      font-size: 8.2pt;
     }
 
     .pdf-table th {
@@ -471,42 +499,19 @@
       font-weight: bold;
     }
 
-    .pdf-drawings-grid {
-      display: table;
-      width: 100%;
-      margin: 4px 0;
-    }
-
-    .pdf-drawing-card {
-      display: table-cell;
-      width: 50%;
-      padding: 2px 4px;
-      vertical-align: top;
-    }
-
-    .pdf-drawing-box {
-      border: 1px solid #000000 !important;
-      background-color: #ffffff !important;
-      height: 115px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2px;
-    }
-
     .pdf-section-title {
       font-weight: bold;
-      margin-top: 5px;
-      margin-bottom: 2px;
+      margin-top: 6px;
+      margin-bottom: 3px;
       text-transform: uppercase;
-      font-size: 8.5pt;
+      font-size: 9pt;
       border-bottom: 1px solid #000000 !important;
     }
 
     .sig-section {
-      margin-top: 6px;
+      margin-top: 8px;
       border: 1px solid #000000 !important;
-      padding: 5px;
+      padding: 6px;
       background-color: #ffffff !important;
     }
 
@@ -519,13 +524,30 @@
       border: none !important;
       vertical-align: top;
       padding: 2px 4px;
-      font-size: 7.8pt;
+      font-size: 8pt;
     }
 
     .sig-line {
       margin-top: 16px;
       border-bottom: 1px solid #000000 !important;
       width: 85%;
+    }
+
+    .pdf-drawings-grid-p2 {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .pdf-drawing-box-p2 {
+      border: 1px solid #000000 !important;
+      background-color: #ffffff !important;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px;
     }
   </style>
 </head>
@@ -571,7 +593,7 @@
 
         <div class="card">
           <div class="drawing-title">
-            <span>Чертеж 1: Вид спереди</span>
+            <span>Чертеж 1: Вид спереди (С отсеками)</span>
             <small style="color:var(--text-muted);">Фасад</small>
           </div>
           <div class="svg-container">
@@ -598,7 +620,7 @@
         <div class="card">
           <div class="section-title">
             <span class="step-badge">1</span>
-            <span>Форма кухни и габариты</span>
+            <span>Форма кухни и общие габариты</span>
           </div>
 
           <div class="type-grid">
@@ -610,10 +632,10 @@
           <div class="inputs-grid">
             <div class="field-group">
               <label id="lblMainWall">Длина основной стены (см)</label>
-              <input type="number" id="mainWall" value="300" min="100" max="800" oninput="updateCalculator()">
+              <input type="number" id="mainWall" value="300" min="100" max="800" oninput="syncUpperLength(); updateSectionsByWallWidth(); updateCalculator();">
             </div>
             <div class="field-group">
-              <label>Общая высота гарнитура (см)</label>
+              <label>Общая высота помещения / гарнитура (см)</label>
               <input type="number" id="totalHeight" value="240" min="150" max="320" oninput="updateCalculator()">
             </div>
           </div>
@@ -637,29 +659,81 @@
           </div>
         </div>
 
-        <!-- 2. Конфигурация верхних шкафов -->
+        <!-- 2. НОВЫЙ КОНФИГУРАТОР ОТСЕКОВ (МОДУЛЕЙ И ШКАФОВ) -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">2</span>
-            <span>Верхние шкафчики</span>
+            <span>Конфигурация Отсеков (Шкафов и Модулей)</span>
           </div>
 
           <div class="inputs-grid">
-            <div class="field-group" style="grid-column: span 1;">
-              <label>Конфигурация верхнего яруса</label>
-              <select id="upperCabinetsMode" onchange="updateCalculator()">
-                <option value="standard" selected>Стандартные верхние шкафы (высота ~70–80 см)</option>
-                <option value="tall">Высокие шкафы / До потолка в 2 яруса (высота 90–110 см)</option>
-                <option value="none">Без верхних шкафчиков (Только нижние тумбы)</option>
-              </select>
+            <div class="field-group" style="grid-column: span 2;">
+              <label>Количество отсеков (модулей) по длине гарнитура</label>
+              <div class="number-stepper">
+                <button type="button" class="btn-step" onclick="changeSectionsCount(-1)">−</button>
+                <input type="number" id="countSectionsInput" value="5" min="1" max="10" readonly>
+                <button type="button" class="btn-step" onclick="changeSectionsCount(1)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="sectionsListContainer">
+            <!-- Сданами динамические блоки отсеков -->
+          </div>
+        </div>
+
+        <!-- 3. КАЛЬКУЛЯТОР ВЕРХНЕГО ЯРУСА -->
+        <div class="card">
+          <div class="section-title">
+            <span class="step-badge">3</span>
+            <span>Калькулятор Верхнего Яруса (Шкафы)</span>
+          </div>
+
+          <div class="toggle-box" style="margin-top:0;">
+            <label class="checkbox-label">
+              <input type="checkbox" id="hasUpperTier" checked onchange="toggleUpperTierControls()">
+              Включить верхние навесные шкафчики
+            </label>
+
+            <div id="upperTierControls" class="sub-options">
+              <div class="inputs-grid">
+                <div class="field-group">
+                  <label>Длина верхнего яруса (см)</label>
+                  <input type="number" id="upperLength" value="300" min="50" max="800" oninput="updateCalculator()">
+                </div>
+                <div class="field-group">
+                  <label>Высота верхних шкафов (см)</label>
+                  <input type="number" id="upperHeight" value="72" min="30" max="130" oninput="updateCalculator()">
+                </div>
+              </div>
+
+              <div class="inputs-grid">
+                <div class="field-group">
+                  <label>Глубина верхних шкафов (см)</label>
+                  <input type="number" id="upperDepth" value="35" min="20" max="65" oninput="updateCalculator()">
+                </div>
+                <div class="field-group">
+                  <label>Конфигурация / Ярусность</label>
+                  <select id="upperTierType" onchange="updateCalculator()">
+                    <option value="1.0" selected>1 ярус (Стандартный 70–80 см)</option>
+                    <option value="1.15">1 ярус Высокий (90–100 см)</option>
+                    <option value="1.35">2 яруса / С антресолями до потолка</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="info-badge">
+                <span>Расчетная стоимость верхнего яруса:</span>
+                <span id="upperTierPriceBadge">0 UZS</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 3. Наполнение, полки и механизмы -->
+        <!-- 4. Наполнение, полки и механизмы -->
         <div class="card">
           <div class="section-title">
-            <span class="step-badge">3</span>
+            <span class="step-badge">4</span>
             <span>Наполнение и механизмы открывания</span>
           </div>
 
@@ -701,14 +775,14 @@
           </div>
         </div>
 
-        <!-- 4. РАЗДЕЛЕНИЕ: ФАСАДЫ, КОРПУС, КРОМКИ И СТОЛЕШНИЦА -->
+        <!-- 5. РАЗДЕЛЕНИЕ: ФАСАДЫ, КОРПУС, КРОМКИ И СТОЛЕШНИЦА -->
         <div class="card">
           <div class="section-title">
-            <span class="step-badge">4</span>
+            <span class="step-badge">5</span>
             <span>Параметры Фасада, Корпуса и Кромки</span>
           </div>
 
-          <div class="sub-section-title">4.1. Параметры и Кромка Фасада</div>
+          <div class="sub-section-title">5.1. Параметры и Кромка Фасада</div>
           <div class="inputs-grid">
             <div class="field-group">
               <label>Материал фасада</label>
@@ -785,7 +859,7 @@
             </div>
           </div>
 
-          <div class="sub-section-title">4.2. Параметры и Кромка Корпуса (Каркаса)</div>
+          <div class="sub-section-title">5.2. Параметры и Кромка Корпуса (Каркаса)</div>
           <div class="inputs-grid">
             <div class="field-group">
               <label>Материал корпуса</label>
@@ -803,7 +877,7 @@
                 <option value="Белый Глянец">2. Белый Глянец</option>
                 <option value="Бежевый">3. Бежевый / Ваниль</option>
                 <option value="Серый Светлый">4. Серый Светлый</option>
-                <option value="Серый Графит">5. Антрацит / Графит</option>
+                <option value="Серый Графит">5. Антрацит / Серый Графит</option>
                 <option value="Чёрный Матовый">6. Чёрный Матовый</option>
                 <option value="Чёрный Глянец">7. Чёрный Глянец</option>
                 <option value="Дуб Сонома">8. Дуб Сонома Светлый</option>
@@ -858,7 +932,7 @@
             </div>
           </div>
 
-          <div class="sub-section-title">4.3. Столешница и Фурнитура</div>
+          <div class="sub-section-title">5.3. Столешница и Фурнитура</div>
           <div class="inputs-grid">
             <div class="field-group">
               <label>Варианты столешниц (Ташкент)</label>
@@ -883,10 +957,10 @@
           </div>
         </div>
 
-        <!-- 5. Островной модуль -->
+        <!-- 6. Островной модуль -->
         <div class="card">
           <div class="section-title">
-            <span class="step-badge">5</span>
+            <span class="step-badge">6</span>
             <span>Островной модуль (Опция)</span>
           </div>
 
@@ -896,7 +970,7 @@
               Добавить кухонный остров
             </label>
 
-            <div id="islandOptions" class="sub-options">
+            <div id="islandOptions" class="sub-options" style="display:none;">
               <div class="inputs-grid">
                 <div class="field-group">
                   <label>Длина острова (см)</label>
@@ -919,10 +993,10 @@
           </div>
         </div>
 
-        <!-- 6. Оформление Договора -->
+        <!-- 7. Оформление Договора -->
         <div class="card">
           <div class="section-title">
-            <span class="step-badge">6</span>
+            <span class="step-badge">7</span>
             <span>Формирование Договора в PDF</span>
           </div>
 
@@ -930,18 +1004,18 @@
             <div class="inputs-grid">
               <div class="field-group">
                 <label>ФИО Заказчика</label>
-                <input type="text" id="clientName" placeholder="Например: Малюк Аркадий" required>
+                <input type="text" id="clientName" placeholder="Например: Ислямов Айдер">
               </div>
               <div class="field-group">
                 <label>Номер телефона Заказчика</label>
-                <input type="tel" id="clientPhone" placeholder="+998 (90) 123-45-67" required>
+                <input type="tel" id="clientPhone" placeholder="+998 (90) 123-45-67">
               </div>
             </div>
             <div class="field-group" style="margin-top: 10px;">
               <label>Адрес объекта / Примечания</label>
               <textarea id="clientNotes" rows="2" placeholder="Адрес установки, этаж, особенности стен..."></textarea>
             </div>
-            <button type="submit" class="btn-submit">Скачать Официальный Договор (PDF)</button>
+            <button type="submit" class="btn-submit">Скачать Официальный Договор (PDF - 2 Страницы)</button>
           </form>
         </div>
 
@@ -950,24 +1024,43 @@
     </div>
   </div>
 
-  <!-- ОПТИМИЗИРОВАННЫЙ 1-СТРАНИЧНЫЙ МАКЕТ PDF ДОГОВОРА -->
+  <!-- ДВУХСТРАНИЧНЫЙ МАКЕТ PDF ДОГОВОРА (СТРОГО 2 СТРАНИЦЫ A4) -->
   <div id="pdf-wrapper">
-    <div id="pdf-contract">
-      
+    
+    <!-- СТРАНИЦА 1: ДОГОВОР, ТЕХСПЕЦИФИКАЦИЯ И ПОДПИСИ -->
+    <div class="pdf-page" id="pdf-page-1">
       <div class="pdf-header">
         ДОГОВОР ПОДРЯДА № <span id="pdfDocNum"></span>________<br>
         НА ИЗГОТОВЛЕНИЕ И МОНТАЖ КУХОННОЙ МЕБЕЛИ
       </div>
 
-      <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 8pt;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 8.5pt;">
         <span>г. Ташкент</span>
         <span>Дата: «____» _________ 20___ г.</span>
       </div>
 
-      <p style="margin-bottom: 4px;">
-        <strong>Исполнитель:</strong> Мастер (А), тел: +998(92)093-45-10, Telegram: @Kitchencalc, и<br>
-        <strong>Заказчик:</strong> <span id="pdfClientName">___________</span>, тел: <span id="pdfClientPhone">___________</span>, адрес объекта: <span id="pdfAddress">___________</span>
-      </p>
+      <!-- БЛОК С ПОЛЯМИ ИСПОЛНИТЕЛЯ И ЗАКАЗЧИКА И ПОДПИСЯМИ В СКОБКАХ -->
+      <div style="margin-bottom: 6px; font-size: 8.5pt; line-height: 1.3;">
+        <div style="display: flex; align-items: flex-end; margin-bottom: 0px;">
+          <strong style="width: 90px; flex-shrink: 0;">Исполнитель:</strong>
+          <div style="flex: 1; border-bottom: 1px solid #000 !important; text-align: center; height: 14px;"></div>
+        </div>
+        <div style="text-align: center; font-size: 7pt; margin-bottom: 4px; margin-left: 90px;">(Ф.И.О серия номер паспорт)</div>
+
+        <div style="display: flex; align-items: flex-end; margin-bottom: 0px;">
+          <strong style="width: 90px; flex-shrink: 0;">Заказчик:</strong>
+          <div style="flex: 1; border-bottom: 1px solid #000 !important; text-align: center; height: 14px;">
+            <span id="pdfClientName"></span>
+          </div>
+        </div>
+        <div style="text-align: center; font-size: 7pt; margin-bottom: 4px; margin-left: 90px;">(Ф.И.О серия номер паспорт)</div>
+
+        <div style="margin-top: 3px;">
+          <strong>Тел. Заказчика:</strong> <span id="pdfClientPhone">____________________</span> &nbsp;&nbsp;|&nbsp;&nbsp;
+          <strong>Адрес объекта:</strong> <span id="pdfAddress">____________________</span> &nbsp;&nbsp;|&nbsp;&nbsp;
+          <strong>Мастер (Исполнитель):</strong> +998(92)093-45-10
+        </div>
+      </div>
 
       <div class="pdf-section-title">1. Размеры кухни и техническая спецификация</div>
       
@@ -984,7 +1077,8 @@
             <td><strong id="pdfDimensions" style="font-size: 8.5pt;"></strong></td>
           </tr>
           <tr><td>Форма гарнитура</td><td id="pdfType"></td></tr>
-          <tr><td>Верхний ярус</td><td id="pdfUpperMode"></td></tr>
+          <tr style="background-color: #f1f5f9 !important;"><td><strong>ВЕРХНИЙ ЯРУС (ГАБАРИТЫ)</strong></td><td id="pdfUpperMode"></td></tr>
+          <tr><td>Количество отсеков (модулей)</td><td id="pdfSectionsSummary"></td></tr>
           <tr><td>Наполнение и механизмы</td><td id="pdfFittings"></td></tr>
           <tr><td>Система открывания</td><td id="pdfDoorType"></td></tr>
           <tr><td><strong>Фасад (Материал / Цвет)</strong></td><td id="pdfFacade"></td></tr>
@@ -996,38 +1090,26 @@
           <tr><td>Кухонный остров</td><td id="pdfIsland"></td></tr>
           <tr style="background-color: #fdf2e9 !important;">
             <td><strong>ОБЩАЯ СУММА ДОГОВОРА</strong></td>
-            <td><strong id="pdfTotalPrice" style="font-size: 9pt;"></strong> <strong>UZS</strong></td>
+            <td><strong id="pdfTotalPrice" style="font-size: 9.5pt;"></strong> <strong>UZS</strong></td>
           </tr>
         </tbody>
       </table>
 
-      <div class="pdf-section-title">2. Эскизы и чертежи проекта</div>
-      <div class="pdf-drawings-grid">
-        <div class="pdf-drawing-card">
-          <div style="font-weight:bold; font-size: 7.8pt; margin-bottom: 2px; text-align:center;">Чертеж 1: Вид спереди (с размерами)</div>
-          <div class="pdf-drawing-box" id="pdfSvgFrontContainer"></div>
-        </div>
-        <div class="pdf-drawing-card">
-          <div style="font-weight:bold; font-size: 7.8pt; margin-bottom: 2px; text-align:center;">Чертеж 2: Вид сверху (планировка)</div>
-          <div class="pdf-drawing-box" id="pdfSvgTopContainer"></div>
-        </div>
-      </div>
-
-      <div class="pdf-section-title">3. Порядок расчетов, оплаты и сроки</div>
-      <p style="margin-bottom: 3px;">
-        3.1. Первоначальная оплата (Аванс) составляет <strong>75%</strong>: <strong id="pdfAdvanceAmount">0</strong> UZS.<br>
-        3.2. Окончательный расчет <strong>25%</strong>: <strong id="pdfFinalAmount">0</strong> UZS выплачивается в день завершения установки.<br>
-        3.3. Срок выполнения работ: <strong>_____________________</strong> рабочих дней с момента получения аванса (75%).
+      <div class="pdf-section-title">2. Порядок расчетов, оплаты и сроки</div>
+      <p style="margin-bottom: 4px;">
+        2.1. Первоначальная оплата (Аванс) составляет <strong>75%</strong>: <strong id="pdfAdvanceAmount">0</strong> UZS.<br>
+        2.2. Окончательный расчет <strong>25%</strong>: <strong id="pdfFinalAmount">0</strong> UZS выплачивается в день завершения установки.<br>
+        2.3. Срок выполнения работ: <strong>_____________________</strong> рабочих дней с момента получения аванса (75%).
       </p>
 
-      <div class="pdf-section-title">4. Условия одностороннего отказа и возврата</div>
-      <p style="margin-bottom: 3px;">
-        4.1. При отказе Заказчика до сдачи работ, Исполнитель возвращает <strong>50% от суммы внесенного аванса (75%)</strong>. Оставшиеся 50% аванса удерживаются Исполнителем на закуп и раскрой материалов.
+      <div class="pdf-section-title">3. Условия одностороннего отказа и возврата</div>
+      <p style="margin-bottom: 4px;">
+        3.1. При отказе Заказчика до сдачи работ, Исполнитель возвращает <strong>50% от суммы внесенного аванса (75%)</strong>. Оставшиеся 50% аванса удерживаются Исполнителем на закуп и раскрой материалов.
       </p>
 
       <!-- БЛОК ИЗ 3 ПОДПИСЕЙ -->
       <div class="sig-section">
-        <div style="font-weight: bold; text-align: center; margin-bottom: 3px; font-size: 8pt;">ПОДТВЕРЖДЕНИЕ ПЛАТЕЖЕЙ И ПРИЕМКИ РАБОТ</div>
+        <div style="font-weight: bold; text-align: center; margin-bottom: 3px; font-size: 8.2pt;">ПОДТВЕРЖДЕНИЕ ПЛАТЕЖЕЙ И ПРИЕМКИ РАБОТ</div>
         <table class="sig-table">
           <tr>
             <td style="width: 50%; border-right: 1px dashed #000000 !important; padding-right: 6px;">
@@ -1052,12 +1134,172 @@
           </tr>
         </table>
       </div>
-
     </div>
+
+    <!-- СТРАНИЦА 2: ЧЕРТЕЖИ С НУМЕРАЦИЕЙ И ДЕТАЛИЗАЦИЯ КАЖДОГО ОТСЕКА -->
+    <div class="pdf-page" id="pdf-page-2">
+      <div class="pdf-header" style="font-size: 11pt; border-bottom: 1.5px solid #000 !important; padding-bottom: 4px; margin-bottom: 8px;">
+        ПРИЛОЖЕНИЕ №1 К ДОГОВОРУ № <span id="pdfDocNum2"></span><br>
+        ЧЕРТЕЖИ И ДЕТАЛИЗАЦИЯ ОТСЕКОВ (МОДУЛЕЙ) ГАРНИТУРА
+      </div>
+
+      <div class="pdf-drawings-grid-p2">
+        <div>
+          <div style="font-weight:bold; font-size: 8.5pt; margin-bottom: 3px;">
+            Чертеж 1: Вид спереди с нумерацией отсеков [1], [2], [3]...
+          </div>
+          <div class="pdf-drawing-box-p2" id="pdfSvgFrontContainer"></div>
+        </div>
+
+        <div>
+          <div style="font-weight:bold; font-size: 8.5pt; margin-bottom: 3px;">
+            Чертеж 2: Вид сверху (Планировка и глубина)
+          </div>
+          <div class="pdf-drawing-box-p2" style="height: 150px;" id="pdfSvgTopContainer"></div>
+        </div>
+      </div>
+
+      <div class="pdf-section-title" style="margin-top: 12px;">3. Подробная спецификация отсеков (модулей) слева направо</div>
+      <table class="pdf-table" id="pdfSectionsTable">
+        <thead>
+          <tr>
+            <th style="width: 8%; text-align: center;">№</th>
+            <th style="width: 32%;">Назначение / Тип отсека</th>
+            <th style="width: 18%; text-align: center;">Ярус</th>
+            <th style="width: 14%; text-align: center;">Ширина (см)</th>
+            <th style="width: 14%; text-align: center;">Глубина (см)</th>
+            <th style="width: 14%; text-align: center;">Расположение</th>
+          </tr>
+        </thead>
+        <tbody id="pdfSectionsTableBody">
+          <!-- Сюда динамически генерируются строки отсеков -->
+        </tbody>
+      </table>
+
+      <div style="margin-top: 15px; font-size: 8pt; font-style: italic;">
+        * Примечание: Нумерация отсеков на Чертеже 1 соответствует номерам в таблице спецификации отсеков.
+      </div>
+    </div>
+
   </div>
 
   <script>
     let currentType = 'straight';
+    let sectionsData = [];
+
+    // Инициализация отсеков по умолчанию
+    function initDefaultSections() {
+      const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
+      let count = 5;
+      let widthPerSec = Math.round(mainW / count);
+      
+      sectionsData = [
+        { id: 1, name: 'Модуль под мойку', tier: 'lower', width: widthPerSec, depth: 60 },
+        { id: 2, name: 'Модуль с ящиками (3 шт)', tier: 'lower', width: widthPerSec, depth: 60 },
+        { id: 3, name: 'Под духовой шкаф / плиту', tier: 'lower', width: widthPerSec, depth: 60 },
+        { id: 4, name: 'Шкаф распашной с полкой', tier: 'lower', width: widthPerSec, depth: 60 },
+        { id: 5, name: 'Бутылочница / Карго', tier: 'lower', width: widthPerSec, depth: 60 }
+      ];
+      renderSectionsConfigurator();
+    }
+
+    function changeSectionsCount(delta) {
+      let input = document.getElementById('countSectionsInput');
+      let val = parseInt(input.value) || 5;
+      val = Math.max(1, Math.min(10, val + delta));
+      input.value = val;
+
+      const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
+      let defaultW = Math.round(mainW / val);
+
+      if (val > sectionsData.length) {
+        for (let i = sectionsData.length + 1; i <= val; i++) {
+          sectionsData.push({
+            id: i,
+            name: `Модуль / Шкаф №${i}`,
+            tier: 'lower',
+            width: defaultW,
+            depth: 60
+          });
+        }
+      } else if (val < sectionsData.length) {
+        sectionsData = sectionsData.slice(0, val);
+      }
+
+      renderSectionsConfigurator();
+      updateCalculator();
+    }
+
+    function updateSectionsByWallWidth() {
+      const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
+      let count = sectionsData.length;
+      if (count > 0) {
+        let avgW = Math.round(mainW / count);
+        sectionsData.forEach(s => s.width = avgW);
+        renderSectionsConfigurator();
+      }
+    }
+
+    function renderSectionsConfigurator() {
+      const container = document.getElementById('sectionsListContainer');
+      let html = '';
+
+      const sectionTypes = [
+        'Модуль под мойку',
+        'Модуль с ящиками (3 шт)',
+        'Под духовой шкаф / плиту',
+        'Шкаф распашной с полкой',
+        'Бутылочница / Карго',
+        'Сушка для посуды',
+        'Пенал / Колонка для техники',
+        'Открытые полки'
+      ];
+
+      sectionsData.forEach((sec, idx) => {
+        html += `
+          <div class="section-card-item">
+            <div class="section-card-header">
+              <span>Отсек №${sec.id} (Слева направо №${sec.id})</span>
+              <small style="color:var(--text-muted)">Ярус: ${sec.tier === 'lower' ? 'Нижний' : sec.tier === 'upper' ? 'Верхний' : 'Пенал'}</small>
+            </div>
+            <div class="inputs-grid" style="margin-bottom:0;">
+              <div class="field-group">
+                <label>Назначение отсека</label>
+                <input type="text" value="${sec.name}" onchange="updateSectionField(${idx}, 'name', this.value)">
+              </div>
+              <div class="field-group">
+                <label>Ширина отсека (см)</label>
+                <input type="number" value="${sec.width}" min="15" max="200" oninput="updateSectionField(${idx}, 'width', parseFloat(this.value)||0)">
+              </div>
+            </div>
+            <div class="inputs-grid" style="margin-top: 8px; margin-bottom:0;">
+              <div class="field-group">
+                <label>Глубина отсека (см)</label>
+                <input type="number" value="${sec.depth}" min="20" max="90" oninput="updateSectionField(${idx}, 'depth', parseFloat(this.value)||0)">
+              </div>
+              <div class="field-group">
+                <label>Тип яруса</label>
+                <select onchange="updateSectionField(${idx}, 'tier', this.value)">
+                  <option value="lower" ${sec.tier === 'lower' ? 'selected' : ''}>Нижняя тумба</option>
+                  <option value="upper" ${sec.tier === 'upper' ? 'selected' : ''}>Верхний шкаф</option>
+                  <option value="tall" ${sec.tier === 'tall' ? 'selected' : ''}>Пенал (на всю высоту)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      document.getElementById('countSectionsInput').value = sectionsData.length;
+    }
+
+    function updateSectionField(index, field, value) {
+      if (sectionsData[index]) {
+        sectionsData[index][field] = value;
+        updateCalculator();
+      }
+    }
 
     function changeQty(inputId, delta) {
       const input = document.getElementById(inputId);
@@ -1099,14 +1341,39 @@
       updateCalculator();
     }
 
+    function syncUpperLength() {
+      const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
+      document.getElementById('upperLength').value = mainW;
+    }
+
+    function toggleUpperTierControls() {
+      const hasUpper = document.getElementById('hasUpperTier').checked;
+      const ctrlBlock = document.getElementById('upperTierControls');
+      const gasGroup = document.getElementById('gasLiftGroup');
+      const gasInput = document.getElementById('countGasLifts');
+      const btnMinus = document.getElementById('btnGasMinus');
+      const btnPlus = document.getElementById('btnGasPlus');
+
+      if (hasUpper) {
+        ctrlBlock.style.display = 'block';
+        gasGroup.style.opacity = '1';
+        gasInput.disabled = false;
+        btnMinus.disabled = false;
+        btnPlus.disabled = false;
+      } else {
+        ctrlBlock.style.display = 'none';
+        gasGroup.style.opacity = '0.4';
+        gasInput.disabled = true;
+        btnMinus.disabled = true;
+        btnPlus.disabled = true;
+      }
+      updateCalculator();
+    }
+
     function toggleIslandOptions() {
       const hasIsland = document.getElementById('hasIsland').checked;
       const optBlock = document.getElementById('islandOptions');
-      if (hasIsland) {
-        optBlock.classList.add('active');
-      } else {
-        optBlock.classList.remove('active');
-      }
+      optBlock.style.display = hasIsland ? 'block' : 'none';
       updateCalculator();
     }
 
@@ -1117,23 +1384,12 @@
       const rightW = parseFloat(document.getElementById('rightWall').value) || 150;
       const lDir = document.getElementById('lAngleDir').value;
 
-      const upperMode = document.getElementById('upperCabinetsMode').value;
-      const gasGroup = document.getElementById('gasLiftGroup');
-      const gasInput = document.getElementById('countGasLifts');
-      const btnMinus = document.getElementById('btnGasMinus');
-      const btnPlus = document.getElementById('btnGasPlus');
-
-      if (upperMode === 'none') {
-        gasGroup.style.opacity = '0.4';
-        gasInput.disabled = true;
-        btnMinus.disabled = true;
-        btnPlus.disabled = true;
-      } else {
-        gasGroup.style.opacity = '1';
-        gasInput.disabled = false;
-        btnMinus.disabled = false;
-        btnPlus.disabled = false;
-      }
+      // Параметры верхнего яруса
+      const hasUpper = document.getElementById('hasUpperTier').checked;
+      const upperL = parseFloat(document.getElementById('upperLength').value) || 0;
+      const upperH = parseFloat(document.getElementById('upperHeight').value) || 72;
+      const upperD = parseFloat(document.getElementById('upperDepth').value) || 35;
+      const upperTierTypeFactor = parseFloat(document.getElementById('upperTierType').value) || 1.0;
 
       const facadePriceM = parseFloat(document.getElementById('facadeMaterial').value);
       const bodyPriceM = parseFloat(document.getElementById('bodyMaterial').value);
@@ -1142,27 +1398,36 @@
 
       const shelves = parseFloat(document.getElementById('countShelves').value) || 0;
       const drawers = parseFloat(document.getElementById('countDrawers').value) || 0;
-      const gasLifts = (upperMode !== 'none') ? (parseFloat(document.getElementById('countGasLifts').value) || 0) : 0;
+      const gasLifts = hasUpper ? (parseFloat(document.getElementById('countGasLifts').value) || 0) : 0;
 
       const hasIsland = document.getElementById('hasIsland').checked;
       const islL = parseFloat(document.getElementById('islandLength').value) || 140;
       const islW = parseFloat(document.getElementById('islandWidth').value) || 80;
       const islAccess = document.getElementById('islandAccess').value;
 
-      let meters = mainW / 100;
+      let lowerMeters = mainW / 100;
       if (currentType === 'l-shape') {
-        meters += (leftW - 60) / 100;
+        lowerMeters += (leftW - 60) / 100;
       } else if (currentType === 'u-shape') {
-        meters += (leftW - 60) / 100 + (rightW - 60) / 100;
+        lowerMeters += (leftW - 60) / 100 + (rightW - 60) / 100;
       }
 
-      let upperFactor = 1.0;
-      if (upperMode === 'none') upperFactor = 0.65;
-      else if (upperMode === 'tall') upperFactor = 1.20;
+      let lowerCostPerMeter = (facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + hardwarePriceM;
+      let lowerTotalPrice = lowerMeters * lowerCostPerMeter;
 
-      let costPerMeter = (facadePriceM * upperFactor) + bodyPriceM + topPriceM + hardwarePriceM;
-      let totalPrice = meters * costPerMeter;
+      let upperTierPrice = 0;
+      if (hasUpper && upperL > 0) {
+        let upperMeters = upperL / 100;
+        let heightRatio = upperH / 72;
+        let depthRatio = upperD / 35;
+        
+        let upperCostPerMeter = (facadePriceM * 0.45) + (bodyPriceM * 0.4);
+        upperTierPrice = upperMeters * upperCostPerMeter * heightRatio * depthRatio * upperTierTypeFactor;
+      }
 
+      document.getElementById('upperTierPriceBadge').innerText = Math.round(upperTierPrice).toLocaleString('ru-RU') + ' UZS';
+
+      let totalPrice = lowerTotalPrice + upperTierPrice;
       totalPrice += (shelves * 50000);
       totalPrice += (drawers * 110000);
       totalPrice += (gasLifts * 120000);
@@ -1176,7 +1441,7 @@
 
       document.getElementById('totalPriceDisplay').innerText = Math.round(totalPrice).toLocaleString('ru-RU');
 
-      drawFrontView(mainW, totalH, upperMode);
+      drawFrontView(mainW, totalH, hasUpper, upperL, upperH);
       drawTopView(mainW, leftW, rightW, lDir, hasIsland, islL, islW);
       drawPanelSample();
     }
@@ -1210,7 +1475,7 @@
       document.getElementById('panelSampleBadge').innerText = `${facadeMatText.trim()} | Цвет:${facadeColText}`;
     }
 
-    function drawFrontView(w, h, upperMode) {
+    function drawFrontView(w, h, hasUpper, upperL, upperH) {
       const svg = document.getElementById('svgFront');
       svg.innerHTML = '';
 
@@ -1229,27 +1494,44 @@
 
       const baseH = kH * (85 / h);
       const apronH = kH * (60 / h);
-      const topH = kH - baseH - apronH;
-
+      
       let html = '';
 
-      html += `<rect x="${startX}" y="${startY + kH - baseH}" width="${kW}" height="${baseH}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
+      // Фартук
+      html += `<rect x="${startX}" y="${startY + Math.max(0, kH - baseH - apronH)}" width="${kW}" height="${apronH}" fill="#0f172a" stroke="#475569" stroke-width="1" />`;
 
-      const numSec = Math.max(2, Math.round(w / 60));
-      const secW = kW / numSec;
-      for (let i = 1; i < numSec; i++) {
-        html += `<line x1="${startX + i*secW}" y1="${startY + kH - baseH}" x2="${startX + i*secW}" y2="${startY + kH}" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2"/>`;
-      }
+      // ОТСЕКИ (НИЖНИЙ ЯРУС С НУМЕРАЦИЕЙ [1], [2], [3]...)
+      let totalSectionsW = sectionsData.reduce((sum, s) => sum + (s.width || 0), 0) || w;
+      let currX = startX;
 
-      html += `<rect x="${startX}" y="${startY + Math.max(0, topH)}" width="${kW}" height="${apronH}" fill="#0f172a" stroke="#475569" stroke-width="1" />`;
+      sectionsData.forEach((sec, idx) => {
+        let secW = (sec.width / totalSectionsW) * kW;
+        html += `<rect x="${currX}" y="${startY + kH - baseH}" width="${secW}" height="${baseH}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
+        
+        // Нумерация отсека на чертеже
+        html += `<text x="${currX + secW/2}" y="${startY + kH - baseH/2 + 4}" fill="#fbbf24" font-size="11" font-weight="bold" text-anchor="middle">[${sec.id}]</text>`;
+        
+        currX += secW;
+      });
 
-      if (upperMode !== 'none' && topH > 5) {
-        html += `<rect x="${startX}" y="${startY}" width="${kW}" height="${topH}" fill="#334155" stroke="#fbbf24" stroke-width="1.5" />`;
-        for (let i = 1; i < numSec; i++) {
-          html += `<line x1="${startX + i*secW}" y1="${startY}" x2="${startX + i*secW}" y2="${startY + topH}" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2"/>`;
+      // Верхние шкафчики по точным размерам
+      if (hasUpper && upperL > 0 && upperH > 0) {
+        const topW = upperL * scale;
+        const topH = upperH * scale;
+        const topY = startY + kH - baseH - apronH - topH;
+
+        html += `<rect x="${startX}" y="${Math.max(startY, topY)}" width="${topW}" height="${topH}" fill="#334155" stroke="#fbbf24" stroke-width="1.5" />`;
+        
+        const topSec = sectionsData.length;
+        const topSecW = topW / topSec;
+        for (let i = 1; i < topSec; i++) {
+          html += `<line x1="${startX + i*topSecW}" y1="${Math.max(startY, topY)}" x2="${startX + i*topSecW}" y2="${Math.max(startY, topY) + topH}" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2"/>`;
         }
+
+        html += `<text x="${startX + topW/2}" y="${Math.max(startY + 10, topY - 4)}" fill="#38bdf8" font-size="9" font-weight="bold" text-anchor="middle">Верх: ${upperL}х${upperH} см</text>`;
       }
 
+      // Размеры кухни
       html += `<text x="${svgW/2}" y="${startY + kH + 14}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">${w} см</text>`;
       html += `<text x="${startX - 6}" y="${startY + kH/2}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="end">${h} см</text>`;
 
@@ -1305,7 +1587,6 @@
       svg.innerHTML = html;
     }
 
-    // НАДЕЖНАЯ КОНВЕРТАЦИЯ ВЕКТОРНЫХ ЧЕРТЕЖЕЙ ДЛЯ ПЕЧАТИ В PDF
     function preparePdfDrawings() {
       function convertSvgForPaper(svgElementId) {
         const origSvg = document.getElementById(svgElementId);
@@ -1342,14 +1623,38 @@
       document.getElementById('pdfSvgTopContainer').innerHTML = convertSvgForPaper('svgTop');
     }
 
+    function renderPdfSectionsTable() {
+      const tbody = document.getElementById('pdfSectionsTableBody');
+      let html = '';
+
+      sectionsData.forEach((sec) => {
+        const tierName = sec.tier === 'lower' ? 'Нижняя тумба' : sec.tier === 'upper' ? 'Верхний шкаф' : 'Пенал (Колонка)';
+        html += `
+          <tr>
+            <td style="text-align: center; font-weight: bold;">[${sec.id}]</td>
+            <td>${sec.name}</td>
+            <td style="text-align: center;">${tierName}</td>
+            <td style="text-align: center; font-weight: bold;">${sec.width} см</td>
+            <td style="text-align: center;">${sec.depth} см</td>
+            <td style="text-align: center;">№${sec.id} слева направо</td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+      document.getElementById('pdfSectionsSummary').innerText = `${sectionsData.length} отсеков (размеры приведены на Странице 2)`;
+    }
+
     function generateContractPDF(e) {
       e.preventDefault();
 
-      const name = document.getElementById('clientName').value;
-      const phone = document.getElementById('clientPhone').value;
-      const notes = document.getElementById('clientNotes').value || 'Не указано';
+      const name = document.getElementById('clientName').value || '';
+      const phone = document.getElementById('clientPhone').value || '____________________';
+      const notes = document.getElementById('clientNotes').value || '____________________';
 
-      document.getElementById('pdfDocNum').innerText = Math.floor(1000 + Math.random() * 9000);
+      const docNum = Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('pdfDocNum').innerText = docNum;
+      document.getElementById('pdfDocNum2').innerText = docNum;
       
       document.getElementById('pdfClientName').innerText = name;
       document.getElementById('pdfClientPhone').innerText = phone;
@@ -1359,17 +1664,26 @@
       document.getElementById('pdfType').innerText = typeNames[currentType];
 
       const mainW = document.getElementById('mainWall').value;
-      let dims = `Основная стена: ${mainW} см, Высота: ${document.getElementById('totalHeight').value} см`;
+      let dims = `Основная стена: ${mainW} см, Высота помещения: ${document.getElementById('totalHeight').value} см`;
       if (currentType === 'l-shape') dims += `, Боковая стена: ${document.getElementById('leftWall').value} см`;
       if (currentType === 'u-shape') dims += `, Левая: ${document.getElementById('leftWall').value} см, Правая: ${document.getElementById('rightWall').value} см`;
       document.getElementById('pdfDimensions').innerText = dims;
 
-      const upperSel = document.getElementById('upperCabinetsMode');
-      document.getElementById('pdfUpperMode').innerText = upperSel.options[upperSel.selectedIndex].text;
+      // Верхний ярус
+      const hasUpper = document.getElementById('hasUpperTier').checked;
+      if (hasUpper) {
+        const uL = document.getElementById('upperLength').value;
+        const uH = document.getElementById('upperHeight').value;
+        const uD = document.getElementById('upperDepth').value;
+        const uBadgeText = document.getElementById('upperTierPriceBadge').innerText;
+        document.getElementById('pdfUpperMode').innerText = `Длина: ${uL} см, Высота: ${uH} см, Глубина: ${uD} см (${uBadgeText})`;
+      } else {
+        document.getElementById('pdfUpperMode').innerText = 'Без верхнего яруса (только нижние тумбы)';
+      }
 
       const shelves = document.getElementById('countShelves').value;
       const drawers = document.getElementById('countDrawers').value;
-      const gasLifts = (upperSel.value !== 'none') ? document.getElementById('countGasLifts').value : 0;
+      const gasLifts = hasUpper ? document.getElementById('countGasLifts').value : 0;
       document.getElementById('pdfFittings').innerText = `Полки: ${shelves} шт., Выдвижные ящики: ${drawers} шт., Газлифты: ${gasLifts} шт.`;
 
       const doorTypeSel = document.getElementById('doorOpenType');
@@ -1410,21 +1724,24 @@
       document.getElementById('pdfFinalAmount').innerText = finalNum.toLocaleString('ru-RU');
 
       preparePdfDrawings();
+      renderPdfSectionsTable();
 
-      const element = document.getElementById('pdf-contract');
+      const element = document.getElementById('pdf-wrapper');
 
       const opt = {
         margin:       0,
-        filename:     `Договор_Кухня_${name}.pdf`,
+        filename:     `Договор_Кухня_${name || 'Заказ'}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['css', 'legacy'] }
       };
 
       html2pdf().set(opt).from(element).save();
     }
 
     window.onload = function() {
+      initDefaultSections();
       updateCalculator();
     };
   </script>
