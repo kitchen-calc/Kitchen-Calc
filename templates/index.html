@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Расчет стоимости кухни - Ташкент</title>
+    <title>Расчет стоимости кухни - Ташкент (Craftwood)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -13,8 +13,9 @@
     <style>
         .kitchen-card { transition: all 0.3s ease; }
         .kitchen-card.active { border-color: #2563eb; ring: 4px; ring-color: rgba(37, 99, 235, 0.2); }
-        .color-swatch { transition: all 0.2s ease; cursor: pointer; }
-        .color-swatch.active { transform: scale(1.1); ring: 3px; ring-color: #2563eb; }
+        .color-item { transition: all 0.2s ease; cursor: pointer; }
+        .color-item.active { border-color: #2563eb; background-color: #eff6ff; ring: 2px; ring-color: #2563eb; }
+        .tab-btn.active { border-bottom-color: #2563eb; color: #2563eb; font-weight: 700; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased pb-12">
@@ -26,7 +27,7 @@
                 <i class="fa-solid fa-kitchen-set text-blue-500 text-3xl"></i>
                 <div>
                     <h1 class="text-xl font-bold tracking-wide">KITCHEN CALC TASHKENT</h1>
-                    <p class="text-xs text-slate-400">Конструктор и точный расчет кухни</p>
+                    <p class="text-xs text-slate-400">Каталог фасадов Craftwood & Конструктор</p>
                 </div>
             </div>
             <a href="tel:+998920934510" class="text-sm font-semibold text-blue-400 hover:underline">
@@ -38,7 +39,7 @@
     <main class="max-w-7xl mx-auto px-4 mt-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <!-- Левая колонка: Настройки -->
+            <!-- Левая колонка -->
             <div class="lg:col-span-7 space-y-6">
 
                 <!-- 1. Планировка -->
@@ -67,7 +68,7 @@
                     </div>
                 </section>
 
-                <!-- 2. Размеры стен -->
+                <!-- 2. Размеры -->
                 <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h2 class="text-lg font-bold mb-4 flex items-center">
                         <span class="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2 text-sm">2</span>
@@ -89,26 +90,24 @@
                     </div>
                 </section>
 
-                <!-- 3. ВЫДЕЛЕННАЯ ГРАФА: ВЕРХНИЕ ШКАФЫ -->
+                <!-- 3. Графа верхних шкафчиков -->
                 <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 ring-2 ring-blue-500/20">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-lg font-bold flex items-center text-slate-900">
                             <span class="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center mr-2 text-sm">3</span>
-                            Параметры и высота верхних шкафов
+                            Параметры верхних шкафов
                         </h2>
-                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">Отдельный блок</span>
                     </div>
 
-                    <!-- Переключатель: Есть / Нет верхних шкафов -->
                     <div class="grid grid-cols-2 gap-3 mb-5">
-                        <label class="cursor-pointer border-2 p-3 rounded-xl flex items-center space-x-3 bg-white hover:border-blue-300 transition" id="box-upper-yes">
+                        <label class="cursor-pointer border-2 p-3 rounded-xl flex items-center space-x-3 bg-white hover:border-blue-300 transition">
                             <input type="radio" name="upperCabinetToggle" value="yes" checked onchange="updateAll()" class="w-4 h-4 text-blue-600">
                             <div>
                                 <span class="text-sm font-bold block">С верхними шкафами</span>
                                 <span class="text-[11px] text-slate-500">Полноценная кухня</span>
                             </div>
                         </label>
-                        <label class="cursor-pointer border-2 p-3 rounded-xl flex items-center space-x-3 bg-white hover:border-blue-300 transition" id="box-upper-no">
+                        <label class="cursor-pointer border-2 p-3 rounded-xl flex items-center space-x-3 bg-white hover:border-blue-300 transition">
                             <input type="radio" name="upperCabinetToggle" value="no" onchange="updateAll()" class="w-4 h-4 text-blue-600">
                             <div>
                                 <span class="text-sm font-bold block">Без верхних шкафов</span>
@@ -117,27 +116,23 @@
                         </label>
                     </div>
 
-                    <!-- Настройки размера верхнего яруса -->
                     <div id="upperCabinetDetails" class="space-y-4 pt-3 border-t border-slate-100">
                         <div>
                             <label class="text-xs font-semibold text-slate-700 block mb-2">Высота верхних шкафов:</label>
                             <select id="upperHeightPreset" onchange="updateAll()" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 text-sm bg-slate-50 font-medium">
-                                <option value="72">72 см (Стандартная высота) — Базовая цена</option>
+                                <option value="72">72 см (Стандартная высота)</option>
                                 <option value="90">90 см (Увеличенные шкафы) — +20% к верхнему ярусу</option>
-                                <option value="108">108-120 см (3 яруса / До потолка с антресолями) — +45% к верхнему ярусу</option>
+                                <option value="108">108-120 см (3 яруса / До потолка) — +45% к верхнему ярусу</option>
                                 <option value="custom">Указать точную высоту (см)...</option>
                             </select>
                         </div>
 
-                        <!-- Поле для точной высоты в см -->
                         <div id="customUpperHeightBox" class="hidden">
                             <label class="text-xs font-medium text-slate-600 block mb-1">Точная высота верхнего шкафа (см)</label>
                             <input type="number" id="customUpperHeight" value="80" min="36" max="140" oninput="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
-                        <!-- Дополнительные опции верхнего яруса -->
                         <div class="bg-slate-50 p-3 rounded-xl space-y-2 border border-slate-200">
-                            <span class="text-xs font-bold text-slate-700 block mb-1">Опции верхнего яруса:</span>
                             <label class="flex items-center space-x-2 cursor-pointer">
                                 <input type="checkbox" id="ledLight" onchange="updateAll()" class="w-4 h-4 text-blue-600 rounded">
                                 <span class="text-xs text-slate-700">Врезная LED-подсветка рабочей зоны (+600 000 UZS)</span>
@@ -150,47 +145,42 @@
                     </div>
                 </section>
 
-                <!-- 4. Фасады и Цвет -->
+                <!-- 4. КАТАЛОГ ЦВЕТОВ CRAFTWOOD -->
                 <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h2 class="text-lg font-bold mb-4 flex items-center">
-                        <span class="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2 text-sm">4</span>
-                        Материалы и каталог цветов
-                    </h2>
-                    
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-lg font-bold flex items-center">
+                            <span class="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2 text-sm">4</span>
+                            Каталог декоров Craftwood
+                        </h2>
+                        <span class="text-xs text-slate-500 font-semibold">Официальная палитра</span>
+                    </div>
+
                     <div class="mb-4">
-                        <label class="text-xs font-medium text-slate-600 block mb-1">Материал фасадов</label>
-                        <select id="facadeMaterial" onchange="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="1.0">ЛДСП Premium (Эконом)</option>
-                            <option value="1.25" selected>МДФ Пленка PVC (Стандарт)</option>
-                            <option value="1.55">МДФ Эмаль / Пластик Fenix (Премиум)</option>
-                            <option value="2.1">Массив Дерева / Шпон (Люкс)</option>
+                        <label class="text-xs font-medium text-slate-600 block mb-1">Материал основы</label>
+                        <select id="facadeMaterial" onchange="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="1.0">ЛДСП Craftwood (Эконом)</option>
+                            <option value="1.25" selected>МДФ Craftwood в Пленке (Стандарт)</option>
+                            <option value="1.55">МДФ Эмаль / Софт-тач (Премиум)</option>
                         </select>
                     </div>
 
-                    <!-- Палитра -->
-                    <div>
-                        <label class="text-xs font-medium text-slate-600 block mb-2">Выберите цвет фасадов:</label>
-                        <div class="flex flex-wrap gap-3">
-                            <div onclick="selectColor('Белый Матовый', '#ffffff')" class="color-swatch active p-1 border rounded-lg bg-white text-center shadow-sm" title="Белый Матовый">
-                                <div class="w-8 h-8 rounded bg-white border border-slate-300"></div>
-                                <span class="text-[10px] font-medium block mt-1">Белый</span>
-                            </div>
-                            <div onclick="selectColor('Графит', '#374151')" class="color-swatch p-1 border rounded-lg bg-white text-center shadow-sm" title="Графит">
-                                <div class="w-8 h-8 rounded bg-gray-700"></div>
-                                <span class="text-[10px] font-medium block mt-1">Графит</span>
-                            </div>
-                            <div onclick="selectColor('Кашемир', '#e5e0d8')" class="color-swatch p-1 border rounded-lg bg-white text-center shadow-sm" title="Кашемир">
-                                <div class="w-8 h-8 rounded bg-[#e5e0d8]"></div>
-                                <span class="text-[10px] font-medium block mt-1">Кашемир</span>
-                            </div>
-                            <div onclick="selectColor('Дуб Натуральный', '#c49a6c')" class="color-swatch p-1 border rounded-lg bg-white text-center shadow-sm" title="Дуб Натуральный">
-                                <div class="w-8 h-8 rounded bg-[#c49a6c]"></div>
-                                <span class="text-[10px] font-medium block mt-1">Дуб</span>
-                            </div>
-                            <div onclick="selectColor('Изумруд', '#064e3b')" class="color-swatch p-1 border rounded-lg bg-white text-center shadow-sm" title="Изумруд">
-                                <div class="w-8 h-8 rounded bg-emerald-900"></div>
-                                <span class="text-[10px] font-medium block mt-1">Изумруд</span>
-                            </div>
+                    <!-- Фильтр Поиска и Вкладки Коллекций -->
+                    <div class="space-y-3">
+                        <div class="relative">
+                            <input type="text" id="colorSearch" oninput="filterColors()" placeholder="Поиск декора (например: Дуб, Кашемир, Графит)..." class="w-full pl-9 pr-3 py-2 border rounded-xl text-xs bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        </div>
+
+                        <!-- Вкладки Коллекций -->
+                        <div class="flex border-b border-slate-200 text-xs font-medium">
+                            <button onclick="switchTab('silver')" id="tab-silver" class="tab-btn active px-4 py-2 border-b-2 border-transparent hover:text-blue-600 transition">Сильвер (5)</button>
+                            <button onclick="switchTab('color')" id="tab-color" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-blue-600 transition">Цветной (25)</button>
+                            <button onclick="switchTab('platinum')" id="tab-platinum" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-blue-600 transition">Платинум (40)</button>
+                        </div>
+
+                        <!-- Сетка декоров -->
+                        <div id="colorGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                            <!-- Заполняется динамически из JS -->
                         </div>
                     </div>
                 </section>
@@ -201,7 +191,7 @@
                         <span class="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2 text-sm">5</span>
                         Фурнитура и механизмы
                     </h2>
-                    <select id="hardwareClass" onchange="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <select id="hardwareClass" onchange="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
                         <option value="1.0">Базовая (DTC / Boyard) с доводчиками</option>
                         <option value="1.3" selected>Стандарт (Hettich / GTV)</option>
                         <option value="1.65">Премиум (Blum Австрия)</option>
@@ -210,7 +200,7 @@
 
             </div>
 
-            <!-- Правая колонка: Чертёж и Детализация цен -->
+            <!-- Правая колонка -->
             <div class="lg:col-span-5 space-y-6">
                 
                 <div class="sticky top-6 space-y-6">
@@ -224,27 +214,22 @@
                             <span id="upperHeightBadge" class="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-md font-bold">Верх: 72 см</span>
                         </div>
 
-                        <!-- SVG Чертёж -->
                         <div class="bg-slate-100 border border-slate-200 rounded-xl p-4 flex justify-center items-center overflow-hidden min-h-[250px]">
                             <svg id="kitchenBlueprint" width="100%" height="240" viewBox="0 0 400 240">
-                                <!-- Динамический SVG -->
+                                <!-- SVG Чертёж -->
                             </svg>
                         </div>
-                        <p class="text-[11px] text-center text-slate-400 mt-2">Размер верхнего яруса изменяется в реальном времени</p>
                     </div>
 
-                    <!-- Карточка Итоговой Стоимости с Детализацией -->
+                    <!-- Итоговая Стоимость -->
                     <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-lg space-y-5">
-                        <div class="flex justify-between items-end border-b border-slate-800 pb-4">
-                            <div>
-                                <div class="text-xs uppercase tracking-wider text-slate-400 mb-1">Итоговая стоимость:</div>
-                                <div class="text-3xl font-extrabold text-blue-400" id="totalPrice">0 UZS</div>
-                            </div>
+                        <div class="border-b border-slate-800 pb-4">
+                            <div class="text-xs uppercase tracking-wider text-slate-400 mb-1">Итоговая стоимость:</div>
+                            <div class="text-3xl font-extrabold text-blue-400" id="totalPrice">0 UZS</div>
                         </div>
 
-                        <!-- Прозрачная детализация расчета -->
                         <div class="space-y-2 text-xs text-slate-300">
-                            <div class="font-bold text-slate-400 text-[11px] uppercase tracking-wider mb-2">Детализация расчета:</div>
+                            <div class="font-bold text-slate-400 text-[11px] uppercase tracking-wider mb-2">Детализация сметы:</div>
                             
                             <div class="flex justify-between">
                                 <span class="text-slate-400">Нижние модули + столешница:</span>
@@ -256,18 +241,18 @@
                                 <span id="upperPrice" class="font-semibold text-white">0 UZS</span>
                             </div>
 
-                            <div class="flex justify-between" id="optionsRow">
+                            <div class="flex justify-between">
                                 <span class="text-slate-400">Доп. опции (LED / Tip-On):</span>
                                 <span id="optionsPrice" class="font-semibold text-white">0 UZS</span>
                             </div>
 
                             <div class="border-t border-slate-800 pt-3 flex justify-between">
-                                <span class="text-slate-400">Длина гарнитура:</span>
+                                <span class="text-slate-400">Длина кухни:</span>
                                 <span id="summaryMeters" class="font-semibold text-white">4.8 м</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-400">Цвет фасада:</span>
-                                <span id="summaryColor" class="font-semibold text-white">Белый Матовый</span>
+                                <span class="text-slate-400">Выбранный декор:</span>
+                                <span id="summaryColor" class="font-semibold text-blue-300">Craftwood Дуб Викинг</span>
                             </div>
                         </div>
 
@@ -289,7 +274,7 @@
         <div class="flex justify-between items-center border-b pb-4 mb-6">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-wide">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</h1>
-                <p class="text-xs text-slate-500">Изготовление кухонного гарнитура по индивидуальным размерам</p>
+                <p class="text-xs text-slate-500">Изготовление кухни с фасадами Craftwood</p>
             </div>
             <div class="text-right text-xs text-slate-600">
                 <p class="font-bold text-slate-900">KITCHEN STUDIO TASHKENT</p>
@@ -301,16 +286,15 @@
             <tbody>
                 <tr class="border-b"><td class="py-2 text-slate-500">Форма кухни:</td><td class="py-2 font-bold text-right" id="pdfLayout">Г-образная</td></tr>
                 <tr class="border-b"><td class="py-2 text-slate-500">Длина стен:</td><td class="py-2 font-bold text-right" id="pdfSizes">300 х 180 см</td></tr>
-                <tr class="border-b"><td class="py-2 text-slate-500">Верхние шкафы (высота):</td><td class="py-2 font-bold text-right" id="pdfUpper">72 см (Стандарт)</td></tr>
-                <tr class="border-b"><td class="py-2 text-slate-500">Стоимость верхнего яруса:</td><td class="py-2 font-bold text-right" id="pdfUpperPrice">0 UZS</td></tr>
-                <tr class="border-b"><td class="py-2 text-slate-500">Материал фасадов:</td><td class="py-2 font-bold text-right" id="pdfFacade">МДФ Пленка</td></tr>
-                <tr class="border-b"><td class="py-2 text-slate-500">Цвет фасадов:</td><td class="py-2 font-bold text-right" id="pdfColor">Белый Матовый</td></tr>
+                <tr class="border-b"><td class="py-2 text-slate-500">Верхние шкафы:</td><td class="py-2 font-bold text-right" id="pdfUpper">72 см (Стандарт)</td></tr>
+                <tr class="border-b"><td class="py-2 text-slate-500">Декор фасадов:</td><td class="py-2 font-bold text-right text-blue-700" id="pdfColor">Craftwood Дуб Викинг (Платинум)</td></tr>
+                <tr class="border-b"><td class="py-2 text-slate-500">Материал:</td><td class="py-2 font-bold text-right" id="pdfFacade">МДФ Пленка</td></tr>
                 <tr class="border-b"><td class="py-2 text-slate-500">Фурнитура:</td><td class="py-2 font-bold text-right" id="pdfHardware">Стандарт</td></tr>
             </tbody>
         </table>
 
         <div class="mb-6">
-            <h3 class="text-sm font-bold mb-2">2D Эскиз проекта:</h3>
+            <h3 class="text-sm font-bold mb-2">2D Схема гарнитура:</h3>
             <div id="pdfSvgContainer" class="border p-4 rounded bg-slate-50 flex justify-center"></div>
         </div>
 
@@ -319,15 +303,96 @@
                 <p class="text-xs text-slate-400">Итоговая расчётная стоимость:</p>
                 <p class="text-xl font-bold text-blue-400" id="pdfPrice">0 UZS</p>
             </div>
-            <p class="text-[10px] text-slate-400 max-w-[220px] text-right">* Точный расчет производится после бесплатного замера</p>
+            <p class="text-[10px] text-slate-400 max-w-[220px] text-right">* В стоимость входит замер, доставка и сборка в Ташкенте</p>
         </div>
     </div>
 
-    <!-- Логика скрипта -->
+    <!-- Скрипт с базой данных Craftwood -->
     <script>
+        // База данных декоров Craftwood из каталогов
+        const craftwoodCatalog = {
+            silver: [
+                { name: 'Дуб Каньон Золотой', hex: '#d4a359' },
+                { name: 'Кенигсберг Светлый', hex: '#e3d5ca' },
+                { name: 'Орех Магнолия', hex: '#8c6d58' },
+                { name: 'Тадж Махал', hex: '#d9d2c9' },
+                { name: 'Турин Темный', hex: '#4a3b32' }
+            ],
+            color: [
+                { name: 'Альпийский Шифер', hex: '#525b62' },
+                { name: 'Артель', hex: '#7c838a' },
+                { name: 'Голубой', hex: '#6ba4b8' },
+                { name: 'Желтый Яичный', hex: '#f4bf42' },
+                { name: 'Индиго', hex: '#1b2a4a' },
+                { name: 'Капучино', hex: '#a88b79' },
+                { name: 'Красный', hex: '#b82525' },
+                { name: 'Лофт Светлый', hex: '#d1ccc0' },
+                { name: 'Лофт Темный', hex: '#4f5357' },
+                { name: 'Луанда', hex: '#8b7355' },
+                { name: 'Мускат', hex: '#7a6857' },
+                { name: 'Оранжевый', hex: '#e06d1a' },
+                { name: 'Паладина', hex: '#c7b89d' },
+                { name: 'Песок', hex: '#dbcbaf' },
+                { name: 'Серебряный', hex: '#b0b5b3' },
+                { name: 'Серый Темный', hex: '#42474d' },
+                { name: 'Синий', hex: '#1d4ed8' },
+                { name: 'Сиреневый', hex: '#9b7bb8' },
+                { name: 'Слива (Уни)', hex: '#5c3a4d' },
+                { name: 'Сталь Закалённая', hex: '#3b434c' },
+                { name: 'Твист', hex: '#e8e1d5' },
+                { name: 'Трюфель', hex: '#5a4a42' },
+                { name: 'Фантом', hex: '#2d3137' },
+                { name: 'Фиолетовый', hex: '#6b21a8' },
+                { name: 'Чокко', hex: '#3d2e28' }
+            ],
+            platinum: [
+                { name: 'Агреппина', hex: '#b8a99a' },
+                { name: 'Алегре', hex: '#d8c7b5' },
+                { name: 'Беларус', hex: '#a38f78' },
+                { name: 'Бледная Синева', hex: '#8da4b5' },
+                { name: 'Бьанко', hex: '#f5f5f7' },
+                { name: 'Графит Металик', hex: '#383d42' },
+                { name: 'Грифф', hex: '#61676d' },
+                { name: 'Древесина', hex: '#8c6f56' },
+                { name: 'Дуб Американский', hex: '#a07248' },
+                { name: 'Дуб Викинг', hex: '#735338' },
+                { name: 'Дуб Гайя', hex: '#b59572' },
+                { name: 'Дуб Серый', hex: '#808588' },
+                { name: 'Дуб Термо', hex: '#423228' },
+                { name: 'Дуб Тернер', hex: '#9c7b5b' },
+                { name: 'Инокс Серый', hex: '#71797e' },
+                { name: 'Камень', hex: '#8f9194' },
+                { name: 'Карлсбад', hex: '#a89785' },
+                { name: 'Каролайн', hex: '#d6c5b3' },
+                { name: 'Кашемир-Беж', hex: '#e6dfd5' },
+                { name: 'Кашемир-Серый', hex: '#c5c1bb' },
+                { name: 'Лаос Тик', hex: '#6e5239' },
+                { name: 'Лембрук', hex: '#917c69' },
+                { name: 'Лес', hex: '#594839' },
+                { name: 'Линия', hex: '#c9bfb5' },
+                { name: 'Линн', hex: '#d1c2b4' },
+                { name: 'Лорель', hex: '#ab9b8c' },
+                { name: 'Лумумба', hex: '#3d2f25' },
+                { name: 'Малинска', hex: '#826d5b' },
+                { name: 'Маркиз', hex: '#a69585' },
+                { name: 'Миднайт', hex: '#1e2530' },
+                { name: 'Мята', hex: '#7ca982' },
+                { name: 'Нео', hex: '#e2dedb' },
+                { name: 'Риббек', hex: '#96734e' },
+                { name: 'Ромео', hex: '#b09e8d' },
+                { name: 'Себастьян', hex: '#6b5b4d' },
+                { name: 'Слоновая Кость', hex: '#fdfaed' },
+                { name: 'Тадао', hex: '#63625f' },
+                { name: 'Элегантный Дуб', hex: '#a8845e' },
+                { name: 'Элегантный Орех', hex: '#5e4533' },
+                { name: 'Эштон', hex: '#877b70' }
+            ]
+        };
+
+        let currentTab = 'silver';
         let selectedLayout = 'straight';
-        let selectedColorName = 'Белый Матовый';
-        let selectedColorHex = '#ffffff';
+        let selectedColorName = 'Craftwood Дуб Каньон Золотой';
+        let selectedColorHex = '#d4a359';
 
         const layoutNames = {
             'straight': 'Прямая',
@@ -335,6 +400,46 @@
             'u_shape': 'П-образная',
             'island': 'С островом'
         };
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            renderColorGrid();
+        }
+
+        function renderColorGrid(filterText = '') {
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = '';
+            
+            const list = craftwoodCatalog[currentTab] || [];
+            
+            list.filter(item => item.name.toLowerCase().includes(filterText.toLowerCase())).forEach(item => {
+                const isActive = selectedColorName.includes(item.name);
+                const div = document.createElement('div');
+                div.className = `color-item p-2 border rounded-xl bg-white flex items-center space-x-2 shadow-sm hover:border-blue-400 ${isActive ? 'active' : ''}`;
+                div.onclick = () => selectColor(item.name, item.hex);
+                
+                div.innerHTML = `
+                    <div class="w-6 h-6 rounded-lg flex-shrink-0 border border-slate-200" style="background-color: ${item.hex}"></div>
+                    <span class="text-[11px] font-medium text-slate-700 truncate">${item.name}</span>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function filterColors() {
+            const text = document.getElementById('colorSearch').value;
+            renderColorGrid(text);
+        }
+
+        function selectColor(name, hex) {
+            const collectionTitle = currentTab === 'silver' ? 'Сильвер' : (currentTab === 'color' ? 'Цветной' : 'Платинум');
+            selectedColorName = `Craftwood ${name} (${collectionTitle})`;
+            selectedColorHex = hex;
+            renderColorGrid(document.getElementById('colorSearch').value);
+            updateAll();
+        }
 
         function selectLayout(layout) {
             selectedLayout = layout;
@@ -346,14 +451,6 @@
             updateAll();
         }
 
-        function selectColor(name, hex) {
-            selectedColorName = name;
-            selectedColorHex = hex;
-            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            updateAll();
-        }
-
         function updateAll() {
             const w1 = parseFloat(document.getElementById('wall1').value) || 300;
             const w2 = selectedLayout !== 'straight' ? (parseFloat(document.getElementById('wall2').value) || 180) : 0;
@@ -362,7 +459,6 @@
             const hasUpper = document.querySelector('input[name="upperCabinetToggle"]:checked').value === 'yes';
             const upperDetails = document.getElementById('upperCabinetDetails');
             
-            // Вывод настроек выпадающего списка или кастомного значения
             const preset = document.getElementById('upperHeightPreset').value;
             const customBox = document.getElementById('customUpperHeightBox');
             
@@ -385,39 +481,32 @@
             const facadeMult = parseFloat(document.getElementById('facadeMaterial').value);
             const hardwareMult = parseFloat(document.getElementById('hardwareClass').value);
 
-            // Базовая расценка: Нижний ярус = 2 200 000 UZS/м, Верхний ярус (72см) = 1 400 000 UZS/м
             let lowerBaseCost = totalMeters * 2200000 * facadeMult * hardwareMult;
             let upperBaseCost = 0;
 
             if (hasUpper) {
-                // Коэффициент высоты верхних шкафов
                 let heightCoeff = upperHeightCm / 72;
-                if (upperHeightCm >= 108) heightCoeff = 1.45; // Скидка на пропорции антресолей
-
+                if (upperHeightCm >= 108) heightCoeff = 1.45;
                 upperBaseCost = totalMeters * 1400000 * heightCoeff * facadeMult * hardwareMult;
             }
 
-            // Доп. опции
             let optionsCost = 0;
             if (hasUpper && document.getElementById('ledLight').checked) optionsCost += 600000;
             if (hasUpper && document.getElementById('pushToOpen').checked) optionsCost += 400000;
 
             let totalSum = lowerBaseCost + upperBaseCost + optionsCost;
 
-            // Форматирование и вывод цен
             document.getElementById('totalPrice').innerText = Math.round(totalSum).toLocaleString('ru-RU') + ' UZS';
             document.getElementById('lowerPrice').innerText = Math.round(lowerBaseCost).toLocaleString('ru-RU') + ' UZS';
             document.getElementById('upperPrice').innerText = hasUpper ? Math.round(upperBaseCost).toLocaleString('ru-RU') + ' UZS' : 'Отключены';
             document.getElementById('optionsPrice').innerText = Math.round(optionsCost).toLocaleString('ru-RU') + ' UZS';
 
-            // Обновление текстовых плашек
             const upperText = hasUpper ? `${upperHeightCm} см` : 'Без верхних';
             document.getElementById('upperHeightBadge').innerText = `Верх: ${upperText}`;
             document.getElementById('upperHeightText').innerText = upperText;
             document.getElementById('summaryMeters').innerText = totalMeters.toFixed(1) + ' м';
             document.getElementById('summaryColor').innerText = selectedColorName;
 
-            // Отрисовка интерактивного чертежа
             drawBlueprint(w1, w2, hasUpper, upperHeightCm);
         }
 
@@ -426,45 +515,38 @@
             let width = 360;
             let height = 200;
 
-            // Сетка/Стена
             let html = `<rect x="20" y="20" width="${width}" height="${height}" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>`;
 
-            // Нижний ярус (фиксированная высота 75px на схеме)
+            // Нижний ярус
             html += `<rect x="30" y="135" width="${width-20}" height="75" fill="${selectedColorHex}" stroke="#334155" stroke-width="2" rx="2"/>`;
-            html += `<line x1="30" y1="135" x2="${width+10}" y2="135" stroke="#000" stroke-width="4"/>`; // Столешница
+            html += `<line x1="30" y1="135" x2="${width+10}" y2="135" stroke="#000" stroke-width="4"/>`;
 
-            // Разделительные линии нижних фасадов
             let modules = 5;
             let moduleWidth = (width - 20) / modules;
             for (let i = 1; i < modules; i++) {
-                html += `<line x1="${30 + i * moduleWidth}" y1="135" x2="${30 + i * moduleWidth}" y2="210" stroke="#64748b" stroke-dasharray="2,2"/>`;
+                html += `<line x1="${30 + i * moduleWidth}" y1="135" x2="${30 + i * moduleWidth}" y2="210" stroke="#ffffff" stroke-dasharray="2,2" opacity="0.6"/>`;
             }
 
-            // Отрисовка верхнего яруса со сложной высотой
+            // Верхний ярус
             if (hasUpper) {
-                // Пропорциональный масштаб высоты шкафа
                 let mappedHeight = Math.min(105, Math.max(35, (upperHeightCm / 72) * 55));
-                let upperY = 135 - 35 - mappedHeight; // 35px - высота фартука
+                let upperY = 135 - 35 - mappedHeight;
 
                 html += `<rect x="30" y="${upperY}" width="${width-20}" height="${mappedHeight}" fill="${selectedColorHex}" opacity="0.9" stroke="#334155" stroke-width="2" rx="2"/>`;
 
-                // Если высота больше 100 см (3 яруса / антресоли) -> рисуем дополнительную горизонтальную линию антресолей
                 if (upperHeightCm >= 100) {
                     let mezzanineY = upperY + 25;
                     html += `<line x1="30" y1="${mezzanineY}" x2="${width+10}" y2="${mezzanineY}" stroke="#1e293b" stroke-width="2"/>`;
                 }
 
-                // Вертикальные фасады верхних шкафов
                 for (let i = 1; i < modules; i++) {
-                    html += `<line x1="${30 + i * moduleWidth}" y1="${upperY}" x2="${30 + i * moduleWidth}" y2="${upperY + mappedHeight}" stroke="#64748b" stroke-dasharray="2,2"/>`;
+                    html += `<line x1="${30 + i * moduleWidth}" y1="${upperY}" x2="${30 + i * moduleWidth}" y2="${upperY + mappedHeight}" stroke="#ffffff" stroke-dasharray="2,2" opacity="0.6"/>`;
                 }
 
-                // Выносная линия высоты верхнего шкафа
                 html += `<line x1="15" y1="${upperY}" x2="15" y2="${upperY + mappedHeight}" stroke="#2563eb" stroke-width="1.5"/>`;
                 html += `<text x="12" y="${upperY + mappedHeight/2}" font-size="9" font-weight="bold" fill="#2563eb" text-anchor="end">${upperHeightCm} см</text>`;
             }
 
-            // Подписи размеров стен
             html += `<text x="${width/2}" y="15" font-size="11" font-weight="bold" fill="#2563eb" text-anchor="middle">Стена 1: ${w1} см</text>`;
             if (selectedLayout !== 'straight') {
                 html += `<text x="${width - 5}" y="${height/2}" font-size="10" font-weight="bold" fill="#2563eb" text-anchor="middle" transform="rotate(90, ${width - 5}, ${height/2})">Стена 2: ${w2} см</text>`;
@@ -479,7 +561,6 @@
             
             const hasUpper = document.querySelector('input[name="upperCabinetToggle"]:checked').value === 'yes';
             document.getElementById('pdfUpper').innerText = hasUpper ? document.getElementById('upperHeightText').innerText : 'Без верхних шкафов';
-            document.getElementById('pdfUpperPrice').innerText = document.getElementById('upperPrice').innerText;
 
             document.getElementById('pdfFacade').innerText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text;
             document.getElementById('pdfColor').innerText = selectedColorName;
@@ -493,7 +574,7 @@
 
             const opt = {
                 margin:       0.4,
-                filename:     'Смета_Кухни_Ташкент.pdf',
+                filename:     'Смета_Кухни_Craftwood_Ташкент.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2 },
                 jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -504,7 +585,8 @@
             });
         }
 
-        // Старт при загрузке
+        // Инициализация
+        renderColorGrid();
         updateAll();
     </script>
 </body>
