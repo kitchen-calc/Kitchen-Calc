@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Конструктор Кухонной Мебели | Ташкент</title>
 
-  <!-- Библиотека html2canvas для конвертации в картинку -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
@@ -129,26 +128,57 @@
       background: rgba(251, 191, 36, 0.1); border: 1px solid var(--border-gold); border-radius: 8px; padding: 8px 12px; font-size: 0.88rem; color: var(--accent-gold); font-weight: 600; margin-top: 10px; display: flex; justify-content: space-between; align-items: center;
     }
 
-    .section-card-item { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-dark); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-    .section-card-header { font-weight: bold; color: var(--accent-gold); font-size: 0.9rem; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    /* КАРТОЧКА ОТСЕКА С МИНИ-ВИЗУАЛИЗАЦИЕЙ */
+    .section-card-item {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      display: grid;
+      grid-template-columns: 1fr 110px;
+      gap: 15px;
+      align-items: center;
+    }
+    .section-card-header {
+      font-weight: bold;
+      color: var(--accent-gold);
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+      grid-column: span 2;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-dark);
+      padding-bottom: 5px;
+    }
+    .section-mini-svg {
+      width: 110px;
+      height: 110px;
+      background: #020617;
+      border: 1px solid var(--border-gold);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
     .btn-submit {
       width: 100%; background: linear-gradient(135deg, #d97706, #b45309); color: #ffffff; border: none; padding: 16px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; margin-top: 10px;
     }
     .btn-submit:hover { background: linear-gradient(135deg, #f59e0b, #d97706); transform: translateY(-1px); }
 
-    /* МОДАЛЬНОЕ ОКНО ДЛЯ ИТОГА (В ВИДЕ ФОТО) */
+    /* МОДАЛЬНОЕ ОКНО ДЛЯ ИТОГА */
     #summaryModal {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.85);
       z-index: 1000;
       overflow-y: auto;
       padding: 20px;
     }
     .modal-content {
-      max-width: 750px;
+      max-width: 800px;
       margin: 30px auto;
       background: #1e293b;
       border: 2px solid var(--accent-gold);
@@ -173,6 +203,8 @@
       .type-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
       .price-value { font-size: 1.8rem; }
       .svg-container { height: 160px; }
+      .section-card-item { grid-template-columns: 1fr; }
+      .section-mini-svg { width: 100%; height: 90px; }
     }
   </style>
 </head>
@@ -214,7 +246,7 @@
 
         <div class="card">
           <div class="drawing-title">
-            <span>Чертеж 1: Вид спереди (С отсеками)</span>
+            <span>Чертеж 1: Вид спереди (Нижний и Верхний ярусы)</span>
             <small style="color:var(--text-muted);">Фасад</small>
           </div>
           <div class="svg-container">
@@ -250,7 +282,7 @@
           <div class="inputs-grid">
             <div class="field-group">
               <label id="lblMainWall">Длина основной стены (см)</label>
-              <input type="number" id="mainWall" value="300" min="100" max="800" oninput="syncUpperLength(); updateSectionsByWallWidth(); updateCalculator();">
+              <input type="number" id="mainWall" value="300" min="100" max="800" oninput="syncUpperLength(); updateCalculator();">
             </div>
             <div class="field-group">
               <label>Общая высота помещения / гарнитура (см)</label>
@@ -277,252 +309,132 @@
           </div>
         </div>
 
+        <!-- 2. НИЖНИЕ ОТСЕКИ С ИНДИВИДУАЛЬНЫМИ РАЗМЕРАМИ, НАПОЛНЕНИЕМ И МИНИ-ЧЕРТЕЖОМ -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">2</span>
-            <span>Конфигурация Отсеков (Шкафов и Модулей)</span>
+            <span>Нижние отсеки (Модули и Тумбы)</span>
           </div>
 
-          <div class="inputs-grid">
+          <div class="inputs-grid" style="margin-bottom: 15px;">
             <div class="field-group" style="grid-column: span 2;">
-              <label>Количество отсеков (модулей) по длине гарнитура</label>
+              <label>Количество нижних отсеков</label>
               <div class="number-stepper">
-                <button type="button" class="btn-step" onclick="changeSectionsCount(-1)">−</button>
-                <input type="number" id="countSectionsInput" value="5" min="1" max="10" readonly>
-                <button type="button" class="btn-step" onclick="changeSectionsCount(1)">+</button>
+                <button type="button" class="btn-step" onclick="changeSectionsCount('lower', -1)">−</button>
+                <input type="number" id="countLowerInput" value="4" min="1" max="8" readonly>
+                <button type="button" class="btn-step" onclick="changeSectionsCount('lower', 1)">+</button>
               </div>
             </div>
           </div>
 
-          <div id="sectionsListContainer"></div>
+          <div id="lowerSectionsContainer"></div>
         </div>
 
+        <!-- 3. ВЕРХНИЕ ОТСЕКИ С ИНДИВИДУАЛЬНЫМИ РАЗМЕРАМИ И ГАЗЛИФТАМИ -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">3</span>
-            <span>Калькулятор Верхнего Яруса (Шкафы)</span>
+            <span>Верхние отсеки (Навесные шкафы)</span>
           </div>
 
-          <div class="toggle-box" style="margin-top:0;">
+          <div class="toggle-box" style="margin-top:0; margin-bottom: 15px;">
             <label class="checkbox-label">
               <input type="checkbox" id="hasUpperTier" checked onchange="toggleUpperTierControls()">
-              Включить верхние навесные шкафчики
+              Включить верхние навесные шкафы
             </label>
+          </div>
 
-            <div id="upperTierControls" class="sub-options">
-              <div class="inputs-grid">
-                <div class="field-group">
-                  <label>Длина верхнего яруса (см)</label>
-                  <input type="number" id="upperLength" value="300" min="50" max="800" oninput="updateCalculator()">
-                </div>
-                <div class="field-group">
-                  <label>Высота верхних шкафов (см)</label>
-                  <input type="number" id="upperHeight" value="72" min="30" max="130" oninput="updateCalculator()">
-                </div>
+          <div id="upperTierControls">
+            <div class="inputs-grid" style="margin-bottom: 15px;">
+              <div class="field-group">
+                <label>Высота верхних шкафов (см)</label>
+                <input type="number" id="upperHeight" value="72" min="30" max="130" oninput="updateCalculator()">
               </div>
-
-              <div class="inputs-grid">
-                <div class="field-group">
-                  <label>Глубина верхних шкафов (см)</label>
-                  <input type="number" id="upperDepth" value="35" min="20" max="65" oninput="updateCalculator()">
-                </div>
-                <div class="field-group">
-                  <label>Конфигурация / Ярусность</label>
-                  <select id="upperTierType" onchange="updateCalculator()">
-                    <option value="1.0" selected>1 ярус (Стандартный 70–80 см)</option>
-                    <option value="1.15">1 ярус Высокий (90–100 см)</option>
-                    <option value="1.35">2 яруса / С антресолями до потолка</option>
-                  </select>
-                </div>
+              <div class="field-group">
+                <label>Глубина верхних шкафов (см)</label>
+                <input type="number" id="upperDepth" value="35" min="20" max="65" oninput="updateCalculator()">
               </div>
-
-              <div class="info-badge">
-                <span>Расчетная стоимость верхнего яруса:</span>
-                <span id="upperTierPriceBadge">0 UZS</span>
+              <div class="field-group" style="grid-column: span 2;">
+                <label>Количество верхних отсеков</label>
+                <div class="number-stepper">
+                  <button type="button" class="btn-step" onclick="changeSectionsCount('upper', -1)">−</button>
+                  <input type="number" id="countUpperInput" value="4" min="1" max="8" readonly>
+                  <button type="button" class="btn-step" onclick="changeSectionsCount('upper', 1)">+</button>
+                </div>
               </div>
             </div>
+
+            <div id="upperSectionsContainer"></div>
           </div>
         </div>
 
+        <!-- 4. МАТЕРИАЛЫ И ФАСАДЫ -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">4</span>
-            <span>Наполнение и механизмы открывания</span>
+            <span>Параметры Фасада, Корпуса и Столешницы</span>
           </div>
 
-          <div class="inputs-grid">
-            <div class="field-group">
-              <label>Дополнительные полки</label>
-              <div class="number-stepper">
-                <button type="button" class="btn-step" onclick="changeQty('countShelves', -1)">−</button>
-                <input type="number" id="countShelves" value="2" min="0" max="20" oninput="updateCalculator()">
-                <button type="button" class="btn-step" onclick="changeQty('countShelves', 1)">+</button>
-              </div>
-            </div>
-            <div class="field-group">
-              <label>Выдвижные ящики</label>
-              <div class="number-stepper">
-                <button type="button" class="btn-step" onclick="changeQty('countDrawers', -1)">−</button>
-                <input type="number" id="countDrawers" value="3" min="0" max="20" oninput="updateCalculator()">
-                <button type="button" class="btn-step" onclick="changeQty('countDrawers', 1)">+</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="inputs-grid" style="margin-top: 5px;">
-            <div class="field-group" id="gasLiftGroup">
-              <label>Газовые лифты (газлифты) на верхние двери</label>
-              <div class="number-stepper">
-                <button type="button" class="btn-step" id="btnGasMinus" onclick="changeQty('countGasLifts', -1)">−</button>
-                <input type="number" id="countGasLifts" value="2" min="0" max="15" oninput="updateCalculator()">
-                <button type="button" class="btn-step" id="btnGasPlus" onclick="changeQty('countGasLifts', 1)">+</button>
-              </div>
-            </div>
-            <div class="field-group">
-              <label>Тип открывания дверей</label>
-              <select id="doorOpenType" onchange="updateCalculator()">
-                <option value="handles" selected>Дверцы с ручками (Классические ручки)</option>
-                <option value="push">Толкательная система (Push-to-Open / Нажатие)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">
-            <span class="step-badge">5</span>
-            <span>Параметры Фасада, Корпуса и Кромки</span>
-          </div>
-
-          <div class="sub-section-title">5.1. Параметры и Кромка Фасада</div>
           <div class="inputs-grid">
             <div class="field-group">
               <label>Материал фасада</label>
               <select id="facadeMaterial" onchange="updateCalculator()">
-                <option value="2500000">ЛДСП Эконом (Узбекистан / Россия)</option>
-                <option value="3200000" selected>ЛДСП Премиум (Egger / Kronospan)</option>
-                <option value="3800000">ЛМДФ / МДФ Пленочный</option>
-                <option value="4400000">AGT Декоративные Панели (Турция)</option>
-                <option value="4800000">МДФ Эмаль (Крашенный Матовый / Глянец)</option>
-                <option value="6500000">МДФ Шпон натуральный / Массив</option>
+                <option value="2500000">ЛДСП Эконом</option>
+                <option value="3200000" selected>ЛДСП Премиум (Egger)</option>
+                <option value="3800000">МДФ Пленочный</option>
+                <option value="4800000">МДФ Эмаль (Крашенный)</option>
+                <option value="6500000">Массив / Шпон</option>
               </select>
             </div>
-
             <div class="field-group">
               <label>Цвет фасада</label>
               <select id="facadeColor" onchange="updateCalculator()">
-                <option value="#f8fafc" selected>Белый Матовый / Альпийский</option>
-                <option value="#ffffff">Белый Глянец / Бриллиант</option>
-                <option value="#fef3c7">Слоновая Кость / Ваниль</option>
-                <option value="#e5e7eb">Серый Светлый / Матовый</option>
-                <option value="#334155">Антрацит / Серый Графит</option>
-                <option value="#090d16">Чёрный Глубокий Матовый</option>
-                <option value="#d97706">Дуб Сонома Светлый</option>
-                <option value="#b45309">Дуб Натуральный / Вотан</option>
-                <option value="#78350f">Орех Тёмный Премиум</option>
-                <option value="#94a3b8">Бетон Светлый Лофт</option>
-              </select>
-            </div>
-
-            <div class="field-group">
-              <label>Тип кромки фасада</label>
-              <select id="facadeEdgeType" onchange="updateCalculator()">
-                <option value="pvc04">ПВХ 0.4 мм (Защитная)</option>
-                <option value="pvc20" selected>ПВХ 2.0 мм (Противоударная)</option>
-                <option value="pur">PUR-кромка (Лазерный влагостойкий шов)</option>
-              </select>
-            </div>
-
-            <div class="field-group">
-              <label>Цвет кромки фасада</label>
-              <select id="facadeEdgeColor" onchange="updateCalculator()">
-                <option value="#fbbf24" selected>Золотой / Латунь (Акцент)</option>
-                <option value="#f8fafc">Белый Матовый</option>
+                <option value="#f8fafc" selected>Белый Матовый</option>
+                <option value="#ffffff">Белый Глянец</option>
+                <option value="#fef3c7">Слоновая Кость</option>
                 <option value="#334155">Антрацит / Графит</option>
-                <option value="#000000">Чёрный Контрастный</option>
                 <option value="#d97706">Дуб Сонома</option>
+                <option value="#b45309">Дуб Вотан</option>
               </select>
             </div>
-          </div>
-
-          <div class="sub-section-title">5.2. Параметры и Кромка Корпуса</div>
-          <div class="inputs-grid">
             <div class="field-group">
               <label>Материал корпуса</label>
               <select id="bodyMaterial" onchange="updateCalculator()">
                 <option value="0" selected>ЛДСП Стандарт</option>
-                <option value="300000">ЛДСП Премиум Egger / Влагостойкий</option>
-                <option value="600000">ЛМДФ Влагостойкий</option>
+                <option value="300000">ЛДСП Премиум Влагостойкий</option>
               </select>
             </div>
             <div class="field-group">
-              <label>Цвет корпуса</label>
-              <select id="bodyColor" onchange="updateCalculator()">
-                <option value="Белый Стандарт" selected>Белый Матовый (Классика)</option>
-                <option value="Серый Графит">Антрацит / Серый Графит</option>
-                <option value="Дуб Вотан">Дуб Вотан Натуральный</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label>Тип кромки корпуса</label>
-              <select id="bodyEdgeType" onchange="updateCalculator()">
-                <option value="pvc04" selected>ПВХ 0.4 мм</option>
-                <option value="pvc20">ПВХ 2.0 мм</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label>Цвет кромки корпуса</label>
-              <select id="bodyEdgeColor" onchange="updateCalculator()">
-                <option value="В тон корпуса" selected>В тон цвета корпуса</option>
-                <option value="Белый">Белый</option>
-                <option value="Графит">Графит</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="sub-section-title">5.3. Столешница и Фурнитура</div>
-          <div class="inputs-grid">
-            <div class="field-group">
-              <label>Варианты столешниц (Ташкент)</label>
+              <label>Столешница</label>
               <select id="countertopMaterial" onchange="updateCalculator()">
                 <option value="200000">ЛДСП 28 мм</option>
                 <option value="350000">ЛДСП 38 мм</option>
-                <option value="1500000" selected>Искусственный акриловый камень</option>
-                <option value="2800000">Кварцевый агломерат (Кварц)</option>
-              </select>
-            </div>
-
-            <div class="field-group">
-              <label>Комплект фурнитуры</label>
-              <select id="hardwareType" onchange="updateCalculator()">
-                <option value="0">Эконом (Boyard)</option>
-                <option value="400000" selected>Стандарт (GTV / Samet с доводчиками)</option>
-                <option value="1200000">Премиум (Blum / Hettich)</option>
+                <option value="1500000" selected>Искусственный камень</option>
+                <option value="2800000">Кварцевый агломерат</option>
               </select>
             </div>
           </div>
         </div>
 
+        <!-- 5. ОСТРОВ -->
         <div class="card">
           <div class="section-title">
-            <span class="step-badge">6</span>
-            <span>Островной модуль (Опция)</span>
+            <span class="step-badge">5</span>
+            <span>Кухонный остров (Опция)</span>
           </div>
-
           <div class="toggle-box">
             <label class="checkbox-label">
               <input type="checkbox" id="hasIsland" onchange="toggleIslandOptions()">
               Добавить кухонный остров
             </label>
-
             <div id="islandOptions" class="sub-options" style="display:none;">
               <div class="inputs-grid">
                 <div class="field-group">
-                  <label>Длина острова (см)</label>
+                  <label>Длина (см)</label>
                   <input type="number" id="islandLength" value="140" min="80" max="300" oninput="updateCalculator()">
                 </div>
                 <div class="field-group">
-                  <label>Ширина острова (см)</label>
+                  <label>Ширина (см)</label>
                   <input type="number" id="islandWidth" value="80" min="50" max="150" oninput="updateCalculator()">
                 </div>
               </div>
@@ -530,25 +442,25 @@
           </div>
         </div>
 
-        <!-- КНОПКА ИТОГ (БЕЗ СЕРВЕРНЫХ ОШИБОК) -->
+        <!-- 6. ИТОГ -->
         <div class="card">
           <div class="section-title">
-            <span class="step-badge">7</span>
+            <span class="step-badge">6</span>
             <span>Формирование Спецификации и Итогов</span>
           </div>
 
           <div class="inputs-grid">
             <div class="field-group">
               <label>ФИО Заказчика</label>
-              <input type="text" id="clientName" placeholder="Например: Ислямов Айдер">
+              <input type="text" id="clientName" placeholder="Ислямов Айдер">
             </div>
             <div class="field-group">
-              <label>Номер телефона Заказчика</label>
+              <label>Телефон</label>
               <input type="tel" id="clientPhone" placeholder="+998 (90) 123-45-67">
             </div>
           </div>
           <div class="field-group" style="margin-top: 10px;">
-            <label>Адрес объекта / Примечания</label>
+            <label>Адрес / Примечания</label>
             <textarea id="clientNotes" rows="2" placeholder="Адрес установки, этаж..."></textarea>
           </div>
 
@@ -559,7 +471,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО С ИТОГОМ И КНОПКОЙ СКАЧИВАНИЯ ФОТО -->
+  <!-- МОДАЛЬНОЕ ОКНО С ИТОГОМ -->
   <div id="summaryModal">
     <div class="modal-content" id="captureArea">
       <div class="modal-header">Спецификация и состав заказа кухни</div>
@@ -574,33 +486,30 @@
       <table class="modal-table">
         <tr><th style="width: 40%;">Параметр</th><th>Выбранное значение</th></tr>
         <tr><td>Тип кухни</td><td id="resKitchenType">-</td></tr>
-        <tr><td>Габариты</td><td id="resDimensions">-</td></tr>
-        <tr><td>Верхний ярус</td><td id="resUpper">-</td></tr>
-        <tr><td>Наполнение</td><td id="resFittings">-</td></tr>
-        <tr><td>Открывание</td><td id="resDoor">-</td></tr>
+        <tr><td>Габариты стены</td><td id="resDimensions">-</td></tr>
         <tr><td>Фасады</td><td id="resFacade">-</td></tr>
-        <tr><td>Кромка фасада</td><td id="resFacadeEdge">-</td></tr>
-        <tr><td>Корпус</td><td id="resBody">-</td></tr>
-        <tr><td>Кромка корпуса</td><td id="resBodyEdge">-</td></tr>
         <tr><td>Столешница</td><td id="resCountertop">-</td></tr>
-        <tr><td>Фурнитура</td><td id="resHardware">-</td></tr>
         <tr><td>Остров</td><td id="resIsland">-</td></tr>
       </table>
 
-      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 8px 0;">Детализация отсеков (модулей) слева направо</h3>
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 8px 0;">Нижние отсеки (модули)</h3>
       <table class="modal-table">
         <thead>
           <tr>
-            <th style="width: 10%; text-align: center;">№</th>
-            <th style="width: 45%;">Назначение отсека</th>
-            <th style="width: 15%;">Ярус</th>
-            <th style="width: 15%;">Ширина</th>
-            <th style="width: 15%;">Глубина</th>
+            <th>№</th><th>Название</th><th>Ширина</th><th>Полки</th><th>Ящики</th><th>Открывание</th>
           </tr>
         </thead>
-        <tbody id="resSectionsTableBody">
-          <!-- Динамически заполняется -->
-        </tbody>
+        <tbody id="resLowerTableBody"></tbody>
+      </table>
+
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 8px 0;">Верхние отсеки (шкафы)</h3>
+      <table class="modal-table">
+        <thead>
+          <tr>
+            <th>№</th><th>Название</th><th>Ширина</th><th>Полки</th><th>Газлифты</th><th>Открывание</th>
+          </tr>
+        </thead>
+        <tbody id="resUpperTableBody"></tbody>
       </table>
 
       <div class="price-box" style="margin-top: 15px; padding: 12px;">
@@ -610,7 +519,7 @@
       </div>
     </div>
 
-    <div style="max-width: 750px; margin: 15px auto; display: flex; gap: 10px;">
+    <div style="max-width: 800px; margin: 15px auto; display: flex; gap: 10px;">
       <button class="btn-submit" style="background: #2563eb;" onclick="downloadAsImage()">📸 Скачать всю спецификацию как фото (для Telegram)</button>
       <button class="btn-submit" style="background: #475569;" onclick="closeSummaryModal()">Закрыть</button>
     </div>
@@ -618,111 +527,156 @@
 
   <script>
     let currentType = 'straight';
-    let sectionsData = [];
+    let lowerSections = [];
+    let upperSections = [];
     let calculatedTotalPriceNumber = 0;
 
     function initDefaultSections() {
       const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
-      let count = 5;
-      let widthPerSec = Math.round(mainW / count);
-      
-      sectionsData = [
-        { id: 1, name: 'Модуль под мойку', tier: 'lower', width: widthPerSec, depth: 60 },
-        { id: 2, name: 'Модуль с ящиками (3 шт)', tier: 'lower', width: widthPerSec, depth: 60 },
-        { id: 3, name: 'Под духовой шкаф / плиту', tier: 'lower', width: widthPerSec, depth: 60 },
-        { id: 4, name: 'Шкаф распашной с полкой', tier: 'lower', width: widthPerSec, depth: 60 },
-        { id: 5, name: 'Бутылочница / Карго', tier: 'lower', width: widthPerSec, depth: 60 }
+      let w = Math.round(mainW / 4);
+
+      lowerSections = [
+        { id: 1, name: 'Модуль под мойку', width: w, depth: 60, shelves: 1, drawers: 0, openType: 'handles' },
+        { id: 2, name: 'Тумба с ящиками', width: w, depth: 60, shelves: 0, drawers: 3, openType: 'push' },
+        { id: 3, name: 'Под варочную панель', width: w, depth: 60, shelves: 1, drawers: 1, openType: 'handles' },
+        { id: 4, name: 'Шкаф распашной', width: w, depth: 60, shelves: 2, drawers: 0, openType: 'handles' }
       ];
-      renderSectionsConfigurator();
+
+      upperSections = [
+        { id: 1, name: 'Шкаф сушка', width: w, depth: 35, shelves: 2, gasLifts: 1, openType: 'handles' },
+        { id: 2, name: 'Шкаф распашной', width: w, depth: 35, shelves: 2, gasLifts: 1, openType: 'handles' },
+        { id: 3, name: 'Шкаф над вытяжкой', width: w, depth: 35, shelves: 1, gasLifts: 1, openType: 'push' },
+        { id: 4, name: 'Шкаф угловой/боковой', width: w, depth: 35, shelves: 2, gasLifts: 1, openType: 'push' }
+      ];
+
+      renderSections('lower');
+      renderSections('upper');
     }
 
-    function changeSectionsCount(delta) {
-      let input = document.getElementById('countSectionsInput');
-      let val = parseInt(input.value) || 5;
-      val = Math.max(1, Math.min(10, val + delta));
+    function changeSectionsCount(type, delta) {
+      let inputId = type === 'lower' ? 'countLowerInput' : 'countUpperInput';
+      let input = document.getElementById(inputId);
+      let val = parseInt(input.value) || 4;
+      val = Math.max(1, Math.min(8, val + delta));
       input.value = val;
 
-      const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
+      let arr = type === 'lower' ? lowerSections : upperSections;
+      let mainW = parseFloat(document.getElementById('mainWall').value) || 300;
       let defaultW = Math.round(mainW / val);
 
-      if (val > sectionsData.length) {
-        for (let i = sectionsData.length + 1; i <= val; i++) {
-          sectionsData.push({ id: i, name: `Модуль / Шкаф №${i}`, tier: 'lower', width: defaultW, depth: 60 });
+      if (val > arr.length) {
+        for (let i = arr.length + 1; i <= val; i++) {
+          arr.push({
+            id: i,
+            name: `${type === 'lower' ? 'Нижний' : 'Верхний'} модуль ${i}`,
+            width: defaultW,
+            depth: type === 'lower' ? 60 : 35,
+            shelves: 1,
+            drawers: type === 'lower' ? 1 : 0,
+            gasLifts: type === 'upper' ? 1 : 0,
+            openType: 'handles'
+          });
         }
-      } else if (val < sectionsData.length) {
-        sectionsData = sectionsData.slice(0, val);
+      } else if (val < arr.length) {
+        arr.splice(val);
       }
-      renderSectionsConfigurator();
+
+      renderSections(type);
       updateCalculator();
     }
 
-    function updateSectionsByWallWidth() {
-      const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
-      let count = sectionsData.length;
-      if (count > 0) {
-        let avgW = Math.round(mainW / count);
-        sectionsData.forEach(s => s.width = avgW);
-        renderSectionsConfigurator();
-      }
-    }
-
-    function renderSectionsConfigurator() {
-      const container = document.getElementById('sectionsListContainer');
+    function renderSections(type) {
+      let containerId = type === 'lower' ? 'lowerSectionsContainer' : 'upperSectionsContainer';
+      let arr = type === 'lower' ? lowerSections : upperSections;
+      let container = document.getElementById(containerId);
       let html = '';
-      sectionsData.forEach((sec, idx) => {
+
+      arr.forEach((sec, idx) => {
         html += `
           <div class="section-card-item">
-            <div class="section-card-header">
-              <span>Отсек №${sec.id} (Слева направо)</span>
-              <small style="color:var(--text-muted)">Ярус: ${sec.tier === 'lower' ? 'Нижний' : sec.tier === 'upper' ? 'Верхний' : 'Пенал'}</small>
+            <div>
+              <div class="section-card-header">
+                <span>Отсек [${sec.id}]</span>
+                <span style="color:var(--text-muted)">Ярус: ${type === 'lower' ? 'Нижний' : 'Верхний'}</span>
+              </div>
+              <div class="inputs-grid" style="margin-bottom:8px;">
+                <div class="field-group">
+                  <label>Название / Назначение</label>
+                  <input type="text" value="${sec.name}" onchange="updateSec('${type}', ${idx}, 'name', this.value)">
+                </div>
+                <div class="field-group">
+                  <label>Ширина отсека (см)</label>
+                  <input type="number" value="${sec.width}" min="20" max="150" oninput="updateSec('${type}', ${idx}, 'width', parseFloat(this.value)||0)">
+                </div>
+              </div>
+              <div class="inputs-grid" style="margin-bottom:0;">
+                <div class="field-group">
+                  <label>Кол-во полок</label>
+                  <input type="number" value="${sec.shelves}" min="0" max="5" oninput="updateSec('${type}', ${idx}, 'shelves', parseInt(this.value)||0)">
+                </div>
+                ${type === 'lower' ? `
+                <div class="field-group">
+                  <label>Выдвижные ящики (шт)</label>
+                  <input type="number" value="${sec.drawers}" min="0" max="4" oninput="updateSec('${type}',${idx}, 'drawers', parseInt(this.value)||0)">
+                </div>` : `
+                <div class="field-group">
+                  <label>Газлифты (шт)</label>
+                  <input type="number" value="${sec.gasLifts}" min="0" max="2" oninput="updateSec('${type}',${idx}, 'gasLifts', parseInt(this.value)||0)">
+                </div>`}
+                <div class="field-group" style="grid-column: span 2;">
+                  <label>Тип открывания</label>
+                  <select onchange="updateSec('${type}', ${idx}, 'openType', this.value)">
+                    <option value="handles" ${sec.openType === 'handles' ? 'selected' : ''}>С ручками</option>
+                    <option value="push" ${sec.openType === 'push' ? 'selected' : ''}>Push-to-Open (Нажатие)</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <div class="inputs-grid" style="margin-bottom:0;">
-              <div class="field-group">
-                <label>Назначение отсека</label>
-                <input type="text" value="${sec.name}" onchange="updateSectionField(${idx}, 'name', this.value)">
-              </div>
-              <div class="field-group">
-                <label>Ширина отсека (см)</label>
-                <input type="number" value="${sec.width}" min="15" max="200" oninput="updateSectionField(${idx}, 'width', parseFloat(this.value)||0)">
-              </div>
-            </div>
-            <div class="inputs-grid" style="margin-top: 8px; margin-bottom:0;">
-              <div class="field-group">
-                <label>Глубина отсека (см)</label>
-                <input type="number" value="${sec.depth}" min="20" max="90" oninput="updateSectionField(${idx}, 'depth', parseFloat(this.value)||0)">
-              </div>
-              <div class="field-group">
-                <label>Тип яруса</label>
-                <select onchange="updateSectionField(${idx}, 'tier', this.value)">
-                  <option value="lower" ${sec.tier === 'lower' ? 'selected' : ''}>Нижняя тумба</option>
-                  <option value="upper" ${sec.tier === 'upper' ? 'selected' : ''}>Верхний шкаф</option>
-                  <option value="tall" ${sec.tier === 'tall' ? 'selected' : ''}>Пенал</option>
-                </select>
-              </div>
+            <div class="section-mini-svg">
+              <svg viewBox="0 0 100 100" id="miniSvg_${type}_${idx}"></svg>
             </div>
           </div>
         `;
       });
+
       container.innerHTML = html;
-      document.getElementById('countSectionsInput').value = sectionsData.length;
+      drawAllMiniSvgs();
     }
 
-    function updateSectionField(index, field, value) {
-      if (sectionsData[index]) {
-        sectionsData[index][field] = value;
+    function updateSec(type, idx, field, val) {
+      let arr = type === 'lower' ? lowerSections : upperSections;
+      if (arr[idx]) {
+        arr[idx][field] = val;
+        drawAllMiniSvgs();
         updateCalculator();
       }
     }
 
-    function changeQty(inputId, delta) {
-      const input = document.getElementById(inputId);
-      if (input.disabled) return;
-      let val = parseInt(input.value) || 0;
-      let min = parseInt(input.getAttribute('min')) || 0;
-      let max = parseInt(input.getAttribute('max')) || 99;
-      val = Math.max(min, Math.min(max, val + delta));
-      input.value = val;
-      updateCalculator();
+    function drawAllMiniSvgs() {
+      lowerSections.forEach((sec, idx) => drawMiniSvg('lower', idx, sec));
+      upperSections.forEach((sec, idx) => drawMiniSvg('upper', idx, sec));
+    }
+
+    function drawMiniSvg(type, idx, sec) {
+      const svg = document.getElementById(`miniSvg_${type}_${idx}`);
+      if (!svg) return;
+      let html = `<rect x="10" y="10" width="80" height="80" fill="#1e293b" stroke="#fbbf24" stroke-width="2" rx="4"/>`;
+      
+      // Полки
+      let shelves = sec.shelves || 0;
+      for (let i = 1; i <= shelves; i++) {
+        let y = 10 + (80 / (shelves + 1)) * i;
+        html += `<line x1="12" y1="${y}" x2="88" y2="${y}" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2"/>`;
+      }
+
+      // Ящики или газлифты
+      if (type === 'lower' && sec.drawers > 0) {
+        html += `<text x="50" y="55" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">Ящиков: ${sec.drawers}</text>`;
+      } else if (type === 'upper' && sec.gasLifts > 0) {
+        html += `<text x="50" y="55" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">Газлифт</text>`;
+      }
+
+      svg.innerHTML = html;
     }
 
     function setKitchenType(type, btnElement) {
@@ -752,8 +706,7 @@
     }
 
     function syncUpperLength() {
-      const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
-      document.getElementById('upperLength').value = mainW;
+      updateCalculator();
     }
 
     function toggleUpperTierControls() {
@@ -775,19 +728,12 @@
       const rightW = parseFloat(document.getElementById('rightWall').value) || 150;
 
       const hasUpper = document.getElementById('hasUpperTier').checked;
-      const upperL = parseFloat(document.getElementById('upperLength').value) || 0;
       const upperH = parseFloat(document.getElementById('upperHeight').value) || 72;
       const upperD = parseFloat(document.getElementById('upperDepth').value) || 35;
-      const upperTierTypeFactor = parseFloat(document.getElementById('upperTierType').value) || 1.0;
 
       const facadePriceM = parseFloat(document.getElementById('facadeMaterial').value);
       const bodyPriceM = parseFloat(document.getElementById('bodyMaterial').value);
       const topPriceM = parseFloat(document.getElementById('countertopMaterial').value);
-      const hardwarePriceM = parseFloat(document.getElementById('hardwareType').value);
-
-      const shelves = parseFloat(document.getElementById('countShelves').value) || 0;
-      const drawers = parseFloat(document.getElementById('countDrawers').value) || 0;
-      const gasLifts = hasUpper ? (parseFloat(document.getElementById('countGasLifts').value) || 0) : 0;
 
       const hasIsland = document.getElementById('hasIsland').checked;
       const islL = parseFloat(document.getElementById('islandLength').value) || 140;
@@ -797,24 +743,34 @@
       if (currentType === 'l-shape') lowerMeters += (leftW - 60) / 100;
       else if (currentType === 'u-shape') lowerMeters += (leftW - 60) / 100 + (rightW - 60) / 100;
 
-      let lowerCostPerMeter = (facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + hardwarePriceM;
-      let lowerTotalPrice = lowerMeters * lowerCostPerMeter;
+      let lowerCostPerMeter = (facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + 400000;
+      let totalPrice = lowerMeters * lowerCostPerMeter;
 
-      let upperTierPrice = 0;
-      if (hasUpper && upperL > 0) {
-        let upperMeters = upperL / 100;
+      // Суммируем наполнение отсеков
+      lowerSections.forEach(s => {
+        totalPrice += (s.shelves * 50000) + (s.drawers * 110000);
+        if (s.openType === 'push') totalPrice += 40000;
+      });
+
+      if (hasUpper) {
+        let upperMeters = mainW / 100;
         let upperCostPerMeter = (facadePriceM * 0.45) + (bodyPriceM * 0.4);
-        upperTierPrice = upperMeters * upperCostPerMeter * (upperH / 72) * (upperD / 35) * upperTierTypeFactor;
+        totalPrice += upperMeters * upperCostPerMeter * (upperH / 72) * (upperD / 35);
+
+        upperSections.forEach(s => {
+          totalPrice += (s.shelves * 50000) + (s.gasLifts * 120000);
+          if (s.openType === 'push') totalPrice += 40000;
+        });
       }
 
-      document.getElementById('upperTierPriceBadge').innerText = Math.round(upperTierPrice).toLocaleString('ru-RU') + ' UZS';
+      if (hasIsland) {
+        totalPrice += (islL / 100) * (facadePriceM + topPriceM + 400000);
+      }
 
-      calculatedTotalPriceNumber = lowerTotalPrice + upperTierPrice + (shelves * 50000) + (drawers * 110000) + (gasLifts * 120000);
-      if (hasIsland) calculatedTotalPriceNumber += (islL / 100) * (facadePriceM + topPriceM + hardwarePriceM);
+      calculatedTotalPriceNumber = totalPrice;
+      document.getElementById('totalPriceDisplay').innerText = Math.round(totalPrice).toLocaleString('ru-RU');
 
-      document.getElementById('totalPriceDisplay').innerText = Math.round(calculatedTotalPriceNumber).toLocaleString('ru-RU');
-
-      drawFrontView(mainW, totalH, hasUpper, upperL, upperH);
+      drawFrontView(mainW, totalH, hasUpper, upperH);
       drawTopView(mainW, leftW, rightW, hasIsland, islL, islW);
       drawPanelSample();
     }
@@ -823,17 +779,16 @@
       const svg = document.getElementById('svgPanelSample');
       svg.innerHTML = '';
       const faceFill = document.getElementById('facadeColor').value;
-      const edgeFill = document.getElementById('facadeEdgeColor').value;
-      const facadeMatText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text.split('(')[0];
+      const facadeMatText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text;
 
       let html = `<polygon points="70,45 250,15 310,65 130,95" fill="${faceFill}" stroke="#fbbf24" stroke-width="1.5" />`;
-      html += `<polygon points="130,95 310,65 310,90 130,120" fill="${edgeFill}" stroke="#fbbf24" stroke-width="1.5" />`;
+      html += `<polygon points="130,95 310,65 310,90 130,120" fill="#fbbf24" stroke="#fbbf24" stroke-width="1.5" />`;
       html += `<polygon points="70,45 130,95 130,120 70,70" fill="#78350f" stroke="#fbbf24" stroke-width="1.5" />`;
       svg.innerHTML = html;
-      document.getElementById('panelSampleBadge').innerText = `${facadeMatText.trim()}`;
+      document.getElementById('panelSampleBadge').innerText = `${facadeMatText}`;
     }
 
-    function drawFrontView(w, h, hasUpper, upperL, upperH) {
+    function drawFrontView(w, h, hasUpper, upperH) {
       const svg = document.getElementById('svgFront');
       svg.innerHTML = '';
       const svgW = 400, svgH = 200, padding = 25;
@@ -844,21 +799,32 @@
       const baseH = kH * (85 / h), apronH = kH * (60 / h);
 
       let html = `<rect x="${startX}" y="${startY + Math.max(0, kH - baseH - apronH)}" width="${kW}" height="${apronH}" fill="#0f172a" stroke="#475569" stroke-width="1" />`;
-      let totalSectionsW = sectionsData.reduce((sum, s) => sum + (s.width || 0), 0) || w;
+      
+      // Нижние отсеки
       let currX = startX;
-
-      sectionsData.forEach((sec) => {
-        let secW = (sec.width / totalSectionsW) * kW;
+      let totalLowerW = lowerSections.reduce((acc, s) => acc + s.width, 0) || w;
+      lowerSections.forEach((sec) => {
+        let secW = (sec.width / totalLowerW) * kW;
         html += `<rect x="${currX}" y="${startY + kH - baseH}" width="${secW}" height="${baseH}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
-        html += `<text x="${currX + secW/2}" y="${startY + kH - baseH/2 + 4}" fill="#fbbf24" font-size="11" font-weight="bold" text-anchor="middle">[${sec.id}]</text>`;
+        html += `<text x="${currX + secW/2}" y="${startY + kH - baseH/2 + 4}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">[${sec.id}]</text>`;
         currX += secW;
       });
 
-      if (hasUpper && upperL > 0 && upperH > 0) {
-        const topW = upperL * scale, topH = upperH * scale;
-        const topY = startY + kH - baseH - apronH - topH;
-        html += `<rect x="${startX}" y="${Math.max(startY, topY)}" width="${topW}" height="${topH}" fill="#334155" stroke="#fbbf24" stroke-width="1.5" />`;
+      // Верхние отсеки
+      if (hasUpper) {
+        let topH = upperH * scale;
+        let topY = startY + kH - baseH - apronH - topH;
+        let currTopX = startX;
+        let totalUpperW = upperSections.reduce((acc, s) => acc + s.width, 0) || w;
+        
+        upperSections.forEach((sec) => {
+          let secW = (sec.width / totalUpperW) * kW;
+          html += `<rect x="${currTopX}" y="${Math.max(startY, topY)}" width="${secW}" height="${topH}" fill="#334155" stroke="#38bdf8" stroke-width="1.5" />`;
+          html += `<text x="${currTopX + secW/2}" y="${Math.max(startY + 12, topY + 12)}" fill="#38bdf8" font-size="9" font-weight="bold" text-anchor="middle">[В-${sec.id}]</text>`;
+          currTopX += secW;
+        });
       }
+
       svg.innerHTML = html;
     }
 
@@ -885,47 +851,30 @@
 
       const typeNames = { 'straight': 'Прямая кухня', 'l-shape': 'Г-образная кухня', 'u-shape': 'П-образная кухня' };
       document.getElementById('resKitchenType').innerText = typeNames[currentType];
-
-      let dims = `Основная стена: ${document.getElementById('mainWall').value} см, Высота: ${document.getElementById('totalHeight').value} см`;
-      document.getElementById('resDimensions').innerText = dims;
-
-      const hasUpper = document.getElementById('hasUpperTier').checked;
-      document.getElementById('resUpper').innerText = hasUpper ? `Длина: ${document.getElementById('upperLength').value} см, Высота: ${document.getElementById('upperHeight').value} см` : 'Без верхнего яруса';
-
-      document.getElementById('resFittings').innerText = `Полки: ${document.getElementById('countShelves').value}, Ящики: ${document.getElementById('countDrawers').value}`;
-      document.getElementById('resDoor').innerText = document.getElementById('doorOpenType').options[document.getElementById('doorOpenType').selectedIndex].text;
+      document.getElementById('resDimensions').innerText = `Основная стена: ${document.getElementById('mainWall').value} см`;
       document.getElementById('resFacade').innerText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text;
-      document.getElementById('resFacadeEdge').innerText = document.getElementById('facadeEdgeType').options[document.getElementById('facadeEdgeType').selectedIndex].text;
-      document.getElementById('resBody').innerText = document.getElementById('bodyMaterial').options[document.getElementById('bodyMaterial').selectedIndex].text;
-      document.getElementById('resBodyEdge').innerText = document.getElementById('bodyEdgeType').options[document.getElementById('bodyEdgeType').selectedIndex].text;
       document.getElementById('resCountertop').innerText = document.getElementById('countertopMaterial').options[document.getElementById('countertopMaterial').selectedIndex].text;
-      document.getElementById('resHardware').innerText = document.getElementById('hardwareType').options[document.getElementById('hardwareType').selectedIndex].text;
       
       const hasIsland = document.getElementById('hasIsland').checked;
       document.getElementById('resIsland').innerText = hasIsland ? `Да (${document.getElementById('islandLength').value}x${document.getElementById('islandWidth').value} см)` : 'Нет';
 
-      // Таблица отсеков
-      let tbodyHtml = '';
-      sectionsData.forEach(sec => {
-        const tierName = sec.tier === 'lower' ? 'Нижний' : sec.tier === 'upper' ? 'Верхний' : 'Пенал';
-        tbodyHtml += `
-          <tr>
-            <td style="text-align: center; font-weight: bold; color: var(--accent-gold);">[${sec.id}]</td>
-            <td>${sec.name}</td>
-            <td>${tierName}</td>
-            <td>${sec.width} см</td>
-            <td>${sec.depth} см</td>
-          </tr>
-        `;
+      // Таблица нижних
+      let lowerHtml = '';
+      lowerSections.forEach(sec => {
+        lowerHtml += `<tr><td>[${sec.id}]</td><td>${sec.name}</td><td>${sec.width} см</td><td>${sec.shelves}</td><td>${sec.drawers}</td><td>${sec.openType === 'push' ? 'Push' : 'Ручка'}</td></tr>`;
       });
-      document.getElementById('resSectionsTableBody').innerHTML = tbodyHtml;
+      document.getElementById('resLowerTableBody').innerHTML = lowerHtml;
+
+      // Таблица верхних
+      let upperHtml = '';
+      upperSections.forEach(sec => {
+        upperHtml += `<tr><td>[В-${sec.id}]</td><td>${sec.name}</td><td>${sec.width} см</td><td>${sec.shelves}</td><td>${sec.gasLifts}</td><td>${sec.openType === 'push' ? 'Push' : 'Ручка'}</td></tr>`;
+      });
+      document.getElementById('resUpperTableBody').innerHTML = upperHtml;
 
       const totalVal = Math.round(calculatedTotalPriceNumber);
-      const advanceVal = Math.round(totalVal * 0.75);
-      const finalVal = totalVal - advanceVal;
-
       document.getElementById('resTotalPrice').innerText = totalVal.toLocaleString('ru-RU') + ' UZS';
-      document.getElementById('resAdvanceInfo').innerText = `Аванс (75%): ${advanceVal.toLocaleString('ru-RU')} UZS | Остаток (25%): ${finalVal.toLocaleString('ru-RU')} UZS`;
+      document.getElementById('resAdvanceInfo').innerText = `Аванс (75%): ${Math.round(totalVal*0.75).toLocaleString('ru-RU')} UZS | Остаток (25%): ${Math.round(totalVal*0.25).toLocaleString('ru-RU')} UZS`;
 
       document.getElementById('summaryModal').style.display = 'block';
     }
