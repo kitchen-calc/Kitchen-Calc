@@ -12,7 +12,8 @@
     body {
       margin: 0;
       padding: 0;
-      background-image: url('kitchen.jpg');
+      /* Прямая ссылка на темный фоновый интерьер */
+      background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80');
       background-repeat: no-repeat;
       background-position: center center;
       background-size: cover;
@@ -28,13 +29,13 @@
     }
 
     .block {
-      background: rgba(18, 18, 18, 0.85);
+      background: rgba(18, 18, 18, 0.88);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
       padding: 25px;
       margin-bottom: 30px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     }
 
     h1, h2, h3 {
@@ -64,7 +65,7 @@
     }
 
     .scheme-card {
-      background: rgba(18, 18, 18, 0.85);
+      background: rgba(18, 18, 18, 0.88);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
@@ -75,8 +76,7 @@
     .scheme-card img {
       width: 100%;
       height: 180px;
-      object-fit: contain;
-      background: rgba(255, 255, 255, 0.03);
+      object-fit: cover;
       border-radius: 6px;
       margin-top: 10px;
     }
@@ -89,7 +89,7 @@
     }
 
     .choice-card {
-      background: rgba(18, 18, 18, 0.85);
+      background: rgba(18, 18, 18, 0.88);
       backdrop-filter: blur(10px);
       border: 2px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
@@ -132,7 +132,7 @@
       accent-color: #d4af37;
     }
 
-    /* СТИЛИ ДЛЯ ДАЛЬНЕЙШИХ ПУНКТОВ */
+    /* СТИЛИ ДЛЯ ПУНКТОВ НИЖЕ */
     .step-header {
       display: flex;
       align-items: center;
@@ -187,7 +187,6 @@
       transform: translateY(-2px);
     }
 
-    /* Адаптивность для мобильных устройств */
     @media (max-width: 900px) {
       .calculator-layout {
         grid-template-columns: 1fr;
@@ -226,17 +225,17 @@
     <!-- МАКЕТ: СБОКУ 2 ЧЕРТЕЖА, ПО ЦЕНТРУ 4 ВЫБОРА -->
     <div class="calculator-layout">
       
-      <!-- ЛЕВАЯ КОЛОНКА: 2 ЧЕРТЕЖА -->
+      <!-- ЛЕВАЯ КОЛОНКА: 2 СХЕМЫ / ЧЕРТЕЖА -->
       <div class="sidebar-schemes">
         <div class="scheme-card">
           <h3>Схема 1</h3>
           <p>Замеры и технические зоны</p>
-          <img src="chertezh1.jfif" alt="Чертеж 1">
+          <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80" alt="Чертеж 1">
         </div>
         <div class="scheme-card">
           <h3>Схема 2</h3>
           <p>Размещение коммуникаций</p>
-          <img src="chertezh2.jfif" alt="Чертеж 2">
+          <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=600&q=80" alt="Чертеж 2">
         </div>
       </div>
 
@@ -248,10 +247,10 @@
           <div>
             <h3>Прямая кухня</h3>
             <p>Компактное решение в один ряд.</p>
-            <img src="прямая.jfif" alt="Прямая кухня">
+            <img src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80" alt="Прямая кухня">
           </div>
           <label class="checkbox-label">
-            <input type="checkbox" class="kitchen-select" value="Прямая кухня" data-img="прямая.jfif" onchange="toggleCard('card-1')">
+            <input type="checkbox" class="kitchen-select" value="Прямая кухня" data-img="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80" onchange="toggleCard('card-1')">
             Выбрать
           </label>
         </div>
@@ -261,10 +260,10 @@
           <div>
             <h3>Г-образная кухня</h3>
             <p>Угловая планировка с витриной.</p>
-            <img src="Г образный.jfif" alt="Г-образная кухня">
+            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" alt="Г-образная кухня">
           </div>
           <label class="checkbox-label">
-            <input type="checkbox" class="kitchen-select" value="Г-образная кухня" data-img="Г образный.jfif" onchange="toggleCard('card-2')">
+            <input type="checkbox" class="kitchen-select" value="Г-образная кухня" data-img="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" onchange="toggleCard('card-2')">
             Выбрать
           </label>
         </div>
@@ -274,10 +273,10 @@
           <div>
             <h3>П-образная кухня</h3>
             <p>Максимум рабочей поверхности.</p>
-            <img src="П образный.jfif" alt="П-образная кухня">
+            <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800&q=80" alt="П-образная кухня">
           </div>
           <label class="checkbox-label">
-            <input type="checkbox" class="kitchen-select" value="П-образная кухня" data-img="П образный.jfif" onchange="toggleCard('card-3')">
+            <input type="checkbox" class="kitchen-select" value="П-образная кухня" data-img="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800&q=80" onchange="toggleCard('card-3')">
             Выбрать
           </label>
         </div>
@@ -287,10 +286,10 @@
           <div>
             <h3>Кухня с островом</h3>
             <p>Премиальный островной модуль.</p>
-            <img src="остров.jfif" alt="Кухня с островом">
+            <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80" alt="Кухня с островом">
           </div>
           <label class="checkbox-label">
-            <input type="checkbox" class="kitchen-select" value="Кухня с островом" data-img="остров.jfif" onchange="toggleCard('card-4')">
+            <input type="checkbox" class="kitchen-select" value="Кухня с островом" data-img="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80" onchange="toggleCard('card-4')">
             Выбрать
           </label>
         </div>
@@ -383,7 +382,7 @@
 
       const checkboxes = document.querySelectorAll('.kitchen-select:checked');
       if (checkboxes.length === 0) {
-        alert('Пожалуйста, выберите хотя бы один вариант кухни из 4 предложенных!');
+        alert('Пожалуйста, выберите хотя бы один вариант кухни!');
         return;
       }
 
@@ -403,7 +402,7 @@
         pdfItemsContainer.innerHTML += `
           <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
             <h4>${title}</h4>
-            <img src="${imgSrc}">
+            <img src="${imgSrc}" style="max-width: 100%; height: 180px; object-fit: cover;">
           </div>
         `;
       });
@@ -415,7 +414,7 @@
         margin:       10,
         filename:     `КП_Кухня_${document.getElementById('clientName').value}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
+        html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
