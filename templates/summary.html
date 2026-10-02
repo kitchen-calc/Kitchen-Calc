@@ -1,1 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Спецификация заказа кухни | Итог</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 30px; }
+    .sheet { max-width: 800px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    h1 { font-size: 1.5rem; color: #0f172a; border-bottom: 2px solid #fbbf24; padding-bottom: 10px; margin-bottom: 20px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; background: #f1f5f9; padding: 15px; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+    th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 0.9rem; }
+    th { background: #1e293b; color: #ffffff; }
+    .price-block { background: #fffbeb; border: 1.5px solid #fbbf24; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px; }
+    .price-value { font-size: 2rem; font-weight: 800; color: #b45309; }
+    .print-btn { display: block; width: 100%; background: #2563eb; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 20px; text-align: center; text-decoration: none; }
+    .print-btn:hover { background: #1d4ed8; }
+    @media print { .print-btn { display: none; } body { background: white; padding: 0; } .sheet { box-shadow: none; padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <h1>СПЕЦИФИКАЦИЯ И СОСТАВ ЗАКАЗА КУХНИ</h1>
+    
+    <div class="info-grid">
+      <div><strong>Заказчик:</strong> {{ clientName if clientName else 'Не указано' }}</div>
+      <div><strong>Телефон:</strong> {{ clientPhone if clientPhone else 'Не указано' }}</div>
+      <div style="grid-column: span 2;"><strong>Адрес / Примечания:</strong> {{ clientNotes if clientNotes else 'Стандарт' }}</div>
+    </div>
 
+    <h3>Параметры гарнитура</h3>
+    <table>
+      <tr><th>Параметр</th><th>Выбранное значение</th></tr>
+      <tr><td>Тип кухни</td><td>{{ kitchenType }}</td></tr>
+      <tr><td>Габариты</td><td>{{ dimensionsText }}</td></tr>
+      <tr><td>Верхний ярус</td><td>{{ upperModeText }}</td></tr>
+      <tr><td>Наполнение и механизмы</td><td>{{ fittingsText }}</td></tr>
+      <tr><td>Открывание дверей</td><td>{{ doorTypeText }}</td></tr>
+      <tr><td>Фасады</td><td>{{ facadeText }}</td></tr>
+      <tr><td>Кромка фасада</td><td>{{ facadeEdgeText }}</td></tr>
+      <tr><td>Корпус</td><td>{{ bodyText }}</td></tr>
+      <tr><td>Кромка корпуса</td><td>{{ bodyEdgeText }}</td></tr>
+      <tr><td>Столешница</td><td>{{ countertopText }}</td></tr>
+      <tr><td>Фурнитура</td><td>{{ hardwareText }}</td></tr>
+      <tr><td>Кухонный остров</td><td>{{ islandText }}</td></tr>
+    </table>
+
+    <h3>Детализация отсеков (модулей) слева направо</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 10%;">№</th>
+          <th style="width: 45%;">Назначение отсека</th>
+          <th style="width: 15%;">Ярус</th>
+          <th style="width: 15%;">Ширина</th>
+          <th style="width: 15%;">Глубина</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sec in sections %}
+        <tr>
+          <td style="text-align: center; font-weight: bold;">[{{ sec.id }}]</td>
+          <td>{{ sec.name }}</td>
+          <td>{{ 'Нижний' if sec.tier == 'lower' else ('Верхний' if sec.tier == 'upper' else 'Пенал') }}</td>
+          <td>{{ sec.width }} см</td>
+          <td>{{ sec.depth }} см</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="price-block">
+      <div style="font-size: 0.9rem; text-transform: uppercase; color: #78350f;">Итоговая стоимость заказа</div>
+      <div class="price-value">{{ totalPrice }} UZS</div>
+      <div style="font-size: 0.85rem; color: #475569; margin-top: 5px;">
+        Аванс (75%): {{ advance }} UZS &nbsp;|&nbsp; Остаток (25%): {{ final_sum }} UZS
+      </div>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">🖨️ Сохранить в PDF / Напечатать</button>
+  </div>
+</body>
+</html>
