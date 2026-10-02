@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Конструктор Кухонной Мебели | Ташкент</title>
 
   <!-- Библиотека html2pdf -->
@@ -116,6 +116,15 @@
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
 
+    .sub-section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      margin: 10px 0 8px 0;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed var(--border-dark);
+    }
+
     .price-box {
       background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(15, 23, 42, 0.9));
       border: 1.5px solid var(--accent-gold);
@@ -188,6 +197,7 @@
       align-items: center;
       justify-content: center;
       font-size: 0.85rem;
+      flex-shrink: 0;
     }
 
     .type-grid {
@@ -241,7 +251,7 @@
       border: 1px solid var(--border-dark);
       border-radius: 8px;
       padding: 10px 12px;
-      font-size: 0.95rem;
+      font-size: 16px !important;
       outline: none;
     }
 
@@ -265,9 +275,9 @@
       color: var(--accent-gold);
       border: 1px solid var(--border-gold);
       border-radius: 8px;
-      width: 42px;
-      height: 42px;
-      font-size: 1.3rem;
+      width: 46px;
+      height: 46px;
+      font-size: 1.4rem;
       font-weight: bold;
       cursor: pointer;
       display: flex;
@@ -275,6 +285,7 @@
       justify-content: center;
       user-select: none;
       transition: all 0.2s;
+      flex-shrink: 0;
     }
 
     .btn-step:hover {
@@ -312,8 +323,8 @@
     }
 
     .checkbox-label input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       accent-color: var(--accent-gold);
     }
 
@@ -347,53 +358,127 @@
       transform: translateY(-1px);
     }
 
-    /* МАКЕТ PDF ДОГОВОРА ДЛЯ ПЕЧАТИ */
+    /* АДАПТИВНЫЙ МОБИЛЬНЫЙ СТИЛЬ */
+    @media (max-width: 768px) {
+      .header-container {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        gap: 10px;
+      }
+
+      .master-contacts {
+        text-align: center;
+      }
+
+      .container {
+        padding: 0 10px;
+        margin: 15px auto;
+      }
+
+      .app-layout {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .sticky-sidebar {
+        position: static;
+      }
+
+      .card {
+        padding: 14px;
+        border-radius: 12px;
+      }
+
+      .inputs-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .type-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .type-btn {
+        padding: 10px 4px;
+        font-size: 0.85rem;
+      }
+
+      .price-value {
+        font-size: 1.8rem;
+      }
+
+      .svg-container {
+        height: 160px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .type-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ЖЕСТКО ИСПРАВЛЕННЫЙ МАКЕТ PDF (100% ЧЕРНЫЙ ТЕКСТ НА БЕЛОМ ФОНЕ) */
     #pdf-wrapper {
-      position: fixed;
-      left: 0;
+      position: absolute;
+      left: -9999px;
       top: 0;
-      z-index: -9999;
-      opacity: 0;
-      pointer-events: none;
       width: 794px;
-      background: #ffffff;
+      background: #ffffff !important;
+      opacity: 1 !important;
+      pointer-events: none;
     }
 
     #pdf-contract {
       width: 794px;
       background: #ffffff !important;
       color: #000000 !important;
-      padding: 35px 40px;
+      padding: 30px 35px;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 10pt;
-      line-height: 1.35;
+      font-size: 9.5pt;
+      line-height: 1.3;
       box-sizing: border-box;
+    }
+
+    /* Принудительная установка черного цвета для всех дочерних элементов */
+    #pdf-contract * {
+      color: #000000 !important;
+      border-color: #000000 !important;
+      background-color: transparent !important;
     }
 
     .pdf-header {
       text-align: center;
       font-weight: bold;
-      font-size: 12.5pt;
-      margin-bottom: 10px;
+      font-size: 12pt;
+      margin-bottom: 8px;
       text-transform: uppercase;
+      color: #000000 !important;
     }
 
     .pdf-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 8px 0;
+      margin: 6px 0;
     }
 
     .pdf-table th, .pdf-table td {
-      border: 1px solid #000000;
-      padding: 4px 8px;
-      font-size: 9pt;
+      border: 1px solid #000000 !important;
+      padding: 4px 6px;
+      font-size: 8.5pt;
+      color: #000000 !important;
+    }
+
+    .pdf-table th {
+      background-color: #f0f0f0 !important;
+      font-weight: bold;
     }
 
     .pdf-drawings-grid {
       display: table;
       width: 100%;
-      margin: 10px 0;
+      margin: 8px 0;
     }
 
     .pdf-drawing-card {
@@ -404,9 +489,9 @@
     }
 
     .pdf-drawing-box {
-      border: 1px solid #000000;
-      background: #fafafa;
-      height: 145px;
+      border: 1px solid #000000 !important;
+      background-color: #ffffff !important;
+      height: 135px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -417,15 +502,16 @@
       margin-top: 8px;
       margin-bottom: 4px;
       text-transform: uppercase;
-      font-size: 9.5pt;
-      border-bottom: 1px solid #000;
+      font-size: 9pt;
+      border-bottom: 1px solid #000000 !important;
+      color: #000000 !important;
     }
 
     .sig-section {
-      margin-top: 12px;
-      border: 1px solid #000000;
-      padding: 8px;
-      background: #fcfcfc;
+      margin-top: 10px;
+      border: 1px solid #000000 !important;
+      padding: 6px;
+      background-color: #ffffff !important;
     }
 
     .sig-table {
@@ -434,22 +520,17 @@
     }
 
     .sig-table td {
-      border: none;
+      border: none !important;
       vertical-align: top;
-      padding: 5px;
-      font-size: 8.5pt;
+      padding: 4px;
+      font-size: 8pt;
+      color: #000000 !important;
     }
 
     .sig-line {
-      margin-top: 22px;
-      border-bottom: 1px solid #000000;
+      margin-top: 20px;
+      border-bottom: 1px solid #000000 !important;
       width: 90%;
-    }
-
-    @media (max-width: 960px) {
-      .app-layout { grid-template-columns: 1fr; }
-      .sticky-sidebar { position: static; }
-      .master-contacts { text-align: left; }
     }
   </style>
 </head>
@@ -481,11 +562,11 @@
           <div class="price-currency">Узбекских сум (UZS)</div>
         </div>
 
-        <!-- 3D ПРЕВЬЮ ПЛИТЫ И КРОМКИ (НОВЫЙ ОТРЕЗОК ДЛЯ КЛИЕНТА) -->
+        <!-- 3D ПРЕВЬЮ ПЛИТЫ И КРОМКИ -->
         <div class="card">
           <div class="drawing-title">
-            <span>Образец плиты в разрезе (3D)</span>
-            <small style="color:var(--text-muted);">Угловой вид</small>
+            <span>Образец фасада и кромки (3D)</span>
+            <small style="color:var(--text-muted);">Угловой срез</small>
           </div>
           <div class="svg-container" style="height: 180px;">
             <svg id="svgPanelSample" viewBox="0 0 350 180"></svg>
@@ -551,7 +632,7 @@
               <label>Правая сторона стены (см)</label>
               <input type="number" id="rightWall" value="150" min="60" max="500" oninput="updateCalculator()">
             </div>
-            <div class="field-group" id="groupLSideDir" style="grid-column: span 2; display: none;">
+            <div class="field-group" id="groupLSideDir" style="grid-column: span 1; display: none;">
               <label>Расположение угла</label>
               <select id="lAngleDir" onchange="updateCalculator()">
                 <option value="right">Угол справа</option>
@@ -569,7 +650,7 @@
           </div>
 
           <div class="inputs-grid">
-            <div class="field-group" style="grid-column: span 2;">
+            <div class="field-group" style="grid-column: span 1;">
               <label>Конфигурация верхнего яруса</label>
               <select id="upperCabinetsMode" onchange="updateCalculator()">
                 <option value="standard" selected>Стандартные верхние шкафы (высота ~70–80 см)</option>
@@ -625,13 +706,14 @@
           </div>
         </div>
 
-        <!-- 4. РАЗДЕЛЕННЫЙ РАЗДЕЛ: МАТЕРИАЛЫ ФАСАДА, КОРПУСА, КРОМКИ И СТОЛЕШНИЦЫ -->
+        <!-- 4. РАЗДЕЛЕНИЕ: ФАСАДЫ, КОРПУС, КРОМКИ И СТОЛЕШНИЦА -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">4</span>
-            <span>Материалы фасадов, корпуса, кромки и столешницы</span>
+            <span>Параметры Фасада, Корпуса и Кромки</span>
           </div>
 
+          <div class="sub-section-title">4.1. Параметры и Кромка Фасада</div>
           <div class="inputs-grid">
             <div class="field-group">
               <label>Материал фасада</label>
@@ -646,22 +728,72 @@
             </div>
 
             <div class="field-group">
-              <label>Цвет и покрытие фасада</label>
+              <label>Цвет фасада (20 вариантов)</label>
               <select id="facadeColor" onchange="updateCalculator()">
-                <option value="white" selected>Белый матовый / Альпийский</option>
-                <option value="anthracite">Антрацит / Серый Графит</option>
-                <option value="agt_soft">AGT Supramat / Soft Touch (Бархатный)</option>
-                <option value="wood_light">Дерево Светлое (Дуб Сонома / Натуральный)</option>
-                <option value="wood_dark">Дерево Тёмное (Орех / Веньге)</option>
-                <option value="concrete">Бетон / Камень Лофт</option>
-                <option value="gloss_beige">Глянец Бежевый / Слоновая кость</option>
+                <option value="#f8fafc" selected>1. Белый Матовый / Альпийский</option>
+                <option value="#ffffff">2. Белый Глянец / Бриллиант</option>
+                <option value="#fef3c7">3. Слоновая Кость / Ваниль</option>
+                <option value="#e5e7eb">4. Серый Светлый / Матовый</option>
+                <option value="#334155">5. Антрацит / Серый Графит</option>
+                <option value="#090d16">6. Чёрный Глубокий Матовый</option>
+                <option value="#1e293b">7. Чёрный Глянец</option>
+                <option value="#d97706">8. Дуб Сонома Светлый</option>
+                <option value="#b45309">9. Дуб Натуральный / Вотан</option>
+                <option value="#78350f">10. Орех Тёмный Премиум</option>
+                <option value="#451a03">11. Венге Афро</option>
+                <option value="#a16207">12. Ясень Светлый</option>
+                <option value="#94a3b8">13. Бетон Светлый Лофт</option>
+                <option value="#475569">14. Бетон Тёмный Индустриал</option>
+                <option value="#f1f5f9">15. Мрамор Белый Калакатта</option>
+                <option value="#0f172a">16. Мрамор Чёрный Марквина</option>
+                <option value="#065f46">17. Изумруд Тёмный Матовый</option>
+                <option value="#1e3a8a">18. Синий Океан / Нави</option>
+                <option value="#9a3412">19. Терракот / Какао</option>
+                <option value="#ca8a04">20. Золотой Латунный Металлик</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label>Тип кромки фасада</label>
+              <select id="facadeEdgeType" onchange="updateCalculator()">
+                <option value="pvc04">ПВХ 0.4 мм (Защитная)</option>
+                <option value="pvc20" selected>ПВХ 2.0 мм (Противоударная)</option>
+                <option value="pur">PUR-кромка (Лазерный влагостойкий шов)</option>
+                <option value="abs">Алюминиевый ABS-профиль</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label>Цвет кромки фасада (20 вариантов)</label>
+              <select id="facadeEdgeColor" onchange="updateCalculator()">
+                <option value="#fbbf24" selected>1. Золотой / Латунь (Акцент)</option>
+                <option value="#f8fafc">2. Белый Матовый</option>
+                <option value="#ffffff">3. Белый Глянец</option>
+                <option value="#fef3c7">4. Слоновая Кость</option>
+                <option value="#e5e7eb">5. Серый Светлый</option>
+                <option value="#334155">6. Антрацит / Графит</option>
+                <option value="#000000">7. Чёрный Контрастный</option>
+                <option value="#d97706">8. Дуб Сонома</option>
+                <option value="#b45309">9. Дуб Вотан</option>
+                <option value="#78350f">10. Орех Тёмный</option>
+                <option value="#451a03">11. Венге</option>
+                <option value="#a16207">12. Ясень Светлый</option>
+                <option value="#94a3b8">13. Бетон Светлый</option>
+                <option value="#475569">14. Бетон Тёмный</option>
+                <option value="#e2e8f0">15. Алюминий Серебристый</option>
+                <option value="#0f172a">16. Чёрный Мрамор</option>
+                <option value="#065f46">17. Изумрудный</option>
+                <option value="#1e3a8a">18. Синий Нави</option>
+                <option value="#9a3412">19. Терракотовый</option>
+                <option value="#38bdf8">20. Светло-голубой Металлик</option>
               </select>
             </div>
           </div>
 
-          <div class="inputs-grid" style="margin-top: 5px;">
+          <div class="sub-section-title">4.2. Параметры и Кромка Корпуса (Каркаса)</div>
+          <div class="inputs-grid">
             <div class="field-group">
-              <label>Материал корпуса (каркаса)</label>
+              <label>Материал корпуса</label>
               <select id="bodyMaterial" onchange="updateCalculator()">
                 <option value="0" selected>ЛДСП Стандарт (Узбекистан / Россия)</option>
                 <option value="300000">ЛДСП Премиум Egger / Влагостойкий</option>
@@ -670,26 +802,69 @@
             </div>
 
             <div class="field-group">
-              <label>Цвет корпуса</label>
+              <label>Цвет корпуса (20 вариантов)</label>
               <select id="bodyColor" onchange="updateCalculator()">
-                <option value="Белый">Белый (Стандарт)</option>
-                <option value="Серый">Серый / Графит</option>
-                <option value="Дуб">Дерево / Дуб</option>
+                <option value="Белый Стандарт" selected>1. Белый Матовый (Классика)</option>
+                <option value="Белый Глянец">2. Белый Глянец</option>
+                <option value="Бежевый">3. Бежевый / Ваниль</option>
+                <option value="Серый Светлый">4. Серый Светлый</option>
+                <option value="Серый Графит">5. Антрацит / Графит</option>
+                <option value="Чёрный Матовый">6. Чёрный Матовый</option>
+                <option value="Чёрный Глянец">7. Чёрный Глянец</option>
+                <option value="Дуб Сонома">8. Дуб Сонома Светлый</option>
+                <option value="Дуб Вотан">9. Дуб Вотан Натуральный</option>
+                <option value="Орех Тёмный">10. Орех Тёмный</option>
+                <option value="Венге">11. Венге Афро</option>
+                <option value="Ясень Светлый">12. Ясень Светлый</option>
+                <option value="Бетон Светлый">13. Бетон Светлый</option>
+                <option value="Бетон Тёмный">14. Бетон Тёмный</option>
+                <option value="Мрамор Белый">15. Мрамор Белый</option>
+                <option value="Мрамор Чёрный">16. Мрамор Чёрный</option>
+                <option value="Изумруд">17. Изумруд Тёмный</option>
+                <option value="Синий Нави">18. Синий Нави</option>
+                <option value="Терракот">19. Терракот</option>
+                <option value="Титан / Серебро">20. Титан / Серебро</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label>Тип кромки корпуса</label>
+              <select id="bodyEdgeType" onchange="updateCalculator()">
+                <option value="pvc04" selected>ПВХ 0.4 мм (Стандартная)</option>
+                <option value="pvc20">ПВХ 2.0 мм (Усиленная)</option>
+                <option value="pur">PUR-кромка (Влагостойкая)</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label>Цвет кромки корпуса (20 вариантов)</label>
+              <select id="bodyEdgeColor" onchange="updateCalculator()">
+                <option value="В тон корпуса" selected>1. В тон цвета корпуса</option>
+                <option value="Белый">2. Белый</option>
+                <option value="Серый Светлый">3. Серый Светлый</option>
+                <option value="Графит">4. Графит / Антрацит</option>
+                <option value="Чёрный">5. Чёрный Контраст</option>
+                <option value="Дуб Сонома">6. Дуб Сонома</option>
+                <option value="Дуб Вотан">7. Дуб Вотан</option>
+                <option value="Орех">8. Орех Тёмный</option>
+                <option value="Венге">9. Венге</option>
+                <option value="Бетон Светлый">10. Бетон Светлый</option>
+                <option value="Бетон Тёмный">11. Бетон Тёмный</option>
+                <option value="Серебро / Алюминий">12. Серебро / Алюминий</option>
+                <option value="Золото">13. Золото</option>
+                <option value="Бежевый">14. Бежевый</option>
+                <option value="Ваниль">15. Ваниль</option>
+                <option value="Изумрудный">16. Изумрудный</option>
+                <option value="Синий">17. Синий</option>
+                <option value="Терракотовый">18. Терракотовый</option>
+                <option value="Шоколадный">19. Шоколадный</option>
+                <option value="Прозрачный / Лазер">20. Прозрачный / Лазерный шов</option>
               </select>
             </div>
           </div>
 
-          <div class="inputs-grid" style="margin-top: 5px;">
-            <div class="field-group">
-              <label>Тип обработки кромки</label>
-              <select id="edgeType" onchange="updateCalculator()">
-                <option value="pvc04">ПВХ 0.4 мм (Стандартная защита)</option>
-                <option value="pvc20" selected>ПВХ 2.0 мм (Ударопрочная противоударная)</option>
-                <option value="pur">PUR-кромка (100% Влагостойкий лазерный шов)</option>
-                <option value="abs">Алюминиевый ABS-профиль по торцу</option>
-              </select>
-            </div>
-
+          <div class="sub-section-title">4.3. Столешница и Фурнитура</div>
+          <div class="inputs-grid">
             <div class="field-group">
               <label>Варианты столешниц (Ташкент)</label>
               <select id="countertopMaterial" onchange="updateCalculator()">
@@ -701,10 +876,8 @@
                 <option value="3500000">Натуральный Гранит / Мрамор</option>
               </select>
             </div>
-          </div>
 
-          <div class="inputs-grid" style="margin-top: 5px;">
-            <div class="field-group" style="grid-column: span 2;">
+            <div class="field-group">
               <label>Комплект фурнитуры</label>
               <select id="hardwareType" onchange="updateCalculator()">
                 <option value="0">Эконом (Boyard / Китай без доводчиков)</option>
@@ -782,7 +955,7 @@
     </div>
   </div>
 
-  <!-- СКРЫТЫЙ КОНТЕЙНЕР ДЛЯ РЕНДЕРА PDF -->
+  <!-- ИСПРАВЛЕННЫЙ КОНТЕЙНЕР ДЛЯ РЕНДЕРА PDF -->
   <div id="pdf-wrapper">
     <div id="pdf-contract">
       
@@ -791,21 +964,21 @@
         НА ИЗГОТОВЛЕНИЕ И МОНТАЖ КУХОННОЙ МЕБЕЛИ
       </div>
 
-      <p style="text-align: right; margin-bottom: 8px; font-size: 9pt;">г. Ташкент &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Дата: <span id="pdfDate"></span> г.</p>
+      <p style="text-align: right; margin-bottom: 6px; font-size: 8.5pt; color: #000000 !important;">г. Ташкент &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Дата: <span id="pdfDate"></span> г.</p>
 
-      <p style="margin-bottom: 6px;">
+      <p style="margin-bottom: 5px; color: #000000 !important;">
         <strong>Исполнитель:</strong> Мастер (А), тел: +998(92)093-45-10, Telegram: @Kitchencalc, и<br>
         <strong>Заказчик:</strong> <span id="pdfClientName"></span>, тел: <span id="pdfClientPhone"></span>, адрес объекта: <span id="pdfAddress"></span>, заключили настоящий Договор:
       </p>
 
-      <div class="pdf-section-title">1. Предмет договора и спецификация</div>
-      <p style="margin-bottom: 4px;">Исполнитель обязуется изготовить, доставить и смонтировать кухонную мебель по индивидуальному проекту согласно нижеследующей спецификации и эскизам.</p>
+      <div class="pdf-section-title">1. Предмет договора и подробная спецификация</div>
+      <p style="margin-bottom: 4px; color: #000000 !important;">Исполнитель обязуется изготовить, доставить и смонтировать кухонную мебель по индивидуальному проекту согласно спецификации:</p>
 
       <table class="pdf-table">
         <thead>
-          <tr style="background: #f0f0f0;">
-            <th style="width: 38%;">Параметр</th>
-            <th style="width: 62%;">Выбранная конфигурация</th>
+          <tr>
+            <th style="width: 35%;">Параметр</th>
+            <th style="width: 65%;">Выбранная конфигурация</th>
           </tr>
         </thead>
         <tbody>
@@ -814,15 +987,16 @@
           <tr><td>Верхний ярус</td><td id="pdfUpperMode"></td></tr>
           <tr><td>Наполнение и механизмы</td><td id="pdfFittings"></td></tr>
           <tr><td>Система открывания</td><td id="pdfDoorType"></td></tr>
-          <tr><td>Материал и цвет фасада</td><td id="pdfFacade"></td></tr>
-          <tr><td>Материал и цвет корпуса</td><td id="pdfBody"></td></tr>
-          <tr><td>Обработка кромки</td><td id="pdfEdge"></td></tr>
+          <tr><td><strong>Фасад (Материал / Цвет)</strong></td><td id="pdfFacade"></td></tr>
+          <tr><td><strong>Кромка Фасада (Тип / Цвет)</strong></td><td id="pdfFacadeEdge"></td></tr>
+          <tr><td><strong>Корпус (Материал / Цвет)</strong></td><td id="pdfBody"></td></tr>
+          <tr><td><strong>Кромка Корпуса (Тип / Цвет)</strong></td><td id="pdfBodyEdge"></td></tr>
           <tr><td>Столешница</td><td id="pdfCountertop"></td></tr>
           <tr><td>Фурнитура</td><td id="pdfHardware"></td></tr>
           <tr><td>Кухонный остров</td><td id="pdfIsland"></td></tr>
-          <tr style="background: #fdf2e9;">
+          <tr style="background-color: #fdf2e9 !important;">
             <td><strong>ОБЩАЯ СУММА ДОГОВОРА</strong></td>
-            <td><strong id="pdfTotalPrice" style="font-size: 10.5pt;"></strong> <strong>UZS</strong></td>
+            <td><strong id="pdfTotalPrice" style="font-size: 10pt;"></strong> <strong>UZS</strong></td>
           </tr>
         </tbody>
       </table>
@@ -830,39 +1004,39 @@
       <div class="pdf-section-title">2. Эскизы и чертежи проекта</div>
       <div class="pdf-drawings-grid">
         <div class="pdf-drawing-card">
-          <div style="font-weight:bold; font-size: 8.5pt; margin-bottom: 2px; text-align:center;">Чертеж 1: Вид спереди</div>
+          <div style="font-weight:bold; font-size: 8pt; margin-bottom: 2px; text-align:center; color:#000000 !important;">Чертеж 1: Вид спереди</div>
           <div class="pdf-drawing-box" id="pdfSvgFrontContainer"></div>
         </div>
         <div class="pdf-drawing-card">
-          <div style="font-weight:bold; font-size: 8.5pt; margin-bottom: 2px; text-align:center;">Чертеж 2: Вид сверху</div>
+          <div style="font-weight:bold; font-size: 8pt; margin-bottom: 2px; text-align:center; color:#000000 !important;">Чертеж 2: Вид сверху</div>
           <div class="pdf-drawing-box" id="pdfSvgTopContainer"></div>
         </div>
       </div>
 
       <div class="pdf-section-title">3. Порядок расчетов и оплаты</div>
-      <p style="margin-bottom: 4px;">
+      <p style="margin-bottom: 3px; color: #000000 !important;">
         3.1. Первоначальная оплата (Аванс) составляет <strong>75%</strong> от стоимости договора: <strong id="pdfAdvanceAmount">0</strong> UZS.<br>
         3.2. Окончательный расчет в размере <strong>25%</strong>: <strong id="pdfFinalAmount">0</strong> UZS выплачивается Заказчиком в день завершения установки.<br>
         3.3. Срок выполнения работ составляет от 10 до 20 рабочих дней с момента получения первоначального аванса (75%).
       </p>
 
       <div class="pdf-section-title">4. Условия одностороннего отказа и возврата</div>
-      <p style="margin-bottom: 5px;">
+      <p style="margin-bottom: 4px; color: #000000 !important;">
         4.1. Заказчик имеет право отказаться от выполнения договора до момента сдачи работы. При этом Исполнитель возвращает Заказчику <strong>50% от суммы первоначального авансового платежа (75%)</strong>. Оставшиеся 50% удерживаются Исполнителем в качестве возмещения расходов на закуп и раскрой материалов.
       </p>
 
       <!-- БЛОК ИЗ 3 ПОДПИСЕЙ -->
       <div class="sig-section">
-        <div style="font-weight: bold; text-align: center; margin-bottom: 6px; font-size: 9pt;">ПОДТВЕРЖДЕНИЕ ПЛАТЕЖЕЙ И ПРИЕМКИ РАБОТ</div>
+        <div style="font-weight: bold; text-align: center; margin-bottom: 4px; font-size: 8.5pt; color:#000000 !important;">ПОДТВЕРЖДЕНИЕ ПЛАТЕЖЕЙ И ПРИЕМКИ РАБОТ</div>
         <table class="sig-table">
           <tr>
-            <td style="width: 50%; border-right: 1px dashed #000; padding-right: 8px;">
+            <td style="width: 50%; border-right: 1px dashed #000000 !important; padding-right: 6px;">
               <strong>1. Передача первоначального аванса (75%):</strong><br>
               Аванс в размере <span id="pdfAdvanceAmountSig"></span> UZS передан Исполнителю.<br><br>
               <strong>Подпись Заказчика №1 (Передал):</strong><br>
               <div class="sig-line">___________________________</div>
             </td>
-            <td style="width: 50%; padding-left: 8px;">
+            <td style="width: 50%; padding-left: 6px;">
               <strong>2. Сдача-приемка оказанной услуги:</strong><br>
               Кухонный гарнитур смонтирован, претензий к качеству не имею.<br><br>
               <strong>Подпись Заказчика №2 (Принял работу):</strong><br>
@@ -870,7 +1044,7 @@
             </td>
           </tr>
           <tr>
-            <td colspan="2" style="border-top: 1px solid #000; margin-top: 6px; padding-top: 6px;">
+            <td colspan="2" style="border-top: 1px solid #000000 !important; margin-top: 4px; padding-top: 4px;">
               <strong>3. Подтверждение Исполнителя (Мастера):</strong><br>
               Подтверждаю получение аванса (75%) и окончательного расчета (25%). Полная сумма Договора получена.<br>
               <strong>Подпись Мастера (Исполнителя):</strong> ___________________________ (Мастер А, +998(92)093-45-10)
@@ -1007,52 +1181,33 @@
       drawPanelSample();
     }
 
-    // ИНТЕРАКТИВНОЕ 3D-ПРЕВЬЮ ОБРАЗЦА ПЛИТЫ И КРОМКИ В УГЛОВОМ ВИДЕ
     function drawPanelSample() {
       const svg = document.getElementById('svgPanelSample');
       svg.innerHTML = '';
 
-      const colorVal = document.getElementById('facadeColor').value;
-      const edgeVal = document.getElementById('edgeType').value;
+      const faceFill = document.getElementById('facadeColor').value;
+      const edgeFill = document.getElementById('facadeEdgeColor').value;
+      
       const facadeMatText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text.split('(')[0];
-
-      let faceFill = '#f8fafc';
-      let edgeFill = '#cbd5e1';
-
-      if (colorVal === 'white') { faceFill = '#f8fafc'; }
-      else if (colorVal === 'anthracite') { faceFill = '#334155'; }
-      else if (colorVal === 'agt_soft') { faceFill = '#d97706'; }
-      else if (colorVal === 'wood_light') { faceFill = '#d97706'; }
-      else if (colorVal === 'wood_dark') { faceFill = '#78350f'; }
-      else if (colorVal === 'concrete') { faceFill = '#64748b'; }
-      else if (colorVal === 'gloss_beige') { faceFill = '#fef3c7'; }
-
-      if (edgeVal === 'pvc04') edgeFill = '#94a3b8';
-      else if (edgeVal === 'pvc20') edgeFill = '#fbbf24';
-      else if (edgeVal === 'pur') edgeFill = '#38bdf8';
-      else if (edgeVal === 'abs') edgeFill = '#e2e8f0';
+      const facadeColText = document.getElementById('facadeColor').options[document.getElementById('facadeColor').selectedIndex].text.split('.')[1];
+      const edgeTypeVal = document.getElementById('facadeEdgeType').value.toUpperCase();
 
       let html = '';
 
-      // Верхняя пластина фасада (Изометрия)
-      html += `<polygon points="70,50 250,20 310,70 130,100" fill="${faceFill}" stroke="#fbbf24" stroke-width="1.5" />`;
-      // Текстурный блик
-      html += `<polygon points="70,50 250,20 280,45 100,75" fill="rgba(255,255,255,0.12)" />`;
+      html += `<polygon points="70,45 250,15 310,65 130,95" fill="${faceFill}" stroke="#fbbf24" stroke-width="1.5" />`;
+      html += `<polygon points="70,45 250,15 280,40 100,70" fill="rgba(255,255,255,0.15)" />`;
 
-      // Торцевая кромка (Спереди)
-      html += `<polygon points="130,100 310,70 310,95 130,125" fill="${edgeFill}" stroke="#fbbf24" stroke-width="1.5" />`;
+      html += `<polygon points="130,95 310,65 310,90 130,120" fill="${edgeFill}" stroke="#fbbf24" stroke-width="1.5" />`;
 
-      // Внутренний срез плиты (Сбоку слева)
-      html += `<polygon points="70,50 130,100 130,125 70,75" fill="#78350f" stroke="#fbbf24" stroke-width="1.5" />`;
-      html += `<text x="85" y="92" fill="#f8fafc" font-size="9" font-weight="bold" transform="rotate(38 85,92)">Основа плиты</text>`;
+      html += `<polygon points="70,45 130,95 130,120 70,70" fill="#78350f" stroke="#fbbf24" stroke-width="1.5" />`;
+      html += `<text x="82" y="86" fill="#f8fafc" font-size="8.5" font-weight="bold" transform="rotate(38 82,86)">Основа МДФ/ЛДСП</text>`;
 
-      // Подпись деталей кромки
-      html += `<line x1="220" y1="85" x2="250" y2="135" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2" />`;
-      html += `<text x="255" y="140" fill="#fbbf24" font-size="10" font-weight="bold">Кромка: ${edgeVal.toUpperCase()}</text>`;
+      html += `<line x1="220" y1="80" x2="250" y2="130" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2" />`;
+      html += `<text x="255" y="135" fill="#fbbf24" font-size="9.5" font-weight="bold">Кромка: ${edgeTypeVal}</text>`;
 
       svg.innerHTML = html;
 
-      document.getElementById('panelSampleBadge').innerText = `${facadeMatText.trim()} | Кромка: ${edgeVal.toUpperCase()}`;
+      document.getElementById('panelSampleBadge').innerText = `${facadeMatText.trim()} | Цвет:${facadeColText}`;
     }
 
     function drawFrontView(w, h, upperMode) {
@@ -1150,17 +1305,22 @@
       svg.innerHTML = html;
     }
 
+    // Подготовка чётких чёрно-белых чертежей для печатного PDF
     function preparePdfDrawings() {
-      const svgFrontPdf = document.getElementById('svgFront').outerHTML
-        .replaceAll('#1e293b', '#e2e8f0')
+      let svgFrontPdf = document.getElementById('svgFront').outerHTML
+        .replaceAll('#1e293b', '#f1f5f9')
         .replaceAll('#fbbf24', '#000000')
         .replaceAll('#0f172a', '#ffffff')
-        .replaceAll('#334155', '#cbd5e1');
+        .replaceAll('#334155', '#cbd5e1')
+        .replaceAll('fill="#fbbf24"', 'fill="#000000"')
+        .replaceAll('stroke="#fbbf24"', 'stroke="#000000"');
 
-      const svgTopPdf = document.getElementById('svgTop').outerHTML
-        .replaceAll('#1e293b', '#e2e8f0')
+      let svgTopPdf = document.getElementById('svgTop').outerHTML
+        .replaceAll('#1e293b', '#f1f5f9')
         .replaceAll('#fbbf24', '#000000')
-        .replaceAll('#334155', '#cbd5e1');
+        .replaceAll('#334155', '#cbd5e1')
+        .replaceAll('fill="#fbbf24"', 'fill="#000000"')
+        .replaceAll('stroke="#fbbf24"', 'stroke="#000000"');
 
       document.getElementById('pdfSvgFrontContainer').innerHTML = svgFrontPdf;
       document.getElementById('pdfSvgTopContainer').innerHTML = svgTopPdf;
@@ -1204,12 +1364,17 @@
       const facadeColSel = document.getElementById('facadeColor');
       document.getElementById('pdfFacade').innerText = `${facadeSel.options[facadeSel.selectedIndex].text} (${facadeColSel.options[facadeColSel.selectedIndex].text})`;
 
+      const facadeEdgeTypeSel = document.getElementById('facadeEdgeType');
+      const facadeEdgeColSel = document.getElementById('facadeEdgeColor');
+      document.getElementById('pdfFacadeEdge').innerText = `${facadeEdgeTypeSel.options[facadeEdgeTypeSel.selectedIndex].text} / Цвет: ${facadeEdgeColSel.options[facadeEdgeColSel.selectedIndex].text}`;
+
       const bodySel = document.getElementById('bodyMaterial');
       const bodyColSel = document.getElementById('bodyColor');
-      document.getElementById('pdfBody').innerText = `${bodySel.options[bodySel.selectedIndex].text} (Цвет: ${bodyColSel.value})`;
+      document.getElementById('pdfBody').innerText = `${bodySel.options[bodySel.selectedIndex].text} (${bodyColSel.value})`;
 
-      const edgeSel = document.getElementById('edgeType');
-      document.getElementById('pdfEdge').innerText = edgeSel.options[edgeSel.selectedIndex].text;
+      const bodyEdgeTypeSel = document.getElementById('bodyEdgeType');
+      const bodyEdgeColSel = document.getElementById('bodyEdgeColor');
+      document.getElementById('pdfBodyEdge').innerText = `${bodyEdgeTypeSel.options[bodyEdgeTypeSel.selectedIndex].text} / Цвет: ${bodyEdgeColSel.value}`;
 
       const topSel = document.getElementById('countertopMaterial');
       document.getElementById('pdfCountertop').innerText = topSel.options[topSel.selectedIndex].text;
@@ -1234,11 +1399,12 @@
       const element = document.getElementById('pdf-contract');
 
       const opt = {
-        margin:       [6, 6, 6, 6],
+        margin:       [5, 5, 5, 5],
         filename:     `Договор_Кухня_${name}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
       };
 
       html2pdf().set(opt).from(element).save();
