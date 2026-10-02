@@ -14,8 +14,8 @@
       --card-bg: #ffffff;
       --text-main: #1e293b;
       --text-muted: #64748b;
-      --primary: #1e3a8a; /* Тёмно-синий премиум */
-      --accent-gold: #d97706; /* Янтарно-золотой */
+      --primary: #1e3a8a;
+      --accent-gold: #d97706;
       --border-color: #cbd5e1;
       --shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
@@ -30,7 +30,7 @@
       padding-bottom: 60px;
     }
 
-    /* ШАПКА И КОНТАКТЫ MASTEРA */
+    /* ШАПКА И КОНТАКТЫ МАСТЕРА */
     .header {
       background: #ffffff;
       border-bottom: 2px solid var(--border-color);
@@ -88,7 +88,6 @@
       padding: 0 20px;
     }
 
-    /* МАКЕТ И КАРТОЧКИ */
     .app-layout {
       display: grid;
       grid-template-columns: 420px 1fr;
@@ -112,7 +111,6 @@
       box-shadow: var(--shadow);
     }
 
-    /* БЛОК ЦЕНЫ */
     .price-box {
       background: linear-gradient(135deg, #1e3a8a, #0f172a);
       color: #ffffff;
@@ -141,7 +139,6 @@
       font-size: 0.95rem;
     }
 
-    /* SVG ЧЕРТЕЖИ */
     .drawing-title {
       font-size: 0.95rem;
       font-weight: 700;
@@ -164,7 +161,6 @@
 
     svg { width: 100%; height: 100%; }
 
-    /* ФОРМЫ И ЭЛЕМЕНТЫ */
     .section-title {
       font-size: 1.1rem;
       font-weight: 700;
@@ -233,7 +229,6 @@
       color: var(--text-main);
     }
 
-    /* Все тексты в select и input теперь четко черные на белом фоне */
     .field-group input, .field-group select, .field-group textarea {
       background: #ffffff !important;
       color: #0f172a !important;
@@ -307,21 +302,20 @@
       transform: translateY(-1px);
     }
 
-    /* СКРЫТЫЙ МАКЕТ ДОГОВОРА ДЛЯ ПЕЧАТИ В PDF */
     #pdf-contract {
       display: none;
       background: #ffffff;
       color: #000000;
       padding: 30px;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 12pt;
+      font-size: 11pt;
       line-height: 1.4;
     }
 
     .contract-header {
       text-align: center;
       font-weight: bold;
-      font-size: 14pt;
+      font-size: 13pt;
       margin-bottom: 15px;
       text-transform: uppercase;
     }
@@ -346,7 +340,7 @@
 
     .sig-block {
       width: 45%;
-      font-size: 11pt;
+      font-size: 10pt;
     }
 
     .sig-line {
@@ -363,7 +357,7 @@
 </head>
 <body>
 
-  <!-- ВЕРХНЯЯ ПАНЕЛЬ С КОНТАКТАМИ МАСТЕРА -->
+  <!-- ШАПКА -->
   <header class="header">
     <div class="header-container">
       <div class="brand">
@@ -380,7 +374,7 @@
   <div class="container">
     <div class="app-layout">
       
-      <!-- ЛЕВАЯ КОЛОНКА: ИТОГОВАЯ ЦЕНА И СХЕМЫ -->
+      <!-- ЛЕВАЯ КОЛОНКА -->
       <div class="sticky-sidebar">
         
         <div class="price-box">
@@ -392,7 +386,7 @@
         <div class="card">
           <div class="drawing-title">
             <span>Чертеж 1: Вид спереди</span>
-            <small style="color:var(--text-muted);">Размеры фасада</small>
+            <small style="color:var(--text-muted);">Фасад</small>
           </div>
           <div class="svg-container">
             <svg id="svgFront" viewBox="0 0 400 200"></svg>
@@ -411,7 +405,7 @@
 
       </div>
 
-      <!-- ПРАВАЯ КОЛОНКА: НАСТРОЙКИ КОНСТРУКТОРА -->
+      <!-- ПРАВАЯ КОЛОНКА -->
       <div style="display: flex; flex-direction: column; gap: 20px;">
         
         <!-- 1. Форма и размеры -->
@@ -438,7 +432,6 @@
             </div>
           </div>
 
-          <!-- Поля для Г и П образных -->
           <div id="sideWallsContainer" class="inputs-grid" style="display: none;">
             <div class="field-group" id="groupLeftWall">
               <label>Боковая стена (см)</label>
@@ -462,7 +455,7 @@
         <div class="card">
           <div class="section-title">
             <span class="step-badge">2</span>
-            <span>Настройка верхних шкафчиков</span>
+            <span>Верхние шкафчики</span>
           </div>
 
           <div class="inputs-grid">
@@ -470,17 +463,50 @@
               <label>Конфигурация верхнего яруса</label>
               <select id="upperCabinetsMode" onchange="updateCalculator()">
                 <option value="standard" selected>Стандартные верхние шкафы (высота ~70–80 см)</option>
-                <option value="tall">Высокие шкафы / Антресоли до потолка (высота 90–110 см)</option>
+                <option value="tall">Высокие шкафы / До потолка в 2 яруса (высота 90–110 см)</option>
                 <option value="none">Без верхних шкафчиков (Только нижние тумбы)</option>
               </select>
             </div>
           </div>
         </div>
 
-        <!-- 3. Материалы фасадов и категории -->
+        <!-- 3. Наполнение, полки и системы открывания -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">3</span>
+            <span>Наполнение и механизмы открывания</span>
+          </div>
+
+          <div class="inputs-grid">
+            <div class="field-group">
+              <label>Дополнительные полки (+50 000 сум/шт)</label>
+              <input type="number" id="countShelves" value="2" min="0" max="20" oninput="updateCalculator()">
+            </div>
+            <div class="field-group">
+              <label>Выдвижные ящики (+110 000 сум/шт)</label>
+              <input type="number" id="countDrawers" value="3" min="0" max="20" oninput="updateCalculator()">
+            </div>
+          </div>
+
+          <div class="inputs-grid" style="margin-top: 5px;">
+            <div class="field-group" id="gasLiftGroup">
+              <label>Газовые лифты (газлифты) на верхние двери (+120 000 сум/дверь)</label>
+              <input type="number" id="countGasLifts" value="2" min="0" max="15" oninput="updateCalculator()">
+            </div>
+            <div class="field-group">
+              <label>Тип открывания дверей</label>
+              <select id="doorOpenType" onchange="updateCalculator()">
+                <option value="handles" selected>Дверцы с ручками (Классические ручки)</option>
+                <option value="push">Толкательная система (Push-to-Open / Нажатие)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Материалы фасадов и фурнитура -->
+        <div class="card">
+          <div class="section-title">
+            <span class="step-badge">4</span>
             <span>Материал фасадов и отделки</span>
           </div>
 
@@ -505,7 +531,6 @@
               </select>
             </div>
 
-            <!-- Раздел выбор Фурнитуры -->
             <div class="field-group">
               <label>Комплект фурнитуры</label>
               <select id="hardwareType" onchange="updateCalculator()">
@@ -517,10 +542,10 @@
           </div>
         </div>
 
-        <!-- 4. Островной модуль -->
+        <!-- 5. Островной модуль -->
         <div class="card">
           <div class="section-title">
-            <span class="step-badge">4</span>
+            <span class="step-badge">5</span>
             <span>Островной модуль (Опция)</span>
           </div>
 
@@ -553,10 +578,10 @@
           </div>
         </div>
 
-        <!-- 5. Оформление Договора -->
+        <!-- 6. Оформление Договора -->
         <div class="card">
           <div class="section-title">
-            <span class="step-badge">5</span>
+            <span class="step-badge">6</span>
             <span>Формирование Договора в PDF</span>
           </div>
 
@@ -584,7 +609,7 @@
     </div>
   </div>
 
-  <!-- СКРЫТЫЙ МАКЕТ ДЛЯ ПЕЧАТИ PDF ДОГОВОРА -->
+  <!-- МАКЕТ PDF ДОГОВОРА -->
   <div id="pdf-contract">
     <div class="contract-header">
       ДОГОВОР ПОДРЯДА № <span id="pdfDocNum"></span><br>
@@ -601,7 +626,7 @@
     <p><strong>1. ПРЕДМЕТ ДОГОВОРА</strong><br>
     Исполнитель обязуется изготовить, доставить и установить кухонный гарнитур согласно согласованной спецификации и чертежу, а Заказчик обязуется принять и оплатить выполненную работу.</p>
 
-    <h4 style="margin-top: 15px; margin-bottom: 5px;">2. СПЕЦИФИКАЦИЯ И РАСЧЕТ СТОИМОСТИ</h4>
+    <h4 style="margin-top: 12px; margin-bottom: 5px;">2. СПЕЦИФИКАЦИЯ И РАСЧЕТ СТОИМОСТИ</h4>
     <table class="contract-table">
       <thead>
         <tr>
@@ -611,8 +636,10 @@
       </thead>
       <tbody>
         <tr><td>Тип и форма кухни</td><td id="pdfType"></td></tr>
-        <tr><td>Размеры основной стены / боковин</td><td id="pdfDimensions"></td></tr>
+        <tr><td>Размеры стен / высота</td><td id="pdfDimensions"></td></tr>
         <tr><td>Верхние шкафы</td><td id="pdfUpperMode"></td></tr>
+        <tr><td>Наполнение и механизмы</td><td id="pdfFittings"></td></tr>
+        <tr><td>Система открывания дверей</td><td id="pdfDoorType"></td></tr>
         <tr><td>Материал фасадов</td><td id="pdfFacade"></td></tr>
         <tr><td>Столешница</td><td id="pdfCountertop"></td></tr>
         <tr><td>Фурнитура</td><td id="pdfHardware"></td></tr>
@@ -621,7 +648,7 @@
       </tbody>
     </table>
 
-    <p><strong>3. ПОРЯДОК РАСЧЕТОВ И ВЫПОЛНЕНИЯ РАБОТ</strong><br>
+    <p><strong>3. ПОРУЧЕНИЕ И ПОРЯДОК РАСЧЕТОВ</strong><br>
     3.1. Заказчик вносит предоплату в размере 70% от общей стоимости для закупа материалов.<br>
     3.2. Оставшиеся 30% выплачиваются Заказчиком после завершения монтажа и проверки качества мебели.<br>
     3.3. Срок изготовления составляет от 10 до 20 рабочих дней с момента внесения предоплаты.</p>
@@ -688,7 +715,6 @@
     }
 
     function updateCalculator() {
-      // Значения полей
       const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
       const totalH = parseFloat(document.getElementById('totalHeight').value) || 240;
       const leftW = parseFloat(document.getElementById('leftWall').value) || 150;
@@ -696,9 +722,23 @@
       const lDir = document.getElementById('lAngleDir').value;
 
       const upperMode = document.getElementById('upperCabinetsMode').value;
+      const gasGroup = document.getElementById('gasLiftGroup');
+      if (upperMode === 'none') {
+        gasGroup.style.opacity = '0.5';
+        document.getElementById('countGasLifts').disabled = true;
+      } else {
+        gasGroup.style.opacity = '1';
+        document.getElementById('countGasLifts').disabled = false;
+      }
+
       const facadePriceM = parseFloat(document.getElementById('facadeMaterial').value);
       const topPriceM = parseFloat(document.getElementById('countertopMaterial').value);
       const hardwarePriceM = parseFloat(document.getElementById('hardwareType').value);
+
+      // Наполнение
+      const shelves = parseFloat(document.getElementById('countShelves').value) || 0;
+      const drawers = parseFloat(document.getElementById('countDrawers').value) || 0;
+      const gasLifts = (upperMode !== 'none') ? (parseFloat(document.getElementById('countGasLifts').value) || 0) : 0;
 
       const hasIsland = document.getElementById('hasIsland').checked;
       const islL = parseFloat(document.getElementById('islandLength').value) || 140;
@@ -713,36 +753,32 @@
         meters += (leftW - 60) / 100 + (rightW - 60) / 100;
       }
 
-      // Коэффициент верхних шкафов
       let upperFactor = 1.0;
-      if (upperMode === 'none') {
-        upperFactor = 0.65; // Без верхних шкафов - минус 35%
-      } else if (upperMode === 'tall') {
-        upperFactor = 1.20; // Высокие/в 2 яруса - плюс 20%
-      }
+      if (upperMode === 'none') upperFactor = 0.65;
+      else if (upperMode === 'tall') upperFactor = 1.20;
 
       let costPerMeter = (facadePriceM * upperFactor) + topPriceM + hardwarePriceM;
       let totalPrice = meters * costPerMeter;
 
-      // Расчет острова
+      // Прибавляем наценки на наполнение
+      totalPrice += (shelves * 50000);
+      totalPrice += (drawers * 110000);
+      totalPrice += (gasLifts * 120000);
+
+      // Остров
       if (hasIsland) {
         let islandMeters = islL / 100;
         let islandBase = islandMeters * (facadePriceM + topPriceM + hardwarePriceM);
-        if (islAccess === 'two') {
-          islandBase *= 1.30; // Доплата за фасады с 2 сторон
-        }
+        if (islAccess === 'two') islandBase *= 1.30;
         totalPrice += islandBase;
       }
 
-      // Отображение суммы
       document.getElementById('totalPriceDisplay').innerText = Math.round(totalPrice).toLocaleString('ru-RU');
 
-      // Отрисовка интерактивных SVG
       drawFrontView(mainW, totalH, upperMode);
       drawTopView(mainW, leftW, rightW, lDir, hasIsland, islL, islW);
     }
 
-    // ЧЕРТЕЖ 1: ВИД СПЕРЕДИ
     function drawFrontView(w, h, upperMode) {
       const svg = document.getElementById('svgFront');
       svg.innerHTML = '';
@@ -766,7 +802,6 @@
 
       let html = '';
 
-      // Нижний ярус
       html += `<rect x="${startX}" y="${startY + kH - baseH}" width="${kW}" height="${baseH}" fill="#cbd5e1" stroke="#1e3a8a" stroke-width="1.5" />`;
 
       const numSec = Math.max(2, Math.round(w / 60));
@@ -775,10 +810,8 @@
         html += `<line x1="${startX + i*secW}" y1="${startY + kH - baseH}" x2="${startX + i*secW}" y2="${startY + kH}" stroke="#1e3a8a" stroke-width="1" stroke-dasharray="2,2"/>`;
       }
 
-      // Фартук
       html += `<rect x="${startX}" y="${startY + Math.max(0, topH)}" width="${kW}" height="${apronH}" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" />`;
 
-      // Верхний ярус
       if (upperMode !== 'none' && topH > 5) {
         html += `<rect x="${startX}" y="${startY}" width="${kW}" height="${topH}" fill="#e2e8f0" stroke="#1e3a8a" stroke-width="1.5" />`;
         for (let i = 1; i < numSec; i++) {
@@ -786,14 +819,12 @@
         }
       }
 
-      // Размеры
       html += `<text x="${svgW/2}" y="${startY + kH + 14}" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">${w} см</text>`;
       html += `<text x="${startX - 6}" y="${startY + kH/2}" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="end">${h} см</text>`;
 
       svg.innerHTML = html;
     }
 
-    // ЧЕРТЕЖ 2: ВИД СВЕРХУ
     function drawTopView(mainW, leftW, rightW, lDir, hasIsland, islL, islW) {
       const svg = document.getElementById('svgTop');
       svg.innerHTML = '';
@@ -816,11 +847,9 @@
       const mainX = cx - mainDrawW / 2;
       const mainY = cy;
 
-      // Главная стена
       html += `<rect x="${mainX}" y="${mainY}" width="${mainDrawW}" height="${mainDrawD}" fill="#cbd5e1" stroke="#1e3a8a" stroke-width="1.5" />`;
       html += `<text x="${mainX + mainDrawW/2}" y="${mainY - 6}" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">${mainW} см</text>`;
 
-      // Углы
       if (currentType === 'l-shape') {
         const sideD = (leftW - depth) * scale;
         const xPos = (lDir === 'right') ? (mainX + mainDrawW - mainDrawD) : mainX;
@@ -832,7 +861,6 @@
         html += `<rect x="${mainX + mainDrawW - mainDrawD}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${rightSideD}" fill="#cbd5e1" stroke="#1e3a8a" stroke-width="1.5" />`;
       }
 
-      // Остров
       if (hasIsland) {
         const iW = islL * scale;
         const iD = islW * scale;
@@ -846,7 +874,6 @@
       svg.innerHTML = html;
     }
 
-    // Генерация Договора в PDF
     function generateContractPDF(e) {
       e.preventDefault();
 
@@ -863,7 +890,6 @@
       document.getElementById('pdfSigClientPhone').innerText = phone;
       document.getElementById('pdfAddress').innerText = notes;
 
-      // Спецификация
       const typeNames = { 'straight': 'Прямая кухня', 'l-shape': 'Г-образная кухня', 'u-shape': 'П-образная кухня' };
       document.getElementById('pdfType').innerText = typeNames[currentType];
 
@@ -875,6 +901,15 @@
 
       const upperSel = document.getElementById('upperCabinetsMode');
       document.getElementById('pdfUpperMode').innerText = upperSel.options[upperSel.selectedIndex].text;
+
+      // Наполнение
+      const shelves = document.getElementById('countShelves').value;
+      const drawers = document.getElementById('countDrawers').value;
+      const gasLifts = (upperSel.value !== 'none') ? document.getElementById('countGasLifts').value : 0;
+      document.getElementById('pdfFittings').innerText = `Полки: ${shelves} шт., Выдвижные ящики: ${drawers} шт., Газлифты: ${gasLifts} шт.`;
+
+      const doorTypeSel = document.getElementById('doorOpenType');
+      document.getElementById('pdfDoorType').innerText = doorTypeSel.options[doorTypeSel.selectedIndex].text;
 
       const facadeSel = document.getElementById('facadeMaterial');
       document.getElementById('pdfFacade').innerText = facadeSel.options[facadeSel.selectedIndex].text;
