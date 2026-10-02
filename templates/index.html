@@ -3,350 +3,292 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Изготовление премиальных кухонь на заказ</title>
+  <title>Изготовление кухонь</title>
+  
+  <!-- Подключение библиотеки для генерации PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <style>
-    /* 1. СБРОС И БАЗОВЫЕ СТИЛИ */
-    * {
-      box-sizing: border-box;
+    body {
       margin: 0;
       padding: 0;
-    }
-
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      color: #ffffff;
-      line-height: 1.6;
-      
-      /* ФИКСИРОВАННЫЙ ФОН СТАЙЛА */
       background-image: url('kitchen.jpg');
       background-repeat: no-repeat;
       background-position: center center;
       background-size: cover;
       background-attachment: fixed;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #ffffff;
     }
 
-    /* 2. ШАПКА САЙТА (HEADER) */
-    .header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(12, 12, 12, 0.9);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 15px 0;
-    }
-
-    .header-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #f3e5ab;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      text-decoration: none;
-    }
-
-    .nav a {
-      color: #e0e0e0;
-      text-decoration: none;
-      margin-left: 25px;
-      font-size: 0.95rem;
-      transition: color 0.3s;
-    }
-
-    .nav a:hover {
-      color: #f3e5ab;
-    }
-
-    /* 3. ОБЩИЕ КОНТЕЙНЕРЫ И КАРТОЧКИ */
     .container {
-      max-width: 1200px;
+      max-width: 900px;
       margin: 0 auto;
-      padding: 80px 20px;
+      padding: 60px 20px;
     }
 
-    .glass-card {
+    .block {
       background: rgba(18, 18, 18, 0.85);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-    }
-
-    .section-title {
-      text-align: center;
-      font-size: 2.2rem;
-      color: #f3e5ab;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 30px;
       margin-bottom: 40px;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      position: relative;
+      transition: all 0.3s ease;
     }
 
-    /* 4. ПРИВЕТСТВЕННЫЙ БЛОК (HERO) */
-    .hero {
-      text-align: center;
-      padding: 100px 30px;
-      margin-top: 40px;
-      margin-bottom: 60px;
+    /* Эффект при выборе карточки */
+    .block.selected {
+      border-color: #f3e5ab;
+      box-shadow: 0 0 20px rgba(243, 229, 171, 0.3);
     }
 
-    .hero h1 {
-      font-size: 3rem;
-      color: #f3e5ab;
-      margin-bottom: 20px;
-      font-weight: 600;
-    }
-
-    .hero p {
-      font-size: 1.2rem;
-      color: #cccccc;
-      max-width: 700px;
-      margin: 0 auto 30px auto;
-    }
-
-    .btn {
-      display: inline-block;
-      background: linear-gradient(135deg, #d4af37, #aa7c11);
-      color: #000000;
-      padding: 15px 35px;
-      border-radius: 30px;
-      text-decoration: none;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
-
-    .btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
-    }
-
-    /* 5. КАТАЛОГ ПЛАНИРОВОК (GRID) */
-    .kitchen-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 30px;
-    }
-
-    .kitchen-card {
-      overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .kitchen-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 15px 35px rgba(212, 175, 55, 0.25);
-      border-color: rgba(243, 229, 171, 0.4);
-    }
-
-    .kitchen-card img {
+    .block img {
       width: 100%;
-      height: 240px;
-      object-fit: cover;
+      height: auto;
+      border-radius: 8px;
+      margin-top: 15px;
       display: block;
     }
 
-    .card-content {
-      padding: 25px;
-    }
-
-    .card-content h3 {
-      margin: 0 0 12px 0;
-      font-size: 1.3rem;
+    h1, h2 {
+      margin-top: 0;
       color: #f3e5ab;
     }
 
-    .card-content p {
-      margin: 0;
-      font-size: 0.95rem;
-      color: #cccccc;
+    p {
+      line-height: 1.6;
+      color: #e0e0e0;
     }
 
-    /* 6. БЛОК ПРЕИМУЩЕСТВ */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 25px;
-      margin-top: 60px;
-    }
-
-    .feature-item {
-      padding: 30px;
-      text-align: center;
-    }
-
-    .feature-item h3 {
+    /* Стилизация галочки выбора */
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 15px;
+      cursor: pointer;
+      font-weight: 600;
       color: #f3e5ab;
-      margin-bottom: 10px;
+      user-select: none;
     }
 
-    /* 7. ФОРМА ОБРАТНОЙ СВЯЗИ */
-    .contact-section {
-      max-width: 600px;
-      margin: 60px auto 0 auto;
-      padding: 40px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-group input,
-    .form-group textarea {
-      width: 100%;
-      padding: 14px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      color: #ffffff;
-      font-size: 1rem;
-      outline: none;
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus {
-      border-color: #f3e5ab;
-    }
-
-    .form-btn {
-      width: 100%;
-      border: none;
+    .checkbox-container input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: #d4af37;
       cursor: pointer;
     }
 
-    /* 8. ПОДВАЛ (FOOTER) */
-    .footer {
-      text-align: center;
-      padding: 30px 20px;
-      background: rgba(10, 10, 10, 0.95);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      margin-top: 80px;
-      color: #888888;
-      font-size: 0.9rem;
+    /* Поля ввода и кнопка */
+    .form-group {
+      margin-bottom: 15px;
     }
 
-    /* АДАПТИВНОСТЬ МЕМОРИ */
-    @media (max-width: 768px) {
-      .hero h1 { font-size: 2rem; }
-      .nav { display: none; }
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    .btn-pdf {
+      width: 100%;
+      background: linear-gradient(135deg, #d4af37, #aa7c11);
+      color: #000;
+      border: none;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: transform 0.2s;
+    }
+
+    .btn-pdf:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Шаблон PDF страницы (скрыт от глаз на сайте) */
+    #pdf-template {
+      display: none;
+      background: #ffffff;
+      color: #000000;
+      padding: 40px;
+      font-family: Arial, sans-serif;
+    }
+
+    #pdf-template h1 { color: #111; }
+    #pdf-template .pdf-item {
+      margin-bottom: 25px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 15px;
+    }
+    #pdf-template img {
+      max-width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-  <!-- ШАПКА -->
-  <header class="header">
-    <div class="header-container">
-      <a href="#" class="logo">Kitchen Lux</a>
-      <nav class="nav">
-        <a href="#catalog">Каталог</a>
-        <a href="#features">Преимущества</a>
-        <a href="#contact">Заказать расчёт</a>
-      </nav>
-    </div>
-  </header>
-
   <div class="container">
+    <div class="block">
+      <h1>Дизайнерские кухни премиум-класса</h1>
+      <p>Выберите понравившиеся планировки ниже, укажите контакты и скачайте персональный КП в формате PDF.</p>
+    </div>
 
-    <!-- ГЛАВНЫЙ БАННЕР -->
-    <section class="glass-card hero">
-      <h1>Дизайнерские кухни под заказ</h1>
-      <p>Создаем функциональные и премиальные кухни по индивидуальным размерам с гарантией высокого качества.</p>
-      <a href="#contact" class="btn">Рассчитать стоимость</a>
-    </section>
+    <!-- Блок: Прямая кухня -->
+    <div class="block" id="block-1">
+      <h2>Прямая кухня</h2>
+      <p>Лаконичное решение в одну линию.</p>
+      <img src="прямая.jfif" alt="Прямая кухня">
+      <label class="checkbox-container">
+        <input type="checkbox" class="kitchen-select" value="Прямая кухня" data-img="прямая.jfif" data-desc="Лаконичное решение в одну линию." onchange="toggleSelect('block-1')">
+        Выбрать этот вариант
+      </label>
+    </div>
 
-    <!-- КАТАЛОГ ПЛАНИРОВОК -->
-    <section id="catalog">
-      <h2 class="section-title">Варианты планировок</h2>
-      <div class="kitchen-grid">
+    <!-- Блок: Г-образная кухня -->
+    <div class="block" id="block-2">
+      <h2>Г-образная кухня</h2>
+      <p>Универсальная угловая планировка с подсветкой.</p>
+      <img src="Г образный.jfif" alt="Г-образная кухня">
+      <label class="checkbox-container">
+        <input type="checkbox" class="kitchen-select" value="Г-образная кухня" data-img="Г образный.jfif" data-desc="Универсальная угловая планировка с подсветкой." onchange="toggleSelect('block-2')">
+        Выбрать этот вариант
+      </label>
+    </div>
 
-        <!-- Прямая -->
-        <div class="glass-card kitchen-card">
-          <img src="прямая.jfif" alt="Прямая кухня">
-          <div class="card-content">
-            <h3>Прямая кухня</h3>
-            <p>Лаконичное решение в одну линию. Идеально подходит для строгих интерьеров и вытянутых помещений.</p>
-          </div>
-        </div>
+    <!-- Блок: П-образная кухня -->
+    <div class="block" id="block-3">
+      <h2>П-образная кухня</h2>
+      <p>Просторная зона готовки, задействующая три стены.</p>
+      <img src="П образный.jfif" alt="П-образная кухня">
+      <label class="checkbox-container">
+        <input type="checkbox" class="kitchen-select" value="П-образная кухня" data-img="П образный.jfif" data-desc="Просторная зона готовки, задействующая три стены." onchange="toggleSelect('block-3')">
+        Выбрать этот вариант
+      </label>
+    </div>
 
-        <!-- Г-образная -->
-        <div class="glass-card kitchen-card">
-          <img src="Г образный.jfif" alt="Г-образная кухня">
-          <div class="card-content">
-            <h3>Г-образная кухня</h3>
-            <p>Эргономичная угловая планировка с витринными фасадами и встроенной подсветкой.</p>
-          </div>
-        </div>
+    <!-- Блок: Кухня с островом -->
+    <div class="block" id="block-4">
+      <h2>Кухня с островом</h2>
+      <p>Премиальное решение с отдельно стоящим островом.</p>
+      <img src="остров.jfif" alt="Кухня с островом">
+      <label class="checkbox-container">
+        <input type="checkbox" class="kitchen-select" value="Кухня с островом" data-img="остров.jfif" data-desc="Премиальное решение с отдельно стоящим островом." onchange="toggleSelect('block-4')">
+        Выбрать этот вариант
+      </label>
+    </div>
 
-        <!-- П-образная -->
-        <div class="glass-card kitchen-card">
-          <img src="П образный.jfif" alt="П-образная кухня">
-          <div class="card-content">
-            <h3>П-образная кухня</h3>
-            <p>Просторная зона готовки, задействующая три стены для максимального комфорта и хранения.</p>
-          </div>
-        </div>
-
-        <!-- Остров -->
-        <div class="glass-card kitchen-card">
-          <img src="остров.jfif" alt="Кухня с островом">
-          <div class="card-content">
-            <h3>Кухня с островом</h3>
-            <p>Премиальный вариант с отдельно стоящим островом, барной стойкой и мраморной отделкой.</p>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ПРЕИМУЩЕСТВА -->
-    <section id="features" class="features-grid">
-      <div class="glass-card feature-item">
-        <h3>Индивидуальный дизайн</h3>
-        <p>Проектируем под любые размеры помещения с учетом всех пожеланий.</p>
-      </div>
-      <div class="glass-card feature-item">
-        <h3>Премиум фурнитура</h3>
-        <p>Используем надежные петли, направляющие и механизмы мягкого закрывания.</p>
-      </div>
-      <div class="glass-card feature-item">
-        <h3>Гарантия качества</h3>
-        <p>Контроль на каждом этапе производства и профессиональный монтаж.</p>
-      </div>
-    </section>
-
-    <!-- ФОРМА СВЯЗИ -->
-    <section id="contact" class="glass-card contact-section">
-      <h2 class="section-title" style="margin-bottom: 20px;">Получить консультацию</h2>
-      <form onsubmit="event.preventDefault(); alert('Спасибо за заявку!');">
+    <!-- Блок оформления и скачивания PDF -->
+    <div class="block">
+      <h2>Получить коммерческое предложение в PDF</h2>
+      <p>Заполните форму и нажмите кнопку для генерации документа с выбранными моделями.</p>
+      
+      <form id="pdfForm" onsubmit="generatePDF(event)">
         <div class="form-group">
-          <input type="text" placeholder="Ваше имя" required>
+          <input type="text" id="clientName" placeholder="Ваше имя" required>
         </div>
         <div class="form-group">
-          <input type="tel" placeholder="Ваш номер телефона" required>
+          <input type="tel" id="clientPhone" placeholder="Ваш телефон" required>
         </div>
-        <div class="form-group">
-          <textarea rows="4" placeholder="Комментарий или пожелания по размерам"></textarea>
-        </div>
-        <button type="submit" class="btn form-btn">Отправить заявку</button>
+        <button type="submit" class="btn-pdf">Скачать выбранные варианты (PDF)</button>
       </form>
-    </section>
-
+    </div>
   </div>
 
-  <!-- ПОДВАЛ -->
-  <footer class="footer">
-    <p>© 2026 Kitchen Lux. Изготовление кухонной мебели на заказ.</p>
-  </footer>
+  <!-- СКРЫТЫЙ МАКЕТ ДЛЯ ГЕНЕРАЦИИ PDF -->
+  <div id="pdf-template">
+    <h1 style="text-align: center; color: #333;">Коммерческое предложение</h1>
+    <hr style="margin: 20px 0;">
+    <p><strong>Клиент:</strong> <span id="pdf-client-name"></span></p>
+    <p><strong>Телефон:</strong> <span id="pdf-client-phone"></span></p>
+    <p><strong>Дата:</strong> <span id="pdf-date"></span></p>
+    <h2 style="margin-top: 30px; color: #333;">Выбранные варианты планировок:</h2>
+    <div id="pdf-items"></div>
+  </div>
+
+  <script>
+    // Подсветка блока при выборе галочки
+    function toggleSelect(blockId) {
+      const block = document.getElementById(blockId);
+      const checkbox = block.querySelector('input[type="checkbox"]');
+      if (checkbox.checked) {
+        block.classList.add('selected');
+      } else {
+        block.classList.remove('selected');
+      }
+    }
+
+    // Генерация и скачивание PDF
+    function generatePDF(event) {
+      event.preventDefault();
+
+      const checkboxes = document.querySelectorAll('.kitchen-select:checked');
+      if (checkboxes.length === 0) {
+        alert('Пожалуйста, выберите хотя бы один вариант кухни!');
+        return;
+      }
+
+      const name = document.getElementById('clientName').value;
+      const phone = document.getElementById('clientPhone').value;
+
+      // Заполняем данные клиента в макет PDF
+      document.getElementById('pdf-client-name').innerText = name;
+      document.getElementById('pdf-client-phone').innerText = phone;
+      document.getElementById('pdf-date').innerText = new Date().toLocaleDateString('ru-RU');
+
+      // Формируем список выбранных кухонь
+      const pdfItemsContainer = document.getElementById('pdf-items');
+      pdfItemsContainer.innerHTML = '';
+
+      checkboxes.forEach(cb => {
+        const title = cb.value;
+        const desc = cb.getAttribute('data-desc');
+        const imgSrc = cb.getAttribute('data-img');
+
+        const itemHtml = `
+          <div class="pdf-item">
+            <h3>${title}</h3>
+            <p>${desc}</p>
+            <img src="${imgSrc}">
+          </div>
+        `;
+        pdfItemsContainer.innerHTML += itemHtml;
+      });
+
+      // Отображаем шаблон для снимка
+      const element = document.getElementById('pdf-template');
+      element.style.display = 'block';
+
+      // Настройки генерации PDF
+      const opt = {
+        margin:       10,
+        filename:     `Кухни_Расчет_${name}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      // Генерируем и автоматически скачиваем PDF
+      html2pdf().set(opt).from(element).save().then(() => {
+        element.style.display = 'none'; // Скрываем обратно
+      });
+    }
+  </script>
 
 </body>
 </html>
