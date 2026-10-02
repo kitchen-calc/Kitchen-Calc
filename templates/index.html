@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Конструктор Кухонной Мебели | Ташкент</title>
 
+  <!-- Библиотека html2canvas для конвертации в картинку -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <style>
     :root {
       --bg-dark: #090d16;
@@ -133,6 +136,31 @@
       width: 100%; background: linear-gradient(135deg, #d97706, #b45309); color: #ffffff; border: none; padding: 16px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; margin-top: 10px;
     }
     .btn-submit:hover { background: linear-gradient(135deg, #f59e0b, #d97706); transform: translateY(-1px); }
+
+    /* МОДАЛЬНОЕ ОКНО ДЛЯ ИТОГА (В ВИДЕ ФОТО) */
+    #summaryModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .modal-content {
+      max-width: 750px;
+      margin: 30px auto;
+      background: #1e293b;
+      border: 2px solid var(--accent-gold);
+      border-radius: 14px;
+      padding: 30px;
+      color: #f8fafc;
+    }
+    .modal-header { font-size: 1.3rem; font-weight: bold; color: var(--accent-gold); border-bottom: 2px solid var(--accent-gold); padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; }
+    .modal-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    .modal-table th, .modal-table td { border: 1px solid #334155; padding: 8px 10px; font-size: 0.85rem; text-align: left; }
+    .modal-table th { background: #0f172a; color: var(--accent-gold); }
+    .modal-table td { background: rgba(15, 23, 42, 0.4); }
 
     @media (max-width: 768px) {
       .header-container { flex-direction: column; align-items: stretch; text-align: center; gap: 10px; }
@@ -502,56 +530,96 @@
           </div>
         </div>
 
-        <!-- КНОПКА ИТОГ (СПЕЦИФИКАЦИЯ) -->
+        <!-- КНОПКА ИТОГ (БЕЗ СЕРВЕРНЫХ ОШИБОК) -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">7</span>
             <span>Формирование Спецификации и Итогов</span>
           </div>
 
-          <form id="summaryForm" action="/summary" method="POST" target="_blank">
-            <div class="inputs-grid">
-              <div class="field-group">
-                <label>ФИО Заказчика</label>
-                <input type="text" id="clientName" name="clientName" placeholder="Например: Ислямов Айдер">
-              </div>
-              <div class="field-group">
-                <label>Номер телефона Заказчика</label>
-                <input type="tel" id="clientPhone" name="clientPhone" placeholder="+998 (90) 123-45-67">
-              </div>
+          <div class="inputs-grid">
+            <div class="field-group">
+              <label>ФИО Заказчика</label>
+              <input type="text" id="clientName" placeholder="Например: Ислямов Айдер">
             </div>
-            <div class="field-group" style="margin-top: 10px;">
-              <label>Адрес объекта / Примечания</label>
-              <textarea id="clientNotes" name="clientNotes" rows="2" placeholder="Адрес установки, этаж..."></textarea>
+            <div class="field-group">
+              <label>Номер телефона Заказчика</label>
+              <input type="tel" id="clientPhone" placeholder="+998 (90) 123-45-67">
             </div>
+          </div>
+          <div class="field-group" style="margin-top: 10px;">
+            <label>Адрес объекта / Примечания</label>
+            <textarea id="clientNotes" rows="2" placeholder="Адрес установки, этаж..."></textarea>
+          </div>
 
-            <!-- Скрытые поля для передачи параметров на страницу Итога -->
-            <input type="hidden" id="inpTotalPrice" name="totalPrice" value="0">
-            <input type="hidden" id="inpKitchenType" name="kitchenType" value="">
-            <input type="hidden" id="inpDimensionsText" name="dimensionsText" value="">
-            <input type="hidden" id="inpUpperModeText" name="upperModeText" value="">
-            <input type="hidden" id="inpFittingsText" name="fittingsText" value="">
-            <input type="hidden" id="inpDoorTypeText" name="doorTypeText" value="">
-            <input type="hidden" id="inpFacadeText" name="facadeText" value="">
-            <input type="hidden" id="inpFacadeEdgeText" name="facadeEdgeText" value="">
-            <input type="hidden" id="inpBodyText" name="bodyText" value="">
-            <input type="hidden" id="inpBodyEdgeText" name="bodyEdgeText" value="">
-            <input type="hidden" id="inpCountertopText" name="countertopText" value="">
-            <input type="hidden" id="inpHardwareText" name="hardwareText" value="">
-            <input type="hidden" id="inpIslandText" name="islandText" value="">
-            <input type="hidden" id="inpSectionsJson" name="sectionsJson" value="[]">
-
-            <button type="submit" class="btn-submit" onclick="prepareSummaryData()">📋 Итог (Спецификация заказа)</button>
-          </form>
+          <button type="button" class="btn-submit" onclick="openSummaryModal()">📋 Итог (Спецификация заказа)</button>
         </div>
 
       </div>
     </div>
   </div>
 
+  <!-- МОДАЛЬНОЕ ОКНО С ИТОГОМ И КНОПКОЙ СКАЧИВАНИЯ ФОТО -->
+  <div id="summaryModal">
+    <div class="modal-content" id="captureArea">
+      <div class="modal-header">Спецификация и состав заказа кухни</div>
+      
+      <div class="inputs-grid" style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+        <div><strong>Заказчик:</strong> <span id="resClientName">-</span></div>
+        <div><strong>Телефон:</strong> <span id="resClientPhone">-</span></div>
+        <div style="grid-column: span 2;"><strong>Адрес:</strong> <span id="resClientNotes">-</span></div>
+      </div>
+
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin-bottom: 8px;">Параметры гарнитура</h3>
+      <table class="modal-table">
+        <tr><th style="width: 40%;">Параметр</th><th>Выбранное значение</th></tr>
+        <tr><td>Тип кухни</td><td id="resKitchenType">-</td></tr>
+        <tr><td>Габариты</td><td id="resDimensions">-</td></tr>
+        <tr><td>Верхний ярус</td><td id="resUpper">-</td></tr>
+        <tr><td>Наполнение</td><td id="resFittings">-</td></tr>
+        <tr><td>Открывание</td><td id="resDoor">-</td></tr>
+        <tr><td>Фасады</td><td id="resFacade">-</td></tr>
+        <tr><td>Кромка фасада</td><td id="resFacadeEdge">-</td></tr>
+        <tr><td>Корпус</td><td id="resBody">-</td></tr>
+        <tr><td>Кромка корпуса</td><td id="resBodyEdge">-</td></tr>
+        <tr><td>Столешница</td><td id="resCountertop">-</td></tr>
+        <tr><td>Фурнитура</td><td id="resHardware">-</td></tr>
+        <tr><td>Остров</td><td id="resIsland">-</td></tr>
+      </table>
+
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 8px 0;">Детализация отсеков (модулей) слева направо</h3>
+      <table class="modal-table">
+        <thead>
+          <tr>
+            <th style="width: 10%; text-align: center;">№</th>
+            <th style="width: 45%;">Назначение отсека</th>
+            <th style="width: 15%;">Ярус</th>
+            <th style="width: 15%;">Ширина</th>
+            <th style="width: 15%;">Глубина</th>
+          </tr>
+        </thead>
+        <tbody id="resSectionsTableBody">
+          <!-- Динамически заполняется -->
+        </tbody>
+      </table>
+
+      <div class="price-box" style="margin-top: 15px; padding: 12px;">
+        <div class="price-title">Итоговая стоимость заказа</div>
+        <div class="price-value" id="resTotalPrice" style="font-size: 1.6rem;">0 UZS</div>
+        <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px;" id="resAdvanceInfo">Аванс (75%): 0 | Остаток (25%): 0</div>
+      </div>
+    </div>
+
+    <div style="max-width: 750px; margin: 15px auto; display: flex; gap: 10px;">
+      <button class="btn-submit" style="background: #2563eb;" onclick="downloadAsImage()">📸 Скачать всю спецификацию как фото (для Telegram)</button>
+      <button class="btn-submit" style="background: #475569;" onclick="closeSummaryModal()">Закрыть</button>
+    </div>
+  </div>
+
   <script>
     let currentType = 'straight';
     let sectionsData = [];
+    let calculatedTotalPriceNumber = 0;
 
     function initDefaultSections() {
       const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
@@ -700,8 +768,6 @@
       updateCalculator();
     }
 
-    let calculatedTotalPriceNumber = 0;
-
     function updateCalculator() {
       const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
       const totalH = parseFloat(document.getElementById('totalHeight').value) || 240;
@@ -812,35 +878,70 @@
       svg.innerHTML = html;
     }
 
-    function prepareSummaryData() {
-      document.getElementById('inpTotalPrice').value = Math.round(calculatedTotalPriceNumber).toLocaleString('ru-RU');
-      
+    function openSummaryModal() {
+      document.getElementById('resClientName').innerText = document.getElementById('clientName').value || 'Не указано';
+      document.getElementById('resClientPhone').innerText = document.getElementById('clientPhone').value || 'Не указано';
+      document.getElementById('resClientNotes').innerText = document.getElementById('clientNotes').value || 'Стандарт';
+
       const typeNames = { 'straight': 'Прямая кухня', 'l-shape': 'Г-образная кухня', 'u-shape': 'П-образная кухня' };
-      document.getElementById('inpKitchenType').value = typeNames[currentType];
+      document.getElementById('resKitchenType').innerText = typeNames[currentType];
 
       let dims = `Основная стена: ${document.getElementById('mainWall').value} см, Высота: ${document.getElementById('totalHeight').value} см`;
-      document.getElementById('inpDimensionsText').value = dims;
+      document.getElementById('resDimensions').innerText = dims;
 
       const hasUpper = document.getElementById('hasUpperTier').checked;
-      if (hasUpper) {
-        document.getElementById('inpUpperModeText').value = `Длина: ${document.getElementById('upperLength').value} см, Высота: ${document.getElementById('upperHeight').value} см`;
-      } else {
-        document.getElementById('inpUpperModeText').value = 'Без верхнего яруса';
-      }
+      document.getElementById('resUpper').innerText = hasUpper ? `Длина: ${document.getElementById('upperLength').value} см, Высота: ${document.getElementById('upperHeight').value} см` : 'Без верхнего яруса';
 
-      document.getElementById('inpFittingsText').value = `Полки: ${document.getElementById('countShelves').value}, Ящики: ${document.getElementById('countDrawers').value}`;
-      document.getElementById('inpDoorTypeText').value = document.getElementById('doorOpenType').options[document.getElementById('doorOpenType').selectedIndex].text;
-      document.getElementById('inpFacadeText').value = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text;
-      document.getElementById('inpFacadeEdgeText').value = document.getElementById('facadeEdgeType').options[document.getElementById('facadeEdgeType').selectedIndex].text;
-      document.getElementById('inpBodyText').value = document.getElementById('bodyMaterial').options[document.getElementById('bodyMaterial').selectedIndex].text;
-      document.getElementById('inpBodyEdgeText').value = document.getElementById('bodyEdgeType').options[document.getElementById('bodyEdgeType').selectedIndex].text;
-      document.getElementById('inpCountertopText').value = document.getElementById('countertopMaterial').options[document.getElementById('countertopMaterial').selectedIndex].text;
-      document.getElementById('inpHardwareText').value = document.getElementById('hardwareType').options[document.getElementById('hardwareType').selectedIndex].text;
+      document.getElementById('resFittings').innerText = `Полки: ${document.getElementById('countShelves').value}, Ящики: ${document.getElementById('countDrawers').value}`;
+      document.getElementById('resDoor').innerText = document.getElementById('doorOpenType').options[document.getElementById('doorOpenType').selectedIndex].text;
+      document.getElementById('resFacade').innerText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text;
+      document.getElementById('resFacadeEdge').innerText = document.getElementById('facadeEdgeType').options[document.getElementById('facadeEdgeType').selectedIndex].text;
+      document.getElementById('resBody').innerText = document.getElementById('bodyMaterial').options[document.getElementById('bodyMaterial').selectedIndex].text;
+      document.getElementById('resBodyEdge').innerText = document.getElementById('bodyEdgeType').options[document.getElementById('bodyEdgeType').selectedIndex].text;
+      document.getElementById('resCountertop').innerText = document.getElementById('countertopMaterial').options[document.getElementById('countertopMaterial').selectedIndex].text;
+      document.getElementById('resHardware').innerText = document.getElementById('hardwareType').options[document.getElementById('hardwareType').selectedIndex].text;
       
       const hasIsland = document.getElementById('hasIsland').checked;
-      document.getElementById('inpIslandText').value = hasIsland ? `Да (${document.getElementById('islandLength').value}x${document.getElementById('islandWidth').value} см)` : 'Нет';
+      document.getElementById('resIsland').innerText = hasIsland ? `Да (${document.getElementById('islandLength').value}x${document.getElementById('islandWidth').value} см)` : 'Нет';
 
-      document.getElementById('inpSectionsJson').value = JSON.stringify(sectionsData);
+      // Таблица отсеков
+      let tbodyHtml = '';
+      sectionsData.forEach(sec => {
+        const tierName = sec.tier === 'lower' ? 'Нижний' : sec.tier === 'upper' ? 'Верхний' : 'Пенал';
+        tbodyHtml += `
+          <tr>
+            <td style="text-align: center; font-weight: bold; color: var(--accent-gold);">[${sec.id}]</td>
+            <td>${sec.name}</td>
+            <td>${tierName}</td>
+            <td>${sec.width} см</td>
+            <td>${sec.depth} см</td>
+          </tr>
+        `;
+      });
+      document.getElementById('resSectionsTableBody').innerHTML = tbodyHtml;
+
+      const totalVal = Math.round(calculatedTotalPriceNumber);
+      const advanceVal = Math.round(totalVal * 0.75);
+      const finalVal = totalVal - advanceVal;
+
+      document.getElementById('resTotalPrice').innerText = totalVal.toLocaleString('ru-RU') + ' UZS';
+      document.getElementById('resAdvanceInfo').innerText = `Аванс (75%): ${advanceVal.toLocaleString('ru-RU')} UZS | Остаток (25%): ${finalVal.toLocaleString('ru-RU')} UZS`;
+
+      document.getElementById('summaryModal').style.display = 'block';
+    }
+
+    function closeSummaryModal() {
+      document.getElementById('summaryModal').style.display = 'none';
+    }
+
+    function downloadAsImage() {
+      const element = document.getElementById('captureArea');
+      html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#1e293b' }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'Kuhnya_Specifikaciya.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
     }
 
     window.onload = function() {
