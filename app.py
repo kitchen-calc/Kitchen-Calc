@@ -12,9 +12,8 @@ app = FastAPI()
 BOT_TOKEN = "8924842939:AAGjTKqOscxHyNH4OYbHkZDtj1MyGqSqPwA"
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# Ссылка будет автоматически браться из окружения хостинга или использоваться локальная для тестов
-# При переезде на хостинг (например Render) сюда подставится постоянная ссылка сервиса
-WEB_APP_URL = os.environ.get("WEB_APP_URL", "http://127.0.0.1:5000")
+# Динамически берем ссылку из окружения Render или ставим дефолтную
+WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://kitchen-calc.onrender.com")
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -31,7 +30,6 @@ def send_welcome(message):
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    # Здесь находится HTML/CSS код вашего калькулятора
     return """
     <!DOCTYPE html>
     <html lang="ru">
@@ -59,13 +57,13 @@ def run_telegram_bot():
 if __name__ == "__main__":
     import uvicorn
     
-    # 1. Запускаем телеграм-бота в фоновом режиме
+    # 1. Запускаем телеграм-бота в фоновом потоке
     bot_thread = threading.Thread(target=run_telegram_bot, daemon=True)
     bot_thread.start()
     
-    # 2. Получаем порт от хостинга (или 5000 для локального запуска)
-    port = int(os.environ.get("PORT", 5000))
+    # 2. Получаем порт от Render (или 5000 для локальных тестов)
+    port = int(os.environ.get("PORT", 10000))
     
     # 3. Запускаем FastAPI сервер
     print(f"🚀 FastAPI сервер запущен на порту {port}")
-    uvicorn.run("app", host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port)
