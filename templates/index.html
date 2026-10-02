@@ -64,7 +64,7 @@
     .master-contacts .telegram { font-size: 0.88rem; color: #38bdf8; text-decoration: none; font-weight: 600; }
 
     .container { max-width: 1280px; margin: 25px auto; padding: 0 20px; }
-    .app-layout { display: grid; grid-template-columns: 420px 1fr; gap: 25px; align-items: start; }
+    .app-layout { display: grid; grid-template-columns: 440px 1fr; gap: 25px; align-items: start; }
     .sticky-sidebar { position: sticky; top: 85px; display: flex; flex-direction: column; gap: 20px; }
 
     .card {
@@ -92,7 +92,7 @@
     .price-currency { color: #f8fafc; font-size: 0.95rem; }
 
     .drawing-title { font-size: 0.95rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 10px; display: flex; justify-content: space-between; }
-    .svg-container { width: 100%; height: 190px; background: #020617; border: 1px solid var(--border-gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .svg-container { width: 100%; height: 210px; background: #020617; border: 1px solid var(--border-gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
     svg { width: 100%; height: 100%; }
 
     .section-title { font-size: 1.1rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
@@ -124,11 +124,7 @@
     .checkbox-label input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-gold); }
     .sub-options { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-dark); display: block; }
 
-    .info-badge {
-      background: rgba(251, 191, 36, 0.1); border: 1px solid var(--border-gold); border-radius: 8px; padding: 8px 12px; font-size: 0.88rem; color: var(--accent-gold); font-weight: 600; margin-top: 10px; display: flex; justify-content: space-between; align-items: center;
-    }
-
-    /* КАРТОЧКА ОТСЕКА С МИНИ-ВИЗУАЛИЗАЦИЕЙ */
+    /* КАРТОЧКА ОТСЕКА С МИНИ-ЧЕРТЕЖОМ В СТИЛЕ CAD */
     .section-card-item {
       background: rgba(15, 23, 42, 0.7);
       border: 1.5px solid var(--border-dark);
@@ -136,7 +132,7 @@
       padding: 15px;
       margin-bottom: 15px;
       display: grid;
-      grid-template-columns: 1fr 110px;
+      grid-template-columns: 1fr 120px;
       gap: 15px;
       align-items: center;
     }
@@ -152,11 +148,11 @@
       padding-bottom: 5px;
     }
     .section-mini-svg {
-      width: 110px;
-      height: 110px;
-      background: #020617;
-      border: 1px solid var(--border-gold);
-      border-radius: 8px;
+      width: 120px;
+      height: 120px;
+      background: #000000;
+      border: 1px solid #38bdf8;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -172,15 +168,15 @@
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.9);
       z-index: 1000;
       overflow-y: auto;
       padding: 20px;
     }
     .modal-content {
-      max-width: 800px;
-      margin: 30px auto;
-      background: #1e293b;
+      max-width: 850px;
+      margin: 20px auto;
+      background: #0f172a;
       border: 2px solid var(--accent-gold);
       border-radius: 14px;
       padding: 30px;
@@ -189,8 +185,19 @@
     .modal-header { font-size: 1.3rem; font-weight: bold; color: var(--accent-gold); border-bottom: 2px solid var(--accent-gold); padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; }
     .modal-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
     .modal-table th, .modal-table td { border: 1px solid #334155; padding: 8px 10px; font-size: 0.85rem; text-align: left; }
-    .modal-table th { background: #0f172a; color: var(--accent-gold); }
-    .modal-table td { background: rgba(15, 23, 42, 0.4); }
+    .modal-table th { background: #1e293b; color: var(--accent-gold); }
+    .modal-table td { background: rgba(15, 23, 42, 0.6); }
+
+    /* CAD-СТИЛЬ ДЛЯ ЧЕРТЕЖЕЙ В ИТОГЕ */
+    .cad-drawing-box {
+      width: 100%;
+      height: 240px;
+      background: #000000;
+      border: 1.5px solid #38bdf8;
+      border-radius: 8px;
+      margin: 15px 0;
+      position: relative;
+    }
 
     @media (max-width: 768px) {
       .header-container { flex-direction: column; align-items: stretch; text-align: center; gap: 10px; }
@@ -202,9 +209,9 @@
       .inputs-grid { grid-template-columns: 1fr !important; }
       .type-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
       .price-value { font-size: 1.8rem; }
-      .svg-container { height: 160px; }
+      .svg-container { height: 180px; }
       .section-card-item { grid-template-columns: 1fr; }
-      .section-mini-svg { width: 100%; height: 90px; }
+      .section-mini-svg { width: 100%; height: 100px; }
     }
   </style>
 </head>
@@ -238,7 +245,7 @@
             <span>Образец фасада и кромки (3D)</span>
             <small style="color:var(--text-muted);">Угловой срез</small>
           </div>
-          <div class="svg-container" style="height: 180px;">
+          <div class="svg-container" style="height: 170px;">
             <svg id="svgPanelSample" viewBox="0 0 350 180"></svg>
           </div>
           <div id="panelSampleBadge" style="font-size: 0.78rem; color: var(--accent-gold); margin-top: 8px; text-align: center; font-weight: 600;"></div>
@@ -246,21 +253,21 @@
 
         <div class="card">
           <div class="drawing-title">
-            <span>Чертеж 1: Вид спереди (Нижний и Верхний ярусы)</span>
-            <small style="color:var(--text-muted);">Фасад</small>
+            <span>Чертеж 1: Вид спереди (CAD Схема)</span>
+            <small style="color:#38bdf8;">Инженерный вид</small>
           </div>
           <div class="svg-container">
-            <svg id="svgFront" viewBox="0 0 400 200"></svg>
+            <svg id="svgFront" viewBox="0 0 400 220"></svg>
           </div>
         </div>
 
         <div class="card">
           <div class="drawing-title">
-            <span>Чертеж 2: Вид сверху</span>
-            <small style="color:var(--text-muted);">Планировка</small>
+            <span>Чертеж 2: Вид сверху (План)</span>
+            <small style="color:#38bdf8;">Спецификация</small>
           </div>
-          <div class="svg-container">
-            <svg id="svgTop" viewBox="0 0 400 200"></svg>
+          <div class="svg-container" style="height: 160px;">
+            <svg id="svgTop" viewBox="0 0 400 180"></svg>
           </div>
         </div>
       </div>
@@ -309,11 +316,11 @@
           </div>
         </div>
 
-        <!-- 2. НИЖНИЕ ОТСЕКИ С ИНДИВИДУАЛЬНЫМИ РАЗМЕРАМИ, НАПОЛНЕНИЕМ И МИНИ-ЧЕРТЕЖОМ -->
+        <!-- 2. НИЖНИЕ ОТСЕКИ -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">2</span>
-            <span>Нижние отсеки (Модули и Тумбы)</span>
+            <span>Нижние отсеки (Модули и Тумбы с CAD-схемой)</span>
           </div>
 
           <div class="inputs-grid" style="margin-bottom: 15px;">
@@ -330,11 +337,11 @@
           <div id="lowerSectionsContainer"></div>
         </div>
 
-        <!-- 3. ВЕРХНИЕ ОТСЕКИ С ИНДИВИДУАЛЬНЫМИ РАЗМЕРАМИ И ГАЗЛИФТАМИ -->
+        <!-- 3. ВЕРХНИЕ ОТСЕКИ -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">3</span>
-            <span>Верхние отсеки (Навесные шкафы)</span>
+            <span>Верхние отсеки (Навесные шкафы с CAD-схемой)</span>
           </div>
 
           <div class="toggle-box" style="margin-top:0; margin-bottom: 15px;">
@@ -464,17 +471,17 @@
             <textarea id="clientNotes" rows="2" placeholder="Адрес установки, этаж..."></textarea>
           </div>
 
-          <button type="button" class="btn-submit" onclick="openSummaryModal()">📋 Итог (Спецификация заказа)</button>
+          <button type="button" class="btn-submit" onclick="openSummaryModal()">📋 Итог (Спецификация и CAD-чертежи)</button>
         </div>
 
       </div>
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО С ИТОГОМ -->
+  <!-- МОДАЛЬНОЕ ОКНО С ИТОГОМ И CAD-ЧЕРТЕЖАМИ -->
   <div id="summaryModal">
     <div class="modal-content" id="captureArea">
-      <div class="modal-header">Спецификация и состав заказа кухни</div>
+      <div class="modal-header">Спецификация и CAD-чертежи кухни</div>
       
       <div class="inputs-grid" style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
         <div><strong>Заказчик:</strong> <span id="resClientName">-</span></div>
@@ -482,17 +489,17 @@
         <div style="grid-column: span 2;"><strong>Адрес:</strong> <span id="resClientNotes">-</span></div>
       </div>
 
-      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin-bottom: 8px;">Параметры гарнитура</h3>
-      <table class="modal-table">
-        <tr><th style="width: 40%;">Параметр</th><th>Выбранное значение</th></tr>
-        <tr><td>Тип кухни</td><td id="resKitchenType">-</td></tr>
-        <tr><td>Габариты стены</td><td id="resDimensions">-</td></tr>
-        <tr><td>Фасады</td><td id="resFacade">-</td></tr>
-        <tr><td>Столешница</td><td id="resCountertop">-</td></tr>
-        <tr><td>Остров</td><td id="resIsland">-</td></tr>
-      </table>
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin-bottom: 5px;">Чертеж 1: Инженерный вид спереди (AutoCAD стиль)</h3>
+      <div class="cad-drawing-box">
+        <svg id="modalCadFront" viewBox="0 0 600 280"></svg>
+      </div>
 
-      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 8px 0;">Нижние отсеки (модули)</h3>
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin-bottom: 5px;">Чертеж 2: Планировка помещения (Вид сверху)</h3>
+      <div class="cad-drawing-box" style="height: 180px;">
+        <svg id="modalCadTop" viewBox="0 0 600 200"></svg>
+      </div>
+
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 5px 0;">Нижние отсеки (модули)</h3>
       <table class="modal-table">
         <thead>
           <tr>
@@ -502,7 +509,7 @@
         <tbody id="resLowerTableBody"></tbody>
       </table>
 
-      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 8px 0;">Верхние отсеки (шкафы)</h3>
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 5px 0;">Верхние отсеки (шкафы)</h3>
       <table class="modal-table">
         <thead>
           <tr>
@@ -519,8 +526,8 @@
       </div>
     </div>
 
-    <div style="max-width: 800px; margin: 15px auto; display: flex; gap: 10px;">
-      <button class="btn-submit" style="background: #2563eb;" onclick="downloadAsImage()">📸 Скачать всю спецификацию как фото (для Telegram)</button>
+    <div style="max-width: 850px; margin: 15px auto; display: flex; gap: 10px;">
+      <button class="btn-submit" style="background: #2563eb;" onclick="downloadAsImage()">📸 Скачать спецификацию и CAD-чертежи (для Telegram)</button>
       <button class="btn-submit" style="background: #475569;" onclick="closeSummaryModal()">Закрыть</button>
     </div>
   </div>
@@ -633,48 +640,54 @@
               </div>
             </div>
             <div class="section-mini-svg">
-              <svg viewBox="0 0 100 100" id="miniSvg_${type}_${idx}"></svg>
+              <svg viewBox="0 0 120 120" id="cadMini_${type}_${idx}"></svg>
             </div>
           </div>
         `;
       });
 
       container.innerHTML = html;
-      drawAllMiniSvgs();
+      drawAllCadMinis();
     }
 
     function updateSec(type, idx, field, val) {
       let arr = type === 'lower' ? lowerSections : upperSections;
       if (arr[idx]) {
         arr[idx][field] = val;
-        drawAllMiniSvgs();
+        drawAllCadMinis();
         updateCalculator();
       }
     }
 
-    function drawAllMiniSvgs() {
-      lowerSections.forEach((sec, idx) => drawMiniSvg('lower', idx, sec));
-      upperSections.forEach((sec, idx) => drawMiniSvg('upper', idx, sec));
+    function drawAllCadMinis() {
+      lowerSections.forEach((sec, idx) => drawCadMiniSvg('lower', idx, sec));
+      upperSections.forEach((sec, idx) => drawCadMiniSvg('upper', idx, sec));
     }
 
-    function drawMiniSvg(type, idx, sec) {
-      const svg = document.getElementById(`miniSvg_${type}_${idx}`);
+    // ИНЖЕНЕРНЫЙ ЧЕРТЕЖ ОТСЕКА В СТИЛЕ AutoCAD
+    function drawCadMiniSvg(type, idx, sec) {
+      const svg = document.getElementById(`cadMini_${type}_${idx}`);
       if (!svg) return;
-      let html = `<rect x="10" y="10" width="80" height="80" fill="#1e293b" stroke="#fbbf24" stroke-width="2" rx="4"/>`;
       
-      // Полки
+      let html = `
+        <!-- Рамка чертежа -->
+        <rect x="5" y="5" width="110" height="110" fill="#000000" stroke="#38bdf8" stroke-width="1"/>
+        <!-- Корпус модуля -->
+        <rect x="15" y="15" width="90" height="90" fill="none" stroke="#f8fafc" stroke-width="1.5"/>
+      `;
+
+      // Полки пунктиром в стиле CAD
       let shelves = sec.shelves || 0;
       for (let i = 1; i <= shelves; i++) {
-        let y = 10 + (80 / (shelves + 1)) * i;
-        html += `<line x1="12" y1="${y}" x2="88" y2="${y}" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2"/>`;
+        let y = 15 + (90 / (shelves + 1)) * i;
+        html += `<line x1="17" y1="${y}" x2="103" y2="${y}" stroke="#38bdf8" stroke-width="1" stroke-dasharray="2,2"/>`;
       }
 
-      // Ящики или газлифты
-      if (type === 'lower' && sec.drawers > 0) {
-        html += `<text x="50" y="55" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">Ящиков: ${sec.drawers}</text>`;
-      } else if (type === 'upper' && sec.gasLifts > 0) {
-        html += `<text x="50" y="55" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">Газлифт</text>`;
-      }
+      // Текст с размером
+      html += `
+        <text x="60" y="65" fill="#38bdf8" font-size="9" font-family="monospace" text-anchor="middle">${sec.width} см</text>
+        <text x="60" y="116" fill="#94a3b8" font-size="7" font-family="monospace" text-anchor="middle">[${sec.id}] ${type === 'lower' ? 'НИЗ' : 'ВЕРХ'}</text>
+      `;
 
       svg.innerHTML = html;
     }
@@ -746,7 +759,6 @@
       let lowerCostPerMeter = (facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + 400000;
       let totalPrice = lowerMeters * lowerCostPerMeter;
 
-      // Суммируем наполнение отсеков
       lowerSections.forEach(s => {
         totalPrice += (s.shelves * 50000) + (s.drawers * 110000);
         if (s.openType === 'push') totalPrice += 40000;
@@ -770,8 +782,8 @@
       calculatedTotalPriceNumber = totalPrice;
       document.getElementById('totalPriceDisplay').innerText = Math.round(totalPrice).toLocaleString('ru-RU');
 
-      drawFrontView(mainW, totalH, hasUpper, upperH);
-      drawTopView(mainW, leftW, rightW, hasIsland, islL, islW);
+      drawCadFrontView('svgFront', mainW, totalH, hasUpper, upperH);
+      drawCadTopView('svgTop', mainW, leftW, rightW, hasIsland, islL, islW);
       drawPanelSample();
     }
 
@@ -788,39 +800,44 @@
       document.getElementById('panelSampleBadge').innerText = `${facadeMatText}`;
     }
 
-    function drawFrontView(w, h, hasUpper, upperH) {
-      const svg = document.getElementById('svgFront');
+    // ГЛАВНЫЙ ИНЖЕНЕРНЫЙ CAD-ЧЕРТЕЖ ВИД СПЕРЕДИ
+    function drawCadFrontView(svgId, w, h, hasUpper, upperH) {
+      const svg = document.getElementById(svgId);
+      if (!svg) return;
       svg.innerHTML = '';
-      const svgW = 400, svgH = 200, padding = 25;
-      const drawW = svgW - padding * 2, drawH = svgH - padding * 2;
-      const scale = Math.min(drawW / Math.max(w, 200), drawH / Math.max(h, 200));
-      const kW = w * scale, kH = h * scale;
-      const startX = (svgW - kW) / 2, startY = (svgH - kH) / 2 + 5;
-      const baseH = kH * (85 / h), apronH = kH * (60 / h);
 
-      let html = `<rect x="${startX}" y="${startY + Math.max(0, kH - baseH - apronH)}" width="${kW}" height="${apronH}" fill="#0f172a" stroke="#475569" stroke-width="1" />`;
+      let html = `
+        <!-- Чертежная рамка и оси -->
+        <rect x="10" y="10" width="380" height="200" fill="#000000" stroke="#38bdf8" stroke-width="1.5"/>
+        <line x1="30" y1="190" x2="370" y2="190" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,2"/>
+        <text x="200" y="202" fill="#38bdf8" font-size="9" font-family="monospace" text-anchor="middle">ОСЬ УСТАНОВКИ ГАРНИТУРА L=${w}см</text>
+      `;
+
+      let startX = 40;
+      let drawW = 320;
       
-      // Нижние отсеки
-      let currX = startX;
+      // Нижние модули по CAD
       let totalLowerW = lowerSections.reduce((acc, s) => acc + s.width, 0) || w;
+      let currX = startX;
       lowerSections.forEach((sec) => {
-        let secW = (sec.width / totalLowerW) * kW;
-        html += `<rect x="${currX}" y="${startY + kH - baseH}" width="${secW}" height="${baseH}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
-        html += `<text x="${currX + secW/2}" y="${startY + kH - baseH/2 + 4}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">[${sec.id}]</text>`;
+        let secW = (sec.width / totalLowerW) * drawW;
+        html += `
+          <rect x="${currX}" y="120" width="${secW}" height="60" fill="none" stroke="#f8fafc" stroke-width="1.5"/>
+          <text x="${currX + secW/2}" y="155" fill="#38bdf8" font-size="9" font-family="monospace" text-anchor="middle">[${sec.id}] ${sec.width}см</text>
+        `;
         currX += secW;
       });
 
-      // Верхние отсеки
+      // Верхние модули по CAD
       if (hasUpper) {
-        let topH = upperH * scale;
-        let topY = startY + kH - baseH - apronH - topH;
         let currTopX = startX;
         let totalUpperW = upperSections.reduce((acc, s) => acc + s.width, 0) || w;
-        
         upperSections.forEach((sec) => {
-          let secW = (sec.width / totalUpperW) * kW;
-          html += `<rect x="${currTopX}" y="${Math.max(startY, topY)}" width="${secW}" height="${topH}" fill="#334155" stroke="#38bdf8" stroke-width="1.5" />`;
-          html += `<text x="${currTopX + secW/2}" y="${Math.max(startY + 12, topY + 12)}" fill="#38bdf8" font-size="9" font-weight="bold" text-anchor="middle">[В-${sec.id}]</text>`;
+          let secW = (sec.width / totalUpperW) * drawW;
+          html += `
+            <rect x="${currTopX}" y="45" width="${secW}" height="55" fill="none" stroke="#f8fafc" stroke-width="1.5"/>
+            <text x="${currTopX + secW/2}" y="75" fill="#38bdf8" font-size="9" font-family="monospace" text-anchor="middle">[В-${sec.id}]</text>
+          `;
           currTopX += secW;
         });
       }
@@ -828,19 +845,28 @@
       svg.innerHTML = html;
     }
 
-    function drawTopView(mainW, leftW, rightW, hasIsland, islL, islW) {
-      const svg = document.getElementById('svgTop');
+    function drawCadTopView(svgId, mainW, leftW, rightW, hasIsland, islL, islW) {
+      const svg = document.getElementById(svgId);
+      if (!svg) return;
       svg.innerHTML = '';
-      const svgW = 400, depth = 60;
-      const scale = 280 / Math.max(mainW, 200);
-      const cx = svgW / 2, cy = 25;
-      const mainDrawW = mainW * scale, mainDrawD = depth * scale;
-      const mainX = cx - mainDrawW / 2, mainY = cy;
 
-      let html = `<rect x="${mainX}" y="${mainY}" width="${mainDrawW}" height="${mainDrawD}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
+      let html = `
+        <rect x="10" y="10" width="380" height="160" fill="#000000" stroke="#38bdf8" stroke-width="1.5"/>
+        <rect x="50" y="40" width="300" height="35" fill="none" stroke="#f8fafc" stroke-width="1.5"/>
+        <text x="200" y="62" fill="#38bdf8" font-size="9" font-family="monospace" text-anchor="middle">ОСНОВНАЯ СТЕНА (${mainW} см)</text>
+      `;
+
       if (currentType === 'l-shape') {
-        html += `<rect x="${mainX}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${(leftW - depth)*scale}" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" />`;
+        html += `<rect x="50" y="75" width="35" height="60" fill="none" stroke="#f8fafc" stroke-width="1.5"/>`;
       }
+
+      if (hasIsland) {
+        html += `
+          <rect x="120" y="110" width="160" height="40" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <text x="200" y="134" fill="#fbbf24" font-size="9" font-family="monospace" text-anchor="middle">КУХОННЫЙ ОСТРОВ (${islL}x${islW}см)</text>
+        `;
+      }
+
       svg.innerHTML = html;
     }
 
@@ -849,23 +875,20 @@
       document.getElementById('resClientPhone').innerText = document.getElementById('clientPhone').value || 'Не указано';
       document.getElementById('resClientNotes').innerText = document.getElementById('clientNotes').value || 'Стандарт';
 
-      const typeNames = { 'straight': 'Прямая кухня', 'l-shape': 'Г-образная кухня', 'u-shape': 'П-образная кухня' };
-      document.getElementById('resKitchenType').innerText = typeNames[currentType];
-      document.getElementById('resDimensions').innerText = `Основная стена: ${document.getElementById('mainWall').value} см`;
-      document.getElementById('resFacade').innerText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text;
-      document.getElementById('resCountertop').innerText = document.getElementById('countertopMaterial').options[document.getElementById('countertopMaterial').selectedIndex].text;
-      
-      const hasIsland = document.getElementById('hasIsland').checked;
-      document.getElementById('resIsland').innerText = hasIsland ? `Да (${document.getElementById('islandLength').value}x${document.getElementById('islandWidth').value} см)` : 'Нет';
+      const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
+      const totalH = parseFloat(document.getElementById('totalHeight').value) || 240;
+      const hasUpper = document.getElementById('hasUpperTier').checked;
 
-      // Таблица нижних
+      // Генерируем CAD чертежи для модального окна
+      drawCadFrontView('modalCadFront', mainW, totalH, hasUpper, parseFloat(document.getElementById('upperHeight').value));
+      drawCadTopView('modalCadTop', mainW, parseFloat(document.getElementById('leftWall').value), parseFloat(document.getElementById('rightWall').value), document.getElementById('hasIsland').checked, parseFloat(document.getElementById('islandLength').value), parseFloat(document.getElementById('islandWidth').value));
+
       let lowerHtml = '';
       lowerSections.forEach(sec => {
         lowerHtml += `<tr><td>[${sec.id}]</td><td>${sec.name}</td><td>${sec.width} см</td><td>${sec.shelves}</td><td>${sec.drawers}</td><td>${sec.openType === 'push' ? 'Push' : 'Ручка'}</td></tr>`;
       });
       document.getElementById('resLowerTableBody').innerHTML = lowerHtml;
 
-      // Таблица верхних
       let upperHtml = '';
       upperSections.forEach(sec => {
         upperHtml += `<tr><td>[В-${sec.id}]</td><td>${sec.name}</td><td>${sec.width} см</td><td>${sec.shelves}</td><td>${sec.gasLifts}</td><td>${sec.openType === 'push' ? 'Push' : 'Ручка'}</td></tr>`;
@@ -885,9 +908,9 @@
 
     function downloadAsImage() {
       const element = document.getElementById('captureArea');
-      html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#1e293b' }).then(canvas => {
+      html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#0f172a' }).then(canvas => {
         const link = document.createElement('a');
-        link.download = 'Kuhnya_Specifikaciya.png';
+        link.download = 'Kuhnya_CAD_Specifikaciya.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
       });
