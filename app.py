@@ -1,4 +1,5 @@
 import os
+import json
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
@@ -32,23 +33,23 @@ async def show_summary(
     islandText: str = Form(""),
     sectionsJson: str = Form("[]")
 ):
-    import json
     try:
         sections = json.loads(sectionsJson)
     except:
         sections = []
 
-    advance = int(totalPrice.replace(" ", "")) * 0.75 if totalPrice.replace(" ", "").isdigit() else 0
-    final_sum = int(totalPrice.replace(" ", "")) - int(advance) if totalPrice.replace(" ", "").isdigit() else 0
+    clean_price = totalPrice.replace(" ", "")
+    advance_val = int(clean_price) * 0.75 if clean_price.isdigit() else 0
+    final_val = int(clean_price) - int(advance_val) if clean_price.isdigit() else 0
 
-    return templates.TemplateResponse("summary.html", {
+    context = {
         "request": request,
         "clientName": clientName,
         "clientPhone": clientPhone,
         "clientNotes": clientNotes,
         "totalPrice": totalPrice,
-        "advance": f"{int(advance):,}".replace(",", " "),
-        "final_sum": f"{int(final_sum):,}".replace(",", " "),
+        "advance": f"{int(advance_val):,}".replace(",", " "),
+        "final_sum": f"{int(final_val):,}".replace(",", " "),
         "kitchenType": kitchenType,
         "dimensionsText": dimensionsText,
         "upperModeText": upperModeText,
@@ -62,4 +63,6 @@ async def show_summary(
         "hardwareText": hardwareText,
         "islandText": islandText,
         "sections": sections
-    })
+    }
+    
+    return templates.TemplateResponse("summary.html", context)
