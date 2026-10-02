@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Расчет стоимости кухни - Ташкент (Craftwood)</title>
+    <title>Расчет стоимости кухни - Ташкент (Craftwood Loft)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -11,27 +11,35 @@
     <!-- html2pdf.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #090d16 100%);
+            color: #f1f5f9;
+        }
         .kitchen-card { transition: all 0.3s ease; }
-        .kitchen-card.active { border-color: #2563eb; ring: 4px; ring-color: rgba(37, 99, 235, 0.2); }
+        .kitchen-card.active { border-color: #3b82f6; ring: 4px; ring-color: rgba(59, 130, 246, 0.4); background-color: #1e293b; }
         .color-item { transition: all 0.2s ease; cursor: pointer; }
-        .color-item.active { border-color: #2563eb; background-color: #eff6ff; ring: 2px; ring-color: #2563eb; }
-        .tab-btn.active { border-bottom-color: #2563eb; color: #2563eb; font-weight: 700; }
+        .color-item.active { border-color: #3b82f6; background-color: #1e3a8a; ring: 2px; ring-color: #60a5fa; }
+        .tab-btn.active { border-bottom-color: #3b82f6; color: #60a5fa; font-weight: 700; }
+        .gost-line { stroke: #3b82f6; stroke-width: 1.5; }
+        .gost-ext { stroke: #64748b; stroke-width: 1; stroke-dasharray: 2,2; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased pb-12">
+<body class="font-sans antialiased pb-12 min-h-screen">
 
     <!-- Header -->
-    <header class="bg-slate-900 text-white py-5 shadow-md">
+    <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-800 text-white py-5 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-kitchen-set text-blue-500 text-3xl"></i>
+                <div class="p-2 bg-blue-600/20 border border-blue-500/30 rounded-xl">
+                    <i class="fa-solid fa-kitchen-set text-blue-400 text-2xl"></i>
+                </div>
                 <div>
-                    <h1 class="text-xl font-bold tracking-wide">KITCHEN CALC TASHKENT</h1>
-                    <p class="text-xs text-slate-400">Каталог фасадов Craftwood & Конструктор</p>
+                    <h1 class="text-xl font-bold tracking-wide text-slate-100">KITCHEN STUDIO TASHKENT</h1>
+                    <p class="text-xs text-slate-400">Конструктор кухонь Loft & Палитра Craftwood</p>
                 </div>
             </div>
-            <a href="tel:+998920934510" class="text-sm font-semibold text-blue-400 hover:underline">
-                <i class="fa-solid fa-phone mr-1"></i> +998 (92) 093-45-10
+            <a href="tel:+998920934510" class="text-sm font-semibold text-blue-400 hover:text-blue-300 transition flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+                <i class="fa-solid fa-phone text-blue-500"></i> +998 (92) 093-45-10
             </a>
         </div>
     </header>
@@ -43,84 +51,129 @@
             <div class="lg:col-span-7 space-y-6">
 
                 <!-- 1. Планировка -->
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h2 class="text-lg font-bold mb-4 flex items-center">
-                        <span class="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2 text-sm">1</span>
-                        Форма кухни
+                <section class="bg-slate-900/90 border border-slate-800 p-6 rounded-2xl shadow-xl backdrop-blur-sm">
+                    <h2 class="text-lg font-bold mb-4 flex items-center text-slate-100">
+                        <span class="w-7 h-7 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full flex items-center justify-center mr-2 text-sm font-bold">1</span>
+                        Форма гарнитура (Лофт Дизайн)
                     </h2>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div onclick="selectLayout('straight')" id="card-straight" class="kitchen-card active cursor-pointer border-2 border-slate-200 rounded-xl overflow-hidden p-2 text-center bg-white hover:border-blue-300">
-                            <img src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=400&q=80" class="h-20 w-full object-cover rounded-lg mb-2" alt="Прямая">
-                            <span class="text-xs font-semibold block">Прямая</span>
+                        <!-- Прямая -->
+                        <div onclick="selectLayout('straight')" id="card-straight" class="kitchen-card active cursor-pointer border-2 border-slate-800 rounded-xl overflow-hidden p-2 text-center bg-slate-950/60 hover:border-blue-500/50">
+                            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=500&q=80" class="h-24 w-full object-cover rounded-lg mb-2" alt="Прямая кухня">
+                            <span class="text-xs font-semibold block text-slate-200">Прямая</span>
                         </div>
-                        <div onclick="selectLayout('l_shape')" id="card-l_shape" class="kitchen-card cursor-pointer border-2 border-slate-200 rounded-xl overflow-hidden p-2 text-center bg-white hover:border-blue-300">
-                            <img src="https://images.unsplash.com/photo-1556909212-d5b604d0c90d?auto=format&fit=crop&w=400&q=80" class="h-20 w-full object-cover rounded-lg mb-2" alt="Г-образная">
-                            <span class="text-xs font-semibold block">Г-образная</span>
+                        <!-- Г-образная -->
+                        <div onclick="selectLayout('l_shape')" id="card-l_shape" class="kitchen-card cursor-pointer border-2 border-slate-800 rounded-xl overflow-hidden p-2 text-center bg-slate-950/60 hover:border-blue-500/50">
+                            <img src="https://images.unsplash.com/photo-1556909212-d5b604d0c90d?auto=format&fit=crop&w=500&q=80" class="h-24 w-full object-cover rounded-lg mb-2" alt="Г-образная кухня">
+                            <span class="text-xs font-semibold block text-slate-200">Г-образная</span>
                         </div>
-                        <div onclick="selectLayout('u_shape')" id="card-u_shape" class="kitchen-card cursor-pointer border-2 border-slate-200 rounded-xl overflow-hidden p-2 text-center bg-white hover:border-blue-300">
-                            <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80" class="h-20 w-full object-cover rounded-lg mb-2" alt="П-образная">
-                            <span class="text-xs font-semibold block">П-образная</span>
+                        <!-- П-образная -->
+                        <div onclick="selectLayout('u_shape')" id="card-u_shape" class="kitchen-card cursor-pointer border-2 border-slate-800 rounded-xl overflow-hidden p-2 text-center bg-slate-950/60 hover:border-blue-500/50">
+                            <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=500&q=80" class="h-24 w-full object-cover rounded-lg mb-2" alt="П-образная кухня">
+                            <span class="text-xs font-semibold block text-slate-200">П-образная</span>
                         </div>
-                        <div onclick="selectLayout('island')" id="card-island" class="kitchen-card cursor-pointer border-2 border-slate-200 rounded-xl overflow-hidden p-2 text-center bg-white hover:border-blue-300">
-                            <img src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?auto=format&fit=crop&w=400&q=80" class="h-20 w-full object-cover rounded-lg mb-2" alt="С островом">
-                            <span class="text-xs font-semibold block">С островом</span>
+                        <!-- С островом -->
+                        <div onclick="selectLayout('island')" id="card-island" class="kitchen-card cursor-pointer border-2 border-slate-800 rounded-xl overflow-hidden p-2 text-center bg-slate-950/60 hover:border-blue-500/50">
+                            <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=500&q=80" class="h-24 w-full object-cover rounded-lg mb-2" alt="Кухня с островом">
+                            <span class="text-xs font-semibold block text-slate-200">С островом</span>
                         </div>
                     </div>
                 </section>
 
-                <!-- 2. Размеры -->
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h2 class="text-lg font-bold mb-4 flex items-center">
-                        <span class="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2 text-sm">2</span>
-                        Размеры гарнитура (см)
+                <!-- 2. Размеры и опции углов/острова -->
+                <section class="bg-slate-900/90 border border-slate-800 p-6 rounded-2xl shadow-xl backdrop-blur-sm space-y-4">
+                    <h2 class="text-lg font-bold flex items-center text-slate-100">
+                        <span class="w-7 h-7 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full flex items-center justify-center mr-2 text-sm font-bold">2</span>
+                        Габариты и Конфигурация (см)
                     </h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs font-medium text-slate-600 block mb-1">Стена 1 (Основная длина) [см]</label>
-                            <input type="number" id="wall1" value="300" min="100" max="600" oninput="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+
+                    <!-- Выбор Левый / Правый угол для Г-образной -->
+                    <div id="lCornerBox" class="hidden bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <label class="text-xs font-semibold text-slate-400 block mb-2">Расположение угла (Г-образная):</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="setLCorner('left')" id="btnCornerLeft" class="py-2 text-xs font-bold rounded-lg border border-blue-500 bg-blue-600/20 text-blue-400">Левый угол</button>
+                            <button type="button" onclick="setLCorner('right')" id="btnCornerRight" class="py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-900 text-slate-400">Правый угол</button>
                         </div>
-                        <div id="wall2-container">
-                            <label class="text-xs font-medium text-slate-600 block mb-1">Стена 2 (Угол) [см]</label>
-                            <input type="number" id="wall2" value="180" min="100" max="400" oninput="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-xs font-medium text-slate-400 block mb-1">Стена 1 (Основная) [см]</label>
+                            <input type="number" id="wall1" value="300" min="100" max="600" oninput="updateAll()" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white outline-none">
+                        </div>
+                        <div id="wall2-container" class="hidden">
+                            <label id="wall2-label" class="text-xs font-medium text-slate-400 block mb-1">Стена 2 (Угол) [см]</label>
+                            <input type="number" id="wall2" value="180" min="100" max="400" oninput="updateAll()" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white outline-none">
+                        </div>
+                        <div id="wall3-container" class="hidden">
+                            <label class="text-xs font-medium text-slate-400 block mb-1">Стена 3 (Правый угол) [см]</label>
+                            <input type="number" id="wall3" value="180" min="100" max="400" oninput="updateAll()" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white outline-none">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-slate-600 block mb-1">Высота помещения/потолка [см]</label>
-                            <input type="number" id="ceilingHeight" value="260" min="220" max="350" oninput="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            <label class="text-xs font-medium text-slate-400 block mb-1">Высота потолка [см]</label>
+                            <input type="number" id="ceilingHeight" value="260" min="220" max="350" oninput="updateAll()" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Параметры Острова -->
+                    <div id="islandParamsBox" class="hidden bg-slate-950/80 p-4 rounded-xl border border-blue-500/30 space-y-3">
+                        <h3 class="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-cubes mr-2"></i> Параметры кухонного острова
+                        </h3>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="text-[11px] text-slate-400 block mb-1">Длина острова (см)</label>
+                                <input type="number" id="islandLen" value="160" min="80" max="300" oninput="updateAll()" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white">
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-slate-400 block mb-1">Ширина/Глубина (см)</label>
+                                <input type="number" id="islandWidth" value="90" min="60" max="150" oninput="updateAll()" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white">
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-slate-400 block mb-1">Высота острова (см)</label>
+                                <input type="number" id="islandHeight" value="90" min="75" max="110" oninput="updateAll()" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-300 block mb-1.5">Конструкция фасадов острова:</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" onclick="setIslandSides('1')" id="btnIslandSide1" class="py-2 text-xs font-semibold rounded-lg border border-blue-500 bg-blue-600/20 text-blue-300">С 1 стороны (2-я глухая)</button>
+                                <button type="button" onclick="setIslandSides('2')" id="btnIslandSide2" class="py-2 text-xs font-semibold rounded-lg border border-slate-800 bg-slate-900 text-slate-400">Дверцы с 2-х сторон (+30%)</button>
+                            </div>
                         </div>
                     </div>
                 </section>
 
                 <!-- 3. Графа верхних шкафчиков -->
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 ring-2 ring-blue-500/20">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold flex items-center text-slate-900">
-                            <span class="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center mr-2 text-sm">3</span>
-                            Параметры верхних шкафов
-                        </h2>
-                    </div>
+                <section class="bg-slate-900/90 border border-slate-800 p-6 rounded-2xl shadow-xl backdrop-blur-sm space-y-4">
+                    <h2 class="text-lg font-bold flex items-center text-slate-100">
+                        <span class="w-7 h-7 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full flex items-center justify-center mr-2 text-sm font-bold">3</span>
+                        Верхние модули
+                    </h2>
 
-                    <div class="grid grid-cols-2 gap-3 mb-5">
-                        <label class="cursor-pointer border-2 p-3 rounded-xl flex items-center space-x-3 bg-white hover:border-blue-300 transition">
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer border-2 border-slate-800 p-3 rounded-xl flex items-center space-x-3 bg-slate-950 hover:border-blue-500/50 transition">
                             <input type="radio" name="upperCabinetToggle" value="yes" checked onchange="updateAll()" class="w-4 h-4 text-blue-600">
                             <div>
-                                <span class="text-sm font-bold block">С верхними шкафами</span>
-                                <span class="text-[11px] text-slate-500">Полноценная кухня</span>
+                                <span class="text-xs font-bold block text-slate-200">С верхними шкафами</span>
+                                <span class="text-[10px] text-slate-400">Полноценная кухня</span>
                             </div>
                         </label>
-                        <label class="cursor-pointer border-2 p-3 rounded-xl flex items-center space-x-3 bg-white hover:border-blue-300 transition">
+                        <label class="cursor-pointer border-2 border-slate-800 p-3 rounded-xl flex items-center space-x-3 bg-slate-950 hover:border-blue-500/50 transition">
                             <input type="radio" name="upperCabinetToggle" value="no" onchange="updateAll()" class="w-4 h-4 text-blue-600">
                             <div>
-                                <span class="text-sm font-bold block">Без верхних шкафов</span>
-                                <span class="text-[11px] text-emerald-600 font-semibold">Скидка -35% от цены</span>
+                                <span class="text-xs font-bold block text-slate-200">Без верхних шкафов</span>
+                                <span class="text-[10px] text-emerald-400 font-semibold">Скидка -35%</span>
                             </div>
                         </label>
                     </div>
 
-                    <div id="upperCabinetDetails" class="space-y-4 pt-3 border-t border-slate-100">
+                    <div id="upperCabinetDetails" class="space-y-4 pt-3 border-t border-slate-800">
                         <div>
-                            <label class="text-xs font-semibold text-slate-700 block mb-2">Высота верхних шкафов:</label>
-                            <select id="upperHeightPreset" onchange="updateAll()" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 text-sm bg-slate-50 font-medium">
-                                <option value="72">72 см (Стандартная высота)</option>
+                            <label class="text-xs font-semibold text-slate-300 block mb-2">Высота верхних шкафов:</label>
+                            <select id="upperHeightPreset" onchange="updateAll()" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white">
+                                <option value="72">72 см (Стандартная)</option>
                                 <option value="90">90 см (Увеличенные шкафы) — +20% к верхнему ярусу</option>
                                 <option value="108">108-120 см (3 яруса / До потолка) — +45% к верхнему ярусу</option>
                                 <option value="custom">Указать точную высоту (см)...</option>
@@ -128,70 +181,65 @@
                         </div>
 
                         <div id="customUpperHeightBox" class="hidden">
-                            <label class="text-xs font-medium text-slate-600 block mb-1">Точная высота верхнего шкафа (см)</label>
-                            <input type="number" id="customUpperHeight" value="80" min="36" max="140" oninput="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <label class="text-xs font-medium text-slate-400 block mb-1">Точная высота верхнего шкафа (см)</label>
+                            <input type="number" id="customUpperHeight" value="80" min="36" max="140" oninput="updateAll()" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
                         </div>
 
-                        <div class="bg-slate-50 p-3 rounded-xl space-y-2 border border-slate-200">
+                        <div class="bg-slate-950/60 p-3 rounded-xl space-y-2 border border-slate-800">
                             <label class="flex items-center space-x-2 cursor-pointer">
                                 <input type="checkbox" id="ledLight" onchange="updateAll()" class="w-4 h-4 text-blue-600 rounded">
-                                <span class="text-xs text-slate-700">Врезная LED-подсветка рабочей зоны (+600 000 UZS)</span>
+                                <span class="text-xs text-slate-300">Врезная LED-подсветка рабочей зоны (+600 000 UZS)</span>
                             </label>
                             <label class="flex items-center space-x-2 cursor-pointer">
                                 <input type="checkbox" id="pushToOpen" onchange="updateAll()" class="w-4 h-4 text-blue-600 rounded">
-                                <span class="text-xs text-slate-700">Фасады без ручек (Push-to-Open / Tip-On) (+400 000 UZS)</span>
+                                <span class="text-xs text-slate-300">Фасады без ручек (Push-to-Open / Tip-On) (+400 000 UZS)</span>
                             </label>
                         </div>
                     </div>
                 </section>
 
                 <!-- 4. КАТАЛОГ ЦВЕТОВ CRAFTWOOD -->
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-lg font-bold flex items-center">
-                            <span class="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2 text-sm">4</span>
+                <section class="bg-slate-900/90 border border-slate-800 p-6 rounded-2xl shadow-xl backdrop-blur-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-lg font-bold flex items-center text-slate-100">
+                            <span class="w-7 h-7 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full flex items-center justify-center mr-2 text-sm font-bold">4</span>
                             Каталог декоров Craftwood
                         </h2>
-                        <span class="text-xs text-slate-500 font-semibold">Официальная палитра</span>
+                        <span class="text-xs text-blue-400 font-semibold bg-blue-950/60 px-2 py-1 rounded border border-blue-800">Официальная палитра</span>
                     </div>
 
                     <div class="mb-4">
-                        <label class="text-xs font-medium text-slate-600 block mb-1">Материал основы</label>
-                        <select id="facadeMaterial" onchange="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                        <label class="text-xs font-medium text-slate-400 block mb-1">Материал фасадов</label>
+                        <select id="facadeMaterial" onchange="updateAll()" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white">
                             <option value="1.0">ЛДСП Craftwood (Эконом)</option>
                             <option value="1.25" selected>МДФ Craftwood в Пленке (Стандарт)</option>
                             <option value="1.55">МДФ Эмаль / Софт-тач (Премиум)</option>
                         </select>
                     </div>
 
-                    <!-- Фильтр Поиска и Вкладки Коллекций -->
                     <div class="space-y-3">
                         <div class="relative">
-                            <input type="text" id="colorSearch" oninput="filterColors()" placeholder="Поиск декора (например: Дуб, Кашемир, Графит)..." class="w-full pl-9 pr-3 py-2 border rounded-xl text-xs bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                            <input type="text" id="colorSearch" oninput="filterColors()" placeholder="Быстрый поиск декора (например: Дуб, Графит, Кашемир)..." class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white outline-none focus:border-blue-500">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
                         </div>
 
-                        <!-- Вкладки Коллекций -->
-                        <div class="flex border-b border-slate-200 text-xs font-medium">
-                            <button onclick="switchTab('silver')" id="tab-silver" class="tab-btn active px-4 py-2 border-b-2 border-transparent hover:text-blue-600 transition">Сильвер (5)</button>
-                            <button onclick="switchTab('color')" id="tab-color" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-blue-600 transition">Цветной (25)</button>
-                            <button onclick="switchTab('platinum')" id="tab-platinum" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-blue-600 transition">Платинум (40)</button>
+                        <div class="flex border-b border-slate-800 text-xs font-medium">
+                            <button onclick="switchTab('silver')" id="tab-silver" class="tab-btn active px-4 py-2 border-b-2 border-transparent hover:text-blue-400 transition">Сильвер (5)</button>
+                            <button onclick="switchTab('color')" id="tab-color" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-blue-400 transition">Цветной (25)</button>
+                            <button onclick="switchTab('platinum')" id="tab-platinum" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-blue-400 transition">Платинум (40)</button>
                         </div>
 
-                        <!-- Сетка декоров -->
-                        <div id="colorGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
-                            <!-- Заполняется динамически из JS -->
-                        </div>
+                        <div id="colorGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1"></div>
                     </div>
                 </section>
 
                 <!-- 5. Фурнитура -->
-                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h2 class="text-lg font-bold mb-4 flex items-center">
-                        <span class="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2 text-sm">5</span>
-                        Фурнитура и механизмы
+                <section class="bg-slate-900/90 border border-slate-800 p-6 rounded-2xl shadow-xl backdrop-blur-sm">
+                    <h2 class="text-lg font-bold mb-3 flex items-center text-slate-100">
+                        <span class="w-7 h-7 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full flex items-center justify-center mr-2 text-sm font-bold">5</span>
+                        Фурнитура и Механизмы
                     </h2>
-                    <select id="hardwareClass" onchange="updateAll()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                    <select id="hardwareClass" onchange="updateAll()" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white">
                         <option value="1.0">Базовая (DTC / Boyard) с доводчиками</option>
                         <option value="1.3" selected>Стандарт (Hettich / GTV)</option>
                         <option value="1.65">Премиум (Blum Австрия)</option>
@@ -200,36 +248,44 @@
 
             </div>
 
-            <!-- Правая колонка -->
+            <!-- Правая колонка: 2D Чертежи по ГОСТу и Смета -->
             <div class="lg:col-span-5 space-y-6">
                 
-                <div class="sticky top-6 space-y-6">
+                <div class="sticky top-20 space-y-6">
                     
-                    <!-- Интерактивный Чертёж -->
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-slate-800 flex items-center">
-                                <i class="fa-solid fa-drafting-compass text-blue-600 mr-2"></i> Интерактивный эскиз
+                    <!-- Чертежи по ГОСТу -->
+                    <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl backdrop-blur-sm space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                            <h3 class="font-bold text-slate-100 flex items-center text-sm">
+                                <i class="fa-solid fa-drafting-compass text-blue-400 mr-2"></i> Интерактивные чертежи (ГОСТ)
                             </h3>
-                            <span id="upperHeightBadge" class="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-md font-bold">Верх: 72 см</span>
+                            <span id="upperHeightBadge" class="text-[11px] bg-blue-950 text-blue-400 border border-blue-800 px-2.5 py-0.5 rounded-md font-bold">Верх: 72 см</span>
                         </div>
 
-                        <div class="bg-slate-100 border border-slate-200 rounded-xl p-4 flex justify-center items-center overflow-hidden min-h-[250px]">
-                            <svg id="kitchenBlueprint" width="100%" height="240" viewBox="0 0 400 240">
-                                <!-- SVG Чертёж -->
-                            </svg>
+                        <!-- Переключение видов -->
+                        <div class="flex border border-slate-800 rounded-lg overflow-hidden bg-slate-950 p-1 text-xs">
+                            <button onclick="switchBlueprintView('front')" id="btnViewFront" class="flex-1 py-1.5 font-bold rounded bg-blue-600 text-white">1. Вид спереди (Фасад)</button>
+                            <button onclick="switchBlueprintView('top')" id="btnViewTop" class="flex-1 py-1.5 font-bold rounded text-slate-400 hover:text-white">2. Вид сверху (План)</button>
+                        </div>
+
+                        <!-- Контейнер SVG -->
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex justify-center items-center overflow-hidden min-h-[260px]">
+                            <!-- Вид спереди -->
+                            <svg id="svgFront" width="100%" height="250" viewBox="0 0 420 250" class="block"></svg>
+                            <!-- Вид сверху -->
+                            <svg id="svgTop" width="100%" height="250" viewBox="0 0 420 250" class="hidden"></svg>
                         </div>
                     </div>
 
-                    <!-- Итоговая Стоимость -->
-                    <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-lg space-y-5">
+                    <!-- Итоговая Смета -->
+                    <div class="bg-slate-950 border border-slate-800 text-white p-6 rounded-2xl shadow-2xl space-y-5">
                         <div class="border-b border-slate-800 pb-4">
-                            <div class="text-xs uppercase tracking-wider text-slate-400 mb-1">Итоговая стоимость:</div>
-                            <div class="text-3xl font-extrabold text-blue-400" id="totalPrice">0 UZS</div>
+                            <div class="text-xs uppercase tracking-wider text-slate-400 mb-1">Итоговая стоимость гарнитура:</div>
+                            <div class="text-3xl font-extrabold text-blue-400 tracking-tight" id="totalPrice">0 UZS</div>
                         </div>
 
                         <div class="space-y-2 text-xs text-slate-300">
-                            <div class="font-bold text-slate-400 text-[11px] uppercase tracking-wider mb-2">Детализация сметы:</div>
+                            <div class="font-bold text-slate-400 text-[10px] uppercase tracking-wider mb-2">Расшифровка сметы:</div>
                             
                             <div class="flex justify-between">
                                 <span class="text-slate-400">Нижние модули + столешница:</span>
@@ -242,23 +298,23 @@
                             </div>
 
                             <div class="flex justify-between">
-                                <span class="text-slate-400">Доп. опции (LED / Tip-On):</span>
+                                <span class="text-slate-400">Доп. опции (LED / Tip-On / Остров):</span>
                                 <span id="optionsPrice" class="font-semibold text-white">0 UZS</span>
                             </div>
 
                             <div class="border-t border-slate-800 pt-3 flex justify-between">
-                                <span class="text-slate-400">Длина кухни:</span>
-                                <span id="summaryMeters" class="font-semibold text-white">4.8 м</span>
+                                <span class="text-slate-400">Суммарная длина модулей:</span>
+                                <span id="summaryMeters" class="font-semibold text-white">3.0 м</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-400">Выбранный декор:</span>
-                                <span id="summaryColor" class="font-semibold text-blue-300">Craftwood Дуб Викинг</span>
+                                <span class="text-slate-400">Декор Craftwood:</span>
+                                <span id="summaryColor" class="font-semibold text-blue-400">Дуб Каньон Золотой</span>
                             </div>
                         </div>
 
-                        <button onclick="generatePDF()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                        <button onclick="generatePDF()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
                             <i class="fa-solid fa-file-pdf text-lg"></i>
-                            <span>Скачать КП в PDF с чертежом</span>
+                            <span>Скачать КП в PDF (с чертежами)</span>
                         </button>
                     </div>
 
@@ -270,11 +326,11 @@
     </main>
 
     <!-- Скрытый шаблон PDF -->
-    <div id="pdf-template" class="hidden p-8 bg-white text-slate-900 font-sans" style="width: 750px;">
+    <div id="pdf-template" class="hidden p-8 bg-white text-slate-900 font-sans" style="width: 780px;">
         <div class="flex justify-between items-center border-b pb-4 mb-6">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-wide">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</h1>
-                <p class="text-xs text-slate-500">Изготовление кухни с фасадами Craftwood</p>
+                <p class="text-xs text-slate-500">Изготовление кухни с фасадами Craftwood (Loft Studio)</p>
             </div>
             <div class="text-right text-xs text-slate-600">
                 <p class="font-bold text-slate-900">KITCHEN STUDIO TASHKENT</p>
@@ -284,18 +340,24 @@
 
         <table class="w-full text-xs mb-6 border-collapse">
             <tbody>
-                <tr class="border-b"><td class="py-2 text-slate-500">Форма кухни:</td><td class="py-2 font-bold text-right" id="pdfLayout">Г-образная</td></tr>
-                <tr class="border-b"><td class="py-2 text-slate-500">Длина стен:</td><td class="py-2 font-bold text-right" id="pdfSizes">300 х 180 см</td></tr>
-                <tr class="border-b"><td class="py-2 text-slate-500">Верхние шкафы:</td><td class="py-2 font-bold text-right" id="pdfUpper">72 см (Стандарт)</td></tr>
-                <tr class="border-b"><td class="py-2 text-slate-500">Декор фасадов:</td><td class="py-2 font-bold text-right text-blue-700" id="pdfColor">Craftwood Дуб Викинг (Платинум)</td></tr>
+                <tr class="border-b"><td class="py-2 text-slate-500">Форма кухни:</td><td class="py-2 font-bold text-right" id="pdfLayout">Прямая</td></tr>
+                <tr class="border-b"><td class="py-2 text-slate-500">Размеры стен:</td><td class="py-2 font-bold text-right" id="pdfSizes">300 см</td></tr>
+                <tr class="border-b"><td class="py-2 text-slate-500">Верхние шкафы:</td><td class="py-2 font-bold text-right" id="pdfUpper">72 см</td></tr>
+                <tr class="border-b"><td class="py-2 text-slate-500">Декор фасадов:</td><td class="py-2 font-bold text-right text-blue-700" id="pdfColor">Craftwood</td></tr>
                 <tr class="border-b"><td class="py-2 text-slate-500">Материал:</td><td class="py-2 font-bold text-right" id="pdfFacade">МДФ Пленка</td></tr>
                 <tr class="border-b"><td class="py-2 text-slate-500">Фурнитура:</td><td class="py-2 font-bold text-right" id="pdfHardware">Стандарт</td></tr>
             </tbody>
         </table>
 
-        <div class="mb-6">
-            <h3 class="text-sm font-bold mb-2">2D Схема гарнитура:</h3>
-            <div id="pdfSvgContainer" class="border p-4 rounded bg-slate-50 flex justify-center"></div>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+                <h3 class="text-xs font-bold mb-2">1. Вид спереди (Фасад):</h3>
+                <div id="pdfFrontSvgContainer" class="border p-2 rounded bg-slate-50 flex justify-center"></div>
+            </div>
+            <div>
+                <h3 class="text-xs font-bold mb-2">2. Вид сверху (План):</h3>
+                <div id="pdfTopSvgContainer" class="border p-2 rounded bg-slate-50 flex justify-center"></div>
+            </div>
         </div>
 
         <div class="bg-slate-900 text-white p-4 rounded-xl flex justify-between items-center">
@@ -303,13 +365,12 @@
                 <p class="text-xs text-slate-400">Итоговая расчётная стоимость:</p>
                 <p class="text-xl font-bold text-blue-400" id="pdfPrice">0 UZS</p>
             </div>
-            <p class="text-[10px] text-slate-400 max-w-[220px] text-right">* В стоимость входит замер, доставка и сборка в Ташкенте</p>
+            <p class="text-[10px] text-slate-400 max-w-[240px] text-right">* В стоимость включены замер, доставка и монтаж в Ташкенте</p>
         </div>
     </div>
 
-    <!-- Скрипт с базой данных Craftwood -->
     <script>
-        // База данных декоров Craftwood из каталогов
+        // БАЗА ДЕКОРОВ CRAFTWOOD
         const craftwoodCatalog = {
             silver: [
                 { name: 'Дуб Каньон Золотой', hex: '#d4a359' },
@@ -391,6 +452,8 @@
 
         let currentTab = 'silver';
         let selectedLayout = 'straight';
+        let lCornerSide = 'left'; // 'left' or 'right'
+        let islandSides = '1'; // '1' or '2'
         let selectedColorName = 'Craftwood Дуб Каньон Золотой';
         let selectedColorHex = '#d4a359';
 
@@ -413,24 +476,22 @@
             grid.innerHTML = '';
             
             const list = craftwoodCatalog[currentTab] || [];
-            
             list.filter(item => item.name.toLowerCase().includes(filterText.toLowerCase())).forEach(item => {
                 const isActive = selectedColorName.includes(item.name);
                 const div = document.createElement('div');
-                div.className = `color-item p-2 border rounded-xl bg-white flex items-center space-x-2 shadow-sm hover:border-blue-400 ${isActive ? 'active' : ''}`;
+                div.className = `color-item p-2 border border-slate-800 rounded-xl bg-slate-950 flex items-center space-x-2 hover:border-blue-500/50 ${isActive ? 'active' : ''}`;
                 div.onclick = () => selectColor(item.name, item.hex);
                 
                 div.innerHTML = `
-                    <div class="w-6 h-6 rounded-lg flex-shrink-0 border border-slate-200" style="background-color: ${item.hex}"></div>
-                    <span class="text-[11px] font-medium text-slate-700 truncate">${item.name}</span>
+                    <div class="w-5 h-5 rounded-md flex-shrink-0 border border-slate-700" style="background-color: ${item.hex}"></div>
+                    <span class="text-[11px] font-medium text-slate-300 truncate">${item.name}</span>
                 `;
                 grid.appendChild(div);
             });
         }
 
         function filterColors() {
-            const text = document.getElementById('colorSearch').value;
-            renderColorGrid(text);
+            renderColorGrid(document.getElementById('colorSearch').value);
         }
 
         function selectColor(name, hex) {
@@ -446,15 +507,70 @@
             document.querySelectorAll('.kitchen-card').forEach(c => c.classList.remove('active'));
             document.getElementById(`card-${layout}`).classList.add('active');
 
+            // Управление видиимостью полей
             const wall2Box = document.getElementById('wall2-container');
-            wall2Box.style.display = (layout === 'straight') ? 'none' : 'block';
+            const wall3Box = document.getElementById('wall3-container');
+            const lCornerBox = document.getElementById('lCornerBox');
+            const islandBox = document.getElementById('islandParamsBox');
+            const wall2Label = document.getElementById('wall2-label');
+
+            wall2Box.classList.add('hidden');
+            wall3Box.classList.add('hidden');
+            lCornerBox.classList.add('hidden');
+            islandBox.classList.add('hidden');
+
+            if (layout === 'l_shape') {
+                wall2Box.classList.remove('hidden');
+                lCornerBox.classList.remove('hidden');
+                wall2Label.innerText = lCornerSide === 'left' ? 'Стена 2 (Левый угол) [см]' : 'Стена 2 (Правый угол) [см]';
+            } else if (layout === 'u_shape') {
+                wall2Box.classList.remove('hidden');
+                wall3Box.classList.remove('hidden');
+                wall2Label.innerText = 'Стена 2 (Левый угол) [см]';
+            } else if (layout === 'island') {
+                islandBox.classList.remove('hidden');
+            }
+
             updateAll();
+        }
+
+        function setLCorner(side) {
+            lCornerSide = side;
+            document.getElementById('btnCornerLeft').className = side === 'left' ? 'py-2 text-xs font-bold rounded-lg border border-blue-500 bg-blue-600/20 text-blue-400' : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-900 text-slate-400';
+            document.getElementById('btnCornerRight').className = side === 'right' ? 'py-2 text-xs font-bold rounded-lg border border-blue-500 bg-blue-600/20 text-blue-400' : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-900 text-slate-400';
+            
+            const wall2Label = document.getElementById('wall2-label');
+            if (wall2Label) wall2Label.innerText = side === 'left' ? 'Стена 2 (Левый угол) [см]' : 'Стена 2 (Правый угол) [см]';
+            updateAll();
+        }
+
+        function setIslandSides(sides) {
+            islandSides = sides;
+            document.getElementById('btnIslandSide1').className = sides === '1' ? 'py-2 text-xs font-semibold rounded-lg border border-blue-500 bg-blue-600/20 text-blue-300' : 'py-2 text-xs font-semibold rounded-lg border border-slate-800 bg-slate-900 text-slate-400';
+            document.getElementById('btnIslandSide2').className = sides === '2' ? 'py-2 text-xs font-semibold rounded-lg border border-blue-500 bg-blue-600/20 text-blue-300' : 'py-2 text-xs font-semibold rounded-lg border border-slate-800 bg-slate-900 text-slate-400';
+            updateAll();
+        }
+
+        function switchBlueprintView(view) {
+            if (view === 'front') {
+                document.getElementById('svgFront').classList.remove('hidden');
+                document.getElementById('svgTop').classList.add('hidden');
+                document.getElementById('btnViewFront').className = 'flex-1 py-1.5 font-bold rounded bg-blue-600 text-white';
+                document.getElementById('btnViewTop').className = 'flex-1 py-1.5 font-bold rounded text-slate-400 hover:text-white';
+            } else {
+                document.getElementById('svgFront').classList.add('hidden');
+                document.getElementById('svgTop').classList.remove('hidden');
+                document.getElementById('btnViewTop').className = 'flex-1 py-1.5 font-bold rounded bg-blue-600 text-white';
+                document.getElementById('btnViewFront').className = 'flex-1 py-1.5 font-bold rounded text-slate-400 hover:text-white';
+            }
         }
 
         function updateAll() {
             const w1 = parseFloat(document.getElementById('wall1').value) || 300;
-            const w2 = selectedLayout !== 'straight' ? (parseFloat(document.getElementById('wall2').value) || 180) : 0;
-            const totalMeters = (w1 + w2) / 100;
+            const w2 = (selectedLayout === 'l_shape' || selectedLayout === 'u_shape') ? (parseFloat(document.getElementById('wall2').value) || 180) : 0;
+            const w3 = (selectedLayout === 'u_shape') ? (parseFloat(document.getElementById('wall3').value) || 180) : 0;
+            
+            let totalMeters = (w1 + w2 + w3) / 100;
 
             const hasUpper = document.querySelector('input[name="upperCabinetToggle"]:checked').value === 'yes';
             const upperDetails = document.getElementById('upperCabinetDetails');
@@ -494,6 +610,14 @@
             if (hasUpper && document.getElementById('ledLight').checked) optionsCost += 600000;
             if (hasUpper && document.getElementById('pushToOpen').checked) optionsCost += 400000;
 
+            // Расчёт Острова
+            if (selectedLayout === 'island') {
+                const islandLen = parseFloat(document.getElementById('islandLen').value) || 160;
+                const islandSideCoeff = islandSides === '2' ? 1.3 : 1.0;
+                const islandCost = (islandLen / 100) * 2400000 * islandSideCoeff * facadeMult * hardwareMult;
+                optionsCost += islandCost;
+            }
+
             let totalSum = lowerBaseCost + upperBaseCost + optionsCost;
 
             document.getElementById('totalPrice').innerText = Math.round(totalSum).toLocaleString('ru-RU') + ' UZS';
@@ -507,57 +631,147 @@
             document.getElementById('summaryMeters').innerText = totalMeters.toFixed(1) + ' м';
             document.getElementById('summaryColor').innerText = selectedColorName;
 
-            drawBlueprint(w1, w2, hasUpper, upperHeightCm);
+            drawFrontBlueprint(w1, w2, w3, hasUpper, upperHeightCm);
+            drawTopBlueprint(w1, w2, w3);
         }
 
-        function drawBlueprint(w1, w2, hasUpper, upperHeightCm) {
-            const svg = document.getElementById('kitchenBlueprint');
-            let width = 360;
-            let height = 200;
+        // ЧЕРТЕЖ 1: ВИД СПЕРЕДИ (ФАСАД ПО ГОСТУ)
+        function drawFrontBlueprint(w1, w2, w3, hasUpper, upperHeightCm) {
+            const svg = document.getElementById('svgFront');
+            let width = 420;
+            let height = 250;
 
-            let html = `<rect x="20" y="20" width="${width}" height="${height}" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>`;
+            let html = `<rect x="0" y="0" width="${width}" height="${height}" fill="#020617"/>`;
 
-            // Нижний ярус
-            html += `<rect x="30" y="135" width="${width-20}" height="75" fill="${selectedColorHex}" stroke="#334155" stroke-width="2" rx="2"/>`;
-            html += `<line x1="30" y1="135" x2="${width+10}" y2="135" stroke="#000" stroke-width="4"/>`;
+            // Общий заголовок
+            html += `<text x="10" y="20" font-size="10" font-family="monospace" fill="#94a3b8">ВИД СПЕРЕДИ (ФАСАД) - ГОСТ 21.501</text>`;
 
+            // Стенка задняя
+            html += `<rect x="50" y="40" width="320" height="170" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>`;
+
+            // Нижние шкафы
+            html += `<rect x="60" y="145" width="300" height="60" fill="${selectedColorHex}" stroke="#3b82f6" stroke-width="1.5" rx="2"/>`;
+            html += `<line x1="60" y1="145" x2="360" y2="145" stroke="#f8fafc" stroke-width="3"/>`; // Столешница
+
+            // Разделители фасадов
             let modules = 5;
-            let moduleWidth = (width - 20) / modules;
+            let modW = 300 / modules;
             for (let i = 1; i < modules; i++) {
-                html += `<line x1="${30 + i * moduleWidth}" y1="135" x2="${30 + i * moduleWidth}" y2="210" stroke="#ffffff" stroke-dasharray="2,2" opacity="0.6"/>`;
+                html += `<line x1="${60 + i * modW}" y1="145" x2="${60 + i * modW}" y2="205" stroke="#ffffff" stroke-dasharray="2,2" opacity="0.5"/>`;
             }
 
-            // Верхний ярус
+            // Upper cabinets
             if (hasUpper) {
-                let mappedHeight = Math.min(105, Math.max(35, (upperHeightCm / 72) * 55));
-                let upperY = 135 - 35 - mappedHeight;
+                let upperH = Math.min(80, Math.max(30, (upperHeightCm / 72) * 45));
+                let upperY = 145 - 30 - upperH;
 
-                html += `<rect x="30" y="${upperY}" width="${width-20}" height="${mappedHeight}" fill="${selectedColorHex}" opacity="0.9" stroke="#334155" stroke-width="2" rx="2"/>`;
-
-                if (upperHeightCm >= 100) {
-                    let mezzanineY = upperY + 25;
-                    html += `<line x1="30" y1="${mezzanineY}" x2="${width+10}" y2="${mezzanineY}" stroke="#1e293b" stroke-width="2"/>`;
-                }
+                html += `<rect x="60" y="${upperY}" width="300" height="${upperH}" fill="${selectedColorHex}" opacity="0.9" stroke="#3b82f6" stroke-width="1.5" rx="2"/>`;
 
                 for (let i = 1; i < modules; i++) {
-                    html += `<line x1="${30 + i * moduleWidth}" y1="${upperY}" x2="${30 + i * moduleWidth}" y2="${upperY + mappedHeight}" stroke="#ffffff" stroke-dasharray="2,2" opacity="0.6"/>`;
+                    html += `<line x1="${60 + i * modW}" y1="${upperY}" x2="${60 + i * modW}" y2="${upperY + upperH}" stroke="#ffffff" stroke-dasharray="2,2" opacity="0.5"/>`;
                 }
 
-                html += `<line x1="15" y1="${upperY}" x2="15" y2="${upperY + mappedHeight}" stroke="#2563eb" stroke-width="1.5"/>`;
-                html += `<text x="12" y="${upperY + mappedHeight/2}" font-size="9" font-weight="bold" fill="#2563eb" text-anchor="end">${upperHeightCm} см</text>`;
+                // Выносная линия высоты верхнего яруса
+                html += `<line x1="40" y1="${upperY}" x2="40" y2="${upperY + upperH}" class="gost-line"/>`;
+                html += `<line x1="35" y1="${upperY}" x2="45" y2="${upperY}" stroke="#3b82f6"/>`;
+                html += `<line x1="35" y1="${upperY + upperH}" x2="45" y2="${upperY + upperH}" stroke="#3b82f6"/>`;
+                html += `<text x="32" y="${upperY + upperH / 2}" font-size="9" font-family="monospace" font-weight="bold" fill="#60a5fa" text-anchor="end">${upperHeightCm} см</text>`;
             }
 
-            html += `<text x="${width/2}" y="15" font-size="11" font-weight="bold" fill="#2563eb" text-anchor="middle">Стена 1: ${w1} см</text>`;
-            if (selectedLayout !== 'straight') {
-                html += `<text x="${width - 5}" y="${height/2}" font-size="10" font-weight="bold" fill="#2563eb" text-anchor="middle" transform="rotate(90, ${width - 5}, ${height/2})">Стена 2: ${w2} см</text>`;
+            // Остров на фасаде (если активен)
+            if (selectedLayout === 'island') {
+                html += `<rect x="130" y="165" width="160" height="40" fill="${selectedColorHex}" stroke="#f59e0b" stroke-width="2" rx="2" opacity="0.9"/>`;
+                html += `<line x1="130" y1="165" x2="290" y2="165" stroke="#fbbf24" stroke-width="3"/>`;
+                html += `<text x="210" y="190" font-size="9" font-family="monospace" font-weight="bold" fill="#fbbf24" text-anchor="middle">ОСТРОВ</text>`;
+            }
+
+            // Разметка длины (ГОСТ Стрелка)
+            html += `<line x1="60" y1="225" x2="360" y2="225" class="gost-line"/>`;
+            html += `<line x1="60" y1="210" x2="60" y2="230" stroke="#64748b"/>`;
+            html += `<line x1="360" y1="210" x2="360" y2="230" stroke="#64748b"/>`;
+            html += `<text x="210" y="238" font-size="10" font-family="monospace" font-weight="bold" fill="#60a5fa" text-anchor="middle">L1 = ${w1} см</text>`;
+
+            svg.innerHTML = html;
+        }
+
+        // ЧЕРТЕЖ 2: ВИД СВЕРХУ (ПЛАН ПРИМЕЩЕНИЯ ПО ГОСТУ)
+        function drawTopBlueprint(w1, w2, w3) {
+            const svg = document.getElementById('svgTop');
+            let width = 420;
+            let height = 250;
+
+            let html = `<rect x="0" y="0" width="${width}" height="${height}" fill="#020617"/>`;
+            html += `<text x="10" y="20" font-size="10" font-family="monospace" fill="#94a3b8">ВИД СВЕРХУ (ПЛАН ПОМЕЩЕНИЯ) - ГОСТ 21.501</text>`;
+
+            // Стенки помещения
+            if (selectedLayout === 'straight') {
+                // Прямая
+                html += `<line x1="60" y1="70" x2="360" y2="70" stroke="#475569" stroke-width="6"/>`;
+                html += `<rect x="60" y="70" width="300" height="40" fill="${selectedColorHex}" stroke="#3b82f6" stroke-width="1.5"/>`;
+                html += `<text x="210" y="95" font-size="10" font-family="monospace" fill="#ffffff" font-weight="bold" text-anchor="middle">Глубина: 60 см</text>`;
+            } 
+            else if (selectedLayout === 'l_shape') {
+                if (lCornerSide === 'left') {
+                    html += `<line x1="60" y1="70" x2="360" y2="70" stroke="#475569" stroke-width="6"/>`;
+                    html += `<line x1="60" y1="70" x2="60" y2="200" stroke="#475569" stroke-width="6"/>`;
+                    // Г-образная левая
+                    html += `<rect x="60" y="70" width="300" height="40" fill="${selectedColorHex}" stroke="#3b82f6" stroke-width="1.5"/>`;
+                    html += `<rect x="60" y="110" width="40" height="80" fill="${selectedColorHex}" stroke="#3b82f6" stroke-width="1.5"/>`;
+                } else {
+                    html += `<line x1="60" y1="70" x2="360" y2="70" stroke="#475569" stroke-width="6"/>`;
+                    html += `<line x1="360" y1="70" x2="360" y2="200" stroke="#475569" stroke-width="6"/>`;
+                    // Г-образная правая
+                    html += `<rect x="60" y="70" width="300" height="40" fill="${selectedColorHex}" stroke="#3b82f6" stroke-width="1.5"/>`;
+                    html += `<rect x="320" y="110" width="40" height="80" fill="${selectedColorHex}" stroke="#3b82f6" stroke-width="1.5"/>`;
+                }
+            } 
+            else if (selectedLayout === 'u_shape') {
+                // П-образная
+                html += `<line x1="60" y1="70" x2="360" y2="70" stroke="#475569" stroke-width="6"/>`;
+                html += `<line x1="60" y1="70" x2="60" y2="190" stroke="#475569" stroke-width="6"/>`;
+                html += `<line x1="360" y1="70" x2="360" y2="190" stroke="#475569" stroke-width="6"/>`;
+
+                html += `<rect x="60" y="70" width="300" height="40" fill="${selectedColorHex}" stroke="#3b82f6" stroke-width="1.5"/>`;
+                html += `<rect x="60" y="110" width="40" height="70" fill="${selectedColorHex}" stroke="#3b82f6" stroke-width="1.5"/>`;
+                html += `<rect x="320" y="110" width="40" height="70" fill="${selectedColorHex}" stroke="#3b82f6" stroke-width="1.5"/>`;
+            } 
+            else if (selectedLayout === 'island') {
+                // С островом
+                html += `<line x1="60" y1="60" x2="360" y2="60" stroke="#475569" stroke-width="6"/>`;
+                html += `<rect x="60" y="60" width="300" height="40" fill="${selectedColorHex}" stroke="#3b82f6" stroke-width="1.5"/>`;
+                
+                // Остров
+                const islandL = parseFloat(document.getElementById('islandLen').value) || 160;
+                const islandW = parseFloat(document.getElementById('islandWidth').value) || 90;
+                html += `<rect x="130" y="130" width="160" height="55" fill="${selectedColorHex}" stroke="#f59e0b" stroke-width="2" rx="3"/>`;
+                html += `<text x="210" y="162" font-size="9" font-family="monospace" font-weight="bold" fill="#fbbf24" text-anchor="middle">ОСТРОВ (${islandL}x${islandW} см)</text>`;
+            }
+
+            // ГОСТ разметочные линии
+            html += `<line x1="60" y1="40" x2="360" y2="40" class="gost-line"/>`;
+            html += `<line x1="60" y1="30" x2="60" y2="50" stroke="#64748b"/>`;
+            html += `<line x1="360" y1="30" x2="360" y2="50" stroke="#64748b"/>`;
+            html += `<text x="210" y="35" font-size="10" font-family="monospace" font-weight="bold" fill="#60a5fa" text-anchor="middle">Стена 1: ${w1} см</text>`;
+
+            if (selectedLayout === 'l_shape') {
+                const sideText = lCornerSide === 'left' ? 'Стена 2 (Левый)' : 'Стена 2 (Правый)';
+                html += `<text x="210" y="225" font-size="10" font-family="monospace" font-weight="bold" fill="#60a5fa" text-anchor="middle">${sideText}: ${w2} см</text>`;
+            } else if (selectedLayout === 'u_shape') {
+                html += `<text x="210" y="225" font-size="10" font-family="monospace" font-weight="bold" fill="#60a5fa" text-anchor="middle">Стена 2 (Левый): ${w2} см | Стена 3 (Правый): ${w3} см</text>`;
             }
 
             svg.innerHTML = html;
         }
 
         function generatePDF() {
-            document.getElementById('pdfLayout').innerText = layoutNames[selectedLayout];
-            document.getElementById('pdfSizes').innerText = document.getElementById('wall1').value + ' см' + (selectedLayout !== 'straight' ? ' х ' + document.getElementById('wall2').value + ' см' : '');
+            document.getElementById('pdfLayout').innerText = layoutNames[selectedLayout] + (selectedLayout === 'l_shape' ? ` (${lCornerSide === 'left' ? 'Левый угол' : 'Правый угол'})` : '');
+            
+            let sizesText = document.getElementById('wall1').value + ' см (Стена 1)';
+            if (selectedLayout === 'l_shape') sizesText += ' х ' + document.getElementById('wall2').value + ' см (Стена 2)';
+            if (selectedLayout === 'u_shape') sizesText += ' х ' + document.getElementById('wall2').value + ' см (Стена 2) х ' + document.getElementById('wall3').value + ' см (Стена 3)';
+            if (selectedLayout === 'island') sizesText += ` + Остров (${document.getElementById('islandLen').value}х${document.getElementById('islandWidth').value} см)`;
+            
+            document.getElementById('pdfSizes').innerText = sizesText;
             
             const hasUpper = document.querySelector('input[name="upperCabinetToggle"]:checked').value === 'yes';
             document.getElementById('pdfUpper').innerText = hasUpper ? document.getElementById('upperHeightText').innerText : 'Без верхних шкафов';
@@ -567,14 +781,15 @@
             document.getElementById('pdfHardware').innerText = document.getElementById('hardwareClass').options[document.getElementById('hardwareClass').selectedIndex].text;
             document.getElementById('pdfPrice').innerText = document.getElementById('totalPrice').innerText;
 
-            document.getElementById('pdfSvgContainer').innerHTML = document.getElementById('kitchenBlueprint').outerHTML;
+            document.getElementById('pdfFrontSvgContainer').innerHTML = document.getElementById('svgFront').outerHTML;
+            document.getElementById('pdfTopSvgContainer').innerHTML = document.getElementById('svgTop').outerHTML;
 
             const element = document.getElementById('pdf-template');
             element.classList.remove('hidden');
 
             const opt = {
-                margin:       0.4,
-                filename:     'Смета_Кухни_Craftwood_Ташкент.pdf',
+                margin:       0.3,
+                filename:     'Смета_Кухни_Loft_Craftwood_Ташкент.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2 },
                 jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
