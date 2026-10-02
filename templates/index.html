@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Конструктор Кухонной Мебели | Ташкент</title>
 
-  <!-- Библиотека для генерации PDF -->
+  <!-- Библиотека html2pdf -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     :root {
       --bg-dark: #090d16;
-      --card-bg: rgba(15, 23, 42, 0.88);
+      --card-bg: rgba(15, 23, 42, 0.90);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --accent-gold: #fbbf24;
-      --border-gold: rgba(251, 191, 36, 0.3);
+      --border-gold: rgba(251, 191, 36, 0.35);
       --border-dark: #334155;
     }
 
@@ -158,7 +158,7 @@
       width: 100%;
       height: 190px;
       background: #020617;
-      border: 1px stroke var(--border-gold);
+      border: 1px solid var(--border-gold);
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -235,7 +235,6 @@
       color: var(--text-muted);
     }
 
-    /* Гарантирует четкий белые текст на темном фоне выпадающих списков */
     .field-group input, .field-group select, .field-group textarea {
       background: #1e293b !important;
       color: #f8fafc !important;
@@ -253,6 +252,46 @@
 
     .field-group input:focus, .field-group select:focus {
       border-color: var(--accent-gold);
+    }
+
+    .number-stepper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-step {
+      background: #334155;
+      color: var(--accent-gold);
+      border: 1px solid var(--border-gold);
+      border-radius: 8px;
+      width: 42px;
+      height: 42px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      transition: all 0.2s;
+    }
+
+    .btn-step:hover {
+      background: var(--accent-gold);
+      color: #0f172a;
+    }
+
+    .number-stepper input {
+      text-align: center;
+      width: 100%;
+      -moz-appearance: textfield;
+    }
+
+    .number-stepper input::-webkit-outer-spin-button,
+    .number-stepper input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
 
     .toggle-box {
@@ -308,57 +347,103 @@
       transform: translateY(-1px);
     }
 
-    /* ШАБЛОН PDF ДОГОВОРА (НАХОДИТСЯ В РАБОЧЕЙ ЗОНЕ ЗА ЭКРАНОМ, ЧТОБЫ БЫТЬ 100% ВИДИМЫМ ДЛЯ HTML2CANVAS) */
-    #pdf-contract {
-      position: absolute;
-      left: -9999px;
+    /* МАКЕТ PDF ДОГОВОРА ДЛЯ ПЕЧАТИ */
+    #pdf-wrapper {
+      position: fixed;
+      left: 0;
       top: 0;
-      width: 750px;
-      background: #ffffff !important;
-      color: #000000 !important;
-      padding: 30px;
-      font-family: 'Times New Roman', Times, serif;
-      font-size: 11pt;
-      line-height: 1.4;
+      z-index: -9999;
+      opacity: 0;
+      pointer-events: none;
+      width: 794px;
+      background: #ffffff;
     }
 
-    .contract-header {
+    #pdf-contract {
+      width: 794px;
+      background: #ffffff !important;
+      color: #000000 !important;
+      padding: 35px 40px;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 10pt;
+      line-height: 1.35;
+      box-sizing: border-box;
+    }
+
+    .pdf-header {
       text-align: center;
       font-weight: bold;
-      font-size: 13pt;
-      margin-bottom: 15px;
+      font-size: 12.5pt;
+      margin-bottom: 10px;
       text-transform: uppercase;
     }
 
-    .contract-table {
+    .pdf-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 15px 0;
+      margin: 8px 0;
     }
 
-    .contract-table th, .contract-table td {
+    .pdf-table th, .pdf-table td {
       border: 1px solid #000000;
-      padding: 6px 10px;
-      font-size: 10pt;
+      padding: 4px 8px;
+      font-size: 9pt;
+    }
+
+    .pdf-drawings-grid {
+      display: table;
+      width: 100%;
+      margin: 10px 0;
+    }
+
+    .pdf-drawing-card {
+      display: table-cell;
+      width: 50%;
+      padding: 4px;
+      vertical-align: top;
+    }
+
+    .pdf-drawing-box {
+      border: 1px solid #000000;
+      background: #fafafa;
+      height: 145px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pdf-section-title {
+      font-weight: bold;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      font-size: 9.5pt;
+      border-bottom: 1px solid #000;
+    }
+
+    .sig-section {
+      margin-top: 12px;
+      border: 1px solid #000000;
+      padding: 8px;
+      background: #fcfcfc;
     }
 
     .sig-table {
       width: 100%;
-      margin-top: 35px;
-      border: none;
+      border-collapse: collapse;
     }
 
     .sig-table td {
       border: none;
       vertical-align: top;
-      width: 50%;
-      font-size: 10pt;
+      padding: 5px;
+      font-size: 8.5pt;
     }
 
     .sig-line {
-      margin-top: 40px;
+      margin-top: 22px;
       border-bottom: 1px solid #000000;
-      width: 80%;
+      width: 90%;
     }
 
     @media (max-width: 960px) {
@@ -394,6 +479,18 @@
           <div class="price-title">Итоговая стоимость гарнитура</div>
           <div class="price-value" id="totalPriceDisplay">0</div>
           <div class="price-currency">Узбекских сум (UZS)</div>
+        </div>
+
+        <!-- 3D ПРЕВЬЮ ПЛИТЫ И КРОМКИ (НОВЫЙ ОТРЕЗОК ДЛЯ КЛИЕНТА) -->
+        <div class="card">
+          <div class="drawing-title">
+            <span>Образец плиты в разрезе (3D)</span>
+            <small style="color:var(--text-muted);">Угловой вид</small>
+          </div>
+          <div class="svg-container" style="height: 180px;">
+            <svg id="svgPanelSample" viewBox="0 0 350 180"></svg>
+          </div>
+          <div id="panelSampleBadge" style="font-size: 0.78rem; color: var(--accent-gold); margin-top: 8px; text-align: center; font-weight: 600;"></div>
         </div>
 
         <div class="card">
@@ -492,19 +589,31 @@
 
           <div class="inputs-grid">
             <div class="field-group">
-              <label>Дополнительные полки (+50 000 сум/шт)</label>
-              <input type="number" id="countShelves" value="2" min="0" max="20" oninput="updateCalculator()">
+              <label>Дополнительные полки</label>
+              <div class="number-stepper">
+                <button type="button" class="btn-step" onclick="changeQty('countShelves', -1)">−</button>
+                <input type="number" id="countShelves" value="2" min="0" max="20" oninput="updateCalculator()">
+                <button type="button" class="btn-step" onclick="changeQty('countShelves', 1)">+</button>
+              </div>
             </div>
             <div class="field-group">
-              <label>Выдвижные ящики (+110 000 сум/шт)</label>
-              <input type="number" id="countDrawers" value="3" min="0" max="20" oninput="updateCalculator()">
+              <label>Выдвижные ящики</label>
+              <div class="number-stepper">
+                <button type="button" class="btn-step" onclick="changeQty('countDrawers', -1)">−</button>
+                <input type="number" id="countDrawers" value="3" min="0" max="20" oninput="updateCalculator()">
+                <button type="button" class="btn-step" onclick="changeQty('countDrawers', 1)">+</button>
+              </div>
             </div>
           </div>
 
           <div class="inputs-grid" style="margin-top: 5px;">
             <div class="field-group" id="gasLiftGroup">
-              <label>Газовые лифты (газлифты) на верхние двери (+120 000 сум/дверь)</label>
-              <input type="number" id="countGasLifts" value="2" min="0" max="15" oninput="updateCalculator()">
+              <label>Газовые лифты (газлифты) на верхние двери</label>
+              <div class="number-stepper">
+                <button type="button" class="btn-step" id="btnGasMinus" onclick="changeQty('countGasLifts', -1)">−</button>
+                <input type="number" id="countGasLifts" value="2" min="0" max="15" oninput="updateCalculator()">
+                <button type="button" class="btn-step" id="btnGasPlus" onclick="changeQty('countGasLifts', 1)">+</button>
+              </div>
             </div>
             <div class="field-group">
               <label>Тип открывания дверей</label>
@@ -516,35 +625,86 @@
           </div>
         </div>
 
-        <!-- 4. Материалы фасадов и фурнитура -->
+        <!-- 4. РАЗДЕЛЕННЫЙ РАЗДЕЛ: МАТЕРИАЛЫ ФАСАДА, КОРПУСА, КРОМКИ И СТОЛЕШНИЦЫ -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">4</span>
-            <span>Материал фасадов и отделки</span>
+            <span>Материалы фасадов, корпуса, кромки и столешницы</span>
           </div>
 
           <div class="inputs-grid">
-            <div class="field-group" style="grid-column: span 2;">
-              <label>Категория материала фасада</label>
+            <div class="field-group">
+              <label>Материал фасада</label>
               <select id="facadeMaterial" onchange="updateCalculator()">
-                <option value="2500000">ЛДСП Эконом (Узбекистан / Россия) — от 2 500 000 сум/п.м</option>
-                <option value="3200000" selected>ЛДСП Премиум (Egger / Kronospan) — от 3 200 000 сум/п.м</option>
-                <option value="3800000">ЛМДФ / МДФ Пленочный — от 3 800 000 сум/п.м</option>
-                <option value="4800000">МДФ Эмаль (Крашенный Матовый / Глянец) — от 4 800 000 сум/п.м</option>
-                <option value="6500000">МДФ Шпон натуральный / Массив — от 6 500 000 сум/п.м</option>
+                <option value="2500000">ЛДСП Эконом (Узбекистан / Россия)</option>
+                <option value="3200000" selected>ЛДСП Премиум (Egger / Kronospan)</option>
+                <option value="3800000">ЛМДФ / МДФ Пленочный</option>
+                <option value="4400000">AGT Декоративные Панели (Турция)</option>
+                <option value="4800000">МДФ Эмаль (Крашенный Матовый / Глянец)</option>
+                <option value="6500000">МДФ Шпон натуральный / Массив</option>
               </select>
             </div>
 
             <div class="field-group">
-              <label>Материал столешницы</label>
+              <label>Цвет и покрытие фасада</label>
+              <select id="facadeColor" onchange="updateCalculator()">
+                <option value="white" selected>Белый матовый / Альпийский</option>
+                <option value="anthracite">Антрацит / Серый Графит</option>
+                <option value="agt_soft">AGT Supramat / Soft Touch (Бархатный)</option>
+                <option value="wood_light">Дерево Светлое (Дуб Сонома / Натуральный)</option>
+                <option value="wood_dark">Дерево Тёмное (Орех / Веньге)</option>
+                <option value="concrete">Бетон / Камень Лофт</option>
+                <option value="gloss_beige">Глянец Бежевый / Слоновая кость</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="inputs-grid" style="margin-top: 5px;">
+            <div class="field-group">
+              <label>Материал корпуса (каркаса)</label>
+              <select id="bodyMaterial" onchange="updateCalculator()">
+                <option value="0" selected>ЛДСП Стандарт (Узбекистан / Россия)</option>
+                <option value="300000">ЛДСП Премиум Egger / Влагостойкий</option>
+                <option value="600000">ЛМДФ Влагостойкий плиточный</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label>Цвет корпуса</label>
+              <select id="bodyColor" onchange="updateCalculator()">
+                <option value="Белый">Белый (Стандарт)</option>
+                <option value="Серый">Серый / Графит</option>
+                <option value="Дуб">Дерево / Дуб</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="inputs-grid" style="margin-top: 5px;">
+            <div class="field-group">
+              <label>Тип обработки кромки</label>
+              <select id="edgeType" onchange="updateCalculator()">
+                <option value="pvc04">ПВХ 0.4 мм (Стандартная защита)</option>
+                <option value="pvc20" selected>ПВХ 2.0 мм (Ударопрочная противоударная)</option>
+                <option value="pur">PUR-кромка (100% Влагостойкий лазерный шов)</option>
+                <option value="abs">Алюминиевый ABS-профиль по торцу</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label>Варианты столешниц (Ташкент)</label>
               <select id="countertopMaterial" onchange="updateCalculator()">
-                <option value="300000">ЛДСП Влагостойкая 38мм (+300 000 сум/п.м)</option>
-                <option value="1500000" selected>Искусственный акриловый камень (+1 500 000 сум/п.м)</option>
-                <option value="2800000">Кварцевый агломерат (+2 800 000 сум/п.м)</option>
+                <option value="200000">ЛДСП Влагостойкая 28 мм (Эконом)</option>
+                <option value="350000">ЛДСП Влагостойкая 38 мм (Классика)</option>
+                <option value="1100000">Компакт-плита HPL 12 мм (Супертонкая водостойкая)</option>
+                <option value="1500000" selected>Искусственный акриловый камень</option>
+                <option value="2800000">Кварцевый агломерат (Кварц)</option>
+                <option value="3500000">Натуральный Гранит / Мрамор</option>
               </select>
             </div>
+          </div>
 
-            <div class="field-group">
+          <div class="inputs-grid" style="margin-top: 5px;">
+            <div class="field-group" style="grid-column: span 2;">
               <label>Комплект фурнитуры</label>
               <select id="hardwareType" onchange="updateCalculator()">
                 <option value="0">Эконом (Boyard / Китай без доводчиков)</option>
@@ -613,7 +773,7 @@
               <label>Адрес объекта / Примечания</label>
               <textarea id="clientNotes" rows="2" placeholder="Адрес установки, этаж, особенности стен..."></textarea>
             </div>
-            <button type="submit" class="btn-submit">Скачать Договор подряда (PDF)</button>
+            <button type="submit" class="btn-submit">Скачать Официальный Договор (PDF)</button>
           </form>
         </div>
 
@@ -622,72 +782,119 @@
     </div>
   </div>
 
-  <!-- РАБОЧИЙ МАКЕТ PDF ДОГОВОРА (РАСПОЛОЖЕН OFF-SCREEN ДЛЯ 100% РЕНДЕРА HTML2CANVAS) -->
-  <div id="pdf-contract">
-    <div class="contract-header">
-      ДОГОВОР ПОДРЯДА № <span id="pdfDocNum"></span><br>
-      НА ИЗГОТОВЛЕНИЕ И МОНТАЖ КУХОННОЙ МЕБЕЛИ
+  <!-- СКРЫТЫЙ КОНТЕЙНЕР ДЛЯ РЕНДЕРА PDF -->
+  <div id="pdf-wrapper">
+    <div id="pdf-contract">
+      
+      <div class="pdf-header">
+        ДОГОВОР ПОДРЯДА № <span id="pdfDocNum"></span><br>
+        НА ИЗГОТОВЛЕНИЕ И МОНТАЖ КУХОННОЙ МЕБЕЛИ
+      </div>
+
+      <p style="text-align: right; margin-bottom: 8px; font-size: 9pt;">г. Ташкент &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Дата: <span id="pdfDate"></span> г.</p>
+
+      <p style="margin-bottom: 6px;">
+        <strong>Исполнитель:</strong> Мастер (А), тел: +998(92)093-45-10, Telegram: @Kitchencalc, и<br>
+        <strong>Заказчик:</strong> <span id="pdfClientName"></span>, тел: <span id="pdfClientPhone"></span>, адрес объекта: <span id="pdfAddress"></span>, заключили настоящий Договор:
+      </p>
+
+      <div class="pdf-section-title">1. Предмет договора и спецификация</div>
+      <p style="margin-bottom: 4px;">Исполнитель обязуется изготовить, доставить и смонтировать кухонную мебель по индивидуальному проекту согласно нижеследующей спецификации и эскизам.</p>
+
+      <table class="pdf-table">
+        <thead>
+          <tr style="background: #f0f0f0;">
+            <th style="width: 38%;">Параметр</th>
+            <th style="width: 62%;">Выбранная конфигурация</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Форма гарнитура</td><td id="pdfType"></td></tr>
+          <tr><td>Габаритные размеры</td><td id="pdfDimensions"></td></tr>
+          <tr><td>Верхний ярус</td><td id="pdfUpperMode"></td></tr>
+          <tr><td>Наполнение и механизмы</td><td id="pdfFittings"></td></tr>
+          <tr><td>Система открывания</td><td id="pdfDoorType"></td></tr>
+          <tr><td>Материал и цвет фасада</td><td id="pdfFacade"></td></tr>
+          <tr><td>Материал и цвет корпуса</td><td id="pdfBody"></td></tr>
+          <tr><td>Обработка кромки</td><td id="pdfEdge"></td></tr>
+          <tr><td>Столешница</td><td id="pdfCountertop"></td></tr>
+          <tr><td>Фурнитура</td><td id="pdfHardware"></td></tr>
+          <tr><td>Кухонный остров</td><td id="pdfIsland"></td></tr>
+          <tr style="background: #fdf2e9;">
+            <td><strong>ОБЩАЯ СУММА ДОГОВОРА</strong></td>
+            <td><strong id="pdfTotalPrice" style="font-size: 10.5pt;"></strong> <strong>UZS</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pdf-section-title">2. Эскизы и чертежи проекта</div>
+      <div class="pdf-drawings-grid">
+        <div class="pdf-drawing-card">
+          <div style="font-weight:bold; font-size: 8.5pt; margin-bottom: 2px; text-align:center;">Чертеж 1: Вид спереди</div>
+          <div class="pdf-drawing-box" id="pdfSvgFrontContainer"></div>
+        </div>
+        <div class="pdf-drawing-card">
+          <div style="font-weight:bold; font-size: 8.5pt; margin-bottom: 2px; text-align:center;">Чертеж 2: Вид сверху</div>
+          <div class="pdf-drawing-box" id="pdfSvgTopContainer"></div>
+        </div>
+      </div>
+
+      <div class="pdf-section-title">3. Порядок расчетов и оплаты</div>
+      <p style="margin-bottom: 4px;">
+        3.1. Первоначальная оплата (Аванс) составляет <strong>75%</strong> от стоимости договора: <strong id="pdfAdvanceAmount">0</strong> UZS.<br>
+        3.2. Окончательный расчет в размере <strong>25%</strong>: <strong id="pdfFinalAmount">0</strong> UZS выплачивается Заказчиком в день завершения установки.<br>
+        3.3. Срок выполнения работ составляет от 10 до 20 рабочих дней с момента получения первоначального аванса (75%).
+      </p>
+
+      <div class="pdf-section-title">4. Условия одностороннего отказа и возврата</div>
+      <p style="margin-bottom: 5px;">
+        4.1. Заказчик имеет право отказаться от выполнения договора до момента сдачи работы. При этом Исполнитель возвращает Заказчику <strong>50% от суммы первоначального авансового платежа (75%)</strong>. Оставшиеся 50% удерживаются Исполнителем в качестве возмещения расходов на закуп и раскрой материалов.
+      </p>
+
+      <!-- БЛОК ИЗ 3 ПОДПИСЕЙ -->
+      <div class="sig-section">
+        <div style="font-weight: bold; text-align: center; margin-bottom: 6px; font-size: 9pt;">ПОДТВЕРЖДЕНИЕ ПЛАТЕЖЕЙ И ПРИЕМКИ РАБОТ</div>
+        <table class="sig-table">
+          <tr>
+            <td style="width: 50%; border-right: 1px dashed #000; padding-right: 8px;">
+              <strong>1. Передача первоначального аванса (75%):</strong><br>
+              Аванс в размере <span id="pdfAdvanceAmountSig"></span> UZS передан Исполнителю.<br><br>
+              <strong>Подпись Заказчика №1 (Передал):</strong><br>
+              <div class="sig-line">___________________________</div>
+            </td>
+            <td style="width: 50%; padding-left: 8px;">
+              <strong>2. Сдача-приемка оказанной услуги:</strong><br>
+              Кухонный гарнитур смонтирован, претензий к качеству не имею.<br><br>
+              <strong>Подпись Заказчика №2 (Принял работу):</strong><br>
+              <div class="sig-line">___________________________</div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="border-top: 1px solid #000; margin-top: 6px; padding-top: 6px;">
+              <strong>3. Подтверждение Исполнителя (Мастера):</strong><br>
+              Подтверждаю получение аванса (75%) и окончательного расчета (25%). Полная сумма Договора получена.<br>
+              <strong>Подпись Мастера (Исполнителя):</strong> ___________________________ (Мастер А, +998(92)093-45-10)
+            </td>
+          </tr>
+        </table>
+      </div>
+
     </div>
-
-    <p style="text-align: right; margin-bottom: 12px;">г. Ташкент &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Дата: <span id="pdfDate"></span> г.</p>
-
-    <p style="margin-bottom: 10px;">
-      <strong>Исполнитель:</strong> Мастер (А), тел: +998(92)093-45-10, Telegram: @Kitchencalc, с одной стороны, и<br>
-      <strong>Заказчик:</strong> <span id="pdfClientName"></span>, тел: <span id="pdfClientPhone"></span>, с другой стороны, заключили настоящий Договор о нижеследующем:
-    </p>
-
-    <p style="margin-bottom: 8px;"><strong>1. ПРЕДМЕТ ДОГОВОРА</strong><br>
-    Исполнитель обязуется изготовить, доставить и установить кухонный гарнитур согласно согласованной спецификации и чертежу, а Заказчик обязуется принять и оплатить выполненную работу.</p>
-
-    <h4 style="margin-top: 10px; margin-bottom: 5px;">2. СПЕЦИФИКАЦИЯ И РАСЧЕТ СТОИМОСТИ</h4>
-    <table class="contract-table">
-      <thead>
-        <tr>
-          <th style="width: 45%;">Параметр / Наименование</th>
-          <th style="width: 55%;">Выбранная конфигурация</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Тип и форма кухни</td><td id="pdfType"></td></tr>
-        <tr><td>Размеры стен / высота</td><td id="pdfDimensions"></td></tr>
-        <tr><td>Верхние шкафы</td><td id="pdfUpperMode"></td></tr>
-        <tr><td>Наполнение и механизмы</td><td id="pdfFittings"></td></tr>
-        <tr><td>Система открывания дверей</td><td id="pdfDoorType"></td></tr>
-        <tr><td>Материал фасадов</td><td id="pdfFacade"></td></tr>
-        <tr><td>Столешница</td><td id="pdfCountertop"></td></tr>
-        <tr><td>Фурнитура</td><td id="pdfHardware"></td></tr>
-        <tr><td>Кухонный остров</td><td id="pdfIsland"></td></tr>
-        <tr><td><strong>ИТОГОВАЯ СУММА ДОГОВОРА</strong></td><td><strong id="pdfTotalPrice" style="font-size: 11pt;"></strong> UZS</td></tr>
-      </tbody>
-    </table>
-
-    <p style="margin-top: 10px; margin-bottom: 8px;"><strong>3. ПОРУЧЕНИЕ И ПОРЯДОК РАСЧЕТОВ</strong><br>
-    3.1. Заказчик вносит предоплату в размере 70% от общей стоимости для закупа материалов.<br>
-    3.2. Оставшиеся 30% выплачиваются Заказчиком после завершения монтажа и проверки качества мебели.<br>
-    3.3. Срок изготовления составляет от 10 до 20 рабочих дней с момента внесения предоплаты.</p>
-
-    <table class="sig-table">
-      <tr>
-        <td>
-          <strong>ИСПОЛНИТЕЛЬ:</strong><br>
-          Мастер (А)<br>
-          Тел: +998(92)093-45-10<br>
-          Telegram: @Kitchencalc<br>
-          <div class="sig-line">Подпись: __________________</div>
-        </td>
-        <td>
-          <strong>ЗАКАЗЧИК:</strong><br>
-          <span id="pdfSigClientName"></span><br>
-          Тел: <span id="pdfSigClientPhone"></span><br>
-          Адрес: <span id="pdfAddress"></span><br>
-          <div class="sig-line">Подпись: __________________</div>
-        </td>
-      </tr>
-    </table>
   </div>
 
   <script>
     let currentType = 'straight';
+
+    function changeQty(inputId, delta) {
+      const input = document.getElementById(inputId);
+      if (input.disabled) return;
+      let val = parseInt(input.value) || 0;
+      let min = parseInt(input.getAttribute('min')) || 0;
+      let max = parseInt(input.getAttribute('max')) || 99;
+      val = Math.max(min, Math.min(max, val + delta));
+      input.value = val;
+      updateCalculator();
+    }
 
     function setKitchenType(type, btnElement) {
       currentType = type;
@@ -738,15 +945,24 @@
 
       const upperMode = document.getElementById('upperCabinetsMode').value;
       const gasGroup = document.getElementById('gasLiftGroup');
+      const gasInput = document.getElementById('countGasLifts');
+      const btnMinus = document.getElementById('btnGasMinus');
+      const btnPlus = document.getElementById('btnGasPlus');
+
       if (upperMode === 'none') {
-        gasGroup.style.opacity = '0.5';
-        document.getElementById('countGasLifts').disabled = true;
+        gasGroup.style.opacity = '0.4';
+        gasInput.disabled = true;
+        btnMinus.disabled = true;
+        btnPlus.disabled = true;
       } else {
         gasGroup.style.opacity = '1';
-        document.getElementById('countGasLifts').disabled = false;
+        gasInput.disabled = false;
+        btnMinus.disabled = false;
+        btnPlus.disabled = false;
       }
 
       const facadePriceM = parseFloat(document.getElementById('facadeMaterial').value);
+      const bodyPriceM = parseFloat(document.getElementById('bodyMaterial').value);
       const topPriceM = parseFloat(document.getElementById('countertopMaterial').value);
       const hardwarePriceM = parseFloat(document.getElementById('hardwareType').value);
 
@@ -770,7 +986,7 @@
       if (upperMode === 'none') upperFactor = 0.65;
       else if (upperMode === 'tall') upperFactor = 1.20;
 
-      let costPerMeter = (facadePriceM * upperFactor) + topPriceM + hardwarePriceM;
+      let costPerMeter = (facadePriceM * upperFactor) + bodyPriceM + topPriceM + hardwarePriceM;
       let totalPrice = meters * costPerMeter;
 
       totalPrice += (shelves * 50000);
@@ -788,6 +1004,55 @@
 
       drawFrontView(mainW, totalH, upperMode);
       drawTopView(mainW, leftW, rightW, lDir, hasIsland, islL, islW);
+      drawPanelSample();
+    }
+
+    // ИНТЕРАКТИВНОЕ 3D-ПРЕВЬЮ ОБРАЗЦА ПЛИТЫ И КРОМКИ В УГЛОВОМ ВИДЕ
+    function drawPanelSample() {
+      const svg = document.getElementById('svgPanelSample');
+      svg.innerHTML = '';
+
+      const colorVal = document.getElementById('facadeColor').value;
+      const edgeVal = document.getElementById('edgeType').value;
+      const facadeMatText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text.split('(')[0];
+
+      let faceFill = '#f8fafc';
+      let edgeFill = '#cbd5e1';
+
+      if (colorVal === 'white') { faceFill = '#f8fafc'; }
+      else if (colorVal === 'anthracite') { faceFill = '#334155'; }
+      else if (colorVal === 'agt_soft') { faceFill = '#d97706'; }
+      else if (colorVal === 'wood_light') { faceFill = '#d97706'; }
+      else if (colorVal === 'wood_dark') { faceFill = '#78350f'; }
+      else if (colorVal === 'concrete') { faceFill = '#64748b'; }
+      else if (colorVal === 'gloss_beige') { faceFill = '#fef3c7'; }
+
+      if (edgeVal === 'pvc04') edgeFill = '#94a3b8';
+      else if (edgeVal === 'pvc20') edgeFill = '#fbbf24';
+      else if (edgeVal === 'pur') edgeFill = '#38bdf8';
+      else if (edgeVal === 'abs') edgeFill = '#e2e8f0';
+
+      let html = '';
+
+      // Верхняя пластина фасада (Изометрия)
+      html += `<polygon points="70,50 250,20 310,70 130,100" fill="${faceFill}" stroke="#fbbf24" stroke-width="1.5" />`;
+      // Текстурный блик
+      html += `<polygon points="70,50 250,20 280,45 100,75" fill="rgba(255,255,255,0.12)" />`;
+
+      // Торцевая кромка (Спереди)
+      html += `<polygon points="130,100 310,70 310,95 130,125" fill="${edgeFill}" stroke="#fbbf24" stroke-width="1.5" />`;
+
+      // Внутренний срез плиты (Сбоку слева)
+      html += `<polygon points="70,50 130,100 130,125 70,75" fill="#78350f" stroke="#fbbf24" stroke-width="1.5" />`;
+      html += `<text x="85" y="92" fill="#f8fafc" font-size="9" font-weight="bold" transform="rotate(38 85,92)">Основа плиты</text>`;
+
+      // Подпись деталей кромки
+      html += `<line x1="220" y1="85" x2="250" y2="135" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2" />`;
+      html += `<text x="255" y="140" fill="#fbbf24" font-size="10" font-weight="bold">Кромка: ${edgeVal.toUpperCase()}</text>`;
+
+      svg.innerHTML = html;
+
+      document.getElementById('panelSampleBadge').innerText = `${facadeMatText.trim()} | Кромка: ${edgeVal.toUpperCase()}`;
     }
 
     function drawFrontView(w, h, upperMode) {
@@ -885,6 +1150,22 @@
       svg.innerHTML = html;
     }
 
+    function preparePdfDrawings() {
+      const svgFrontPdf = document.getElementById('svgFront').outerHTML
+        .replaceAll('#1e293b', '#e2e8f0')
+        .replaceAll('#fbbf24', '#000000')
+        .replaceAll('#0f172a', '#ffffff')
+        .replaceAll('#334155', '#cbd5e1');
+
+      const svgTopPdf = document.getElementById('svgTop').outerHTML
+        .replaceAll('#1e293b', '#e2e8f0')
+        .replaceAll('#fbbf24', '#000000')
+        .replaceAll('#334155', '#cbd5e1');
+
+      document.getElementById('pdfSvgFrontContainer').innerHTML = svgFrontPdf;
+      document.getElementById('pdfSvgTopContainer').innerHTML = svgTopPdf;
+    }
+
     function generateContractPDF(e) {
       e.preventDefault();
 
@@ -897,8 +1178,6 @@
       
       document.getElementById('pdfClientName').innerText = name;
       document.getElementById('pdfClientPhone').innerText = phone;
-      document.getElementById('pdfSigClientName').innerText = name;
-      document.getElementById('pdfSigClientPhone').innerText = phone;
       document.getElementById('pdfAddress').innerText = notes;
 
       const typeNames = { 'straight': 'Прямая кухня', 'l-shape': 'Г-образная кухня', 'u-shape': 'П-образная кухня' };
@@ -906,7 +1185,7 @@
 
       const mainW = document.getElementById('mainWall').value;
       let dims = `Основная стена: ${mainW} см, Высота: ${document.getElementById('totalHeight').value} см`;
-      if (currentType === 'l-shape') dims += `, Боковая: ${document.getElementById('leftWall').value} см`;
+      if (currentType === 'l-shape') dims += `, Боковая стена: ${document.getElementById('leftWall').value} см`;
       if (currentType === 'u-shape') dims += `, Левая: ${document.getElementById('leftWall').value} см, Правая: ${document.getElementById('rightWall').value} см`;
       document.getElementById('pdfDimensions').innerText = dims;
 
@@ -916,13 +1195,21 @@
       const shelves = document.getElementById('countShelves').value;
       const drawers = document.getElementById('countDrawers').value;
       const gasLifts = (upperSel.value !== 'none') ? document.getElementById('countGasLifts').value : 0;
-      document.getElementById('pdfFittings').innerText = `Полки: ${shelves} шт., Выдвижные ящики: ${drawers} шт., Газовые лифты: ${gasLifts} шт.`;
+      document.getElementById('pdfFittings').innerText = `Полки: ${shelves} шт., Выдвижные ящики: ${drawers} шт., Газлифты: ${gasLifts} шт.`;
 
       const doorTypeSel = document.getElementById('doorOpenType');
       document.getElementById('pdfDoorType').innerText = doorTypeSel.options[doorTypeSel.selectedIndex].text;
 
       const facadeSel = document.getElementById('facadeMaterial');
-      document.getElementById('pdfFacade').innerText = facadeSel.options[facadeSel.selectedIndex].text;
+      const facadeColSel = document.getElementById('facadeColor');
+      document.getElementById('pdfFacade').innerText = `${facadeSel.options[facadeSel.selectedIndex].text} (${facadeColSel.options[facadeColSel.selectedIndex].text})`;
+
+      const bodySel = document.getElementById('bodyMaterial');
+      const bodyColSel = document.getElementById('bodyColor');
+      document.getElementById('pdfBody').innerText = `${bodySel.options[bodySel.selectedIndex].text} (Цвет: ${bodyColSel.value})`;
+
+      const edgeSel = document.getElementById('edgeType');
+      document.getElementById('pdfEdge').innerText = edgeSel.options[edgeSel.selectedIndex].text;
 
       const topSel = document.getElementById('countertopMaterial');
       document.getElementById('pdfCountertop').innerText = topSel.options[topSel.selectedIndex].text;
@@ -933,15 +1220,24 @@
       const hasIsland = document.getElementById('hasIsland').checked;
       document.getElementById('pdfIsland').innerText = hasIsland ? `Да (${document.getElementById('islandLength').value}x${document.getElementById('islandWidth').value} см)` : 'Нет';
 
-      document.getElementById('pdfTotalPrice').innerText = document.getElementById('totalPriceDisplay').innerText;
+      const totalNum = parseFloat(document.getElementById('totalPriceDisplay').innerText.replace(/\s/g, '')) || 0;
+      const advanceNum = Math.round(totalNum * 0.75);
+      const finalNum = totalNum - advanceNum;
+
+      document.getElementById('pdfTotalPrice').innerText = totalNum.toLocaleString('ru-RU');
+      document.getElementById('pdfAdvanceAmount').innerText = advanceNum.toLocaleString('ru-RU');
+      document.getElementById('pdfAdvanceAmountSig').innerText = advanceNum.toLocaleString('ru-RU');
+      document.getElementById('pdfFinalAmount').innerText = finalNum.toLocaleString('ru-RU');
+
+      preparePdfDrawings();
 
       const element = document.getElementById('pdf-contract');
 
       const opt = {
-        margin:       10,
+        margin:       [6, 6, 6, 6],
         filename:     `Договор_Кухня_${name}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, logging: false },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
