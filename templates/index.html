@@ -3,418 +3,725 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Конструктор кухонь</title>
-  
-  <!-- Библиотека для генерации PDF -->
+  <title>Конструктор и Калькулятор Кухонь (Ташкент)</title>
+
+  <!-- Библиотека генерации PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: rgba(24, 24, 27, 0.9);
+      --accent-color: #f3e5ab;
+      --accent-gold: #d4af37;
+      --text-color: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
-      padding: 0;
-      /* Прямая ссылка на темный фоновый интерьер */
-      background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80');
-      background-repeat: no-repeat;
-      background-position: center center;
-      background-size: cover;
-      background-attachment: fixed;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #ffffff;
+      background-color: var(--bg-color);
+      background-image: radial-gradient(circle at 50% 0%, #2a2215 0%, #121212 70%);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: var(--text-color);
+      line-height: 1.5;
+      padding-bottom: 60px;
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
-      padding: 40px 20px;
+      padding: 30px 20px;
     }
 
-    .block {
-      background: rgba(18, 18, 18, 0.88);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      padding: 25px;
+    .header-title {
+      text-align: center;
       margin-bottom: 30px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     }
 
-    h1, h2, h3 {
-      margin-top: 0;
-      color: #f3e5ab;
+    .header-title h1 {
+      color: var(--accent-color);
+      font-size: 2.2rem;
+      margin-bottom: 8px;
     }
 
-    p {
-      line-height: 1.5;
-      color: #e0e0e0;
-      font-size: 0.95rem;
+    .header-title p {
+      color: var(--text-muted);
     }
 
-    /* ОСНОВНАЯ СЕТКА: СБОКУ ЧЕРТЕЖИ, ПО ЦЕНТРУ 4 ВЫБОРА */
-    .calculator-layout {
+    /* ДВУХКОЛОНОЧНЫЙ МАКЕТ */
+    .app-layout {
       display: grid;
-      grid-template-columns: 280px 1fr;
+      grid-template-columns: 420px 1fr;
       gap: 25px;
-      margin-bottom: 30px;
+      align-items: start;
     }
 
-    /* Боковая колонка с 2 чертежами */
-    .sidebar-schemes {
+    /* ЛЕВАЯ КОЛОНКА (ЧЕРТЕЖИ И ЦЕНА) */
+    .sticky-sidebar {
+      position: sticky;
+      top: 20px;
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
 
-    .scheme-card {
-      background: rgba(18, 18, 18, 0.88);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      padding: 15px;
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .price-box {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(0, 0, 0, 0.4));
+      border: 1px solid var(--accent-gold);
       text-align: center;
+      padding: 20px;
+      border-radius: 12px;
     }
 
-    .scheme-card img {
+    .price-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-color);
+    }
+
+    .price-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 8px 0;
+    }
+
+    .price-currency {
+      color: var(--accent-gold);
+      font-size: 1rem;
+    }
+
+    .drawing-title {
+      font-size: 1rem;
+      color: var(--accent-color);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .svg-container {
       width: 100%;
-      height: 180px;
-      object-fit: cover;
-      border-radius: 6px;
-      margin-top: 10px;
+      height: 200px;
+      background: #1e1e24;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     }
 
-    /* Центральная сетка на 4 выбора (2х2) */
-    .center-choices {
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ПРАВАЯ КОЛОНКА (НАСТРОЙКИ) */
+    .section-title {
+      font-size: 1.2rem;
+      color: var(--accent-color);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-badge {
+      background: var(--accent-gold);
+      color: #000;
+      font-weight: bold;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    /* Выбор формы кухни */
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .type-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 15px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .type-btn:hover {
+      border-color: var(--accent-color);
+    }
+
+    .type-btn.active {
+      border-color: var(--accent-gold);
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    /* Формы ввода размеров */
+    .inputs-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
+      gap: 15px;
+      margin-bottom: 15px;
     }
 
-    .choice-card {
-      background: rgba(18, 18, 18, 0.88);
-      backdrop-filter: blur(10px);
-      border: 2px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      padding: 20px;
+    .field-group {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      transition: all 0.3s ease;
-      cursor: pointer;
+      gap: 6px;
     }
 
-    .choice-card:hover, .choice-card.selected {
-      border-color: #f3e5ab;
-      box-shadow: 0 0 15px rgba(243, 229, 171, 0.25);
+    .field-group label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
     }
 
-    .choice-card img {
-      width: 100%;
-      height: 160px;
-      object-fit: cover;
+    .field-group input, .field-group select, .field-group textarea {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
       border-radius: 8px;
-      margin: 10px 0;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
     }
 
-    /* Галочки выбора */
+    .field-group input:focus, .field-group select:focus {
+      border-color: var(--accent-gold);
+    }
+
+    /* Чекбоксы и доп функции */
+    .toggle-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
     .checkbox-label {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-weight: 600;
-      color: #f3e5ab;
       cursor: pointer;
-      user-select: none;
-      margin-top: 5px;
+      font-weight: 600;
+      color: var(--accent-color);
     }
 
-    .checkbox-label input {
-      width: 20px;
-      height: 20px;
-      accent-color: #d4af37;
+    .checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent-gold);
     }
 
-    /* СТИЛИ ДЛЯ ПУНКТОВ НИЖЕ */
-    .step-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 15px;
+    .sub-options {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+      display: none;
     }
 
-    .step-number {
-      background: #d4af37;
-      color: #000;
-      font-weight: bold;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
+    .sub-options.active {
+      display: block;
     }
 
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%;
-      padding: 12px 15px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      color: #fff;
-      font-size: 1rem;
-      box-sizing: border-box;
-    }
-
-    .btn-pdf {
+    /* Кнопка экспорта */
+    .btn-submit {
       width: 100%;
       background: linear-gradient(135deg, #d4af37, #aa7c11);
       color: #000;
       border: none;
       padding: 16px;
-      border-radius: 8px;
-      font-size: 1.1rem;
+      border-radius: 10px;
+      font-size: 1.05rem;
       font-weight: 700;
       cursor: pointer;
       text-transform: uppercase;
       letter-spacing: 1px;
-      transition: transform 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 10px;
     }
 
-    .btn-pdf:hover {
+    .btn-submit:hover {
       transform: translateY(-2px);
-    }
-
-    @media (max-width: 900px) {
-      .calculator-layout {
-        grid-template-columns: 1fr;
-      }
-      .center-choices {
-        grid-template-columns: 1fr;
-      }
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
     }
 
     /* Скрытый шаблон PDF */
     #pdf-template {
       display: none;
-      background: #ffffff;
-      color: #000000;
+      background: #fff;
+      color: #000;
       padding: 30px;
       font-family: Arial, sans-serif;
     }
-    #pdf-template img {
-      max-width: 100%;
-      height: 180px;
-      object-fit: cover;
-      margin-top: 10px;
+
+    @media (max-width: 960px) {
+      .app-layout { grid-template-columns: 1fr; }
+      .sticky-sidebar { position: static; }
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    
-    <!-- ЗАГОЛОВОК -->
-    <div class="block">
-      <h1>Дизайнерские кухни премиум-класса</h1>
-      <p>Сконструируйте ваш проект: выберите планировку, укажите параметры и скачайте персональный КП в формате PDF.</p>
+    <div class="header-title">
+      <h1>Конструктор кухонной мебели</h1>
+      <p>Интерактивный чертёж и калькулятор средней стоимости по Ташкенту</p>
     </div>
 
-    <!-- МАКЕТ: СБОКУ 2 ЧЕРТЕЖА, ПО ЦЕНТРУ 4 ВЫБОРА -->
-    <div class="calculator-layout">
+    <div class="app-layout">
       
-      <!-- ЛЕВАЯ КОЛОНКА: 2 СХЕМЫ / ЧЕРТЕЖА -->
-      <div class="sidebar-schemes">
-        <div class="scheme-card">
-          <h3>Схема 1</h3>
-          <p>Замеры и технические зоны</p>
-          <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80" alt="Чертеж 1">
-        </div>
-        <div class="scheme-card">
-          <h3>Схема 2</h3>
-          <p>Размещение коммуникаций</p>
-          <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=600&q=80" alt="Чертеж 2">
-        </div>
-      </div>
-
-      <!-- ЦЕНТРАЛЬНАЯ ЧАСТЬ: 4 ВЫБОРА -->
-      <div class="center-choices">
+      <!-- ЛЕВАЯ КОЛОНКА: ДИНАМИЧЕСКИЕ СХЕМЫ И ЦЕНА -->
+      <div class="sticky-sidebar">
         
-        <!-- Выбор 1: Прямая -->
-        <div class="choice-card" id="card-1">
-          <div>
-            <h3>Прямая кухня</h3>
-            <p>Компактное решение в один ряд.</p>
-            <img src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80" alt="Прямая кухня">
+        <!-- Расчётная стоимость -->
+        <div class="price-box">
+          <div class="price-title">Ориентировочная стоимость</div>
+          <div class="price-value" id="totalPriceDisplay">0</div>
+          <div class="price-currency">Узбекских сум (UZS)</div>
+        </div>
+
+        <!-- Чертеж 1: Вид спереди -->
+        <div class="card">
+          <div class="drawing-title">
+            <span>Чертеж 1: Вид спереди</span>
+            <small style="color:var(--text-muted);">Размеры фасада</small>
           </div>
-          <label class="checkbox-label">
-            <input type="checkbox" class="kitchen-select" value="Прямая кухня" data-img="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80" onchange="toggleCard('card-1')">
-            Выбрать
-          </label>
-        </div>
-
-        <!-- Выбор 2: Г-образная -->
-        <div class="choice-card" id="card-2">
-          <div>
-            <h3>Г-образная кухня</h3>
-            <p>Угловая планировка с витриной.</p>
-            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" alt="Г-образная кухня">
+          <div class="svg-container">
+            <svg id="svgFront" viewBox="0 0 400 200"></svg>
           </div>
-          <label class="checkbox-label">
-            <input type="checkbox" class="kitchen-select" value="Г-образная кухня" data-img="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" onchange="toggleCard('card-2')">
-            Выбрать
-          </label>
         </div>
 
-        <!-- Выбор 3: П-образная -->
-        <div class="choice-card" id="card-3">
-          <div>
-            <h3>П-образная кухня</h3>
-            <p>Максимум рабочей поверхности.</p>
-            <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800&q=80" alt="П-образная кухня">
+        <!-- Чертеж 2: Вид сверху -->
+        <div class="card">
+          <div class="drawing-title">
+            <span>Чертеж 2: Вид сверху</span>
+            <small style="color:var(--text-muted);">Планировка</small>
           </div>
-          <label class="checkbox-label">
-            <input type="checkbox" class="kitchen-select" value="П-образная кухня" data-img="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800&q=80" onchange="toggleCard('card-3')">
-            Выбрать
-          </label>
-        </div>
-
-        <!-- Выбор 4: Остров -->
-        <div class="choice-card" id="card-4">
-          <div>
-            <h3>Кухня с островом</h3>
-            <p>Премиальный островной модуль.</p>
-            <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80" alt="Кухня с островом">
+          <div class="svg-container">
+            <svg id="svgTop" viewBox="0 0 400 200"></svg>
           </div>
-          <label class="checkbox-label">
-            <input type="checkbox" class="kitchen-select" value="Кухня с островом" data-img="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80" onchange="toggleCard('card-4')">
-            Выбрать
-          </label>
         </div>
 
       </div>
-    </div>
 
-    <!-- ДАЛЕЕ ПО ПУНКТАМ -->
-    
-    <!-- Пункт 1: Материалы фасадов -->
-    <div class="block">
-      <div class="step-header">
-        <div class="step-number">1</div>
-        <h2>Выберите материал фасадов</h2>
-      </div>
-      <div class="form-group">
-        <select id="facadeMaterial">
-          <option value="MDF Эмаль (Матовый / Глянец)">MDF Эмаль (Матовый / Глянец)</option>
-          <option value="Массив дерева / Шпон">Массив дерева / Шпон</option>
-          <option value="Акрил премиум">Акрил премиум</option>
-          <option value="ЛДСП Egger">ЛДСП Egger</option>
-        </select>
-      </div>
-    </div>
+      <!-- ПРАВАЯ КОЛОНКА: НАСТРОЙКИ -->
+      <div class="main-content" style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- 1. Форма кухни -->
+        <div class="card">
+          <div class="section-title">
+            <span class="step-badge">1</span>
+            <span>Выберите форму кухни</span>
+          </div>
+          <div class="type-grid">
+            <div class="type-btn active" onclick="setKitchenType('straight', this)">Прямая</div>
+            <div class="type-btn" onclick="setKitchenType('l-shape', this)">Г-образная</div>
+            <div class="type-btn" onclick="setKitchenType('u-shape', this)">П-образная</div>
+          </div>
 
-    <!-- Пункт 2: Фурнитура и столешница -->
-    <div class="block">
-      <div class="step-header">
-        <div class="step-number">2</div>
-        <h2>Столешница и фурнитура</h2>
-      </div>
-      <div class="form-group">
-        <select id="countertopType">
-          <option value="Кварцевый агломерат / Мрамор">Кварцевый агломерат / Мрамор</option>
-          <option value="Искусственный камень">Искусственный камень</option>
-          <option value="Компакт-плита">Компакт-плита</option>
-          <option value="Влагостойкий пластик">Влагостойкий пластик</option>
-        </select>
-      </div>
-    </div>
+          <!-- Размеры основных стен -->
+          <div class="inputs-grid">
+            <div class="field-group">
+              <label>Высота гарнитура (см)</label>
+              <input type="number" id="height" value="240" min="150" max="320" oninput="updateCalculator()">
+            </div>
+            <div class="field-group">
+              <label id="lblMainWall">Длина главной стены (см)</label>
+              <input type="number" id="mainWall" value="300" min="100" max="800" oninput="updateCalculator()">
+            </div>
+          </div>
 
-    <!-- Пункт 3: Оформление заказа и расчет в PDF -->
-    <div class="block">
-      <div class="step-header">
-        <div class="step-number">3</div>
-        <h2>Данные для получения расчёта в PDF</h2>
-      </div>
-      <form id="pdfForm" onsubmit="generatePDF(event)">
-        <div class="form-group">
-          <input type="text" id="clientName" placeholder="Ваше имя" required>
+          <!-- Специфические поля для Г и П образных -->
+          <div id="sideWallsContainer" class="inputs-grid" style="display: none;">
+            <div class="field-group" id="groupLeftWall">
+              <label>Левая сторона стены (см)</label>
+              <input type="number" id="leftWall" value="150" min="60" max="500" oninput="updateCalculator()">
+            </div>
+            <div class="field-group" id="groupRightWall">
+              <label>Правая сторона стены (см)</label>
+              <input type="number" id="rightWall" value="150" min="60" max="500" oninput="updateCalculator()">
+            </div>
+            <div class="field-group" id="groupLSideDir" style="grid-column: span 2; display: none;">
+              <label>Расположение угла</label>
+              <select id="lAngleDir" onchange="updateCalculator()">
+                <option value="right">Угол справа (Г-образная)</option>
+                <option value="left">Угол слева (Г-образная)</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <input type="tel" id="clientPhone" placeholder="Ваш телефон" required>
-        </div>
-        <div class="form-group">
-          <textarea id="clientComment" rows="3" placeholder="Примерные размеры помещения или пожелания..."></textarea>
-        </div>
-        <button type="submit" class="btn-pdf">Скачать предложение (PDF)</button>
-      </form>
-    </div>
 
+        <!-- 2. Дополнительная функция: Остров -->
+        <div class="card">
+          <div class="section-title">
+            <span class="step-badge">2</span>
+            <span>Дополнительные модули</span>
+          </div>
+          
+          <div class="toggle-box">
+            <label class="checkbox-label">
+              <input type="checkbox" id="hasIsland" onchange="toggleIslandOptions()">
+              Добавить кухонный остров
+            </label>
+
+            <div id="islandOptions" class="sub-options">
+              <div class="inputs-grid">
+                <div class="field-group">
+                  <label>Длина острова (см)</label>
+                  <input type="number" id="islandLength" value="140" min="80" max="300" oninput="updateCalculator()">
+                </div>
+                <div class="field-group">
+                  <label>Ширина острова (см)</label>
+                  <input type="number" id="islandWidth" value="80" min="50" max="150" oninput="updateCalculator()">
+                </div>
+              </div>
+
+              <div class="field-group" style="margin-top: 10px;">
+                <label>Доступ к шкафам острова</label>
+                <select id="islandAccess" onchange="updateCalculator()">
+                  <option value="one">Дверцы / фасады только с 1 стороны</option>
+                  <option value="two">Вид и фасады с 2-х сторон (двусторонний доступ)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Материалы и Фурнитура -->
+        <div class="card">
+          <div class="section-title">
+            <span class="step-badge">3</span>
+            <span>Материалы и отделка</span>
+          </div>
+
+          <div class="inputs-grid">
+            <div class="field-group">
+              <label>Материал фасадов</label>
+              <select id="facadeMaterial" onchange="updateCalculator()">
+                <option value="4200000">ЛДСП Egger (от 4,2 млн сум/п.м)</option>
+                <option value="5500000" selected>MDF Эмаль Матовый/Глянец (от 5,5 млн сум/п.м)</option>
+                <option value="6200000">Акрил Премиум (от 6,2 млн сум/п.м)</option>
+                <option value="8000000">Шпон дерева / Массив (от 8,0 млн сум/п.м)</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label>Материал столешницы</label>
+              <select id="countertopMaterial" onchange="updateCalculator()">
+                <option value="600000">Влагостойкий пластик (+600 тыс сум/п.м)</option>
+                <option value="1800000" selected>Искусственный акриловый камень (+1,8 млн сум/п.м)</option>
+                <option value="3200000">Кварцевый агломерат (+3,2 млн сум/п.м)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Оформление заявки -->
+        <div class="card">
+          <div class="section-title">
+            <span class="step-badge">4</span>
+            <span>Получить расчет и чертеж в PDF</span>
+          </div>
+
+          <form id="pdfForm" onsubmit="downloadPDF(event)">
+            <div class="inputs-grid">
+              <div class="field-group">
+                <input type="text" id="clientName" placeholder="Ваше имя" required>
+              </div>
+              <div class="field-group">
+                <input type="tel" id="clientPhone" placeholder="Ваш номер телефона" required>
+              </div>
+            </div>
+            <div class="field-group" style="margin-top: 10px;">
+              <textarea id="clientNotes" rows="2" placeholder="Комментарий (город, этаж, пожелания)..."></textarea>
+            </div>
+            <button type="submit" class="btn-submit">Скачать спецификацию (PDF)</button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
   </div>
 
-  <!-- СКРЫТЫЙ МАКЕТ PDF -->
+  <!-- СКРЫТЫЙ МАКЕТ ДЛЯ ПЕЧАТИ PDF -->
   <div id="pdf-template">
-    <h1 style="text-align: center; color: #111;">Коммерческое предложение</h1>
-    <hr style="margin: 15px 0;">
-    <p><strong>Клиент:</strong> <span id="pdf-client-name"></span></p>
-    <p><strong>Телефон:</strong> <span id="pdf-client-phone"></span></p>
-    <p><strong>Материал фасадов:</strong> <span id="pdf-facade"></span></p>
-    <p><strong>Столешница:</strong> <span id="pdf-countertop"></span></p>
-    <p><strong>Комментарий:</strong> <span id="pdf-comment"></span></p>
-    <h3 style="margin-top: 20px;">Выбранные варианты планировок:</h3>
-    <div id="pdf-items"></div>
+    <h2 style="text-align: center; margin-bottom: 5px;">Коммерческое предложение / Проект кухни</h2>
+    <p style="text-align: center; color: #666; font-size: 12px; margin-bottom: 20px;">Расчет стоимости и предварительные чертежи</p>
+    
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
+      <tr><td><strong>Заказчик:</strong> <span id="pdfName"></span></td><td><strong>Телефон:</strong> <span id="pdfPhone"></span></td></tr>
+      <tr><td><strong>Тип кухни:</strong> <span id="pdfType"></span></td><td><strong>Примерная стоимость:</strong> <span id="pdfPrice"></span> UZS</td></tr>
+    </table>
+
+    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px;">
+      <h4>Чертеж 1: Вид спереди</h4>
+      <div id="pdfSvgFrontHolder" style="width: 100%; height: 180px;"></div>
+    </div>
+
+    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px;">
+      <h4>Чертеж 2: Вид сверху (Планировка)</h4>
+      <div id="pdfSvgTopHolder" style="width: 100%; height: 180px;"></div>
+    </div>
+
+    <p style="font-size: 12px;"><strong>Детализация:</strong> <span id="pdfDetails"></span></p>
   </div>
 
   <script>
-    function toggleCard(cardId) {
-      const card = document.getElementById(cardId);
-      const cb = card.querySelector('input[type="checkbox"]');
-      if (cb.checked) {
-        card.classList.add('selected');
-      } else {
-        card.classList.remove('selected');
+    let currentType = 'straight'; // 'straight', 'l-shape', 'u-shape'
+
+    function setKitchenType(type, btnElement) {
+      currentType = type;
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+
+      const sideWallsContainer = document.getElementById('sideWallsContainer');
+      const groupLeft = document.getElementById('groupLeftWall');
+      const groupRight = document.getElementById('groupRightWall');
+      const groupLSideDir = document.getElementById('groupLSideDir');
+
+      if (type === 'straight') {
+        sideWallsContainer.style.display = 'none';
+      } else if (type === 'l-shape') {
+        sideWallsContainer.style.display = 'grid';
+        groupLeft.style.display = 'flex';
+        groupRight.style.display = 'none';
+        groupLSideDir.style.display = 'block';
+        groupLeft.querySelector('label').innerText = "Длина боковой стены (см)";
+      } else if (type === 'u-shape') {
+        sideWallsContainer.style.display = 'grid';
+        groupLeft.style.display = 'flex';
+        groupRight.style.display = 'flex';
+        groupLSideDir.style.display = 'none';
+        groupLeft.querySelector('label').innerText = "Левая сторона стены (см)";
       }
+
+      updateCalculator();
     }
 
-    function generatePDF(event) {
-      event.preventDefault();
+    function toggleIslandOptions() {
+      const hasIsland = document.getElementById('hasIsland').checked;
+      const optBlock = document.getElementById('islandOptions');
+      if (hasIsland) {
+        optBlock.classList.add('active');
+      } else {
+        optBlock.classList.remove('active');
+      }
+      updateCalculator();
+    }
 
-      const checkboxes = document.querySelectorAll('.kitchen-select:checked');
-      if (checkboxes.length === 0) {
-        alert('Пожалуйста, выберите хотя бы один вариант кухни!');
-        return;
+    function updateCalculator() {
+      // 1. Получение значения полей
+      const h = parseFloat(document.getElementById('height').value) || 240;
+      const mainW = parseFloat(document.getElementById('mainWall').value) || 300;
+      const leftW = parseFloat(document.getElementById('leftWall').value) || 150;
+      const rightW = parseFloat(document.getElementById('rightWall').value) || 150;
+      const lDir = document.getElementById('lAngleDir').value;
+
+      const hasIsland = document.getElementById('hasIsland').checked;
+      const islL = parseFloat(document.getElementById('islandLength').value) || 140;
+      const islW = parseFloat(document.getElementById('islandWidth').value) || 80;
+      const islAccess = document.getElementById('islandAccess').value;
+
+      const facadePriceM = parseFloat(document.getElementById('facadeMaterial').value);
+      const topPriceM = parseFloat(document.getElementById('countertopMaterial').value);
+
+      // 2. Расчет погонных метров (п.м.)
+      let totalMeters = mainW / 100;
+      if (currentType === 'l-shape') {
+        totalMeters += (leftW - 60) / 100; // вычитаем перекрытие угла
+      } else if (currentType === 'u-shape') {
+        totalMeters += (leftW - 60) / 100 + (rightW - 60) / 100;
       }
 
-      document.getElementById('pdf-client-name').innerText = document.getElementById('clientName').value;
-      document.getElementById('pdf-client-phone').innerText = document.getElementById('clientPhone').value;
-      document.getElementById('pdf-facade').innerText = document.getElementById('facadeMaterial').value;
-      document.getElementById('pdf-countertop').innerText = document.getElementById('countertopType').value;
-      document.getElementById('pdf-comment').innerText = document.getElementById('clientComment').value || '—';
+      let totalPrice = totalMeters * (facadePriceM + topPriceM);
 
-      const pdfItemsContainer = document.getElementById('pdf-items');
-      pdfItemsContainer.innerHTML = '';
+      // Расчет острова
+      if (hasIsland) {
+        let islandMeters = islL / 100;
+        let islandCost = islandMeters * (facadePriceM + topPriceM);
+        if (islAccess === 'two') {
+          islandCost *= 1.35; // Наценка за 2-сторонние фасады/дверцы
+        }
+        totalPrice += islandCost;
+      }
 
-      checkboxes.forEach(cb => {
-        const title = cb.value;
-        const imgSrc = cb.getAttribute('data-img');
+      // Форматирование цены в сум
+      document.getElementById('totalPriceDisplay').innerText = Math.round(totalPrice).toLocaleString('ru-RU');
 
-        pdfItemsContainer.innerHTML += `
-          <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
-            <h4>${title}</h4>
-            <img src="${imgSrc}" style="max-width: 100%; height: 180px; object-fit: cover;">
-          </div>
-        `;
-      });
+      // 3. Отрисовка Чертежей
+      drawFrontView(mainW, h);
+      drawTopView(mainW, leftW, rightW, lDir, hasIsland, islL, islW);
+    }
+
+    // ЧЕРТЕЖ 1: ВИД СПЕРЕДИ (FRONT VIEW)
+    function drawFrontView(w, h) {
+      const svg = document.getElementById('svgFront');
+      svg.innerHTML = '';
+
+      const padding = 30;
+      const svgW = 400;
+      const svgH = 200;
+
+      const drawW = svgW - padding * 2;
+      const drawH = svgH - padding * 2;
+
+      // Масштабирование
+      const scaleX = drawW / Math.max(w, 200);
+      const scaleY = drawH / Math.max(h, 200);
+
+      const kW = Math.min(scaleX, scaleY) * w;
+      const kH = Math.min(scaleX, scaleY) * h;
+
+      const startX = (svgW - kW) / 2;
+      const startY = (svgH - kH) / 2 + 10;
+
+      // Высоты элементов пропорционально
+      const baseH = kH * (85 / h);   // нижние шкафы 85см
+      const apronH = kH * (60 / h);  // фартук 60см
+      const topH = kH - baseH - apronH; // верхние шкафы
+
+      let html = '';
+
+      // Нижние шкафы
+      html += `<rect x="${startX}" y="${startY + kH - baseH}" width="${kW}" height="${baseH}" fill="#2a2d34" stroke="#d4af37" stroke-width="1.5" />`;
+      
+      // Разделение нижних фасадов на секции (~60см)
+      const numSections = Math.max(2, Math.round(w / 60));
+      const sectionW = kW / numSections;
+      for(let i=1; i<numSections; i++) {
+        html += `<line x1="${startX + i*sectionW}" y1="${startY + kH - baseH}" x2="${startX + i*sectionW}" y2="${startY + kH}" stroke="#d4af37" stroke-width="1" stroke-dasharray="2,2"/>`;
+      }
+
+      // Фартук
+      html += `<rect x="${startX}" y="${startY + topH}" width="${kW}" height="${apronH}" fill="#18181b" stroke="#555" stroke-width="1" />`;
+
+      // Верхние шкафы
+      if (topH > 5) {
+        html += `<rect x="${startX}" y="${startY}" width="${kW}" height="${topH}" fill="#2a2d34" stroke="#d4af37" stroke-width="1.5" />`;
+        for(let i=1; i<numSections; i++) {
+          html += `<line x1="${startX + i*sectionW}" y1="${startY}" x2="${startX + i*sectionW}" y2="${startY + topH}" stroke="#d4af37" stroke-width="1" stroke-dasharray="2,2"/>`;
+        }
+      }
+
+      // Подписи размеров
+      html += `<text x="${svgW/2}" y="${startY + kH + 15}" fill="#f3e5ab" font-size="11" text-anchor="middle">${w} см</text>`;
+      html += `<text x="${startX - 10}" y="${startY + kH/2}" fill="#f3e5ab" font-size="11" text-anchor="end">${h} см</text>`;
+
+      svg.innerHTML = html;
+    }
+
+    // ЧЕРТЕЖ 2: ВИД СВЕРХУ (TOP VIEW)
+    function drawTopView(mainW, leftW, rightW, lDir, hasIsland, islL, islW) {
+      const svg = document.getElementById('svgTop');
+      svg.innerHTML = '';
+
+      const svgW = 400;
+      const svgH = 200;
+      const depth = 60; // Глубина кухни в см
+
+      // Рассчитываем габариты всей композиции для масштаба
+      let totalX = mainW;
+      let totalY = depth;
+
+      if (currentType === 'l-shape') totalY = Math.max(depth, leftW);
+      if (currentType === 'u-shape') totalY = Math.max(depth, leftW, rightW);
+      if (hasIsland) totalY += islW + 80; // учитываем проход между кухней и островом
+
+      const scale = Math.min(300 / Math.max(totalX, 200), 130 / Math.max(totalY, 120));
+
+      const cx = svgW / 2;
+      const cy = 30;
+
+      let html = '';
+
+      // Главная стена (сверху)
+      const mainDrawW = mainW * scale;
+      const mainDrawD = depth * scale;
+      const mainX = cx - mainDrawW / 2;
+      const mainY = cy;
+
+      html += `<rect x="${mainX}" y="${mainY}" width="${mainDrawW}" height="${mainDrawD}" fill="#3f3f46" stroke="#d4af37" stroke-width="1.5" />`;
+      html += `<text x="${mainX + mainDrawW/2}" y="${mainY - 8}" fill="#f3e5ab" font-size="10" text-anchor="middle">${mainW} см</text>`;
+
+      // Дополнительные крылья
+      if (currentType === 'l-shape') {
+        const sideD = (leftW - depth) * scale;
+        if (lDir === 'right') {
+          html += `<rect x="${mainX + mainDrawW - mainDrawD}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${sideD}" fill="#3f3f46" stroke="#d4af37" stroke-width="1.5" />`;
+        } else {
+          html += `<rect x="${mainX}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${sideD}" fill="#3f3f46" stroke="#d4af37" stroke-width="1.5" />`;
+        }
+      } else if (currentType === 'u-shape') {
+        const leftSideD = (leftW - depth) * scale;
+        const rightSideD = (rightW - depth) * scale;
+        // Левое крыло
+        html += `<rect x="${mainX}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${leftSideD}" fill="#3f3f46" stroke="#d4af37" stroke-width="1.5" />`;
+        // Правое крыло
+        html += `<rect x="${mainX + mainDrawW - mainDrawD}" y="${mainY + mainDrawD}" width="${mainDrawD}" height="${rightSideD}" fill="#3f3f46" stroke="#d4af37" stroke-width="1.5" />`;
+      }
+
+      // Остров
+      if (hasIsland) {
+        const iW = islL * scale;
+        const iD = islW * scale;
+        const iX = cx - iW / 2;
+        const iY = mainY + totalY * scale - iD;
+
+        html += `<rect x="${iX}" y="${iY}" width="${iW}" height="${iD}" fill="#27272a" stroke="#f3e5ab" stroke-width="1.5" stroke-dasharray="4,2" />`;
+        html += `<text x="${iX + iW/2}" y="${iY + iD/2 + 3}" fill="#f3e5ab" font-size="10" text-anchor="middle">Остров ${islL}x${islW}</text>`;
+      }
+
+      svg.innerHTML = html;
+    }
+
+    // Генерация и скачивание PDF
+    function downloadPDF(e) {
+      e.preventDefault();
+
+      document.getElementById('pdfName').innerText = document.getElementById('clientName').value;
+      document.getElementById('pdfPhone').innerText = document.getElementById('clientPhone').value;
+      document.getElementById('pdfType').innerText = currentType.toUpperCase();
+      document.getElementById('pdfPrice').innerText = document.getElementById('totalPriceDisplay').innerText;
+
+      // Копирование SVG в PDF контейнеры
+      document.getElementById('pdfSvgFrontHolder').innerHTML = document.getElementById('svgFront').outerHTML;
+      document.getElementById('pdfSvgTopHolder').innerHTML = document.getElementById('svgTop').outerHTML;
 
       const element = document.getElementById('pdf-template');
       element.style.display = 'block';
 
       const opt = {
         margin:       10,
-        filename:     `КП_Кухня_${document.getElementById('clientName').value}.pdf`,
+        filename:     `Проект_Кухни_${document.getElementById('clientName').value}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
+        html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
@@ -422,7 +729,11 @@
         element.style.display = 'none';
       });
     }
-  </script>
 
+    // Инициализация при загрузке
+    window.onload = function() {
+      updateCalculator();
+    };
+  </script>
 </body>
 </html>
