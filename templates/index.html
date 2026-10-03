@@ -302,6 +302,59 @@
       .section-mini-svg { width: 100%; height: 110px; }
       .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
     }
+
+    /* ФИЛЬТР КАТАЛОГА ЦВЕТОВ */
+    .catalog-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .filter-chip {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1.5px solid var(--border-dark);
+      color: var(--text-main);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-chip:hover { border-color: var(--accent-gold); }
+    .filter-chip.active { border-color: var(--accent-gold); background: rgba(251, 191, 36, 0.15); color: var(--accent-gold); }
+    .color-card.selected { border-color: var(--accent-gold); background: rgba(251, 191, 36, 0.18); }
+
+    /* ПОМЕТКА О ЦЕНЕ */
+    .price-note { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+
+    /* ЗАЯВКА МАСТЕРУ */
+    .lead-box {
+      max-width: 850px; margin: 15px auto; background: #0f172a; border: 2px solid var(--accent-gold);
+      border-radius: 14px; padding: 18px 20px; position: relative; color: #f8fafc;
+    }
+    .lead-title { font-size: 1rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 10px; }
+    .lead-status { display: none; margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; }
+    .lead-status.success { background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #bbf7d0; }
+    .lead-status.error { background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fecaca; }
+    .lead-hint { margin-top: 10px; font-size: 0.85rem; color: var(--text-muted); text-align: center; }
+    .lead-hint a { color: #38bdf8; font-weight: 600; text-decoration: none; }
+
+    /* НИЖНЯЯ ПАНЕЛЬ СВЯЗИ (только на телефоне) */
+    .contact-bar {
+      display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; gap: 8px;
+      padding: 8px 12px; background: rgba(15, 23, 42, 0.97); border-top: 1px solid var(--border-gold);
+      backdrop-filter: blur(10px);
+    }
+    .contact-bar a { flex: 1; text-align: center; padding: 12px 8px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; text-decoration: none; color: #ffffff; }
+    .contact-bar .call { background: linear-gradient(135deg, #d97706, #b45309); }
+    .contact-bar .tg { background: #2563eb; }
+    @media (max-width: 900px) {
+      .contact-bar { display: flex; }
+      body { padding-bottom: 84px; }
+      /* колонки не шире экрана телефона (раньше левая колонка вылезала за край) */
+      .app-layout { grid-template-columns: minmax(0, 1fr); }
+      .app-layout > * { min-width: 0; }
+      .inputs-grid > * { min-width: 0; }
+      .field-group input, .field-group select, .field-group textarea { min-width: 0; width: 100%; }
+      .btn-color-picker { min-width: 0; }
+      .btn-color-picker span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
   </style>
 </head>
 <body>
@@ -313,7 +366,7 @@
         <p>Расчет стоимости производства по Ташкенту</p>
       </div>
       <div class="master-contacts">
-        <div><strong>Телефон:</strong> <span class="phone">+998(92)093-45-10</span> — Мастер (А)</div>
+        <div><strong>Телефон:</strong> <a href="tel:+998920934510" class="phone" style="text-decoration:none;">+998(92)093-45-10</a> — Мастер (А)</div>
         <div><strong>Telegram:</strong> <a href="https://t.me/Kitchencalc" target="_blank" class="telegram">@Kitchencalc</a></div>
       </div>
     </div>
@@ -328,6 +381,7 @@
           <div class="price-title">Итоговая стоимость гарнитура</div>
           <div class="price-value" id="totalPriceDisplay">0</div>
           <div class="price-currency">Узбекских сум (UZS)</div>
+          <div class="price-note">Ориентировочный расчёт. Итоговую стоимость уточняет мастер.</div>
         </div>
 
         <!-- ЧЕРТЕЖ 1: ВИД СПЕРЕДИ 2D -->
@@ -603,6 +657,7 @@
         Выберите цвет из каталога (отсортировано по ценовым категориям). Нажмите на карточку для выбора.
       </p>
 
+      <div class="catalog-filters" id="catalogFilters"></div>
       <div id="catalogContent"></div>
     </div>
   </div>
@@ -662,13 +717,31 @@
         <div class="price-title">Итоговая стоимость заказа</div>
         <div class="price-value" id="resTotalPrice" style="font-size: 1.6rem;">0 UZS</div>
         <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px;" id="resAdvanceInfo">Аванс (75%): 0 | Остаток (25%): 0</div>
+        <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 6px;">Ориентировочный расчёт. Итоговую стоимость уточняет мастер.</div>
       </div>
+    </div>
+
+    <div class="lead-box">
+      <div class="lead-title">Понравился расчёт? Отправьте заявку мастеру</div>
+      <div class="field-group">
+        <label>Телефон для связи</label>
+        <input type="tel" id="leadPhone" placeholder="+998 (90) 123-45-67" oninput="syncLeadPhone(this.value)">
+      </div>
+      <input type="text" id="leadWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute; left:-9999px; width:0; height:0; opacity:0;">
+      <div id="leadStatus" class="lead-status"></div>
+      <button type="button" id="sendLeadBtn" class="btn-submit" onclick="sendLeadToMaster()">📨 Отправить заявку мастеру</button>
+      <div class="lead-hint">Или позвоните: <a href="tel:+998920934510">+998 92 093-45-10</a> · <a href="https://t.me/Kitchencalc" target="_blank" rel="noopener">Telegram</a></div>
     </div>
 
     <div style="max-width: 850px; margin: 15px auto; display: flex; gap: 10px;">
       <button class="btn-submit" style="background: #2563eb;" onclick="downloadAsImage()">📸 Скачать спецификацию (для Telegram)</button>
       <button class="btn-submit" style="background: #475569;" onclick="closeSummaryModal()">Закрыть</button>
     </div>
+  </div>
+
+  <div class="contact-bar">
+    <a class="call" href="tel:+998920934510">📞 Позвонить</a>
+    <a class="tg" href="https://t.me/Kitchencalc" target="_blank" rel="noopener">✈ Telegram</a>
   </div>
 
   <script>
@@ -681,7 +754,7 @@
 
     // ТЕКУЩИЕ ВЫБРАННЫЕ ЦВЕТА
     let selectedFacadeColor = { id: 'ec_1', name: 'Белый Матовый', hex: '#f8fafc', category: 'Эконом', img: '' };
-    let selectedBodyColor = { id: 'ec_2', name: 'Белый Стандарт', hex: '#ffffff', category: 'Эконом', img: '' };
+    let selectedBodyColor = { id: 'ec_13', name: 'Белый Стандарт', hex: '#ffffff', category: 'Эконом', img: '' };
 
     /* КАТАЛОГ ЦВЕТОВ ПО КАТЕГОРИЯМ: ЭКОНОМ -> СТАДАРТ -> ПРЕМИУМ -> ПЛАТИНУМ */
     /* В поле img вы можете вставить пути к вырезанным картинкам из PDF, например: "images/white_mat.jpg" */
@@ -689,40 +762,92 @@
       {
         categoryName: '1. Эконом цвета',
         items: [
-          { id: 'ec_1', name: 'Белый Матовый', hex: '#f8fafc', img: '' },
-          { id: 'ec_2', name: 'Бук Светлый', hex: '#fef08a', img: '' },
-          { id: 'ec_3', name: 'Ольха Классик', hex: '#d97706', img: '' },
-          { id: 'ec_4', name: 'Серый Пепел', hex: '#94a3b8', img: '' }
+          { id: 'ec_1', name: 'Белый Матовый', hex: '#f8fafc', tone: 'white', img: '' },
+          { id: 'ec_2', name: 'Бук Светлый', hex: '#fef08a', tone: 'wood', img: '' },
+          { id: 'ec_3', name: 'Ольха Классик', hex: '#d97706', tone: 'wood', img: '' },
+          { id: 'ec_4', name: 'Серый Пепел', hex: '#94a3b8', tone: 'gray', img: '' },
+          { id: 'ec_5', name: 'Слоновая Кость', hex: '#f5efdc', tone: 'white', img: '' },
+          { id: 'ec_6', name: 'Ваниль', hex: '#f3e5ab', tone: 'white', img: '' },
+          { id: 'ec_7', name: 'Светло-серый', hex: '#cbd5e1', tone: 'gray', img: '' },
+          { id: 'ec_8', name: 'Графит Эконом', hex: '#4b5563', tone: 'dark', img: '' },
+          { id: 'ec_9', name: 'Дуб Молочный', hex: '#e5cfa5', tone: 'wood', img: '' },
+          { id: 'ec_10', name: 'Орех Светлый', hex: '#a0764a', tone: 'wood', img: '' },
+          { id: 'ec_11', name: 'Вишня Оксфорд', hex: '#7f2f26', tone: 'wood', img: '' },
+          { id: 'ec_12', name: 'Чёрный Матовый', hex: '#1f2937', tone: 'dark', img: '' },
+          { id: 'ec_13', name: 'Белый Стандарт', hex: '#ffffff', tone: 'white', img: '' }
         ]
       },
       {
         categoryName: '2. Стандарт цвета',
         items: [
-          { id: 'st_1', name: 'Дуб Сонома', hex: '#ca8a04', img: '' },
-          { id: 'st_2', name: 'Венге Магия', hex: '#451a03', img: '' },
-          { id: 'st_3', name: 'Бежевый Песок', hex: '#fde68a', img: '' },
-          { id: 'st_4', name: 'Антрацит', hex: '#334155', img: '' }
+          { id: 'st_1', name: 'Дуб Сонома', hex: '#ca8a04', tone: 'wood', img: '' },
+          { id: 'st_2', name: 'Венге Магия', hex: '#451a03', tone: 'dark', img: '' },
+          { id: 'st_3', name: 'Бежевый Песок', hex: '#fde68a', tone: 'white', img: '' },
+          { id: 'st_4', name: 'Антрацит', hex: '#334155', tone: 'dark', img: '' },
+          { id: 'st_5', name: 'Дуб Серый', hex: '#8d8579', tone: 'wood', img: '' },
+          { id: 'st_6', name: 'Орех Американский', hex: '#6b4423', tone: 'wood', img: '' },
+          { id: 'st_7', name: 'Ясень Шимо Светлый', hex: '#c9b8a0', tone: 'wood', img: '' },
+          { id: 'st_8', name: 'Капучино', hex: '#b89b80', tone: 'white', img: '' },
+          { id: 'st_9', name: 'Мокко', hex: '#6f4e37', tone: 'dark', img: '' },
+          { id: 'st_10', name: 'Серый Камень', hex: '#6b7280', tone: 'gray', img: '' },
+          { id: 'st_11', name: 'Бетон Светлый', hex: '#b7bcc2', tone: 'gray', img: '' },
+          { id: 'st_12', name: 'Пудровый Розовый', hex: '#e8c4c0', tone: 'color', img: '' },
+          { id: 'st_13', name: 'Голубой Туман', hex: '#a9c4d6', tone: 'color', img: '' },
+          { id: 'st_14', name: 'Оливковый', hex: '#6b705c', tone: 'color', img: '' }
         ]
       },
       {
         categoryName: '3. Премиум цвета',
         items: [
-          { id: 'pr_1', name: 'Дуб Вотан (Egger)', hex: '#b45309', img: '' },
-          { id: 'pr_2', name: 'Белый Глянец Soft-Touch', hex: '#ffffff', img: '' },
-          { id: 'pr_3', name: 'Кашемир Серый', hex: '#a8a29e', img: '' },
-          { id: 'pr_4', name: 'Бетон Тёмный', hex: '#475569', img: '' }
+          { id: 'pr_1', name: 'Дуб Вотан (Egger)', hex: '#b45309', tone: 'wood', img: '' },
+          { id: 'pr_2', name: 'Белый Глянец Soft-Touch', hex: '#ffffff', tone: 'white', img: '' },
+          { id: 'pr_3', name: 'Кашемир Серый', hex: '#a8a29e', tone: 'gray', img: '' },
+          { id: 'pr_4', name: 'Бетон Тёмный', hex: '#475569', tone: 'gray', img: '' },
+          { id: 'pr_5', name: 'Дуб Артизан', hex: '#a67c52', tone: 'wood', img: '' },
+          { id: 'pr_6', name: 'Дуб Craft Золотой', hex: '#b8895a', tone: 'wood', img: '' },
+          { id: 'pr_7', name: 'Орех Миланский', hex: '#7a5233', tone: 'wood', img: '' },
+          { id: 'pr_8', name: 'Белый Шёлк Супермат', hex: '#f1f1ee', tone: 'white', img: '' },
+          { id: 'pr_9', name: 'Крем-брюле Soft-Touch', hex: '#ecdcb8', tone: 'white', img: '' },
+          { id: 'pr_10', name: 'Шалфей Матовый', hex: '#9caf88', tone: 'color', img: '' },
+          { id: 'pr_11', name: 'Синий Navy', hex: '#1e3a5f', tone: 'color', img: '' },
+          { id: 'pr_12', name: 'Терракота', hex: '#b5593c', tone: 'color', img: '' },
+          { id: 'pr_13', name: 'Горчичный', hex: '#c9962b', tone: 'color', img: '' },
+          { id: 'pr_14', name: 'Бордо', hex: '#5e1f2b', tone: 'color', img: '' },
+          { id: 'pr_15', name: 'Графит Soft-Touch', hex: '#3a3f47', tone: 'dark', img: '' },
+          { id: 'pr_16', name: 'Серый Дым', hex: '#8a8f96', tone: 'gray', img: '' }
         ]
       },
       {
         categoryName: '4. Платинум цвета',
         items: [
-          { id: 'pl_1', name: 'Мрамор Марквина Чёрный', hex: '#0f172a', img: '' },
-          { id: 'pl_2', name: 'Золотой Деревянный Шпон', hex: '#854d0e', img: '' },
-          { id: 'pl_3', name: 'Изумруд Матовый Platinum', hex: '#064e3b', img: '' },
-          { id: 'pl_4', name: 'Металл Бронза', hex: '#78350f', img: '' }
+          { id: 'pl_1', name: 'Мрамор Марквина Чёрный', hex: '#0f172a', tone: 'dark', img: '' },
+          { id: 'pl_2', name: 'Золотой Деревянный Шпон', hex: '#854d0e', tone: 'wood', img: '' },
+          { id: 'pl_3', name: 'Изумруд Матовый Platinum', hex: '#064e3b', tone: 'color', img: '' },
+          { id: 'pl_4', name: 'Металл Бронза', hex: '#78350f', tone: 'color', img: '' },
+          { id: 'pl_5', name: 'Мрамор Каррара Белый', hex: '#e9e9e6', tone: 'white', img: '' },
+          { id: 'pl_6', name: 'Камень Тёмный Сланец', hex: '#2f3640', tone: 'dark', img: '' },
+          { id: 'pl_7', name: 'Дуб Шпон Натуральный', hex: '#c19a6b', tone: 'wood', img: '' },
+          { id: 'pl_8', name: 'Орех Шпон Американский', hex: '#5a3b22', tone: 'wood', img: '' },
+          { id: 'pl_9', name: 'Чёрный Супермат Anti-Fingerprint', hex: '#121212', tone: 'dark', img: '' },
+          { id: 'pl_10', name: 'Сапфир Матовый', hex: '#1d4e89', tone: 'color', img: '' },
+          { id: 'pl_11', name: 'Бордовый Велюр', hex: '#6d1a36', tone: 'color', img: '' },
+          { id: 'pl_12', name: 'Шампань Металлик', hex: '#cdb892', tone: 'color', img: '' },
+          { id: 'pl_13', name: 'Графитовый Металлик', hex: '#4a4f57', tone: 'dark', img: '' },
+          { id: 'pl_14', name: 'Жемчуг Серый', hex: '#d1d5db', tone: 'gray', img: '' }
         ]
       }
     ];
+
+    /* Фильтр каталога по оттенку */
+    const catalogTones = [
+      { key: 'all', label: 'Все цвета' },
+      { key: 'white', label: 'Белые и светлые' },
+      { key: 'wood', label: 'Дерево' },
+      { key: 'gray', label: 'Серые и бетон' },
+      { key: 'dark', label: 'Тёмные и чёрные' },
+      { key: 'color', label: 'Цветные' }
+    ];
+    let activeCatalogTone = 'all';
 
     function initDefaultSections() {
       let defaultW = 50;
@@ -750,30 +875,58 @@
 
     function openColorCatalogModal(target) {
       activeColorTarget = target;
-      const titleElem = document.getElementById('catalogModalTitle');
-      titleElem.innerText = target === 'facade' ? 'Выбор цвета для ФАСАДА' : 'Выбор цвета для КОРПУСА';
+      activeCatalogTone = 'all';
+      document.getElementById('catalogModalTitle').innerText = target === 'facade' ? 'Выбор цвета для ФАСАДА' : 'Выбор цвета для КОРПУСА';
+      renderCatalog();
+      document.getElementById('colorCatalogModal').style.display = 'block';
+    }
+
+    function setCatalogTone(key) {
+      activeCatalogTone = key;
+      renderCatalog();
+    }
+
+    function renderCatalog() {
+      const selected = activeColorTarget === 'facade' ? selectedFacadeColor : selectedBodyColor;
+
+      let filters = '';
+      catalogTones.forEach(t => {
+        filters += `<button type="button" class="filter-chip ${t.key === activeCatalogTone ? 'active' : ''}" onclick="setCatalogTone('${t.key}')">${t.label}</button>`;
+      });
+      document.getElementById('catalogFilters').innerHTML = filters;
 
       let html = '';
       colorCatalog.forEach(cat => {
-        let catShortName = cat.categoryName.split('.')[1].trim().split(' ')[0]; // Эконом, Стандарт и т.д.
-        html += `<div class="catalog-category-title">📁 ${cat.categoryName}</div>`;
+        const items = cat.items.filter(it => activeCatalogTone === 'all' || it.tone === activeCatalogTone);
+        if (!items.length) return;
+
+        html += `<div class="catalog-category-title">📁 ${cat.categoryName} <span style="color:var(--text-muted); font-weight:400; font-size:0.8rem;">(${items.length})</span></div>`;
         html += `<div class="catalog-grid">`;
-        
-        cat.items.forEach(item => {
-          let styleBg = item.img ? `background-image: url('${item.img}');` : `background-color: ${item.hex};`;
+        items.forEach(item => {
+          const styleBg = item.img ? `background-image: url('${item.img}');` : `background-color: ${item.hex};`;
           html += `
-            <div class="color-card" onclick="selectColorFromCatalog('${item.id}', '${item.name}', '${item.hex}', '${catShortName}', '${item.img}')">
+            <div class="color-card ${item.id === selected.id ? 'selected' : ''}" onclick="selectColorById('${item.id}')">
               <div class="color-swatch-box" style="${styleBg}"></div>
               <div class="color-card-title">${item.name}</div>
             </div>
           `;
         });
-
         html += `</div>`;
       });
 
+      if (!html) html = '<p style="color:var(--text-muted);">В этой группе пока нет цветов.</p>';
       document.getElementById('catalogContent').innerHTML = html;
-      document.getElementById('colorCatalogModal').style.display = 'block';
+    }
+
+    function selectColorById(id) {
+      for (const cat of colorCatalog) {
+        const item = cat.items.find(i => i.id === id);
+        if (item) {
+          const catShortName = cat.categoryName.split('.')[1].trim().split(' ')[0]; // Эконом, Стандарт и т.д.
+          selectColorFromCatalog(item.id, item.name, item.hex, catShortName, item.img || '');
+          return;
+        }
+      }
     }
 
     function closeColorCatalogModal() {
@@ -1491,6 +1644,8 @@
       document.getElementById('resTotalPrice').innerText = totalVal.toLocaleString('ru-RU') + ' UZS';
       document.getElementById('resAdvanceInfo').innerText = `Аванс (75%): ${Math.round(totalVal*0.75).toLocaleString('ru-RU')} UZS | Остаток (25%): ${Math.round(totalVal*0.25).toLocaleString('ru-RU')} UZS`;
 
+      document.getElementById('leadPhone').value = document.getElementById('clientPhone').value;
+      resetLeadUI();
       document.getElementById('summaryModal').style.display = 'block';
     }
 
@@ -1506,6 +1661,102 @@
         link.href = canvas.toDataURL('image/png');
         link.click();
       });
+    }
+
+    /* ===== ЗАЯВКА МАСТЕРУ: уходит на сервер (/lead), оттуда в Telegram ===== */
+    function syncLeadPhone(value) {
+      document.getElementById('clientPhone').value = value;
+      document.getElementById('resClientPhone').innerText = value || 'Не указано';
+    }
+
+    function showLeadStatus(text, kind) {
+      const el = document.getElementById('leadStatus');
+      el.innerText = text;
+      el.className = 'lead-status ' + (kind || '');
+      el.style.display = text ? 'block' : 'none';
+    }
+
+    function resetLeadUI() {
+      const btn = document.getElementById('sendLeadBtn');
+      btn.disabled = false;
+      btn.innerText = '📨 Отправить заявку мастеру';
+      showLeadStatus('', '');
+    }
+
+    function buildLeadPayload() {
+      const typeNames = { 'straight': 'Прямая', 'l-shape': 'Г-образная', 'u-shape': 'П-образная' };
+      const optText = id => { const e = document.getElementById(id); return e.options[e.selectedIndex].text; };
+      const val = id => document.getElementById(id).value;
+      const hasUpper = document.getElementById('hasUpperTier').checked;
+
+      let dims = `основная стена ${val('mainWall')} см`;
+      if (currentType === 'l-shape') dims += `, левая ${val('leftWall')} см`;
+      if (currentType === 'u-shape') dims += `, левая ${val('leftWall')} см, правая ${val('rightWall')} см`;
+      dims += `, высота помещения ${val('totalHeight')} см`;
+
+      const extras = [];
+      if (document.getElementById('optSinkCut').checked) extras.push('вырез под раковину');
+      if (document.getElementById('optHobCut').checked) extras.push('вырез под варочную панель');
+      if (document.getElementById('optBuiltInAppliances').checked) extras.push('встраиваемая техника');
+      if (document.getElementById('hasIsland').checked) extras.push(`остров ${val('islandLength')}x${val('islandWidth')} см`);
+
+      return {
+        name: val('clientName').trim(),
+        phone: val('leadPhone').trim(),
+        notes: val('clientNotes').trim(),
+        price: Math.round(calculatedTotalPriceNumber).toLocaleString('ru-RU').replace(/ /g, ' '),
+        source: location.href,
+        website: val('leadWebsite'),
+        details: {
+          'Тип кухни': typeNames[currentType] || currentType,
+          'Габариты': dims,
+          'Фасад': `${optText('facadeMaterial')}, ${selectedFacadeColor.name}`,
+          'Корпус': `${optText('bodyMaterial')}, ${selectedBodyColor.name}`,
+          'Столешница': optText('countertopMaterial'),
+          'Верхние шкафы': hasUpper ? `да, ${val('upperHeight')}x${val('upperDepth')} см` : 'нет',
+          'Допы': extras.length ? extras.join(', ') : 'нет'
+        },
+        lower: lowerSections.map(s => ({ id: s.id, name: s.name, width: s.width, shelves: s.shelves, drawers: s.drawers || 0, openType: s.openType })),
+        upper: hasUpper ? upperSections.map(s => ({ id: s.id, name: s.name, width: s.width, shelves: s.shelves, gasLifts: s.gasLifts || 0, openType: s.openType })) : []
+      };
+    }
+
+    async function sendLeadToMaster() {
+      const btn = document.getElementById('sendLeadBtn');
+      const phone = document.getElementById('leadPhone').value.trim();
+      if (phone.replace(/\D/g, '').length < 9) {
+        showLeadStatus('Укажите номер телефона, по нему мастер свяжется с вами.', 'error');
+        document.getElementById('leadPhone').focus();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'Отправляем...';
+      showLeadStatus('', '');
+      const fallback = 'Не удалось отправить заявку. Позвоните +998 92 093-45-10 или напишите в Telegram @Kitchencalc.';
+
+      try {
+        const resp = await fetch('/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(buildLeadPayload())
+        });
+        let data = {};
+        try { data = await resp.json(); } catch (e) {}
+
+        if (resp.ok && data.ok) {
+          btn.innerText = '✔ Заявка отправлена';
+          showLeadStatus('Спасибо! Заявка отправлена мастеру, он свяжется с вами по указанному номеру.', 'success');
+          return;
+        }
+        if (data.error === 'bad_phone') showLeadStatus('Проверьте номер телефона.', 'error');
+        else if (data.error === 'rate_limited') showLeadStatus('Слишком много заявок подряд. Позвоните +998 92 093-45-10 или напишите в Telegram @Kitchencalc.', 'error');
+        else showLeadStatus(fallback, 'error');
+      } catch (e) {
+        showLeadStatus(fallback, 'error');
+      }
+      btn.disabled = false;
+      btn.innerText = '📨 Отправить заявку мастеру';
     }
 
     window.onload = function() {
