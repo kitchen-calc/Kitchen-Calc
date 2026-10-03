@@ -395,6 +395,16 @@
     .section-head h2 { font-size: 1.7rem; font-weight: 800; color: var(--accent-gold); }
     .section-head p { color: var(--text-muted); margin-top: 4px; }
 
+    /* ДИЗАЙН-ПРОЕКТ В ПОДАРОК */
+    .gift-banner { display: flex; gap: 12px; align-items: center; margin-top: 16px; max-width: 560px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(15, 23, 42, 0.6)); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 14px; }
+    .gift-banner b { color: #a7f3d0; font-size: 1rem; }
+    .gift-banner small { color: #94a3b8; font-size: 0.78rem; }
+    .gift-icon { font-size: 1.8rem; line-height: 1; }
+    .gift-line { margin-top: 6px; font-weight: 700; font-size: 0.9rem; color: #a7f3d0; }
+    .gift-line small { display: block; font-weight: 500; color: #94a3b8; font-size: 0.75rem; }
+    .gift-line.pending { color: #fde68a; }
+    .preset-gift { display: inline-block; margin-top: 6px; font-size: 0.75rem; font-weight: 700; color: #a7f3d0; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 10px; padding: 1px 8px; }
+
     /* ГОТОВЫЕ ВАРИАНТЫ */
     .presets-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
     .preset-card { background: var(--card-bg); border: 1.5px solid var(--border-dark); border-radius: 14px; overflow: hidden; cursor: pointer; transition: all 0.2s; text-align: left; color: var(--text-main); font-family: inherit; padding: 0; }
@@ -524,6 +534,10 @@
             <li>🛡 <span data-i18n="badgeWarranty">Гарантия {m} мес.</span></li>
             <li>🚚 <span data-i18n="badgeDelivery">Доставка и монтаж</span></li>
           </ul>
+          <div class="gift-banner" id="giftBanner">
+            <span class="gift-icon">🎁</span>
+            <span><b data-i18n="giftBanner">Дизайн-проект в подарок при заказе от 20 000 000 сум</b><br><small data-i18n="giftNote">Условие: итоговая сумма по договору от 20 000 000 сум.</small></span>
+          </div>
           <div class="hero-cta">
             <a class="btn-primary" href="#presets" data-i18n="ctaPick">Подобрать кухню</a>
             <a class="btn-ghost" id="heroCall" href="tel:+998920934510" data-i18n="ctaCall">Позвонить</a>
@@ -560,6 +574,7 @@
             <div class="price-title" data-i18n="priceTitle">Ориентировочная стоимость</div>
             <div class="price-value"><span id="totalPriceDisplay">0</span> <span class="price-currency" data-i18n="sum">сум</span></div>
             <div class="installment-line" id="installmentLine" style="display:none;"></div>
+            <div class="gift-line" id="giftLine"></div>
             <div class="price-note" data-i18n="priceNote">Итоговую стоимость уточняет мастер после замера.</div>
             <div class="share-row">
               <a class="share-btn tg" id="shareTg" href="#" target="_blank" rel="noopener">✈ <span data-i18n="shareTg">Отправить в Telegram</span></a>
@@ -842,6 +857,7 @@
       <div class="price-box" style="margin-top:15px; padding:14px;">
         <div class="price-title" data-i18n="priceTitle">Ориентировочная стоимость</div>
         <div class="price-value" style="font-size:1.7rem;"><span id="resTotalPrice">0</span> <span class="price-currency" data-i18n="sum">сум</span></div>
+        <div class="gift-line" id="resGiftLine"></div>
         <div class="price-note" data-i18n="priceNote">Итоговую стоимость уточняет мастер после замера.</div>
       </div>
     </div>
@@ -875,7 +891,8 @@
       phone: '+998920934510',          // для кнопки «Позвонить» (без пробелов)
       phoneDisplay: '+998 92 093-45-10',
       telegram: 'Kitchencalc',          // без @
-      productionDays: '15–25',          // срок изготовления, рабочих дней
+      productionDays: '3–30',           // срок изготовления, рабочих дней
+      giftDesignFrom: 20000000,         // дизайн-проект в подарок при заказе от этой суммы (0 = не показывать)
       warrantyMonths: 12,               // гарантия, месяцев
       advancePercent: 75,               // аванс по договору, % (в спецификации клиенту не показывается)
       installmentMonths: 0,             // рассрочка: 0 = не показывать; например 6 = «или от X сум/мес»
@@ -916,6 +933,9 @@
         brandTitle: 'Кухни на заказ', city: 'Ташкент', masterLine: 'Ваш мастер: {name}',
         heroTitle: 'Соберите кухню онлайн и узнайте цену за 2 минуты',
         heroLead: 'Выберите готовый вариант или настройте под свои размеры. Замер и консультация бесплатно.',
+        giftBanner: 'Дизайн-проект в подарок при заказе от {gift} сум',
+        giftYes: '🎁 Дизайн-проект — в подарок', giftLeft: '🎁 Ещё {x} сум до дизайн-проекта в подарок', giftTag: '🎁 + дизайн-проект',
+        giftNote: 'Условие: итоговая сумма по договору от {gift} сум.',
         badgeMeasure: 'Бесплатный замер', badgeDays: 'Изготовление {days} раб. дней', badgeWarranty: 'Гарантия {m} мес.', badgeDelivery: 'Доставка и монтаж',
         ctaPick: 'Подобрать кухню', ctaCall: 'Позвонить',
         presetsTitle: 'Готовые варианты', presetsSub: 'Нажмите на понравившийся — дальше можно поменять размеры, цвет и материалы.',
@@ -983,6 +1003,9 @@
         brandTitle: 'Buyurtma oshxonalar', city: 'Toshkent', masterLine: 'Ustangiz: {name}',
         heroTitle: 'Oshxonangizni onlayn yigʻing va narxini 2 daqiqada biling',
         heroLead: 'Tayyor variantni tanlang yoki oʻz oʻlchamlaringizga moslang. Oʻlchov va maslahat bepul.',
+        giftBanner: '{gift} soʻmdan boshlab buyurtmada dizayn-loyiha sovgʻa',
+        giftYes: '🎁 Dizayn-loyiha — sovgʻa', giftLeft: '🎁 Dizayn-loyiha sovgʻa boʻlishi uchun yana {x} soʻm', giftTag: '🎁 + dizayn-loyiha',
+        giftNote: 'Shart: shartnoma boʻyicha yakuniy summa {gift} soʻmdan.',
         badgeMeasure: 'Bepul oʻlchov', badgeDays: 'Tayyorlash {days} ish kuni', badgeWarranty: 'Kafolat {m} oy', badgeDelivery: 'Yetkazish va oʻrnatish',
         ctaPick: 'Oshxona tanlash', ctaCall: 'Qoʻngʻiroq qilish',
         presetsTitle: 'Tayyor variantlar', presetsSub: 'Yoqqanini bosing — keyin oʻlcham, rang va materiallarni oʻzgartirish mumkin.',
@@ -1582,7 +1605,21 @@
 
     /* ===================== ПОМОЩНИКИ ===================== */
     function vars() {
-      return { days: CONFIG.productionDays, m: CONFIG.warrantyMonths, name: LANG === 'uz' ? CONFIG.masterNameUz : CONFIG.masterName, phone: CONFIG.phoneDisplay, tg: CONFIG.telegram };
+      return { days: CONFIG.productionDays, m: CONFIG.warrantyMonths, name: LANG === 'uz' ? CONFIG.masterNameUz : CONFIG.masterName, phone: CONFIG.phoneDisplay, tg: CONFIG.telegram, gift: fmt(CONFIG.giftDesignFrom) };
+    }
+    // Дизайн-проект в подарок: показываем честно — с условием и с тем, сколько не хватает до порога
+    function giftHtml(total) {
+      if (!(CONFIG.giftDesignFrom > 0)) return '';
+      const note = `<small>${esc(t('giftNote', vars()))}</small>`;
+      if (total >= CONFIG.giftDesignFrom) return esc(t('giftYes')) + note;
+      return esc(t('giftLeft', { x: fmt(CONFIG.giftDesignFrom - total) })) + note;
+    }
+    function renderGift(id, total) {
+      const box = el(id);
+      if (!box) return;
+      box.innerHTML = giftHtml(total);
+      box.classList.toggle('pending', CONFIG.giftDesignFrom > 0 && total < CONFIG.giftDesignFrom);
+      box.style.display = CONFIG.giftDesignFrom > 0 ? 'block' : 'none';
     }
     function t(key, v) {
       let s = (I18N[LANG] && I18N[LANG][key] !== undefined) ? I18N[LANG][key] : (I18N.ru[key] !== undefined ? I18N.ru[key] : key);
@@ -1732,6 +1769,7 @@
         inst.style.display = 'none';
       }
 
+      renderGift('giftLine', total);
       drawFullFrontView('svgFront', s.hasUpper);
       drawTopViewPlan('svgTop', s.hasUpper);
       renderKitchen(el('kitchenRender'), renderStateFrom(s));
@@ -2220,6 +2258,7 @@
             <div class="preset-name">${esc(t('p_' + p.id))}</div>
             <div class="preset-desc">${esc(t('p_' + p.id + '_d'))}</div>
             <div class="preset-price">${esc(t('from', { x: fmt(price) }))}</div>
+            ${CONFIG.giftDesignFrom > 0 && price >= CONFIG.giftDesignFrom ? `<div class="preset-gift">${esc(t('giftTag'))}</div>` : ''}
           </div>
         </button>`;
       }).join('');
@@ -2394,6 +2433,7 @@
       if (s.hasUpper) upperSections.forEach((sec, idx) => drawSectionCadScheme('resMini_upper_' + idx, 'upper', sec));
 
       el('resTotalPrice').textContent = fmt(calculatedTotalPriceNumber);
+      renderGift('resGiftLine', calculatedTotalPriceNumber);
       el('leadPhone').value = el('clientPhone').value;
       resetLeadUI();
       el('summaryModal').style.display = 'block';
@@ -2566,6 +2606,7 @@
   <p>2.2. Заказчик вносит аванс в размере ${F(String(CONFIG.advancePercent), 40)}% — ${F(fmt(adv), 130)} сум в день подписания Договора.</p>
   <p>2.3. Оставшаяся сумма ${F(fmt(rest), 130)} сум оплачивается в день завершения монтажа после подписания Акта приёмки.</p>
   <p>2.4. В стоимость входят изготовление, доставка по г. Ташкенту и монтаж Изделия. Бытовая техника, мойка, смеситель и их подключение к коммуникациям в стоимость не входят, если это не указано в Спецификации.</p>
+  ${CONFIG.giftDesignFrom > 0 ? `<p>2.5. При стоимости Изделия по Договору от ${fmt(CONFIG.giftDesignFrom)} сум Исполнитель бесплатно разрабатывает для Заказчика дизайн-проект кухни. Стоимость дизайн-проекта в этом случае в цену Договора не включается и дополнительно не оплачивается.</p>` : ''}
 
   <h2>3. Сроки</h2>
   <p>3.1. Срок изготовления — ${F(CONFIG.productionDays, 70)} рабочих дней с даты внесения аванса и утверждения окончательных размеров.</p>
