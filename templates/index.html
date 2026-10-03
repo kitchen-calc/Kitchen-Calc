@@ -548,15 +548,18 @@
         <tbody id="resLowerTableBody"></tbody>
       </table>
 
-      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 5px 0;">Верхние отсеки (шкафы)</h3>
-      <table class="modal-table">
-        <thead>
-          <tr>
-            <th>№</th><th>Название</th><th>Стена</th><th>Ширина</th><th>Полки</th><th>Газлифты</th><th>Открывание</th>
-          </tr>
-        </thead>
-        <tbody id="resUpperTableBody"></tbody>
-      </table>
+      <!-- ВЕРХНИЕ ОТСЕКИ (СКРЫВАЮТСЯ, ЕСЛИ ОПЦИЯ ОТКЛЮЧЕНА) -->
+      <div id="modalUpperTableBlock">
+        <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 5px 0;">Верхние отсеки (шкафы)</h3>
+        <table class="modal-table">
+          <thead>
+            <tr>
+              <th>№</th><th>Название</th><th>Стена</th><th>Ширина</th><th>Полки</th><th>Газлифты</th><th>Открывание</th>
+            </tr>
+          </thead>
+          <tbody id="resUpperTableBody"></tbody>
+        </table>
+      </div>
 
       <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 20px 0 5px 0;">Схемы отдельных отсеков (CAD-детализация)</h3>
       <div class="modal-minis-grid" id="resMinisContainer"></div>
@@ -693,8 +696,8 @@
             depth: type === 'lower' ? 60 : 35,
             height: type === 'lower' ? 85 : 72,
             shelves: 1,
-            drawers: type === 'lower' ? 0 : undefined,
-            gasLifts: type === 'upper' ? 0 : undefined,
+            drawers: type === 'lower' ? 0 : 0,
+            gasLifts: type === 'upper' ? 0 : 0,
             openType: 'handles',
             wall: 'main'
           });
@@ -753,11 +756,11 @@
                 ${type === 'lower' ? `
                 <div class="field-group">
                   <label>Выдвижные ящики (шт)</label>
-                  <input type="number" value="${sec.drawers}" min="0" max="4" oninput="updateSec('${type}',${idx}, 'drawers', parseInt(this.value)||0)">
+                  <input type="number" value="${sec.drawers || 0}" min="0" max="4" oninput="updateSec('${type}',${idx}, 'drawers', parseInt(this.value)||0)">
                 </div>` : `
                 <div class="field-group">
                   <label>Газлифты (шт)</label>
-                  <input type="number" value="${sec.gasLifts}" min="0" max="2" oninput="updateSec('${type}',${idx}, 'gasLifts', parseInt(this.value)||0)">
+                  <input type="number" value="${sec.gasLifts || 0}" min="0" max="2" oninput="updateSec('${type}',${idx}, 'gasLifts', parseInt(this.value)||0)">
                 </div>`}
                 <div class="field-group" style="grid-column: span 2;">
                   <label>Тип открывания</label>
@@ -971,18 +974,21 @@
       let totalPrice = lowerMeters * lowerCostPerMeter;
 
       lowerSections.forEach(s => {
-        totalPrice += (s.shelves * 50000) + (s.drawers * 110000);
+        totalPrice += (s.shelves * 50000) + ((s.drawers || 0) * 110000);
         if (s.openType === 'push') totalPrice += 40000;
         if (s.openType === 'gola') totalPrice += 95000;
       });
 
       if (hasUpper) {
         let upperMeters = mainW / 100;
+        if (currentType === 'l-shape') upperMeters += Math.max(0, leftW - 35) / 100;
+        else if (currentType === 'u-shape') upperMeters += (Math.max(0, leftW - 35) + Math.max(0, rightW - 35)) / 100;
+
         let upperCostPerMeter = (facadePriceM * 0.45) + (bodyPriceM * 0.4);
         totalPrice += upperMeters * upperCostPerMeter * (upperH / 72) * (upperD / 35);
 
         upperSections.forEach(s => {
-          totalPrice += (s.shelves * 50000) + (s.gasLifts * 120000);
+          totalPrice += (s.shelves * 50000) + ((s.gasLifts || 0) * 120000);
           if (s.openType === 'push') totalPrice += 40000;
           if (s.openType === 'gola') totalPrice += 95000;
         });
@@ -1018,6 +1024,7 @@
       document.getElementById('panelSampleBadge').innerText = `${facadeMatText}`;
     }
 
+    /* 2D ВИД СПЕРЕДИ С ЕДИНЫМ МАСШТАБОМ */
     function drawFullFrontView(svgId, hasUpper) {
       const svg = document.getElementById(svgId);
       if (!svg) return;
@@ -1028,12 +1035,16 @@
       let endX = 560;
       let availW = endX - startX;
 
-      let totalWidthUnits = lowerSections.reduce((acc, s) => acc + (parseFloat(s.width) || 50), 0);
-      let scaleRatio = availW / (totalWidthUnits || 1);
+      let totalLowerWidth = lowerSections.reduce((acc, s) => acc + (parseFloat(s.width) || 50), 0);
+      let totalUpperWidth = hasUpper ? upperSections.reduce((acc, s) => acc + (parseFloat(s.width) || 50), 0) : 0;
+      
+      // Использование единого базового масштаба
+      let maxTotalWidth = Math.max(totalLowerWidth, totalUpperWidth, 1);
+      let scaleRatio = availW / maxTotalWidth;
 
       let html = `
         <rect x="5" y="5" width="590" height="270" fill="#f8fafc" stroke="#0284c7" stroke-width="1.5" rx="6"/>
-        <text x="300" y="22" fill="#0284c7" font-size="11" font-weight="bold" font-family="sans-serif" text-anchor="middle">ВИД СПЕРЕДИ 2D: ФАСАДЫ И МОДУЛИ (${Math.round(totalWidthUnits)} см)</text>
+        <text x="300" y="22" fill="#0284c7" font-size="11" font-weight="bold" font-family="sans-serif" text-anchor="middle">ВИД СПЕРЕДИ 2D: ФАСАДЫ И МОДУЛИ (${Math.round(totalLowerWidth)} см)</text>
       `;
 
       let lowerY = 160;
@@ -1045,7 +1056,7 @@
         let x = currX;
         currX += secW_px;
 
-        html += `<rect x="${x + 1}" y="${lowerY}" width="${secW_px - 2}" height="${lowerH}" fill="${faceFill}" stroke="#0f172a" stroke-width="1.5"/>`;
+        html += `<rect x="${x + 1}" y="${lowerY}" width="${Math.max(2, secW_px - 2)}" height="${lowerH}" fill="${faceFill}" stroke="#0f172a" stroke-width="1.5"/>`;
 
         let shelves = sec.shelves || 0;
         let drawers = sec.drawers || 0;
@@ -1061,7 +1072,7 @@
           let hBox = lowerH / drawers;
           for (let d = 0; d < drawers; d++) {
             let yD = lowerY + d * hBox;
-            html += `<rect x="${x + 3}" y="${yD + 2}" width="${secW_px - 6}" height="${hBox - 4}" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>`;
+            html += `<rect x="${x + 3}" y="${yD + 2}" width="${Math.max(2, secW_px - 6)}" height="${hBox - 4}" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>`;
             if (sec.openType === 'handles') {
               html += `<line x1="${x + secW_px*0.3}" y1="${yD + hBox/2}" x2="${x + secW_px*0.7}" y2="${yD + hBox/2}" stroke="#0f172a" stroke-width="2"/>`;
             }
@@ -1075,7 +1086,7 @@
         }
 
         html += `<rect x="${x + 6}" y="${lowerY + lowerH}" width="6" height="10" fill="#64748b"/>`;
-        html += `<rect x="${x + secW_px - 12}" y="${lowerY + lowerH}" width="6" height="10" fill="#64748b"/>`;
+        html += `<rect x="${x + Math.max(7, secW_px - 12)}" y="${lowerY + lowerH}" width="6" height="10" fill="#64748b"/>`;
 
         html += `
           <rect x="${x + secW_px/2 - 18}" y="${lowerY + 6}" width="36" height="14" rx="3" fill="#0f172a"/>
@@ -1084,22 +1095,20 @@
         `;
       });
 
-      html += `<rect x="${startX - 2}" y="${lowerY - 8}" width="${availW + 4}" height="8" fill="#b45309" stroke="#0f172a" stroke-width="1"/>`;
+      let lowerLineW = (totalLowerWidth * scaleRatio);
+      html += `<rect x="${startX - 2}" y="${lowerY - 8}" width="${lowerLineW + 4}" height="8" fill="#b45309" stroke="#0f172a" stroke-width="1"/>`;
 
       if (hasUpper && upperSections.length > 0) {
         let upperH_px = 65;
         let upperY = lowerY - 8 - 20 - upperH_px;
 
-        let totalUpperUnits = upperSections.reduce((acc, s) => acc + (parseFloat(s.width) || 50), 0);
-        let scaleUpperRatio = availW / (totalUpperUnits || 1);
-
         let currUpperX = startX;
         upperSections.forEach((sec) => {
-          let secW_px = (parseFloat(sec.width) || 50) * scaleUpperRatio;
+          let secW_px = (parseFloat(sec.width) || 50) * scaleRatio;
           let x = currUpperX;
           currUpperX += secW_px;
 
-          html += `<rect x="${x + 1}" y="${upperY}" width="${secW_px - 2}" height="${upperH_px}" fill="${faceFill}" stroke="#0f172a" stroke-width="1.5"/>`;
+          html += `<rect x="${x + 1}" y="${upperY}" width="${Math.max(2, secW_px - 2)}" height="${upperH_px}" fill="${faceFill}" stroke="#0f172a" stroke-width="1.5"/>`;
 
           let shelves = sec.shelves || 0;
           if (shelves > 0) {
@@ -1186,6 +1195,9 @@
             <rect x="${cornerX + 4}" y="${currY}" width="45" height="${modH}" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
             <text x="${cornerX + 26}" y="${currY + modH/2}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}] ${sec.width}см</text>
           `;
+          if (hasUpper) {
+            html += `<rect x="${cornerX + 4}" y="${currY}" width="26" height="${modH}" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+          }
         });
 
         let currX = cornerX + 48;
@@ -1195,6 +1207,9 @@
             <rect x="${currX}" y="${cornerY + 4}" width="${modW}" height="45" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
             <text x="${currX + modW/2}" y="${cornerY + 28}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}] ${sec.width}см</text>
           `;
+          if (hasUpper) {
+            html += `<rect x="${currX}" y="${cornerY + 4}" width="${modW}" height="26" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+          }
           currX += modW;
         });
 
@@ -1216,6 +1231,9 @@
             <rect x="${leftX + 4}" y="${currY}" width="45" height="${modH}" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
             <text x="${leftX + 26}" y="${currY + modH/2}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}]</text>
           `;
+          if (hasUpper) {
+            html += `<rect x="${leftX + 4}" y="${currY}" width="26" height="${modH}" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+          }
         });
 
         let currX = leftX + 48;
@@ -1225,6 +1243,9 @@
             <rect x="${currX}" y="${topY + 4}" width="${modW}" height="45" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
             <text x="${currX + modW/2}" y="${topY + 28}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}] ${sec.width}см</text>
           `;
+          if (hasUpper) {
+            html += `<rect x="${currX}" y="${topY + 4}" width="${modW}" height="26" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+          }
           currX += modW;
         });
 
@@ -1235,6 +1256,9 @@
             <rect x="${rightX - 49}" y="${currRightY}" width="45" height="${modH}" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
             <text x="${rightX - 26}" y="${currRightY + modH/2}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}]</text>
           `;
+          if (hasUpper) {
+            html += `<rect x="${rightX - 30}" y="${currRightY}" width="26" height="${modH}" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+          }
           currRightY += modH;
         });
       }
@@ -1256,17 +1280,24 @@
       lowerSections.forEach(sec => {
         let openTxt = sec.openType === 'push' ? 'Push' : (sec.openType === 'gola' ? 'Гола профиль' : 'Ручка');
         let wallTxt = sec.wall === 'left' ? 'Левая' : (sec.wall === 'right' ? 'Правая' : 'Основная');
-        lowerHtml += `<tr><td>[Н-${sec.id}]</td><td>${sec.name}</td><td>${wallTxt}</td><td>${sec.width} см</td><td>${sec.shelves}</td><td>${sec.drawers}</td><td>${openTxt}</td></tr>`;
+        lowerHtml += `<tr><td>[Н-${sec.id}]</td><td>${sec.name}</td><td>${wallTxt}</td><td>${sec.width} см</td><td>${sec.shelves}</td><td>${sec.drawers || 0}</td><td>${openTxt}</td></tr>`;
       });
       document.getElementById('resLowerTableBody').innerHTML = lowerHtml;
 
-      let upperHtml = '';
-      upperSections.forEach(sec => {
-        let openTxt = sec.openType === 'push' ? 'Push' : (sec.openType === 'gola' ? 'Гола профиль' : 'Ручка');
-        let wallTxt = sec.wall === 'left' ? 'Левая' : (sec.wall === 'right' ? 'Правая' : 'Основная');
-        upperHtml += `<tr><td>[В-${sec.id}]</td><td>${sec.name}</td><td>${wallTxt}</td><td>${sec.width} см</td><td>${sec.shelves}</td><td>${sec.gasLifts}</td><td>${openTxt}</td></tr>`;
-      });
-      document.getElementById('resUpperTableBody').innerHTML = upperHtml;
+      // СКРЫВАЕМ ВЕРХНИЙ БЛОК В МОДАЛЬНОМ ОКНЕ ЕСЛИ ОТКЛЮЧЕН
+      const modalUpperBlock = document.getElementById('modalUpperTableBlock');
+      if (hasUpper) {
+        modalUpperBlock.style.display = 'block';
+        let upperHtml = '';
+        upperSections.forEach(sec => {
+          let openTxt = sec.openType === 'push' ? 'Push' : (sec.openType === 'gola' ? 'Гола профиль' : 'Ручка');
+          let wallTxt = sec.wall === 'left' ? 'Левая' : (sec.wall === 'right' ? 'Правая' : 'Основная');
+          upperHtml += `<tr><td>[В-${sec.id}]</td><td>${sec.name}</td><td>${wallTxt}</td><td>${sec.width} см</td><td>${sec.shelves}</td><td>${sec.gasLifts || 0}</td><td>${openTxt}</td></tr>`;
+        });
+        document.getElementById('resUpperTableBody').innerHTML = upperHtml;
+      } else {
+        modalUpperBlock.style.display = 'none';
+      }
 
       let minisHtml = '';
       lowerSections.forEach((sec, idx) => {
@@ -1277,19 +1308,24 @@
           </div>
         `;
       });
-      upperSections.forEach((sec, idx) => {
-        minisHtml += `
-          <div class="modal-mini-card">
-            <svg viewBox="0 0 140 140" id="resMini_upper_${idx}"></svg>
-            <div class="modal-mini-title">[В-${sec.id}] ${sec.name}</div>
-          </div>
-        `;
-      });
+      
+      if (hasUpper) {
+        upperSections.forEach((sec, idx) => {
+          minisHtml += `
+            <div class="modal-mini-card">
+              <svg viewBox="0 0 140 140" id="resMini_upper_${idx}"></svg>
+              <div class="modal-mini-title">[В-${sec.id}] ${sec.name}</div>
+            </div>
+          `;
+        });
+      }
       document.getElementById('resMinisContainer').innerHTML = minisHtml;
 
       setTimeout(() => {
         lowerSections.forEach((sec, idx) => drawSectionCadScheme('resMini_lower_' + idx, 'lower', sec));
-        upperSections.forEach((sec, idx) => drawSectionCadScheme('resMini_upper_' + idx, 'upper', sec));
+        if (hasUpper) {
+          upperSections.forEach((sec, idx) => drawSectionCadScheme('resMini_upper_' + idx, 'upper', sec));
+        }
       }, 50);
 
       const totalVal = Math.round(calculatedTotalPriceNumber);
