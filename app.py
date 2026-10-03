@@ -94,7 +94,7 @@ def build_lead_text(data):
     phone = _esc(data.get("phone"), 30)
     notes = _esc(data.get("notes"), 300) or "—"
     price = _esc(data.get("price"), 30) or "—"
-    source = _esc(data.get("source"), 200) or "прямой заход"
+    source = _clip(data.get("source"), 2000)
 
     lines = [
         "🔔 <b>Новая заявка с калькулятора</b>",
@@ -122,11 +122,22 @@ def build_lead_text(data):
                 if line:
                     lines.append(line)
 
-    lines.append("")
-    lines.append(f"🔗 Источник: {source}")
+    # Ссылка открывает на сайте ровно ту кухню, которую собрал клиент
+    if source.startswith(("https://", "http://")):
+        link_line = f'🔗 <a href="{html.escape(source, quote=True)}">Открыть расчёт клиента на сайте</a>'
+    else:
+        link_line = "🔗 Источник: прямой заход"
 
-    text = "\n".join(lines)
-    return text[:3900]
+    # Обрезаем по целым строкам, чтобы не порвать HTML-теги (лимит Telegram 4096 символов)
+    limit = 3900 - len(link_line) - 2
+    out, size = [], 0
+    for line in lines:
+        if size + len(line) + 1 > limit:
+            out.append("…")
+            break
+        out.append(line)
+        size += len(line) + 1
+    return "\n".join(out) + "\n\n" + link_line
 
 
 def _send_telegram(text):
