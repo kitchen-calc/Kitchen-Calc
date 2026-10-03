@@ -124,7 +124,7 @@
     .checkbox-label input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-gold); }
     .sub-options { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-dark); display: block; }
 
-    /* 3D КАРТОЧКА ОТСЕКА */
+    /* КАРТОЧКА ОТСЕКА */
     .section-card-item {
       background: rgba(15, 23, 42, 0.7);
       border: 1.5px solid var(--border-dark);
@@ -197,6 +197,35 @@
       position: relative;
     }
 
+    /* Сетка мини-схем в итоговом модальном окне */
+    .modal-minis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+    .modal-mini-card {
+      background: #1e293b;
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .modal-mini-card svg {
+      width: 100px;
+      height: 100px;
+      background: #eef2f6;
+      border-radius: 6px;
+      margin: 0 auto;
+      display: block;
+    }
+    .modal-mini-title {
+      font-size: 0.75rem;
+      color: var(--accent-gold);
+      margin-top: 5px;
+      font-weight: 600;
+    }
+
     @media (max-width: 768px) {
       .header-container { flex-direction: column; align-items: stretch; text-align: center; gap: 10px; }
       .master-contacts { text-align: center; }
@@ -251,18 +280,18 @@
 
         <div class="card">
           <div class="drawing-title">
-            <span>Чертеж 1: 3D (Левая сторона + Фасад)</span>
-            <small style="color:#0284c7; font-weight:700;">Детальный вид</small>
+            <span>Чертеж 1: Вид спереди (Фасады, ящики, полки)</span>
+            <small style="color:#0284c7; font-weight:700;">Общая схема</small>
           </div>
-          <div class="svg-container">
-            <svg id="svgFront" viewBox="0 0 400 230"></svg>
+          <div class="svg-container" style="height: 240px;">
+            <svg id="svgFront" viewBox="0 0 450 250"></svg>
           </div>
         </div>
 
         <div class="card">
           <div class="drawing-title">
-            <span>Чертеж 2: 3D (Правая сторона + Фасад)</span>
-            <small style="color:#0284c7; font-weight:700;">Детальный вид</small>
+            <span>Чертеж 2: Вид сбоку / Угол</span>
+            <small style="color:#0284c7; font-weight:700;">Проекция</small>
           </div>
           <div class="svg-container" style="height: 220px;">
             <svg id="svgTop" viewBox="0 0 400 230"></svg>
@@ -318,7 +347,7 @@
         <div class="card">
           <div class="section-title">
             <span class="step-badge">2</span>
-            <span>Нижние отсеки (Модули и Тумбы с 3D-схемой)</span>
+            <span>Нижние отсеки (Модули и Тумбы с CAD-схемой)</span>
           </div>
 
           <div class="inputs-grid" style="margin-bottom: 15px;">
@@ -339,7 +368,7 @@
         <div class="card">
           <div class="section-title">
             <span class="step-badge">3</span>
-            <span>Верхние отсеки (Навесные шкафы с 3D-схемой)</span>
+            <span>Верхние отсеки (Навесные шкафы с CAD-схемой)</span>
           </div>
 
           <div class="toggle-box" style="margin-top:0; margin-bottom: 15px;">
@@ -497,7 +526,7 @@
             <textarea id="clientNotes" rows="2" placeholder="Адрес установки, этаж..."></textarea>
           </div>
 
-          <button type="button" class="btn-submit" onclick="openSummaryModal()">📋 Итог (Спецификация и 3D-чертежи)</button>
+          <button type="button" class="btn-submit" onclick="openSummaryModal()">📋 Итог (Спецификация и чертежи)</button>
         </div>
 
       </div>
@@ -507,7 +536,7 @@
   <!-- МОДАЛЬНОЕ ОКНО С ИТОГОМ -->
   <div id="summaryModal">
     <div class="modal-content" id="captureArea">
-      <div class="modal-header">Спецификация и 3D-чертежи кухни</div>
+      <div class="modal-header">Спецификация и чертежи кухни</div>
       
       <div class="inputs-grid" style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
         <div><strong>Заказчик:</strong> <span id="resClientName">-</span></div>
@@ -515,14 +544,14 @@
         <div style="grid-column: span 2;"><strong>Адрес:</strong> <span id="resClientNotes">-</span></div>
       </div>
 
-      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin-bottom: 5px;">Чертеж 1: 3D (Левая сторона + Фасад)</h3>
-      <div class="cad-drawing-box">
-        <svg id="modalCadFront" viewBox="0 0 600 280"></svg>
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin-bottom: 5px;">Чертеж 1: Вид спереди (Общая схема гарнитура)</h3>
+      <div class="cad-drawing-box" style="height: 220px;">
+        <svg id="modalSvgFront" viewBox="0 0 500 240"></svg>
       </div>
 
-      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin-bottom: 5px;">Чертеж 2: 3D (Правая сторона + Фасад)</h3>
-      <div class="cad-drawing-box">
-        <svg id="modalCadTop" viewBox="0 0 600 280"></svg>
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin-bottom: 5px;">Чертеж 2: Вид сбоку</h3>
+      <div class="cad-drawing-box" style="height: 200px;">
+        <svg id="modalSvgTop" viewBox="0 0 500 220"></svg>
       </div>
 
       <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 5px 0;">Нижние отсеки (модули)</h3>
@@ -545,6 +574,10 @@
         <tbody id="resUpperTableBody"></tbody>
       </table>
 
+      <!-- БЛОК МИНИ-СХЕМ ОТСЕКОВ В ИТОГЕ -->
+      <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 20px 0 5px 0;">Схемы отдельных отсеков (CAD-детализация)</h3>
+      <div class="modal-minis-grid" id="resMinisContainer"></div>
+
       <div class="price-box" style="margin-top: 15px; padding: 12px;">
         <div class="price-title">Итоговая стоимость заказа</div>
         <div class="price-value" id="resTotalPrice" style="font-size: 1.6rem;">0 UZS</div>
@@ -553,7 +586,7 @@
     </div>
 
     <div style="max-width: 850px; margin: 15px auto; display: flex; gap: 10px;">
-      <button class="btn-submit" style="background: #2563eb;" onclick="downloadAsImage()">📸 Скачать спецификацию и 3D-чертежи (для Telegram)</button>
+      <button class="btn-submit" style="background: #2563eb;" onclick="downloadAsImage()">📸 Скачать спецификацию и чертежи (для Telegram)</button>
       <button class="btn-submit" style="background: #475569;" onclick="closeSummaryModal()">Закрыть</button>
     </div>
   </div>
@@ -568,17 +601,17 @@
       let defaultW = 60;
 
       lowerSections = [
-        { id: 1, name: 'Модуль под мойку', width: defaultW, depth: 60, height: 85, shelves: 0, drawers: 0, openType: 'handles' },
-        { id: 2, name: 'Тумба с ящиками', width: defaultW, depth: 60, height: 85, shelves: 0, drawers: 0, openType: 'handles' },
-        { id: 3, name: 'Под варочную панель', width: defaultW, depth: 60, height: 85, shelves: 0, drawers: 0, openType: 'handles' },
-        { id: 4, name: 'Шкаф распашной', width: defaultW, depth: 60, height: 85, shelves: 0, drawers: 0, openType: 'handles' }
+        { id: 1, name: 'Модуль под мойку', width: defaultW, depth: 60, height: 85, shelves: 1, drawers: 0, openType: 'handles' },
+        { id: 2, name: 'Тумба с ящиками', width: defaultW, depth: 60, height: 85, shelves: 0, drawers: 3, openType: 'handles' },
+        { id: 3, name: 'Под варочную панель', width: defaultW, depth: 60, height: 85, shelves: 1, drawers: 0, openType: 'handles' },
+        { id: 4, name: 'Шкаф распашной', width: defaultW, depth: 60, height: 85, shelves: 1, drawers: 0, openType: 'handles' }
       ];
 
       upperSections = [
-        { id: 1, name: 'Шкаф сушка', width: defaultW, depth: 35, height: 72, shelves: 0, gasLifts: 0, openType: 'handles' },
-        { id: 2, name: 'Шкаф распашной', width: defaultW, depth: 35, height: 72, shelves: 0, gasLifts: 0, openType: 'handles' },
-        { id: 3, name: 'Шкаф над вытяжкой', width: defaultW, depth: 35, height: 72, shelves: 0, gasLifts: 0, openType: 'handles' },
-        { id: 4, name: 'Шкаф угловой/боковой', width: defaultW, depth: 35, height: 72, shelves: 0, gasLifts: 0, openType: 'handles' }
+        { id: 1, name: 'Шкаф сушка', width: defaultW, depth: 35, height: 72, shelves: 1, gasLifts: 1, openType: 'handles' },
+        { id: 2, name: 'Шкаф распашной', width: defaultW, depth: 35, height: 72, shelves: 1, gasLifts: 0, openType: 'handles' },
+        { id: 3, name: 'Шкаф над вытяжкой', width: defaultW, depth: 35, height: 72, shelves: 0, gasLifts: 1, openType: 'handles' },
+        { id: 4, name: 'Шкаф боковой', width: defaultW, depth: 35, height: 72, shelves: 1, gasLifts: 0, openType: 'handles' }
       ];
 
       renderSections('lower');
@@ -603,9 +636,9 @@
             width: defaultW,
             depth: type === 'lower' ? 60 : 35,
             height: type === 'lower' ? 85 : 72,
-            shelves: 0,
-            drawers: 0,
-            gasLifts: 0,
+            shelves: 1,
+            drawers: type === 'lower' ? 0 : undefined,
+            gasLifts: type === 'upper' ? 0 : undefined,
             openType: 'handles'
           });
         }
@@ -652,7 +685,7 @@
                   <input type="number" value="${sec.drawers}" min="0" max="4" oninput="updateSec('${type}',${idx}, 'drawers', parseInt(this.value)||0)">
                 </div>` : `
                 <div class="field-group">
-                  <label>Газлифты (шт) <span style="font-size:0.75rem; color:#38bdf8;" title="Фурнитура для поднятия фасадов вверх">ℹ️</span></label>
+                  <label>Газлифты (шт) <span style="font-size:0.75rem; color:#38bdf8;" title="Подъем фасада вверх">ℹ️</span></label>
                   <input type="number" value="${sec.gasLifts}" min="0" max="2" oninput="updateSec('${type}',${idx}, 'gasLifts', parseInt(this.value)||0)">
                 </div>`}
                 <div class="field-group" style="grid-column: span 2;">
@@ -686,36 +719,59 @@
     }
 
     function drawAllCadMinis() {
-      lowerSections.forEach((sec, idx) => drawSection3dMini('lower', idx, sec));
-      upperSections.forEach((sec, idx) => drawSection3dMini('upper', idx, sec));
+      lowerSections.forEach((sec, idx) => drawSectionCadScheme('cadMini_lower_' + idx, 'lower', sec));
+      upperSections.forEach((sec, idx) => drawSectionCadScheme('cadMini_upper_' + idx, 'upper', sec));
     }
 
-    // 3D МИНИ-СХЕМА ОТСЕКА С НОЖКАМИ И ДВЕРЦАМИ
-    function drawSection3dMini(type, idx, sec) {
-      const svg = document.getElementById(`cadMini_${type}_${idx}`);
+    // ДЕТАЛЬНАЯ CAD-СХЕМА ОТСЕКА (С ПУНКТИРНЫМИ ПОЛКАМИ И ГАЗЛИФТАМИ)
+    function drawSectionCadScheme(svgElementId, type, sec) {
+      const svg = document.getElementById(svgElementId);
       if (!svg) return;
 
       let isLower = (type === 'lower');
+      let shelves = sec.shelves || 0;
+      let drawers = sec.drawers || 0;
+      let gasLifts = sec.gasLifts || 0;
+
       let html = `
         <rect x="5" y="5" width="130" height="130" fill="#eef2f6" stroke="#0284c7" stroke-width="1"/>
       `;
 
       if (isLower) {
-        // Ножки тумбы
+        // Ножки
         html += `
-          <rect x="25" y="115" width="8" height="12" fill="#64748b"/>
-          <rect x="107" y="115" width="8" height="12" fill="#64748b"/>
+          <rect x="25" y="115" width="8" height="10" fill="#64748b"/>
+          <rect x="107" y="115" width="8" height="10" fill="#64748b"/>
         `;
       }
 
-      // Корпус 3D изометрия / коробок
+      // Корпус шкафа (коробка)
       html += `
         <rect x="20" y="25" width="100" height="90" fill="#cbd5e1" stroke="#334155" stroke-width="1.5"/>
       `;
 
-      let drawers = sec.drawers || 0;
-      if (isLower && drawers > 0) {
-        // Отрисовка выдвижных ящиков вместо распашных дверей
+      // ПУНКТИРНЫЕ ПОЛКИ (- - - - - - -)
+      if (shelves > 0) {
+        let stepH = 90 / (shelves + 1);
+        for (let s = 1; s <= shelves; s++) {
+          let yP = 25 + s * stepH;
+          html += `<line x1="23" y1="${yP}" x2="117" y2="${yP}" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+        }
+      }
+
+      // Если верхний шкаф с газлифтами -> рисуем открытую наверх дверь и поршень газлифта!
+      if (!isLower && gasLifts > 0) {
+        // Открытая вверх дверца (под углом над шкафом)
+        html += `
+          <polygon points="20,25 120,25 105,5 5,5" fill="rgba(56, 189, 248, 0.3)" stroke="#0284c7" stroke-width="1.5"/>
+          <!-- Газлифт (телескопический упор) -->
+          <line x1="35" y1="25" x2="80" y2="12" stroke="#d97706" stroke-width="2.5"/>
+          <circle cx="35" cy="25" r="2.5" fill="#d97706"/>
+          <circle cx="80" cy="12" r="2.5" fill="#d97706"/>
+          <text x="70" y="38" fill="#d97706" font-size="7" font-weight="bold">Газлифт</text>
+        `;
+      } else if (isLower && drawers > 0) {
+        // Выдвижные ящики
         let hBox = 90 / drawers;
         for (let d = 0; d < drawers; d++) {
           let yPos = 25 + d * hBox;
@@ -723,18 +779,17 @@
           html += `<line x1="50" y1="${yPos + hBox/2}" x2="90" y2="${yPos + hBox/2}" stroke="#0f172a" stroke-width="2"/>`;
         }
       } else {
-        // Стандарт 2 дверцы в 1 отсеке (или распашной)
+        // Распашные дверцы
         html += `
           <line x1="70" y1="25" x2="70" y2="115" stroke="#0f172a" stroke-width="2"/>
-          <circle cx="62" cy="70" r="3" fill="#0f172a"/>
-          <circle cx="78" cy="70" r="3" fill="#0f172a"/>
+          <circle cx="62" cy="70" r="2.5" fill="#0f172a"/>
+          <circle cx="78" cy="70" r="2.5" fill="#0f172a"/>
         `;
       }
 
-      // Размеры на мини-схеме
       html += `
         <text x="70" y="18" fill="#0284c7" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">Ш: ${sec.width} см</text>
-        <text x="70" y="138" fill="#475569" font-size="8" font-family="sans-serif" text-anchor="middle">[${sec.id}] ${isLower ? 'Низ' : 'Верх'}</text>
+        <text x="70" y="137" fill="#475569" font-size="8" font-family="sans-serif" text-anchor="middle">[${sec.id}] ${isLower ? 'Низ' : 'Верх'}</text>
       `;
 
       svg.innerHTML = html;
@@ -798,7 +853,6 @@
 
       const hasIsland = document.getElementById('hasIsland').checked;
       const islL = parseFloat(document.getElementById('islandLength').value) || 140;
-      const islW = parseFloat(document.getElementById('islandWidth').value) || 80;
 
       let lowerMeters = mainW / 100;
       if (currentType === 'l-shape') lowerMeters += (leftW - 60) / 100;
@@ -829,7 +883,6 @@
         totalPrice += (islL / 100) * (facadePriceM + topPriceM + 400000);
       }
 
-      // Доп опции
       if (document.getElementById('optSinkCut').checked) totalPrice += 150000;
       if (document.getElementById('optHobCut').checked) totalPrice += 150000;
       if (document.getElementById('optBuiltInAppliances').checked) totalPrice += 400000;
@@ -837,8 +890,8 @@
       calculatedTotalPriceNumber = totalPrice;
       document.getElementById('totalPriceDisplay').innerText = Math.round(totalPrice).toLocaleString('ru-RU');
 
-      draw3dIsoView('svgFront', mainW, totalH, leftW, 'left', hasUpper, upperH);
-      draw3dIsoView('svgTop', mainW, totalH, rightW, 'right', hasUpper, upperH);
+      drawFullFrontView('svgFront', mainW, totalH, hasUpper, upperH);
+      drawSideView('svgTop', totalH, upperH);
       drawPanelSample();
     }
 
@@ -855,41 +908,112 @@
       document.getElementById('panelSampleBadge').innerText = `${facadeMatText}`;
     }
 
-    // ДЕТАЛЬНЫЕ 3D ИЗОМЕТРИЧЕСКИЕ ЧЕРТЕЖИ
-    function draw3dIsoView(svgId, mainW, totalH, sideW, sideDir, hasUpper, upperH) {
+    // ЧЕРТЕЖ 1: ВИД СПЕРЕДИ (ЦЕЛЬНЫЙ ГАРНИТУР С ДВЕРЦАМИ, ЯЩИКАМИ И ПОЛКАМИ)
+    function drawFullFrontView(svgId, mainW, totalH, hasUpper, upperH) {
       const svg = document.getElementById(svgId);
       if (!svg) return;
       svg.innerHTML = '';
 
-      let sideLabel = sideDir === 'left' ? 'Левая сторона' : 'Правая сторона';
+      let faceFill = document.getElementById('facadeColor').value;
+      let totalW = 450;
+      let startX = 35;
+      let availableW = totalW - 70;
+      let totalSectionsCount = lowerSections.length;
+      let secW = availableW / totalSectionsCount;
+
+      let html = `
+        <rect x="5" y="5" width="440" height="240" fill="#eef2f6" stroke="#0284c7" stroke-width="1.5"/>
+        <text x="225" y="20" fill="#0284c7" font-size="10" font-weight="bold" font-family="sans-serif" text-anchor="middle">ВИД СПЕРЕДИ: ФАСАДЫ И МОДУЛИ (${mainW} см)</text>
+      `;
+
+      // Отрисовка нижних секций с учетом ящиков и полок (- - -)
+      let lowerY = 135;
+      let lowerH = 80;
+      lowerSections.forEach((sec, idx) => {
+        let x = startX + idx * secW;
+        // Корпус/Фасад тумбы
+        html += `<rect x="${x + 2}" y="${lowerY}" width="${secW - 4}" height="${lowerH}" fill="${faceFill}" stroke="#334155" stroke-width="1.5"/>`;
+
+        // Если есть ящики
+        let drawers = sec.drawers || 0;
+        if (drawers > 0) {
+          let hBox = lowerH / drawers;
+          for (let d = 0; d < drawers; d++) {
+            let yD = lowerY + d * hBox;
+            html += `<rect x="${x + 4}" y="${yD + 2}" width="${secW - 8}" height="${hBox - 4}" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>`;
+            html += `<line x1="${x + secW*0.3}" y1="${yD + hBox/2}" x2="${x + secW*0.7}" y2="${yD + hBox/2}" stroke="#0f172a" stroke-width="2"/>`;
+          }
+        } else {
+          // Дверца с ручкой
+          html += `<line x1="${x + secW/2}" y1="${lowerY}" x2="${x + secW/2}" y2="${lowerY + lowerH}" stroke="#0f172a" stroke-width="1.5"/>`;
+          html += `<circle cx="${x + secW/2 - 6}" cy="${lowerY + lowerH/2}" r="2" fill="#0f172a"/>`;
+          html += `<circle cx="${x + secW/2 + 6}" cy="${lowerY + lowerH/2}" r="2" fill="#0f172a"/>`;
+        }
+
+        // Пунктирные полки внутри тумбы
+        let shelves = sec.shelves || 0;
+        if (shelves > 0 && drawers === 0) {
+          let stepP = lowerH / (shelves + 1);
+          for (let p = 1; p <= shelves; p++) {
+            let yP = lowerY + p * stepP;
+            html += `<line x1="${x + 6}" y1="${yP}" x2="${x + secW - 6}" y2="${yP}" stroke="#0f172a" stroke-width="1" stroke-dasharray="3,3"/>`;
+          }
+        }
+
+        // Ножки
+        html += `<rect x="${x + 8}" y="${lowerY + lowerH}" width="6" height="8" fill="#64748b"/>`;
+        html += `<rect x="${x + secW - 14}" y="${lowerY + lowerH}" width="6" height="8" fill="#64748b"/>`;
+      });
+
+      // Столешница
+      html += `<rect x="${startX - 2}" y="${lowerY - 6}" width="${availableW + 4}" height="6" fill="#b45309" stroke="#0f172a" stroke-width="1"/>`;
+
+      // Отрисовка верхних секций (если есть)
+      if (hasUpper) {
+        let upperH_px = 55;
+        let upperY = lowerY - 6 - 10 - upperH_px;
+        upperSections.forEach((sec, idx) => {
+          let x = startX + idx * secW;
+          html += `<rect x="${x + 2}" y="${upperY}" width="${secW - 4}" height="${upperH_px}" fill="${faceFill}" stroke="#334155" stroke-width="1.5"/>`;
+          
+          let shelves = sec.shelves || 0;
+          if (shelves > 0) {
+            let stepP = upperH_px / (shelves + 1);
+            for (let p = 1; p <= shelves; p++) {
+              let yP = upperY + p * stepP;
+              html += `<line x1="${x + 6}" y1="${yP}" x2="${x + secW - 6}" y2="${yP}" stroke="#0f172a" stroke-width="1" stroke-dasharray="3,3"/>`;
+            }
+          }
+
+          if (sec.gasLifts > 0) {
+            html += `<text x="${x + secW/2}" y="${upperY + upperH_px/2}" fill="#d97706" font-size="8" font-weight="bold" text-anchor="middle">Газлифт ↗</text>`;
+          } else {
+            html += `<circle cx="${x + secW/2}" cy="${upperY + upperH_px - 8}" r="2" fill="#0f172a"/>`;
+          }
+        });
+      }
+
+      svg.innerHTML = html;
+    }
+
+    // ЧЕРТЕЖ 2: ВИД СБОКУ
+    function drawSideView(svgId, totalH, upperH) {
+      const svg = document.getElementById(svgId);
+      if (!svg) return;
+      svg.innerHTML = '';
 
       let html = `
         <rect x="5" y="5" width="390" height="220" fill="#eef2f6" stroke="#0284c7" stroke-width="1.5"/>
-        <line x1="20" y1="200" x2="380" y2="200" stroke="#0284c7" stroke-width="1" stroke-dasharray="4,2"/>
-        <text x="200" y="215" fill="#0284c7" font-size="10" font-weight="bold" font-family="sans-serif" text-anchor="middle">3D ПРОЕКЦИЯ: ФАСАД (${mainW}см) + ${sideLabel} (${sideW}см)</text>
-      `;
-
-      // Изометрический объемный каркас кухни
-      html += `
-        <!-- Нижняя база -->
-        <polygon points="60,150 180,110 320,130 200,170" fill="#cbd5e1" stroke="#334155" stroke-width="1.5"/>
-        <polygon points="60,95 180,55 180,110 60,150" fill="#94a3b8" stroke="#334155" stroke-width="1.5"/>
-        <polygon points="180,55 320,75 320,130 180,110" fill="#64748b" stroke="#334155" stroke-width="1.5"/>
-      `;
-
-      if (hasUpper) {
-        html += `
-          <!-- Верхняя база -->
-          <polygon points="70,50 170,25 290,40 190,65" fill="#e2e8f0" stroke="#334155" stroke-width="1.5"/>
-          <polygon points="70,15 170,0 170,25 70,50" fill="#cbd5e1" stroke="#334155" stroke-width="1.5"/>
-          <polygon points="170,0 290,15 290,40 170,25" fill="#94a3b8" stroke="#334155" stroke-width="1.5"/>
-        `;
-      }
-
-      // Размеры и выноски
-      html += `
-        <text x="120" y="140" fill="#0f172a" font-size="9" font-weight="bold">Высота: ${totalH} см</text>
-        <text x="250" y="100" fill="#0f172a" font-size="9" font-weight="bold">Глубина: 60 см</text>
+        <text x="200" y="20" fill="#0284c7" font-size="10" font-weight="bold" font-family="sans-serif" text-anchor="middle">ПРОЕКЦИЯ СБОКУ: ГЛУБИНА И УРОВНИ</text>
+        <!-- Нижняя база сбоку -->
+        <rect x="150" y="110" width="80" height="90" fill="#cbd5e1" stroke="#334155" stroke-width="1.5"/>
+        <rect x="150" y="104" width="86" height="6" fill="#b45309" stroke="#334155" stroke-width="1"/>
+        <rect x="158" y="200" width="10" height="10" fill="#64748b"/>
+        <rect x="212" y="200" width="10" height="10" fill="#64748b"/>
+        <!-- Верхняя база сбоку -->
+        <rect x="165" y="45" width="50" height="55" fill="#e2e8f0" stroke="#334155" stroke-width="1.5"/>
+        <text x="190" y="150" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="middle">Низ: 60см</text>
+        <text x="190" y="75" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="middle">Верх: 35см</text>
       `;
 
       svg.innerHTML = html;
@@ -904,8 +1028,8 @@
       const totalH = parseFloat(document.getElementById('totalHeight').value) || 240;
       const hasUpper = document.getElementById('hasUpperTier').checked;
 
-      draw3dIsoView('modalCadFront', mainW, totalH, parseFloat(document.getElementById('leftWall').value), 'left', hasUpper, parseFloat(document.getElementById('upperHeight').value));
-      draw3dIsoView('modalCadTop', mainW, totalH, parseFloat(document.getElementById('rightWall').value), 'right', hasUpper, parseFloat(document.getElementById('upperHeight').value));
+      drawFullFrontView('modalSvgFront', mainW, totalH, hasUpper, parseFloat(document.getElementById('upperHeight').value));
+      drawSideView('modalSvgTop', totalH, parseFloat(document.getElementById('upperHeight').value));
 
       let lowerHtml = '';
       lowerSections.forEach(sec => {
@@ -920,6 +1044,32 @@
         upperHtml += `<tr><td>[В-${sec.id}]</td><td>${sec.name}</td><td>${sec.width} см</td><td>${sec.shelves}</td><td>${sec.gasLifts}</td><td>${openTxt}</td></tr>`;
       });
       document.getElementById('resUpperTableBody').innerHTML = upperHtml;
+
+      // ГЕНЕРАЦИЯ СЕТКИ МИНИ-СХЕМ ОТСЕКОВ В ИТОГЕ
+      let minisHtml = '';
+      lowerSections.forEach((sec, idx) => {
+        minisHtml += `
+          <div class="modal-mini-card">
+            <svg viewBox="0 0 140 140" id="resMini_lower_${idx}"></svg>
+            <div class="modal-mini-title">[Н-${sec.id}] ${sec.name}</div>
+          </div>
+        `;
+      });
+      upperSections.forEach((sec, idx) => {
+        minisHtml += `
+          <div class="modal-mini-card">
+            <svg viewBox="0 0 140 140" id="resMini_upper_${idx}"></svg>
+            <div class="modal-mini-title">[В-${sec.id}] ${sec.name}</div>
+          </div>
+        `;
+      });
+      document.getElementById('resMinisContainer').innerHTML = minisHtml;
+
+      // Отрисовка схем в модалке
+      setTimeout(() => {
+        lowerSections.forEach((sec, idx) => drawSectionCadScheme('resMini_lower_' + idx, 'lower', sec));
+        upperSections.forEach((sec, idx) => drawSectionCadScheme('resMini_upper_' + idx, 'upper', sec));
+      }, 50);
 
       const totalVal = Math.round(calculatedTotalPriceNumber);
       document.getElementById('resTotalPrice').innerText = totalVal.toLocaleString('ru-RU') + ' UZS';
@@ -936,7 +1086,7 @@
       const element = document.getElementById('captureArea');
       html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#0f172a' }).then(canvas => {
         const link = document.createElement('a');
-        link.download = 'Kuhnya_3D_Specifikaciya.png';
+        link.download = 'Kuhnya_Specifikaciya_I_Chertezhi.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
       });
