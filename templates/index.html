@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Кухни на заказ в Ташкенте — расчёт онлайн | Абд-ул-Азиз</title>
+  <title>Кухни на заказ в Ташкенте — расчёт онлайн | АбдулАзиз</title>
   <meta name="description" content="Соберите кухню онлайн и узнайте цену за 2 минуты. Кухни на заказ в Ташкенте: бесплатный замер, договор, гарантия, доставка и монтаж.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -395,15 +395,14 @@
     .section-head h2 { font-size: 1.7rem; font-weight: 800; color: var(--accent-gold); }
     .section-head p { color: var(--text-muted); margin-top: 4px; }
 
-    /* ДИЗАЙН-ПРОЕКТ В ПОДАРОК */
-    .gift-banner { display: flex; gap: 12px; align-items: center; margin-top: 16px; max-width: 560px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(15, 23, 42, 0.6)); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 14px; }
-    .gift-banner b { color: #a7f3d0; font-size: 1rem; }
-    .gift-banner small { color: #94a3b8; font-size: 0.78rem; }
-    .gift-icon { font-size: 1.8rem; line-height: 1; }
-    .gift-line { margin-top: 6px; font-weight: 700; font-size: 0.9rem; color: #a7f3d0; }
-    .gift-line small { display: block; font-weight: 500; color: #94a3b8; font-size: 0.75rem; }
-    .gift-line.pending { color: #fde68a; }
-    .preset-gift { display: inline-block; margin-top: 6px; font-size: 0.75rem; font-weight: 700; color: #a7f3d0; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 10px; padding: 1px 8px; }
+    /* ТЕХНИЧЕСКИЕ ЧЕРТЕЖИ */
+    .tech-box { height: auto !important; background: #f8f6f2 !important; padding: 6px; border-radius: 8px; display: block !important; }
+    .tech-svg { width: 100% !important; height: auto !important; display: block; max-height: 520px; }
+    .section-mini-svg { width: 170px; height: 190px; background: #f8f6f2; }
+    .section-mini-svg svg, .modal-mini-card svg { width: 100%; height: 100%; }
+    .section-card-item { grid-template-columns: 1fr 170px; }
+    .modal-minis-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .modal-mini-card svg { height: 170px; background: #f8f6f2; border-radius: 6px; }
 
     /* ГОТОВЫЕ ВАРИАНТЫ */
     .presets-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
@@ -433,6 +432,13 @@
     .share-hint { color: var(--text-muted); font-size: 0.75rem; }
     .tech-details summary { cursor: pointer; font-weight: 700; color: var(--accent-gold); }
     .type-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; font-family: inherit; font-size: 0.92rem; }
+    .type-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .island-toggle { border-style: dashed; position: relative; }
+    .island-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .island-toggle.active { border-style: solid; border-color: #10b981; background: rgba(16, 185, 129, 0.14); color: #a7f3d0; }
+    .island-check { font-weight: 800; }
+    .island-box { margin: 0 0 14px; padding: 12px; border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 10px; border-top: 1px solid rgba(16, 185, 129, 0.5); }
+    .wall-hint { font-size: 0.78rem; color: var(--text-muted); margin: -4px 0 10px; }
     .type-btn svg { width: 46px; height: 32px; fill: none; stroke: currentColor; stroke-width: 2; }
     .sub-title { font-weight: 700; color: #cbd5e1; margin-bottom: 10px; font-size: 0.92rem; }
     .tiers-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
@@ -481,9 +487,14 @@
       .header-phone { display: none; }
       .render-svg { height: 240px; }
       .preset-render, .preset-render .render-svg { height: 130px; }
+      .section-card-item { grid-template-columns: minmax(0, 1fr); }
+      .section-mini-svg { width: 100%; height: 200px; }
       .tiers-grid { gap: 6px; }
       .tier-card { padding: 10px 6px; }
       .tier-desc { display: none; }
+      .type-grid { gap: 6px; }
+      .type-btn { font-size: 0.8rem; padding: 10px 4px; }
+      .type-btn svg { width: 36px; height: 26px; }
       .options-grid { grid-template-columns: minmax(0, 1fr); }
       .summary-info { grid-template-columns: minmax(0, 1fr); }
       .summary-info > div { grid-column: auto !important; }
@@ -508,7 +519,7 @@
         </span>
         <span>
           <span class="brand-title" data-i18n="brandTitle">Кухни на заказ</span>
-          <span class="brand-sub"><span data-i18n="city">Ташкент</span> · <span data-i18n="masterLine">Ваш мастер: Абд-ул-Азиз</span></span>
+          <span class="brand-sub"><span data-i18n="city">Ташкент</span> · <span data-i18n="masterLine">Ваш мастер: АбдулАзиз</span></span>
         </span>
       </a>
       <div class="header-actions">
@@ -534,10 +545,6 @@
             <li>🛡 <span data-i18n="badgeWarranty">Гарантия {m} мес.</span></li>
             <li>🚚 <span data-i18n="badgeDelivery">Доставка и монтаж</span></li>
           </ul>
-          <div class="gift-banner" id="giftBanner">
-            <span class="gift-icon">🎁</span>
-            <span><b data-i18n="giftBanner">Дизайн-проект в подарок при заказе от 20 000 000 сум</b><br><small data-i18n="giftNote">Условие: итоговая сумма по договору от 20 000 000 сум.</small></span>
-          </div>
           <div class="hero-cta">
             <a class="btn-primary" href="#presets" data-i18n="ctaPick">Подобрать кухню</a>
             <a class="btn-ghost" id="heroCall" href="tel:+998920934510" data-i18n="ctaCall">Позвонить</a>
@@ -574,7 +581,6 @@
             <div class="price-title" data-i18n="priceTitle">Ориентировочная стоимость</div>
             <div class="price-value"><span id="totalPriceDisplay">0</span> <span class="price-currency" data-i18n="sum">сум</span></div>
             <div class="installment-line" id="installmentLine" style="display:none;"></div>
-            <div class="gift-line" id="giftLine"></div>
             <div class="price-note" data-i18n="priceNote">Итоговую стоимость уточняет мастер после замера.</div>
             <div class="share-row">
               <a class="share-btn tg" id="shareTg" href="#" target="_blank" rel="noopener">✈ <span data-i18n="shareTg">Отправить в Telegram</span></a>
@@ -587,9 +593,9 @@
           <details class="card tech-details">
             <summary data-i18n="techDrawings">Технические чертежи</summary>
             <div class="drawing-title" style="margin-top:12px;"><span data-i18n="drawFront">Чертёж: вид спереди</span></div>
-            <div class="svg-container"><svg id="svgFront" viewBox="0 0 600 280"></svg></div>
+            <div class="svg-container tech-box"><svg id="svgFront" class="tech-svg"></svg></div>
             <div class="drawing-title" style="margin-top:12px;"><span data-i18n="drawTop">Чертёж: вид сверху</span></div>
-            <div class="svg-container" style="height:260px;"><svg id="svgTop" viewBox="0 0 600 320"></svg></div>
+            <div class="svg-container tech-box"><svg id="svgTop" class="tech-svg"></svg></div>
           </details>
         </div>
 
@@ -612,25 +618,43 @@
                 <svg viewBox="0 0 40 28"><path d="M4 4h32v20h-8V12H12v12H4z"/></svg>
                 <span data-i18n="typeU">П-образная</span>
               </button>
+              <label class="type-btn island-toggle" id="islandToggle">
+                <input type="checkbox" id="hasIsland" onchange="toggleIslandOptions()">
+                <svg viewBox="0 0 40 28"><rect x="10" y="9" width="20" height="10" rx="1"/><path d="M20 3v3M20 22v3" stroke-dasharray="2,2"/></svg>
+                <span><span class="island-check">＋</span> <span data-i18n="typeIsland">Остров</span></span>
+              </label>
+            </div>
+            <div id="islandOptions" class="sub-options island-box" style="display:none;">
+              <div class="inputs-grid">
+                <div class="field-group">
+                  <label data-i18n="islandLength">Длина острова, см</label>
+                  <input type="number" id="islandLength" value="140" min="80" max="300" oninput="updateCalculator()">
+                </div>
+                <div class="field-group">
+                  <label data-i18n="islandWidth">Ширина острова, см</label>
+                  <input type="number" id="islandWidth" value="80" min="50" max="150" oninput="updateCalculator()">
+                </div>
+              </div>
             </div>
             <div class="inputs-grid">
               <div class="field-group">
                 <label id="lblMainWall" data-i18n="mainWall">Длина основной стены, см</label>
-                <input type="number" id="mainWall" value="200" min="60" max="1000" oninput="onWallInputManual('mainWall')">
+                <input type="number" id="mainWall" value="240" min="60" max="1000" onchange="onWallInputManual('mainWall')">
               </div>
               <div class="field-group">
                 <label data-i18n="ceiling">Высота потолка, см</label>
                 <input type="number" id="totalHeight" value="240" min="150" max="320" oninput="updateCalculator()">
               </div>
             </div>
+            <div class="wall-hint" data-i18n="wallHint">Шкафы по 60 см подставятся сами — ширину любого можно поменять в шаге 3.</div>
             <div id="sideWallsContainer" class="inputs-grid" style="display:none;">
               <div class="field-group" id="groupLeftWall">
                 <label data-i18n="leftWall">Левая стена, см</label>
-                <input type="number" id="leftWall" value="120" min="60" max="600" oninput="onWallInputManual('leftWall')">
+                <input type="number" id="leftWall" value="120" min="60" max="600" onchange="onWallInputManual('leftWall')">
               </div>
               <div class="field-group" id="groupRightWall">
                 <label data-i18n="rightWall">Правая стена, см</label>
-                <input type="number" id="rightWall" value="120" min="60" max="600" oninput="onWallInputManual('rightWall')">
+                <input type="number" id="rightWall" value="120" min="60" max="600" onchange="onWallInputManual('rightWall')">
               </div>
             </div>
           </div>
@@ -692,7 +716,7 @@
                   <label data-i18n="lowerCount">Нижние шкафы: количество</label>
                   <div class="number-stepper">
                     <button type="button" class="btn-step" onclick="changeSectionsCount('lower', -1)">−</button>
-                    <input type="number" id="countLowerInput" value="4" min="1" max="8" readonly>
+                    <input type="number" id="countLowerInput" value="4" min="1" max="16" readonly>
                     <button type="button" class="btn-step" onclick="changeSectionsCount('lower', 1)">+</button>
                   </div>
                 </div>
@@ -713,7 +737,7 @@
                     <label data-i18n="upperCount">Верхние шкафы: количество</label>
                     <div class="number-stepper">
                       <button type="button" class="btn-step" onclick="changeSectionsCount('upper', -1)">−</button>
-                      <input type="number" id="countUpperInput" value="4" min="1" max="8" readonly>
+                      <input type="number" id="countUpperInput" value="4" min="1" max="16" readonly>
                       <button type="button" class="btn-step" onclick="changeSectionsCount('upper', 1)">+</button>
                     </div>
                   </div>
@@ -730,19 +754,6 @@
               <label class="option-chip"><input type="checkbox" id="optSinkCut" onchange="updateCalculator()"><span data-i18n="optSink">Вырез под мойку</span></label>
               <label class="option-chip"><input type="checkbox" id="optHobCut" onchange="updateCalculator()"><span data-i18n="optHob">Вырез под варочную панель</span></label>
               <label class="option-chip"><input type="checkbox" id="optBuiltInAppliances" onchange="updateCalculator()"><span data-i18n="optApp">Установка встраиваемой техники</span></label>
-              <label class="option-chip"><input type="checkbox" id="hasIsland" onchange="toggleIslandOptions()"><span data-i18n="optIsland">Кухонный остров</span></label>
-            </div>
-            <div id="islandOptions" class="sub-options" style="display:none;">
-              <div class="inputs-grid">
-                <div class="field-group">
-                  <label data-i18n="islandLength">Длина острова, см</label>
-                  <input type="number" id="islandLength" value="140" min="80" max="300" oninput="updateCalculator()">
-                </div>
-                <div class="field-group">
-                  <label data-i18n="islandWidth">Ширина острова, см</label>
-                  <input type="number" id="islandWidth" value="80" min="50" max="150" oninput="updateCalculator()">
-                </div>
-              </div>
             </div>
           </div>
 
@@ -786,7 +797,7 @@
   </main>
 
   <footer class="footer">
-    <div><span data-i18n="footer">Абд-ул-Азиз · Кухни на заказ в Ташкенте</span></div>
+    <div><span data-i18n="footer">АбдулАзиз · Кухни на заказ в Ташкенте</span></div>
     <div><a id="footerPhone" href="tel:+998920934510">+998 92 093-45-10</a> · <a id="footerTg" href="https://t.me/Kitchencalc" target="_blank" rel="noopener">Telegram</a></div>
   </footer>
 
@@ -828,10 +839,10 @@
       <div class="render-box modal-render"><svg id="modalRender" class="render-svg"></svg></div>
 
       <h3 class="modal-h3" data-i18n="drawFront">Чертёж: вид спереди</h3>
-      <div class="cad-drawing-box"><svg id="modalSvgFront" viewBox="0 0 600 280"></svg></div>
+      <div class="cad-drawing-box tech-box"><svg id="modalSvgFront" class="tech-svg"></svg></div>
 
       <h3 class="modal-h3" data-i18n="drawTop">Чертёж: вид сверху</h3>
-      <div class="cad-drawing-box" style="height:260px;"><svg id="modalSvgTop" viewBox="0 0 600 320"></svg></div>
+      <div class="cad-drawing-box tech-box"><svg id="modalSvgTop" class="tech-svg"></svg></div>
 
       <h3 class="modal-h3" data-i18n="lowerCabs">Нижние шкафы</h3>
       <div class="table-wrap">
@@ -857,7 +868,6 @@
       <div class="price-box" style="margin-top:15px; padding:14px;">
         <div class="price-title" data-i18n="priceTitle">Ориентировочная стоимость</div>
         <div class="price-value" style="font-size:1.7rem;"><span id="resTotalPrice">0</span> <span class="price-currency" data-i18n="sum">сум</span></div>
-        <div class="gift-line" id="resGiftLine"></div>
         <div class="price-note" data-i18n="priceNote">Итоговую стоимость уточняет мастер после замера.</div>
       </div>
     </div>
@@ -875,6 +885,7 @@
     </div>
 
     <div class="modal-actions">
+      <button class="btn-submit" style="background:#7c3aed;" onclick="openSketch()">🎨 <span data-i18n="sketchBtn">Эскиз кухни с визуализацией</span></button>
       <button class="btn-submit" style="background:#2563eb;" onclick="downloadAsImage()">📸 <span data-i18n="downloadSpec">Скачать спецификацию</span></button>
       <button class="btn-submit" style="background:#0f766e;" onclick="openContract()">📄 <span data-i18n="contractBtn">Договор (образец)</span></button>
       <button class="btn-submit" style="background:#475569;" onclick="closeSummaryModal()"><span data-i18n="close">Закрыть</span></button>
@@ -886,13 +897,12 @@
        НАСТРОЙКИ САЙТА — всё, что можно менять без программиста, находится здесь
        ===================================================================== */
     const CONFIG = {
-      masterName: 'Абд-ул-Азиз',
-      masterNameUz: 'Abd-ul-Aziz',
+      masterName: 'АбдулАзиз',
+      masterNameUz: 'AbdulAziz',
       phone: '+998920934510',          // для кнопки «Позвонить» (без пробелов)
       phoneDisplay: '+998 92 093-45-10',
       telegram: 'Kitchencalc',          // без @
       productionDays: '3–30',           // срок изготовления, рабочих дней
-      giftDesignFrom: 20000000,         // дизайн-проект в подарок при заказе от этой суммы (0 = не показывать)
       warrantyMonths: 12,               // гарантия, месяцев
       advancePercent: 75,               // аванс по договору, % (в спецификации клиенту не показывается)
       installmentMonths: 0,             // рассрочка: 0 = не показывать; например 6 = «или от X сум/мес»
@@ -912,10 +922,10 @@
         { price: 300000, ru: 'ЛДСП Премиум Влагостойкий', uz: 'LDSP Premium (namga chidamli)' }
       ],
       countertops: [
-        { price: 200000,  ru: 'ЛДСП 28 мм',           uz: 'LDSP 28 mm',      color: '#c9a273' },
-        { price: 350000,  ru: 'ЛДСП 38 мм',           uz: 'LDSP 38 mm',      color: '#b98c5c' },
-        { price: 1500000, ru: 'Искусственный камень', uz: 'Sunʼiy tosh',     color: '#e6e3df' },
-        { price: 2800000, ru: 'Кварцевый агломерат',  uz: 'Kvars aglomerat', color: '#f5f4f1' }
+        { price: 200000,  ru: 'ЛДСП 28 мм',           uz: 'LDSP 28 mm',      color: '#c9a273', thick: 2.8 },
+        { price: 350000,  ru: 'ЛДСП 38 мм',           uz: 'LDSP 38 mm',      color: '#b98c5c', thick: 3.8 },
+        { price: 1500000, ru: 'Искусственный камень', uz: 'Sunʼiy tosh',     color: '#e6e3df', thick: 4 },
+        { price: 2800000, ru: 'Кварцевый агломерат',  uz: 'Kvars aglomerat', color: '#f5f4f1', thick: 3 }   // thick — толщина столешницы, см (для чертежа)
       ],
       // Сравнение «Эконом / Стандарт / Премиум»: номера материалов из списков выше (с нуля)
       tiers: [
@@ -929,13 +939,12 @@
     /* ===================== ПЕРЕВОДЫ RU / UZ ===================== */
     const I18N = {
       ru: {
-        pageTitle: 'Кухни на заказ в Ташкенте — расчёт онлайн | Абд-ул-Азиз',
+        pageTitle: 'Кухни на заказ в Ташкенте — расчёт онлайн | АбдулАзиз',
         brandTitle: 'Кухни на заказ', city: 'Ташкент', masterLine: 'Ваш мастер: {name}',
         heroTitle: 'Соберите кухню онлайн и узнайте цену за 2 минуты',
         heroLead: 'Выберите готовый вариант или настройте под свои размеры. Замер и консультация бесплатно.',
-        giftBanner: 'Дизайн-проект в подарок при заказе от {gift} сум',
-        giftYes: '🎁 Дизайн-проект — в подарок', giftLeft: '🎁 Ещё {x} сум до дизайн-проекта в подарок', giftTag: '🎁 + дизайн-проект',
-        giftNote: 'Условие: итоговая сумма по договору от {gift} сум.',
+        drawFront: 'Чертёж: вид спереди (размеры в мм)', drawTop: 'Чертёж: вид сверху (размеры в мм)',
+        techCorner: 'угол', techCeiling: 'потолок {x}', techDepth: 'Глубина: нижние шкафы {l}, верхние {u} (пунктир)', techDepthShort: 'глубина {x}', techAisle: 'проход', techIsland: 'Остров',
         badgeMeasure: 'Бесплатный замер', badgeDays: 'Изготовление {days} раб. дней', badgeWarranty: 'Гарантия {m} мес.', badgeDelivery: 'Доставка и монтаж',
         ctaPick: 'Подобрать кухню', ctaCall: 'Позвонить',
         presetsTitle: 'Готовые варианты', presetsSub: 'Нажмите на понравившийся — дальше можно поменять размеры, цвет и материалы.',
@@ -945,9 +954,9 @@
         installment: 'или от {x} сум/мес в рассрочку на {n} мес.',
         shareTg: 'Отправить в Telegram', shareCopy: 'Скопировать ссылку', shareCopied: 'Ссылка скопирована!', shareCopyFail: 'Не удалось скопировать — выделите адрес страницы вручную.',
         shareHint: 'Покажите кухню семье — ссылка откроет именно этот расчёт.', shareText: 'Посмотри, какую кухню я собрал(а):',
-        techDrawings: 'Технические чертежи', drawFront: 'Чертёж: вид спереди', drawTop: 'Чертёж: вид сверху',
-        step1: 'Какая у вас кухня?', typeStraight: 'Прямая', typeL: 'Угловая (Г)', typeU: 'П-образная',
-        mainWall: 'Длина основной стены, см', ceiling: 'Высота потолка, см', leftWall: 'Левая стена, см', rightWall: 'Правая стена, см',
+        techDrawings: 'Технические чертежи',
+        step1: 'Какая у вас кухня?', typeIsland: 'Остров', islandHint: 'Можно добавить к любой форме кухни', typeStraight: 'Прямая', typeL: 'Угловая (Г)', typeU: 'П-образная',
+        mainWall: 'Длина основной стены, см', wallHint: 'Шкафы по 60 см подставятся сами — ширину любого можно поменять в шаге 3.', ceiling: 'Высота потолка, см', leftWall: 'Левая стена, см', rightWall: 'Правая стена, см',
         step2: 'Материалы и цвет', tiersTitle: 'Сравните варианты для ваших размеров',
         tier_econ: 'Эконом', tier_std: 'Стандарт', tier_prem: 'Премиум',
         tierDesc_econ: 'ЛДСП, столешница 28 мм', tierDesc_std: 'ЛДСП Egger, столешница 38 мм', tierDesc_prem: 'МДФ эмаль, искусственный камень',
@@ -989,23 +998,26 @@
         leadNeedPhone: 'Укажите номер телефона, по нему мастер свяжется с вами.', leadBadPhone: 'Проверьте номер телефона.',
         leadRate: 'Слишком много заявок подряд. Позвоните {phone} или напишите в Telegram @{tg}.',
         leadFail: 'Не удалось отправить заявку. Позвоните {phone} или напишите в Telegram @{tg}.',
+        sketchBtn: 'Эскиз кухни с визуализацией', sketchTitle: 'Эскиз кухни', sketchView1: 'Вид спереди', sketchView2: 'Вид сбоку',
+        sketchMaterials: 'Материалы и цвета', sketchDrawings: 'Чертежи (размеры в мм)', sketchSpec: 'Спецификация', sketchDate: 'Дата', sketchMaster: 'Мастер',
+        sketchPrint: '🖨 Печать / сохранить в PDF', sketchShape: 'Форма кухни',
+        sketchNote: 'Эскиз выполнен по размерам, указанным на сайте, и нужен для предварительного согласования. Окончательные размеры, расположение розеток, воды и техники уточняются после замера.',
         downloadSpec: 'Скачать спецификацию', contractBtn: 'Договор (образец)', close: 'Закрыть',
         popupBlocked: 'Браузер заблокировал окно договора. Разрешите всплывающие окна для этого сайта.',
         mod_sink: 'Модуль под мойку', mod_drawers: 'Тумба с ящиками', mod_hob: 'Под варочную панель', mod_door: 'Шкаф распашной',
         mod_dryer: 'Шкаф сушка', mod_hood: 'Шкаф над вытяжкой', mod_side: 'Шкаф боковой', mod_lower: 'Нижний модуль {i}', mod_upper: 'Верхний модуль {i}',
         p_compact: 'Компакт', p_compact_d: 'Прямая 1,8 м · ЛДСП · белая',
-        p_scandi: 'Скандинавия', p_scandi_d: 'Прямая 2,6 м · Egger · светлая, столешница под дерево',
+        p_scandi: 'Скандинавия', p_scandi_d: 'Прямая 2,4 м · Egger · светлая, столешница под дерево',
         p_loft: 'Лофт', p_loft_d: 'Угловая 2,4 × 1,8 м · графит и дерево · без ручек',
         p_classic: 'Классика', p_classic_d: 'П-образная · МДФ эмаль · крем · искусственный камень'
       },
       uz: {
-        pageTitle: 'Toshkentda buyurtma asosida oshxona mebeli — onlayn hisob | Abd-ul-Aziz',
+        pageTitle: 'Toshkentda buyurtma asosida oshxona mebeli — onlayn hisob | AbdulAziz',
         brandTitle: 'Buyurtma oshxonalar', city: 'Toshkent', masterLine: 'Ustangiz: {name}',
         heroTitle: 'Oshxonangizni onlayn yigʻing va narxini 2 daqiqada biling',
         heroLead: 'Tayyor variantni tanlang yoki oʻz oʻlchamlaringizga moslang. Oʻlchov va maslahat bepul.',
-        giftBanner: '{gift} soʻmdan boshlab buyurtmada dizayn-loyiha sovgʻa',
-        giftYes: '🎁 Dizayn-loyiha — sovgʻa', giftLeft: '🎁 Dizayn-loyiha sovgʻa boʻlishi uchun yana {x} soʻm', giftTag: '🎁 + dizayn-loyiha',
-        giftNote: 'Shart: shartnoma boʻyicha yakuniy summa {gift} soʻmdan.',
+        drawFront: 'Chizma: old koʻrinish (oʻlchamlar mm)', drawTop: 'Chizma: yuqoridan koʻrinish (oʻlchamlar mm)',
+        techCorner: 'burchak', techCeiling: 'shift {x}', techDepth: 'Chuqurlik: pastki shkaflar {l}, yuqori {u} (punktir)', techDepthShort: 'chuqurlik {x}', techAisle: 'yoʻlak', techIsland: 'Orol',
         badgeMeasure: 'Bepul oʻlchov', badgeDays: 'Tayyorlash {days} ish kuni', badgeWarranty: 'Kafolat {m} oy', badgeDelivery: 'Yetkazish va oʻrnatish',
         ctaPick: 'Oshxona tanlash', ctaCall: 'Qoʻngʻiroq qilish',
         presetsTitle: 'Tayyor variantlar', presetsSub: 'Yoqqanini bosing — keyin oʻlcham, rang va materiallarni oʻzgartirish mumkin.',
@@ -1015,9 +1027,9 @@
         installment: 'yoki {n} oyga muddatli toʻlov: oyiga {x} soʻmdan',
         shareTg: 'Telegramda yuborish', shareCopy: 'Havolani nusxalash', shareCopied: 'Havola nusxalandi!', shareCopyFail: 'Nusxalab boʻlmadi — sahifa manzilini qoʻlda belgilang.',
         shareHint: 'Oshxonani oilangizga koʻrsating — havola aynan shu hisobni ochadi.', shareText: 'Qara, qanday oshxona yigʻdim:',
-        techDrawings: 'Texnik chizmalar', drawFront: 'Chizma: old koʻrinish', drawTop: 'Chizma: yuqoridan koʻrinish',
-        step1: 'Oshxonangiz qanday?', typeStraight: 'Toʻgʻri', typeL: 'Burchakli (G)', typeU: 'P-shaklida',
-        mainWall: 'Asosiy devor uzunligi, sm', ceiling: 'Shift balandligi, sm', leftWall: 'Chap devor, sm', rightWall: 'Oʻng devor, sm',
+        techDrawings: 'Texnik chizmalar',
+        step1: 'Oshxonangiz qanday?', typeIsland: 'Orol', islandHint: 'Istalgan shakldagi oshxonaga qoʻshish mumkin', typeStraight: 'Toʻgʻri', typeL: 'Burchakli (G)', typeU: 'P-shaklida',
+        mainWall: 'Asosiy devor uzunligi, sm', wallHint: '60 sm lik shkaflar avtomatik qoʻyiladi — istalganining kengligini 3-qadamda oʻzgartirish mumkin.', ceiling: 'Shift balandligi, sm', leftWall: 'Chap devor, sm', rightWall: 'Oʻng devor, sm',
         step2: 'Materiallar va rang', tiersTitle: 'Oʻlchamlaringiz uchun variantlarni solishtiring',
         tier_econ: 'Ekonom', tier_std: 'Standart', tier_prem: 'Premium',
         tierDesc_econ: 'LDSP, 28 mm stoleshnitsa', tierDesc_std: 'LDSP Egger, 38 mm stoleshnitsa', tierDesc_prem: 'MDF emal, sunʼiy tosh',
@@ -1059,12 +1071,16 @@
         leadNeedPhone: 'Usta siz bilan bogʻlanishi uchun telefon raqamingizni kiriting.', leadBadPhone: 'Telefon raqamini tekshiring.',
         leadRate: 'Juda koʻp ariza yuborildi. Qoʻngʻiroq qiling: {phone} yoki Telegramda yozing: @{tg}.',
         leadFail: 'Arizani yuborib boʻlmadi. Qoʻngʻiroq qiling: {phone} yoki Telegramda yozing: @{tg}.',
+        sketchBtn: 'Vizualizatsiyali oshxona eskizi', sketchTitle: 'Oshxona eskizi', sketchView1: 'Old tomondan', sketchView2: 'Yon tomondan',
+        sketchMaterials: 'Materiallar va ranglar', sketchDrawings: 'Chizmalar (oʻlchamlar mm)', sketchSpec: 'Spetsifikatsiya', sketchDate: 'Sana', sketchMaster: 'Usta',
+        sketchPrint: '🖨 Chop etish / PDF saqlash', sketchShape: 'Oshxona shakli',
+        sketchNote: 'Eskiz saytda koʻrsatilgan oʻlchamlar asosida tayyorlangan va dastlabki kelishuv uchun kerak. Yakuniy oʻlchamlar, rozetkalar, suv va texnika joylashuvi oʻlchovdan keyin aniqlanadi.',
         downloadSpec: 'Spetsifikatsiyani yuklab olish', contractBtn: 'Shartnoma (namuna, rus tilida)', close: 'Yopish',
         popupBlocked: 'Brauzer shartnoma oynasini blokladi. Ushbu sayt uchun qalqib chiquvchi oynalarga ruxsat bering.',
         mod_sink: 'Rakovina osti moduli', mod_drawers: 'Tortmali tumba', mod_hob: 'Plita osti moduli', mod_door: 'Eshikli shkaf',
         mod_dryer: 'Idish quritgich shkafi', mod_hood: 'Vytyajka usti shkafi', mod_side: 'Yon shkaf', mod_lower: 'Pastki modul {i}', mod_upper: 'Yuqori modul {i}',
         p_compact: 'Kompakt', p_compact_d: 'Toʻgʻri 1,8 m · LDSP · oq',
-        p_scandi: 'Skandinaviya', p_scandi_d: 'Toʻgʻri 2,6 m · Egger · och rang, yogʻoch stoleshnitsa',
+        p_scandi: 'Skandinaviya', p_scandi_d: 'Toʻgʻri 2,4 m · Egger · och rang, yogʻoch stoleshnitsa',
         p_loft: 'Loft', p_loft_d: 'Burchakli 2,4 × 1,8 m · grafit va yogʻoch · dastasiz',
         p_classic: 'Klassika', p_classic_d: 'P-shaklida · MDF emal · krem · sunʼiy tosh'
       }
@@ -1209,361 +1225,9 @@
       }
     }
 
-    function onWallInputManual(wallId) {
-      let targetVal = parseFloat(document.getElementById(wallId).value) || 0;
-      if (targetVal <= 0) return;
-
-      let wallFilter = (wallId === 'mainWall') ? 'main' : ((wallId === 'leftWall') ? 'left' : 'right');
-      let matchingLower = lowerSections.filter(s => (s.wall || 'main') === wallFilter);
-
-      if (matchingLower.length > 0) {
-        let effectiveTarget = targetVal;
-        if (wallId !== 'mainWall') effectiveTarget = Math.max(20, targetVal - 60);
-
-        let currentSum = matchingLower.reduce((acc, s) => acc + (parseFloat(s.width) || 0), 0);
-        if (currentSum > 0) {
-          let factor = effectiveTarget / currentSum;
-          matchingLower.forEach(s => {
-            s.width = Math.round(s.width * factor);
-          });
-          renderSections('lower');
-        }
-      }
-      updateCalculator();
-    }
-
     function drawAllCadMinis() {
       lowerSections.forEach((sec, idx) => drawSectionCadScheme('cadMini_lower_' + idx, 'lower', sec));
       upperSections.forEach((sec, idx) => drawSectionCadScheme('cadMini_upper_' + idx, 'upper', sec));
-    }
-
-    function drawSectionCadScheme(svgElementId, type, sec) {
-      const svg = document.getElementById(svgElementId);
-      if (!svg) return;
-
-      let isLower = (type === 'lower');
-      let shelves = sec.shelves || 0;
-      let drawers = sec.drawers || 0;
-      let gasLifts = sec.gasLifts || 0;
-      let openType = sec.openType || 'handles';
-      let tag = (isLower ? 'Н-' : 'В-') + sec.id;
-
-      let html = `<rect x="5" y="5" width="130" height="130" fill="#eef2f6" stroke="#0284c7" stroke-width="1"/>`;
-
-      if (!isLower && gasLifts > 0) {
-        html += `
-          <rect x="25" y="45" width="45" height="70" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5"/>
-          <text x="47" y="85" fill="#475569" font-size="8" font-weight="bold" text-anchor="middle">Корпус</text>
-          <polygon points="25,45 20,12 28,11 31,45" fill="#38bdf8" stroke="#0284c7" stroke-width="1.2"/>
-          <line x1="20" y1="12" x2="28" y2="11" stroke="#0f172a" stroke-width="2"/>
-          <line x1="45" y1="75" x2="25" y2="28" stroke="#d97706" stroke-width="2.5"/>
-          <line x1="45" y1="75" x2="35" y2="52" stroke="#b45309" stroke-width="4.5"/>
-          <circle cx="45" cy="75" r="3" fill="#0f172a"/>
-          <circle cx="25" cy="28" r="3" fill="#d97706"/>
-          <text x="82" y="30" fill="#d97706" font-size="9" font-weight="bold">↗ Газлифт</text>
-          <text x="82" y="42" fill="#0f172a" font-size="8">Открыто вверх</text>
-        `;
-      } else {
-        if (isLower) {
-          html += `
-            <rect x="25" y="115" width="8" height="10" fill="#64748b"/>
-            <rect x="107" y="115" width="8" height="10" fill="#64748b"/>
-          `;
-        }
-
-        let topY = 25;
-        let boxH = 90;
-
-        if (isLower && openType === 'gola') {
-          html += `<rect x="20" y="25" width="100" height="8" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>`;
-          topY = 33;
-          boxH = 82;
-        }
-
-        html += `<rect x="20" y="${topY}" width="100" height="${boxH}" fill="#cbd5e1" stroke="#334155" stroke-width="1.5"/>`;
-
-        if (shelves > 0 && drawers === 0) {
-          let stepH = boxH / (shelves + 1);
-          for (let s = 1; s <= shelves; s++) {
-            let yP = topY + s * stepH;
-            html += `<line x1="23" y1="${yP}" x2="117" y2="${yP}" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="3,3"/>`;
-          }
-        }
-
-        if (isLower && drawers > 0) {
-          let hBox = boxH / drawers;
-          for (let d = 0; d < drawers; d++) {
-            let yPos = topY + d * hBox;
-            if (openType === 'gola' && d > 0) {
-              html += `<rect x="20" y="${yPos}" width="100" height="5" fill="#1e293b"/>`;
-            }
-            html += `<rect x="22" y="${yPos + 2}" width="96" height="${hBox - 4}" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>`;
-            if (openType === 'handles') {
-              html += `<line x1="50" y1="${yPos + hBox/2}" x2="90" y2="${yPos + hBox/2}" stroke="#0f172a" stroke-width="2.5"/>`;
-            } else if (openType === 'push') {
-              html += `<circle cx="70" cy="${yPos + hBox/2}" r="2.5" fill="#d97706"/>`;
-            }
-          }
-        } else {
-          html += `<line x1="70" y1="${topY}" x2="70" y2="${topY + boxH}" stroke="#0f172a" stroke-width="1.5"/>`;
-          if (openType === 'handles') {
-            html += `<rect x="62" y="${topY + boxH/2 - 8}" width="3" height="16" rx="1" fill="#0f172a"/>`;
-            html += `<rect x="75" y="${topY + boxH/2 - 8}" width="3" height="16" rx="1" fill="#0f172a"/>`;
-          } else if (openType === 'push') {
-            html += `<text x="70" y="${topY + boxH/2 + 3}" fill="#d97706" font-size="8" font-weight="bold" text-anchor="middle">PUSH</text>`;
-          } else if (openType === 'gola') {
-            html += `<line x1="22" y1="${topY + boxH - 3}" x2="118" y2="${topY + boxH - 3}" stroke="#1e293b" stroke-width="3"/>`;
-          }
-        }
-      }
-
-      html += `
-        <rect x="45" y="3" width="50" height="15" rx="3" fill="#0f172a"/>
-        <text x="70" y="14" fill="#fbbf24" font-size="9" font-weight="bold" text-anchor="middle">[${tag}]</text>
-        <text x="70" y="137" fill="#0284c7" font-size="8" font-weight="bold" text-anchor="middle">Ш: ${sec.width} см</text>
-      `;
-
-      svg.innerHTML = html;
-    }
-
-    function drawFullFrontView(svgId, hasUpper) {
-      const svg = document.getElementById(svgId);
-      if (!svg) return;
-      svg.innerHTML = '';
-
-      let faceFill = selectedFacadeColor.hex;
-      let startX = 40;
-      let endX = 560;
-      let availW = endX - startX;
-
-      let totalLowerWidth = lowerSections.reduce((acc, s) => acc + (parseFloat(s.width) || 50), 0);
-      let totalUpperWidth = hasUpper ? upperSections.reduce((acc, s) => acc + (parseFloat(s.width) || 50), 0) : 0;
-      
-      let maxTotalWidth = Math.max(totalLowerWidth, totalUpperWidth, 1);
-      let scaleRatio = availW / maxTotalWidth;
-
-      let html = `
-        <rect x="5" y="5" width="590" height="270" fill="#f8fafc" stroke="#0284c7" stroke-width="1.5" rx="6"/>
-        <text x="300" y="22" fill="#0284c7" font-size="11" font-weight="bold" text-anchor="middle">ВИД СПЕРЕДИ 2D: ФАСАДЫ И МОДУЛИ (${Math.round(totalLowerWidth)} см)</text>
-      `;
-
-      let lowerY = 160;
-      let lowerH = 85;
-
-      let currX = startX;
-      lowerSections.forEach((sec) => {
-        let secW_px = (parseFloat(sec.width) || 50) * scaleRatio;
-        let x = currX;
-        currX += secW_px;
-
-        html += `<rect x="${x + 1}" y="${lowerY}" width="${Math.max(2, secW_px - 2)}" height="${lowerH}" fill="${faceFill}" stroke="#0f172a" stroke-width="1.5"/>`;
-
-        let shelves = sec.shelves || 0;
-        let drawers = sec.drawers || 0;
-        if (shelves > 0 && drawers === 0) {
-          let stepP = lowerH / (shelves + 1);
-          for (let p = 1; p <= shelves; p++) {
-            let yP = lowerY + p * stepP;
-            html += `<line x1="${x + 4}" y1="${yP}" x2="${x + secW_px - 4}" y2="${yP}" stroke="#0f172a" stroke-width="1" stroke-dasharray="3,3"/>`;
-          }
-        }
-
-        if (drawers > 0) {
-          let hBox = lowerH / drawers;
-          for (let d = 0; d < drawers; d++) {
-            let yD = lowerY + d * hBox;
-            html += `<rect x="${x + 3}" y="${yD + 2}" width="${Math.max(2, secW_px - 6)}" height="${hBox - 4}" fill="${faceFill}" stroke="#0f172a" stroke-width="1"/>`;
-            if (sec.openType === 'handles') {
-              html += `<line x1="${x + secW_px*0.3}" y1="${yD + hBox/2}" x2="${x + secW_px*0.7}" y2="${yD + hBox/2}" stroke="#0f172a" stroke-width="2"/>`;
-            }
-          }
-        } else {
-          html += `<line x1="${x + secW_px/2}" y1="${lowerY}" x2="${x + secW_px/2}" y2="${lowerY + lowerH}" stroke="#0f172a" stroke-width="1.2"/>`;
-          if (sec.openType === 'handles') {
-            html += `<circle cx="${x + secW_px/2 - 4}" cy="${lowerY + lowerH/2}" r="2" fill="#0f172a"/>`;
-            html += `<circle cx="${x + secW_px/2 + 4}" cy="${lowerY + lowerH/2}" r="2" fill="#0f172a"/>`;
-          }
-        }
-
-        html += `<rect x="${x + 6}" y="${lowerY + lowerH}" width="6" height="10" fill="#64748b"/>`;
-        html += `<rect x="${x + Math.max(7, secW_px - 12)}" y="${lowerY + lowerH}" width="6" height="10" fill="#64748b"/>`;
-
-        html += `
-          <rect x="${x + secW_px/2 - 18}" y="${lowerY + 6}" width="36" height="14" rx="3" fill="#0f172a"/>
-          <text x="${x + secW_px/2}" y="${lowerY + 16}" fill="#fbbf24" font-size="9" font-weight="bold" text-anchor="middle">[Н-${sec.id}]</text>
-          <text x="${x + secW_px/2}" y="${lowerY + lowerH + 22}" fill="#0284c7" font-size="9" font-weight="bold" text-anchor="middle">${sec.width}см</text>
-        `;
-      });
-
-      let lowerLineW = (totalLowerWidth * scaleRatio);
-      html += `<rect x="${startX - 2}" y="${lowerY - 8}" width="${lowerLineW + 4}" height="8" fill="#b45309" stroke="#0f172a" stroke-width="1"/>`;
-
-      if (hasUpper && upperSections.length > 0) {
-        let upperH_px = 65;
-        let upperY = lowerY - 8 - 20 - upperH_px;
-
-        let currUpperX = startX;
-        upperSections.forEach((sec) => {
-          let secW_px = (parseFloat(sec.width) || 50) * scaleRatio;
-          let x = currUpperX;
-          currUpperX += secW_px;
-
-          html += `<rect x="${x + 1}" y="${upperY}" width="${Math.max(2, secW_px - 2)}" height="${upperH_px}" fill="${faceFill}" stroke="#0f172a" stroke-width="1.5"/>`;
-
-          let shelves = sec.shelves || 0;
-          if (shelves > 0) {
-            let stepP = upperH_px / (shelves + 1);
-            for (let p = 1; p <= shelves; p++) {
-              let yP = upperY + p * stepP;
-              html += `<line x1="${x + 4}" y1="${yP}" x2="${x + secW_px - 4}" y2="${yP}" stroke="#0f172a" stroke-width="1" stroke-dasharray="3,3"/>`;
-            }
-          }
-
-          if (sec.gasLifts > 0) {
-            html += `<text x="${x + secW_px/2}" y="${upperY + upperH_px/2 + 3}" fill="#d97706" font-size="8" font-weight="bold" text-anchor="middle">↗ Газлифт</text>`;
-          }
-
-          html += `
-            <rect x="${x + secW_px/2 - 18}" y="${upperY + 4}" width="36" height="14" rx="3" fill="#0f172a"/>
-            <text x="${x + secW_px/2}" y="${upperY + 14}" fill="#38bdf8" font-size="9" font-weight="bold" text-anchor="middle">[В-${sec.id}]</text>
-            <text x="${x + secW_px/2}" y="${upperY - 4}" fill="#0284c7" font-size="8" font-weight="bold" text-anchor="middle">${sec.width}см</text>
-          `;
-        });
-      }
-
-      svg.innerHTML = html;
-    }
-
-    function drawTopViewPlan(svgId, hasUpper) {
-      const svg = document.getElementById(svgId);
-      if (!svg) return;
-      svg.innerHTML = '';
-
-      let mainW = parseFloat(document.getElementById('mainWall').value) || 200;
-      let leftW = parseFloat(document.getElementById('leftWall').value) || 120;
-      let rightW = parseFloat(document.getElementById('rightWall').value) || 120;
-
-      let html = `
-        <rect x="5" y="5" width="590" height="310" fill="#f8fafc" stroke="#0284c7" stroke-width="1.5" rx="6"/>
-        <text x="300" y="22" fill="#0284c7" font-size="11" font-weight="bold" text-anchor="middle">ВИД СВЕРХУ 2D: ПЛАН ПОМЕЩЕНИЯ И МОДУЛЕЙ</text>
-      `;
-
-      if (currentType === 'straight') {
-        let wallX1 = 50, wallX2 = 550, wallY = 55;
-        let scale = (wallX2 - wallX1) / (mainW || 1);
-
-        html += `
-          <line x1="${wallX1}" y1="${wallY}" x2="${wallX2}" y2="${wallY}" stroke="#334155" stroke-width="8"/>
-          <text x="300" y="${wallY - 12}" fill="#334155" font-size="10" font-weight="bold" text-anchor="middle">Основная стена: ${mainW} см</text>
-        `;
-
-        let currX = wallX1;
-        lowerSections.forEach((sec) => {
-          let modW = (parseFloat(sec.width) || 50) * scale;
-          let depthPx = 48;
-
-          html += `
-            <rect x="${currX}" y="${wallY + 4}" width="${modW}" height="${depthPx}" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
-            <rect x="${currX + modW/2 - 16}" y="${wallY + 12}" width="32" height="14" rx="3" fill="#0f172a"/>
-            <text x="${currX + modW/2}" y="${wallY + 22}" fill="#fbbf24" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}]</text>
-            <text x="${currX + modW/2}" y="${wallY + 38}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">${sec.width}см</text>
-          `;
-
-          if (hasUpper) {
-            html += `<rect x="${currX}" y="${wallY + 4}" width="${modW}" height="28" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
-          }
-
-          currX += modW;
-        });
-
-      } else if (currentType === 'l-shape') {
-        let cornerX = 80, cornerY = 60;
-        let mainScale = 420 / (mainW || 1);
-        let leftScale = 180 / (leftW || 1);
-
-        html += `
-          <polyline points="${cornerX},${cornerY + 200} ${cornerX},${cornerY} ${cornerX + 440},${cornerY}" fill="none" stroke="#334155" stroke-width="8"/>
-          <text x="${cornerX + 220}" y="${cornerY - 10}" fill="#334155" font-size="10" font-weight="bold" text-anchor="middle">Основная: ${mainW} см</text>
-          <text x="${cornerX - 15}" y="${cornerY + 100}" fill="#334155" font-size="10" font-weight="bold" text-anchor="middle" transform="rotate(-90 ${cornerX - 15} ${cornerY + 100})">Левая: ${leftW} см</text>
-        `;
-
-        let currY = cornerY + 200;
-        lowerSections.filter(s => s.wall === 'left').forEach((sec) => {
-          let modH = (parseFloat(sec.width) || 50) * leftScale;
-          currY -= modH;
-          html += `
-            <rect x="${cornerX + 4}" y="${currY}" width="45" height="${modH}" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
-            <text x="${cornerX + 26}" y="${currY + modH/2}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}] ${sec.width}см</text>
-          `;
-          if (hasUpper) {
-            html += `<rect x="${cornerX + 4}" y="${currY}" width="26" height="${modH}" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
-          }
-        });
-
-        let currX = cornerX + 48;
-        lowerSections.filter(s => s.wall !== 'left').forEach((sec) => {
-          let modW = (parseFloat(sec.width) || 50) * mainScale;
-          html += `
-            <rect x="${currX}" y="${cornerY + 4}" width="${modW}" height="45" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
-            <text x="${currX + modW/2}" y="${cornerY + 28}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}] ${sec.width}см</text>
-          `;
-          if (hasUpper) {
-            html += `<rect x="${currX}" y="${cornerY + 4}" width="${modW}" height="26" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
-          }
-          currX += modW;
-        });
-
-      } else if (currentType === 'u-shape') {
-        let leftX = 80, rightX = 520, topY = 60;
-        let mainScale = 380 / (mainW || 1);
-        let sideScale = 180 / Math.max(leftW, rightW, 1);
-
-        html += `
-          <polyline points="${leftX},${topY + 200} ${leftX},${topY} ${rightX},${topY} ${rightX},${topY + 200}" fill="none" stroke="#334155" stroke-width="8"/>
-          <text x="300" y="${topY - 10}" fill="#334155" font-size="10" font-weight="bold" text-anchor="middle">Основная: ${mainW} см</text>
-        `;
-
-        let currY = topY + 200;
-        lowerSections.filter(s => s.wall === 'left').forEach((sec) => {
-          let modH = (parseFloat(sec.width) || 50) * sideScale;
-          currY -= modH;
-          html += `
-            <rect x="${leftX + 4}" y="${currY}" width="45" height="${modH}" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
-            <text x="${leftX + 26}" y="${currY + modH/2}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}]</text>
-          `;
-          if (hasUpper) {
-            html += `<rect x="${leftX + 4}" y="${currY}" width="26" height="${modH}" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
-          }
-        });
-
-        let currX = leftX + 48;
-        lowerSections.filter(s => s.wall === 'main' || !s.wall).forEach((sec) => {
-          let modW = (parseFloat(sec.width) || 50) * mainScale;
-          html += `
-            <rect x="${currX}" y="${topY + 4}" width="${modW}" height="45" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
-            <text x="${currX + modW/2}" y="${topY + 28}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}] ${sec.width}см</text>
-          `;
-          if (hasUpper) {
-            html += `<rect x="${currX}" y="${topY + 4}" width="${modW}" height="26" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
-          }
-          currX += modW;
-        });
-
-        let currRightY = topY + 48;
-        lowerSections.filter(s => s.wall === 'right').forEach((sec) => {
-          let modH = (parseFloat(sec.width) || 50) * sideScale;
-          html += `
-            <rect x="${rightX - 49}" y="${currRightY}" width="45" height="${modH}" fill="rgba(251, 191, 36, 0.25)" stroke="#b45309" stroke-width="1.5"/>
-            <text x="${rightX - 26}" y="${currRightY + modH/2}" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">[Н-${sec.id}]</text>
-          `;
-          if (hasUpper) {
-            html += `<rect x="${rightX - 30}" y="${currRightY}" width="26" height="${modH}" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2"/>`;
-          }
-          currRightY += modH;
-        });
-      }
-
-      svg.innerHTML = html;
     }
 
     async function captureSpecImage() {
@@ -1591,7 +1255,327 @@
       });
     }
 
+    /* =====================================================================
+       ТЕХНИЧЕСКИЕ ЧЕРТЕЖИ В ЦВЕТЕ С РАЗМЕРАМИ (мм)
+       ===================================================================== */
+    const DIM_COL = '#0369a1';
+    const STK = 'vector-effect="non-scaling-stroke"';
+    let techUid = 0;
+    const MM = cm => Math.round((Number(cm) || 0) * 10);
+
+    function techBuilder() {
+      const b = { out: [], box: [Infinity, Infinity, -Infinity, -Infinity], uid: 't' + (++techUid) };
+      b.pt = (x, y) => { if (x < b.box[0]) b.box[0] = x; if (y < b.box[1]) b.box[1] = y; if (x > b.box[2]) b.box[2] = x; if (y > b.box[3]) b.box[3] = y; };
+      b.rect = (x, y, w, h, attrs, noFit) => { b.out.push(`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${Math.max(0, w).toFixed(2)}" height="${Math.max(0, h).toFixed(2)}" ${attrs}/>`); if (!noFit) { b.pt(x, y); b.pt(x + w, y + h); } };
+      b.line = (x1, y1, x2, y2, attrs) => { b.out.push(`<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" ${attrs}/>`); b.pt(x1, y1); b.pt(x2, y2); };
+      b.path = (d, attrs) => b.out.push(`<path d="${d}" ${attrs}/>`);
+      b.text = (x, y, str, fs, attrs, rot) => {
+        const s = esc(str), w = String(str).length * fs * 0.58;
+        b.out.push(`<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" font-size="${fs.toFixed(2)}" font-family="Manrope, Arial, sans-serif" text-anchor="middle" ${rot ? `transform="rotate(-90 ${x.toFixed(2)} ${y.toFixed(2)})"` : ''} ${attrs || ''}>${s}</text>`);
+        if (rot) { b.pt(x - fs, y - w / 2); b.pt(x + fs * 0.3, y + w / 2); } else { b.pt(x - w / 2, y - fs); b.pt(x + w / 2, y + fs * 0.3); }
+      };
+      // горизонтальный размер: x1..x2 на уровне y, выносные линии от yFrom
+      b.dimH = (x1, x2, y, label, fs, yFrom) => {
+        if (x2 - x1 < 0.5) return;
+        const tk = fs * 0.35, a = `stroke="${DIM_COL}" stroke-width="1" ${STK}`;
+        if (yFrom !== undefined) { b.line(x1, yFrom, x1, y + (y > yFrom ? tk : -tk), a); b.line(x2, yFrom, x2, y + (y > yFrom ? tk : -tk), a); }
+        b.line(x1, y, x2, y, a);
+        b.line(x1 - tk, y + tk, x1 + tk, y - tk, `stroke="${DIM_COL}" stroke-width="1.6" ${STK}`);
+        b.line(x2 - tk, y + tk, x2 + tk, y - tk, `stroke="${DIM_COL}" stroke-width="1.6" ${STK}`);
+        const f = Math.max(fs * 0.55, Math.min(fs, (x2 - x1) / (String(label).length * 0.62)));
+        b.text((x1 + x2) / 2, y - f * 0.35, label, f, `fill="${DIM_COL}" font-weight="700"`);
+      };
+      // вертикальный размер: y1..y2 на линии x, выносные линии от xFrom
+      b.dimV = (y1, y2, x, label, fs, xFrom) => {
+        if (Math.abs(y2 - y1) < 0.5) return;
+        const lo = Math.min(y1, y2), hi = Math.max(y1, y2);
+        const tk = fs * 0.35, a = `stroke="${DIM_COL}" stroke-width="1" ${STK}`;
+        if (xFrom !== undefined) { b.line(xFrom, lo, x + (x > xFrom ? tk : -tk), lo, a); b.line(xFrom, hi, x + (x > xFrom ? tk : -tk), hi, a); }
+        b.line(x, lo, x, hi, a);
+        b.line(x - tk, lo + tk, x + tk, lo - tk, `stroke="${DIM_COL}" stroke-width="1.6" ${STK}`);
+        b.line(x - tk, hi + tk, x + tk, hi - tk, `stroke="${DIM_COL}" stroke-width="1.6" ${STK}`);
+        const f = Math.max(fs * 0.55, Math.min(fs, (hi - lo) / (String(label).length * 0.62)));
+        b.text(x - f * 0.35, (lo + hi) / 2, label, f, `fill="${DIM_COL}" font-weight="700"`, true);
+      };
+      b.render = (svg, mx, my) => {
+        let [x0, y0, x1, y1] = b.box;
+        if (!isFinite(x0)) { x0 = 0; y0 = 0; x1 = 100; y1 = 100; }
+        const w = x1 - x0, h = y1 - y0, px = w * (mx || 0.03), py = h * (my || 0.04);
+        svg.setAttribute('viewBox', `${(x0 - px).toFixed(1)} ${(y0 - py).toFixed(1)} ${(w + 2 * px).toFixed(1)} ${(h + 2 * py).toFixed(1)}`);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        svg.innerHTML = `<defs><linearGradient id="${b.uid}sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/><stop offset="0.6" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.10"/></linearGradient></defs>` + b.out.join('');
+      };
+      return b;
+    }
+
+    // Фасад шкафа (вид спереди). yt — верх, yb — низ (координаты SVG, ось Y вниз)
+    function techFront(b, x0, x1, yt, yb, sec, tier, col, fs) {
+      const w = x1 - x0, h = yb - yt, uc = (x0 + x1) / 2, g = Math.min(0.3, w / 20);
+      const dark = luminance(col) < 0.4;
+      const edge = dark ? 'rgba(255,255,255,0.40)' : 'rgba(0,0,0,0.38)';
+      const handle = dark ? '#e2e8f0' : '#475569';
+      const shelfA = `stroke="${dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.30)'}" stroke-width="1" stroke-dasharray="4,3" ${STK}`;
+      const L = (ax, ay, bx, by, c, sw, extra) => b.line(ax, ay, bx, by, `stroke="${c}" stroke-width="${sw}" stroke-linecap="round" ${STK} ${extra || ''}`);
+      b.rect(x0 + g, yt, w - 2 * g, h, `fill="${col}" stroke="#1f2937" stroke-width="1" ${STK}`);
+      b.rect(x0 + g, yt, w - 2 * g, h, `fill="url(#${b.uid}sh)"`, true);
+      const open = sec.openType || 'handles';
+      if (tier === 'lower' && open === 'gola') b.rect(x0, yt, w, 3, 'fill="#1f2328"', true);
+      const drawers = tier === 'lower' ? (sec.drawers | 0) : 0;
+      if (drawers > 0) {
+        const hk = h / drawers;
+        for (let k = 1; k < drawers; k++) {
+          const y = yt + k * hk;
+          if (open === 'gola') b.rect(x0, y - 1.5, w, 3, 'fill="#1f2328"', true);
+          else L(x0 + 1, y, x1 - 1, y, edge, 1);
+        }
+        if (open === 'handles') for (let k = 0; k < drawers; k++) {
+          const y = yt + k * hk + Math.min(5, hk / 3), hw = Math.min(12, w * 0.25);
+          L(uc - hw, y, uc + hw, y, handle, 2.4);
+        }
+        return;
+      }
+      const shelves = sec.shelves | 0;
+      for (let k = 1; k <= shelves; k++) { const y = yt + k * h / (shelves + 1); b.line(x0 + 2, y, x1 - 2, y, shelfA); }
+      if (tier === 'upper' && (sec.gasLifts | 0) > 0) {
+        if (open === 'handles') { const hw = Math.min(12, w * 0.25); L(uc - hw, yb - 5, uc + hw, yb - 5, handle, 2.4); }
+        const ar = Math.min(w, h) * 0.16;
+        b.path(`M${uc} ${yt + h * 0.30} L${uc - ar * 0.6} ${yt + h * 0.30 + ar} M${uc} ${yt + h * 0.30} L${uc + ar * 0.6} ${yt + h * 0.30 + ar} M${uc} ${yt + h * 0.30} L${uc} ${yt + h * 0.30 + ar * 1.8}`,
+          `stroke="#d97706" stroke-width="2" fill="none" stroke-linecap="round" ${STK}`);
+        return;
+      }
+      const hA = tier === 'lower' ? yt + 7 : yb - 20, hB = tier === 'lower' ? yt + 20 : yb - 7;
+      if (w >= 45) {
+        L(uc, yt + 0.5, uc, yb - 0.5, edge, 1);
+        if (open === 'handles') { L(uc - 3.5, hA, uc - 3.5, hB, handle, 2.4); L(uc + 3.5, hA, uc + 3.5, hB, handle, 2.4); }
+      } else if (open === 'handles') {
+        L(x1 - 4, hA, x1 - 4, hB, handle, 2.4);
+      }
+    }
+
+    function techLabel(b, x, y, str, fs, color) {
+      const f = fs * 0.72, pw = String(str).length * f * 0.62 + f * 0.8;
+      b.rect(x - pw / 2, y, pw, f * 1.35, 'fill="#0f172a" rx="1.5"', true);
+      b.text(x, y + f * 1.02, str, f, `fill="${color}" font-weight="800"`);
+    }
+
+    function techGeometry() {
+      const s = getCalcState();
+      const top = CONFIG.countertops[s.top];
+      const CT = top.thick || 3.8;
+      return { s, topCol: top.color, CT, PL: 10, BOX: 85, TOPY: 85 + CT, UB: 145, UH: s.upperH, UT: 145 + s.upperH };
+    }
+
+    /* ---------- ВИД СПЕРЕДИ: развёртка по стенам ---------- */
+    function drawFullFrontView(svgId, hasUpper) {
+      const svg = typeof svgId === 'string' ? document.getElementById(svgId) : svgId;
+      if (!svg) return;
+      const G = techGeometry(), s = G.s;
+      hasUpper = hasUpper && upperSections.length > 0;
+      const facade = selectedFacadeColor.hex;
+      const wallOf = sec => (currentType === 'straight' ? 'main' : (sec.wall || 'main'));
+      const order = currentType === 'straight' ? ['main'] : (currentType === 'l-shape' ? ['left', 'main'] : ['left', 'main', 'right']);
+      const sumW = a => a.reduce((acc, x) => acc + (parseFloat(x.width) || 0), 0);
+      const segs = order.map(w => {
+        const lo = lowerSections.filter(x => wallOf(x) === w);
+        const up = hasUpper ? upperSections.filter(x => wallOf(x) === w) : [];
+        return { w, lo, up, wl: sumW(lo), wu: sumW(up) };
+      }).filter(g => g.lo.length || g.up.length);
+      const GAP = 30;
+      let x = 0;
+      segs.forEach(g => { g.width = Math.max(g.wl, g.wu, 1); g.x = x; x += g.width + GAP; });
+      const totalW = x - GAP;
+      const fs = Math.max(6, totalW / 30);
+      const Y = y => -y;
+      const b = techBuilder();
+      const topY = hasUpper ? G.UT : G.TOPY + 25;
+      const wallName = w => (w === 'left' ? t('wLeft') : (w === 'right' ? t('wRight') : t('wMain')));
+
+      // стена и пол
+      b.rect(-8, Y(topY + 10), totalW + 16, topY + 10, 'fill="#f3eee7"', true);
+      b.line(-8, 0, totalW + 8, 0, `stroke="#475569" stroke-width="2.5" ${STK}`);
+
+      segs.forEach((g, gi) => {
+        const loStart = g.w === 'left' ? g.x + g.width - g.wl : g.x;
+        const upStart = g.w === 'left' ? g.x + g.width - g.wu : g.x;
+        // фартук
+        b.rect(g.x, Y(G.UB), g.width, G.UB - G.TOPY, `fill="#fbfaf7" stroke="rgba(0,0,0,0.08)" stroke-width="1" ${STK}`, true);
+        for (let tx = g.x + 15; tx < g.x + g.width; tx += 15) b.line(tx, Y(G.UB), tx, Y(G.TOPY), `stroke="rgba(0,0,0,0.06)" stroke-width="1" ${STK}`);
+        // нижние шкафы
+        let u = loStart, hob = null;
+        g.lo.forEach(sec => {
+          const w = parseFloat(sec.width) || 0;
+          b.rect(u + 0.3, Y(G.PL), w - 0.6, G.PL, 'fill="#3a3a3f"');
+          techFront(b, u, u + w, Y(G.BOX), Y(G.PL), sec, 'lower', facade, fs);
+          if (w >= 14) techLabel(b, u + w / 2, Y(G.BOX) + 2, `Н-${sec.id}`, fs, '#fbbf24');
+          if (sec.kind === 'sink') {
+            const c = u + w / 2;
+            b.path(`M${c} ${Y(G.TOPY)} L${c} ${Y(G.TOPY + 24)} Q${c} ${Y(G.TOPY + 28)} ${c + 6} ${Y(G.TOPY + 27)} L${c + 11} ${Y(G.TOPY + 25)}`, `stroke="#64748b" stroke-width="2.4" fill="none" stroke-linecap="round" ${STK}`);
+          }
+          if (sec.kind === 'hob') { hob = { u0: u, u1: u + w }; b.rect(u + 4, Y(G.TOPY + 1.4), w - 8, 1.4, 'fill="#18181b"', true); }
+          u += w;
+        });
+        if (g.lo.length) b.rect(loStart, Y(G.TOPY), g.wl, G.CT, `fill="${G.topCol}" stroke="#1f2937" stroke-width="1" ${STK}`);
+        // верхние шкафы
+        let uu = upStart;
+        g.up.forEach(sec => {
+          const w = parseFloat(sec.width) || 0;
+          techFront(b, uu, uu + w, Y(G.UT), Y(G.UB), sec, 'upper', facade, fs);
+          if (w >= 14) techLabel(b, uu + w / 2, Y(G.UT) + 2, `В-${sec.id}`, fs, '#38bdf8');
+          uu += w;
+        });
+        if (hob && g.up.length) b.rect(hob.u0 + 2, Y(G.UB), hob.u1 - hob.u0 - 4, 8, `fill="#c3c9cf" stroke="#8f979f" stroke-width="1" ${STK}`, true);
+
+        // размеры снизу: каждый шкаф и стена целиком
+        let ux = loStart;
+        g.lo.forEach(sec => { const w = parseFloat(sec.width) || 0; b.dimH(ux, ux + w, fs * 1.9, String(MM(w)), fs, 0.5); ux += w; });
+        if (g.lo.length) b.dimH(loStart, loStart + g.wl, fs * 4.0, `${wallName(g.w)}: ${MM(g.wl)}`, fs, fs * 1.9);
+        // размеры сверху: верхние шкафы
+        if (g.up.length) {
+          let vx = upStart;
+          g.up.forEach(sec => { const w = parseFloat(sec.width) || 0; b.dimH(vx, vx + w, Y(G.UT) - fs * 1.7, String(MM(w)), fs, Y(G.UT) - 0.5); vx += w; });
+        }
+        // угол между стенами
+        if (gi < segs.length - 1) {
+          const cx = g.x + g.width + GAP / 2;
+          b.line(cx, 0, cx, Y(topY), `stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="6,4" ${STK}`);
+          b.text(cx - fs * 0.4, Y(topY / 2), t('techCorner'), fs * 0.8, 'fill="#64748b" font-weight="700"', true);
+        }
+      });
+
+      // высоты слева
+      const xV = -8 - fs * 1.8, xV2 = -8 - fs * 4.0;
+      b.dimV(0, Y(G.TOPY), xV, String(MM(G.TOPY)), fs, -8);
+      if (hasUpper) {
+        b.dimV(Y(G.TOPY), Y(G.UB), xV, String(MM(G.UB - G.TOPY)), fs, -8);
+        b.dimV(Y(G.UB), Y(G.UT), xV, String(MM(G.UH)), fs, -8);
+        b.dimV(0, Y(G.UT), xV2, String(MM(G.UT)), fs, xV);
+      }
+      b.text(totalW, Y(topY) - fs * (hasUpper ? 3.6 : 1.2), t('techCeiling', { x: MM(s.roomH) }), fs * 0.8, 'fill="#64748b" text-anchor="end"');
+      b.render(svg, 0.02, 0.03);
+    }
+
+    /* ---------- ВИД СВЕРХУ: план ---------- */
+    function drawTopViewPlan(svgId, hasUpper) {
+      const svg = typeof svgId === 'string' ? document.getElementById(svgId) : svgId;
+      if (!svg) return;
+      const G = techGeometry(), s = G.s;
+      hasUpper = hasUpper && upperSections.length > 0;
+      const LD = 60, UD = s.upperD, WT = 8;
+      const wallOf = sec => (currentType === 'straight' ? 'main' : (sec.wall || 'main'));
+      const sumW = a => a.reduce((acc, x) => acc + (parseFloat(x.width) || 0), 0);
+      const loM = lowerSections.filter(x => wallOf(x) === 'main'), loL = lowerSections.filter(x => wallOf(x) === 'left'), loR = currentType === 'u-shape' ? lowerSections.filter(x => wallOf(x) === 'right') : [];
+      const upM = hasUpper ? upperSections.filter(x => wallOf(x) === 'main') : [], upL = hasUpper ? upperSections.filter(x => wallOf(x) === 'left') : [], upR = hasUpper && currentType === 'u-shape' ? upperSections.filter(x => wallOf(x) === 'right') : [];
+      const W = Math.max(60, sumW(loM), sumW(upM));
+      const lenL = LD + Math.max(sumW(loL), sumW(upL)), lenR = LD + Math.max(sumW(loR), sumW(upR));
+      const fs = Math.max(6, (W + (loL.length ? 60 : 0)) / 26);
+      const b = techBuilder();
+      const wallC = 'fill="#475569"';
+      const isL = currentType !== 'straight', isU = currentType === 'u-shape';
+      let depthMax = Math.max(LD, isL ? lenL : 0, isU ? lenR : 0);
+      let isl = null;
+      if (s.island) {
+        const L = s.islL, Wd = s.islW, z0 = Math.max(depthMax, LD) + 100;
+        isl = { x0: W / 2 - L / 2, x1: W / 2 + L / 2, z0, z1: z0 + Wd };
+      }
+      const floorD = (isl ? isl.z1 : depthMax) + 40;
+
+      // пол и стены
+      b.rect(isL ? 0 : -25, 0, W + (isL ? 0 : 50) + (isU ? 0 : (isL ? 25 : 0)), floorD, 'fill="#f3eee7"', true);
+      b.rect(isL ? -WT : -25, -WT, W + (isL ? WT : 25) + (isU ? WT : 25), WT, wallC);
+      if (isL) b.rect(-WT, 0, WT, Math.max(lenL, 120) + 20, wallC);
+      if (isU) b.rect(W, 0, WT, Math.max(lenR, 120) + 20, wallC);
+
+      const modRect = (x, y, w, h, id) => {
+        b.rect(x, y, w, h, `fill="${G.topCol}" stroke="#1f2937" stroke-width="1" ${STK}`);
+        if (Math.min(w, h) >= 14) b.text(x + w / 2, y + h / 2 + fs * 0.3, id, fs * 0.75, 'fill="#0f172a" font-weight="800"');
+      };
+      const upRect = (x, y, w, h) => b.rect(x, y, w, h, `fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="5,3" ${STK}`, true);
+      const sinkAt = (x, y, w, h, vertical) => {
+        const bw = vertical ? h : w;
+        const iw = Math.min(bw - 10, 45), ih = 36;
+        if (!vertical) { b.rect(x + w / 2 - iw / 2, y + 12, iw, ih, `fill="#cfd4da" stroke="#94a3b8" stroke-width="1" rx="4" ${STK}`, true); b.out.push(`<circle cx="${(x + w / 2).toFixed(1)}" cy="${(y + 7).toFixed(1)}" r="2.2" fill="#64748b"/>`); }
+        else { b.rect(x + 12, y + h / 2 - iw / 2, ih, iw, `fill="#cfd4da" stroke="#94a3b8" stroke-width="1" rx="4" ${STK}`, true); }
+      };
+      const hobAt = (x, y, w, h, vertical) => {
+        const cx = x + w / 2, cy = y + h / 2, r = 6;
+        const pts = vertical ? [[-11, -12], [-11, 12], [11, -12], [11, 12]] : [[-12, -11], [12, -11], [-12, 11], [12, 11]];
+        b.rect(cx - 27, cy - 25, 54, 50, `fill="#27272a" rx="2"`, true);
+        pts.forEach(([dx, dy]) => b.out.push(`<circle cx="${(cx + dx).toFixed(1)}" cy="${(cy + dy).toFixed(1)}" r="${r}" fill="none" stroke="#a1a1aa" stroke-width="1" ${STK}/>`));
+      };
+
+      // основная стена
+      let x = 0;
+      loM.forEach(sec => { const w = parseFloat(sec.width) || 0; modRect(x, 0, w, LD, `Н-${sec.id}`); if (sec.kind === 'sink') sinkAt(x, 0, w, LD); if (sec.kind === 'hob') hobAt(x, 0, w, LD); x += w; });
+      let ux = 0;
+      upM.forEach(sec => { const w = parseFloat(sec.width) || 0; upRect(ux, 0, w, UD); ux += w; });
+      // левая стена: первый шкаф — дальний от угла
+      let y = lenL;
+      loL.forEach(sec => { const w = parseFloat(sec.width) || 0; y -= w; modRect(0, y, LD, w, `Н-${sec.id}`); if (sec.kind === 'sink') sinkAt(0, y, LD, w, true); if (sec.kind === 'hob') hobAt(0, y, LD, w, true); });
+      let uy = LD + sumW(upL);
+      upL.forEach(sec => { const w = parseFloat(sec.width) || 0; uy -= w; upRect(0, uy, UD, w); });
+      // правая стена: от угла
+      let yr = LD;
+      loR.forEach(sec => { const w = parseFloat(sec.width) || 0; modRect(W - LD, yr, LD, w, `Н-${sec.id}`); if (sec.kind === 'sink') sinkAt(W - LD, yr, LD, w, true); if (sec.kind === 'hob') hobAt(W - LD, yr, LD, w, true); yr += w; });
+      let uyr = LD;
+      upR.forEach(sec => { const w = parseFloat(sec.width) || 0; upRect(W - UD, uyr, UD, w); uyr += w; });
+      // остров
+      if (isl) {
+        b.rect(isl.x0, isl.z0, isl.x1 - isl.x0, isl.z1 - isl.z0, `fill="${G.topCol}" stroke="#1f2937" stroke-width="1" ${STK}`);
+        b.text((isl.x0 + isl.x1) / 2, (isl.z0 + isl.z1) / 2 + fs * 0.3, t('techIsland'), fs * 0.8, 'fill="#0f172a" font-weight="800"');
+        b.dimH(isl.x0, isl.x1, isl.z1 + fs * 1.8, String(MM(isl.x1 - isl.x0)), fs, isl.z1 + 0.5);
+        b.dimV(isl.z0, isl.z1, isl.x1 + fs * 1.8, String(MM(isl.z1 - isl.z0)), fs, isl.x1 + 0.5);
+        b.dimV(depthMax, isl.z0, (isl.x0 + isl.x1) / 2 - fs * 2.5, `${t('techAisle')} ${MM(isl.z0 - depthMax)}`, fs);
+      }
+
+      // размеры: основная стена сверху
+      let dx = 0;
+      loM.forEach(sec => { const w = parseFloat(sec.width) || 0; b.dimH(dx, dx + w, -WT - fs * 1.7, String(MM(w)), fs, -WT); dx += w; });
+      b.dimH(0, W, -WT - fs * 3.8, `${t('wMain')}: ${MM(W)}`, fs, -WT - fs * 1.7);
+      // левая стена слева
+      if (isL && loL.length) {
+        let dy = lenL;
+        loL.forEach(sec => { const w = parseFloat(sec.width) || 0; b.dimV(dy - w, dy, -WT - fs * 1.7, String(MM(w)), fs, -WT); dy -= w; });
+        b.dimV(0, lenL, -WT - fs * 3.8, `${t('wLeft')}: ${MM(lenL)}`, fs, -WT - fs * 1.7);
+      }
+      // правая стена справа
+      if (isU && loR.length) {
+        let dy = LD;
+        loR.forEach(sec => { const w = parseFloat(sec.width) || 0; b.dimV(dy, dy + w, W + WT + fs * 1.7, String(MM(w)), fs, W + WT); dy += w; });
+        b.dimV(0, lenR, W + WT + fs * 3.8, `${t('wRight')}: ${MM(lenR)}`, fs, W + WT + fs * 1.7);
+      }
+      // глубина
+      if (!isU) b.dimV(0, LD, W + fs * 1.7, String(MM(LD)), fs, W + 0.5);
+      b.text(isL ? LD + 4 : 0, floorD - fs * 0.6, t('techDepth', { l: MM(LD), u: hasUpper ? MM(UD) : '—' }), fs * 0.75, 'fill="#64748b" text-anchor="start"');
+      b.render(svg, 0.03, 0.04);
+    }
+
+    /* ---------- ОТДЕЛЬНЫЙ ШКАФ ---------- */
+    function drawSectionCadScheme(svgElementId, type, sec) {
+      const svg = typeof svgElementId === 'string' ? document.getElementById(svgElementId) : svgElementId;
+      if (!svg) return;
+      const isLower = type === 'lower';
+      const w = Math.max(10, parseFloat(sec.width) || 50);
+      const h = isLower ? 85 : (parseFloat(document.getElementById('upperHeight').value) || 72);
+      const fs = Math.max(4.5, Math.max(w, h) / 9);
+      const b = techBuilder();
+      const facade = selectedFacadeColor.hex;
+      if (isLower) {
+        b.rect(0.3, -10, w - 0.6, 10, 'fill="#3a3a3f"');
+        techFront(b, 0, w, -h, -10, sec, 'lower', facade, fs);
+      } else {
+        techFront(b, 0, w, -h, 0, sec, 'upper', facade, fs);
+      }
+      techLabel(b, w / 2, -h - fs * 1.6, `${isLower ? 'Н' : 'В'}-${sec.id}`, fs * 1.1, isLower ? '#fbbf24' : '#38bdf8');
+      b.pt(w / 2, -h - fs * 1.7);
+      b.dimH(0, w, fs * 1.7, String(MM(w)), fs, 0.5);
+      b.dimV(-h, 0, w + fs * 1.7, String(MM(h)), fs, w + 0.5);
+      b.text(w / 2, fs * 3.6, t('techDepthShort', { x: MM(sec.depth || (isLower ? 60 : 35)) }), fs * 0.8, 'fill="#64748b" font-weight="700"');
+      b.render(svg, 0.05, 0.04);
+    }
+
     /* ===================== СОСТОЯНИЕ ===================== */
+    const STD_W = 60;          // стандартная ширина шкафа, см
+    const MAX_SECTIONS = 16;   // максимум шкафов в ряду
     let LANG = 'ru';
     let currentType = 'straight';
     let lowerSections = [];
@@ -1605,21 +1589,7 @@
 
     /* ===================== ПОМОЩНИКИ ===================== */
     function vars() {
-      return { days: CONFIG.productionDays, m: CONFIG.warrantyMonths, name: LANG === 'uz' ? CONFIG.masterNameUz : CONFIG.masterName, phone: CONFIG.phoneDisplay, tg: CONFIG.telegram, gift: fmt(CONFIG.giftDesignFrom) };
-    }
-    // Дизайн-проект в подарок: показываем честно — с условием и с тем, сколько не хватает до порога
-    function giftHtml(total) {
-      if (!(CONFIG.giftDesignFrom > 0)) return '';
-      const note = `<small>${esc(t('giftNote', vars()))}</small>`;
-      if (total >= CONFIG.giftDesignFrom) return esc(t('giftYes')) + note;
-      return esc(t('giftLeft', { x: fmt(CONFIG.giftDesignFrom - total) })) + note;
-    }
-    function renderGift(id, total) {
-      const box = el(id);
-      if (!box) return;
-      box.innerHTML = giftHtml(total);
-      box.classList.toggle('pending', CONFIG.giftDesignFrom > 0 && total < CONFIG.giftDesignFrom);
-      box.style.display = CONFIG.giftDesignFrom > 0 ? 'block' : 'none';
+      return { days: CONFIG.productionDays, m: CONFIG.warrantyMonths, name: LANG === 'uz' ? CONFIG.masterNameUz : CONFIG.masterName, phone: CONFIG.phoneDisplay, tg: CONFIG.telegram };
     }
     function t(key, v) {
       let s = (I18N[LANG] && I18N[LANG][key] !== undefined) ? I18N[LANG][key] : (I18N.ru[key] !== undefined ? I18N.ru[key] : key);
@@ -1769,7 +1739,6 @@
         inst.style.display = 'none';
       }
 
-      renderGift('giftLine', total);
       drawFullFrontView('svgFront', s.hasUpper);
       drawTopViewPlan('svgTop', s.hasUpper);
       renderKitchen(el('kitchenRender'), renderStateFrom(s));
@@ -1801,12 +1770,12 @@
     /* ===================== ШКАФЫ ===================== */
     function initDefaultSections() {
       lowerSections = [
-        mkSec('lower', 1, 'sink', 50, 1, 0), mkSec('lower', 2, 'drawers', 50, 0, 3),
-        mkSec('lower', 3, 'hob', 50, 1, 0), mkSec('lower', 4, 'door', 50, 1, 0)
+        mkSec('lower', 1, 'sink', STD_W, 1, 0), mkSec('lower', 2, 'drawers', STD_W, 0, 3),
+        mkSec('lower', 3, 'hob', STD_W, 1, 0), mkSec('lower', 4, 'door', STD_W, 1, 0)
       ];
       upperSections = [
-        mkSec('upper', 1, 'dryer', 50, 1, 1), mkSec('upper', 2, 'door', 50, 1, 0),
-        mkSec('upper', 3, 'hood', 50, 0, 1), mkSec('upper', 4, 'side', 50, 1, 0)
+        mkSec('upper', 1, 'dryer', STD_W, 1, 1), mkSec('upper', 2, 'door', STD_W, 1, 0),
+        mkSec('upper', 3, 'hood', STD_W, 0, 1), mkSec('upper', 4, 'side', STD_W, 1, 0)
       ];
       el('countLowerInput').value = 4;
       el('countUpperInput').value = 4;
@@ -1820,11 +1789,11 @@
     function changeSectionsCount(type, delta) {
       const input = el(type === 'lower' ? 'countLowerInput' : 'countUpperInput');
       let val = parseInt(input.value) || 4;
-      val = Math.max(1, Math.min(8, val + delta));
+      val = Math.max(1, Math.min(MAX_SECTIONS, val + delta));
       input.value = val;
       const arr = type === 'lower' ? lowerSections : upperSections;
       if (val > arr.length) {
-        for (let i = arr.length + 1; i <= val; i++) arr.push(mkSec(type, i, null, 50, 1, 0, 'handles', 'main'));
+        for (let i = arr.length + 1; i <= val; i++) arr.push(mkSec(type, i, null, STD_W, 1, 0, 'handles', 'main'));
       } else if (val < arr.length) {
         arr.splice(val);
       }
@@ -1903,6 +1872,52 @@
       updateCalculator();
     }
 
+    /* Клиент ввёл длину стены — раскладываем шкафы по 60 см (остаток — узкий шкаф или прибавка к последнему) */
+    function standardWidths(len) {
+      len = Math.round(len);
+      const n = Math.floor(len / STD_W), r = len - n * STD_W;
+      const w = new Array(n).fill(STD_W);
+      if (r >= 15) w.push(r);
+      else if (w.length) w[w.length - 1] += r;
+      else w.push(Math.max(15, len));
+      return w;
+    }
+    function fillWall(wall, len) {
+      const widths = standardWidths(len);
+      ['lower', 'upper'].forEach(tier => {
+        const arr = tier === 'lower' ? lowerSections : upperSections;
+        const wallOf = s => (currentType === 'straight' ? 'main' : (s.wall || 'main'));
+        const parts = { left: [], main: [], right: [] };
+        arr.forEach(s => parts[wallOf(s)].push(s));
+        const old = parts[wall];
+        const open = old[0] ? old[0].openType : 'handles';
+        parts[wall] = widths.map((w, i) => {
+          const s = old[i] ? Object.assign({}, old[i]) : mkSec(tier, 0, 'door', w, 1, 0, open, wall);
+          s.width = w;
+          s.wall = wall;
+          return s;
+        });
+        const merged = [...parts.left, ...parts.main, ...parts.right].slice(0, MAX_SECTIONS);
+        merged.forEach((s, i) => { s.id = i + 1; if (s.autoName) s.name = defaultModuleName(s.kind, tier, s.id); });
+        if (tier === 'lower') lowerSections = merged; else upperSections = merged;
+      });
+      el('countLowerInput').value = lowerSections.length;
+      el('countUpperInput').value = upperSections.length;
+    }
+    function onWallInputManual(wallId) {
+      const input = el(wallId);
+      let len = parseFloat(input.value) || 0;
+      const isMain = wallId === 'mainWall';
+      const min = isMain ? 30 : 75;
+      if (len < min) { len = min; input.value = min; }
+      const wall = isMain ? 'main' : (wallId === 'leftWall' ? 'left' : 'right');
+      fillWall(wall, isMain ? len : len - 60);
+      syncWallAssignments();
+      renderSections('lower');
+      renderSections('upper');
+      updateCalculator();
+    }
+
     function updateTypeUI() {
       document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === currentType));
       const box = el('sideWallsContainer');
@@ -1930,8 +1945,14 @@
       updateCalculator();
     }
     function toggleIslandOptions() {
-      el('islandOptions').style.display = chk('hasIsland') ? 'block' : 'none';
+      updateIslandUI();
       updateCalculator();
+    }
+    function updateIslandUI() {
+      const on = chk('hasIsland');
+      el('islandOptions').style.display = on ? 'block' : 'none';
+      el('islandToggle').classList.toggle('active', on);
+      el('islandToggle').querySelector('.island-check').textContent = on ? '✓' : '＋';
     }
     function toggleDetailMode() {
       el('sectionsDetail').style.display = chk('detailMode') ? 'block' : 'none';
@@ -2031,7 +2052,11 @@
         zFront = Math.max(zFront, isl.z1);
       }
       const floorZ = zFront + 60;
-      const cam = { x: W / 2, y: 165, z: floorZ + Math.max(W, 260) * 1.15 + 120 };
+      const view = st.view || {};
+      let camX = W / 2 + (view.shift || 0) * W;
+      if (lowLeft.length || upLeft.length) camX = Math.max(camX, LD + 15);
+      if (lowRight.length || upRight.length) camX = Math.min(camX, W - LD - 15);
+      const cam = { x: camX, y: view.camY || 165, z: floorZ + Math.max(W, 260) * 1.15 + 120 };
       const P = (x, y, z) => { const d = Math.max(1, cam.z - z); return [(x - cam.x) / d * 1000, -(y - cam.y) / d * 1000]; };
       const shapes = [];
       const poly = (pts, fill, o) => shapes.push(Object.assign({ p: pts.map(q => P(q[0], q[1], q[2])), fill, fit: true }, o || {}));
@@ -2120,6 +2145,8 @@
           u += w;
         });
         if (kind !== 'main') poly([pt(run, u, UB, 0), pt(run, u, UB, UD), pt(run, u, UB + UH, UD), pt(run, u, UB + UH, 0)], shadeColor(bodyCol, -0.12), { stroke: 'rgba(0,0,0,0.15)' });
+        if (kind === 'main' && cam.x > u + 1 && type !== 'u-shape') poly([pt(run, u, UB, 0), pt(run, u, UB, UD), pt(run, u, UB + UH, UD), pt(run, u, UB + UH, 0)], shadeColor(bodyCol, -0.12), { stroke: 'rgba(0,0,0,0.15)' });
+        if (cam.y > UB + UH) poly(flat(run, 0, u, 0, UD, UB + UH), shadeColor(bodyCol, 0.04), { stroke: 'rgba(0,0,0,0.12)' });
       }
       upperRun(upMain, 'main');
       upperRun(upLeft, 'left');
@@ -2139,13 +2166,13 @@
           if (sec.kind === 'sink' || sec.kind === 'hob') marks.push({ kind: sec.kind, u0: u, u1: u + w });
           u += w;
         });
-        if (kind !== 'main') {
+        if (kind !== 'main' || (cam.x > total + 1 && type !== 'u-shape')) {
           poly([pt(run, total, PL, 0), pt(run, total, PL, LD), pt(run, total, LTOP, LD), pt(run, total, LTOP, 0)], shadeColor(bodyCol, -0.12), { stroke: 'rgba(0,0,0,0.15)' });
         }
         // столешница
         poly(flat(run, 0, total + (kind === 'main' ? 0 : 1), 0, LD + 2, TOPY), shadeColor(topCol, 0.08), { stroke: 'rgba(0,0,0,0.12)' });
         poly(quad(run, 0, total + (kind === 'main' ? 0 : 1), LTOP, TOPY, LD + 2), shadeColor(topCol, -0.15), {});
-        if (kind !== 'main') poly([pt(run, total + 1, LTOP, 0), pt(run, total + 1, LTOP, LD + 2), pt(run, total + 1, TOPY, LD + 2), pt(run, total + 1, TOPY, 0)], shadeColor(topCol, -0.25), {});
+        if (kind !== 'main' || (cam.x > total + 1 && type !== 'u-shape')) poly([pt(run, total + (kind === 'main' ? 0 : 1), LTOP, 0), pt(run, total + (kind === 'main' ? 0 : 1), LTOP, LD + 2), pt(run, total + (kind === 'main' ? 0 : 1), TOPY, LD + 2), pt(run, total + (kind === 'main' ? 0 : 1), TOPY, 0)], shadeColor(topCol, -0.25), {});
         if (/#(c|b|a|9)/i.test(topCol) && luminance(topCol) < 0.75) {
           for (let k = 1; k < 4; k++) seg(pt(run, 0, TOPY + 0.05, (LD + 2) * k / 4), pt(run, total, TOPY + 0.05, (LD + 2) * k / 4), 'rgba(90,55,20,0.12)', 1);
         }
@@ -2217,17 +2244,17 @@
     // [вид шкафа, ширина см, полки, ящики (нижние) или газлифты (верхние), стена m/l/r]
     const PRESETS = [
       { id: 'compact', t: 'straight', f: 0, b: 0, c: 0, fc: 'ec_1', bc: 'ec_13', open: 'h', o: [1, 1, 0],
-        lo: [['sink', 60, 1, 0], ['drawers', 40, 0, 3], ['hob', 50, 1, 0], ['door', 30, 1, 0]],
-        up: [['dryer', 60, 1, 1], ['door', 40, 1, 0], ['hood', 50, 0, 1], ['door', 30, 1, 0]] },
+        lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0]],
+        up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1]] },
       { id: 'scandi', t: 'straight', f: 2, b: 0, c: 1, fc: 'pr_8', bc: 'ec_13', open: 'h', o: [1, 1, 0],
-        lo: [['sink', 60, 1, 0], ['drawers', 40, 0, 3], ['hob', 60, 1, 0], ['door', 50, 1, 0], ['drawers', 50, 0, 3]],
-        up: [['dryer', 60, 1, 1], ['door', 40, 1, 0], ['hood', 60, 0, 1], ['door', 50, 1, 0], ['door', 50, 1, 0]] },
+        lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
+        up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
       { id: 'loft', t: 'l-shape', f: 3, b: 0, c: 1, fc: 'pr_15', bc: 'st_4', open: 'g', o: [1, 1, 1],
         lo: [['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 60, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
         up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
       { id: 'classic', t: 'u-shape', f: 4, b: 1, c: 2, fc: 'pr_9', bc: 'ec_5', open: 'h', o: [1, 1, 1],
-        lo: [['door', 50, 1, 0, 'l'], ['drawers', 50, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 40, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['door', 50, 1, 0, 'r'], ['door', 50, 1, 0, 'r']],
-        up: [['door', 50, 1, 0, 'l'], ['door', 50, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 40, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 50, 1, 0, 'r'], ['door', 50, 1, 0, 'r']] }
+        lo: [['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 60, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']],
+        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']] }
     ];
 
     function presetState(p) {
@@ -2258,7 +2285,6 @@
             <div class="preset-name">${esc(t('p_' + p.id))}</div>
             <div class="preset-desc">${esc(t('p_' + p.id + '_d'))}</div>
             <div class="preset-price">${esc(t('from', { x: fmt(price) }))}</div>
-            ${CONFIG.giftDesignFrom > 0 && price >= CONFIG.giftDesignFrom ? `<div class="preset-gift">${esc(t('giftTag'))}</div>` : ''}
           </div>
         </button>`;
       }).join('');
@@ -2325,7 +2351,7 @@
       if (!st || typeof st !== 'object' || !Array.isArray(st.lo)) return false;
       const clampN = (v, a, b, d) => { v = Number(v); return Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d; };
       const om = { h: 'handles', p: 'push', g: 'gola' }, wm = { m: 'main', l: 'left', r: 'right' };
-      const build = (arr, tier) => (Array.isArray(arr) ? arr.slice(0, 8) : []).map((e, i) => {
+      const build = (arr, tier) => (Array.isArray(arr) ? arr.slice(0, MAX_SECTIONS) : []).map((e, i) => {
         e = Array.isArray(e) ? e : [];
         const kind = (typeof e[0] === 'string' && I18N.ru['mod_' + e[0]] !== undefined && e[0] !== 'lower' && e[0] !== 'upper') ? e[0] : null;
         const s = { id: i + 1, kind, autoName: !e[1], width: clampN(e[2], 10, 300, 50), depth: tier === 'lower' ? 60 : 35, height: tier === 'lower' ? 85 : 72,
@@ -2337,7 +2363,7 @@
       const lo = build(st.lo, 'lower');
       if (!lo.length) return false;
       let up = build(st.up, 'upper');
-      if (!up.length) up = [mkSec('upper', 1, 'door', 50, 1, 0)];
+      if (!up.length) up = [mkSec('upper', 1, 'door', STD_W, 1, 0)];
       lowerSections = lo;
       upperSections = up;
       el('countLowerInput').value = lo.length;
@@ -2369,7 +2395,7 @@
       el('islandLength').value = clampN(isl[1], 80, 300, 140);
       el('islandWidth').value = clampN(isl[2], 50, 150, 80);
       el('upperTierControls').style.display = chk('hasUpperTier') ? 'block' : 'none';
-      el('islandOptions').style.display = chk('hasIsland') ? 'block' : 'none';
+      updateIslandUI();
       renderSections('lower');
       renderSections('upper');
       updateColorUIBadges();
@@ -2433,7 +2459,6 @@
       if (s.hasUpper) upperSections.forEach((sec, idx) => drawSectionCadScheme('resMini_upper_' + idx, 'upper', sec));
 
       el('resTotalPrice').textContent = fmt(calculatedTotalPriceNumber);
-      renderGift('resGiftLine', calculatedTotalPriceNumber);
       el('leadPhone').value = el('clientPhone').value;
       resetLeadUI();
       el('summaryModal').style.display = 'block';
@@ -2511,6 +2536,110 @@
         showLeadStatus(t('leadFail', vars()), 'error');
       }
       setLeadBtn('leadBtn', false);
+    }
+
+    /* ===================== ЭСКИЗ КУХНИ С ВИЗУАЛИЗАЦИЕЙ ===================== */
+    function openSketch() {
+      const s = getCalcState();
+      const NS = 'http://www.w3.org/2000/svg';
+      const mk = () => { const e = document.createElementNS(NS, 'svg'); e.setAttribute('xmlns', NS); return e; };
+      const out = (e, style) => { e.setAttribute('style', style); return e.outerHTML; };
+      const rs = renderStateFrom(s);
+      const angle = { shift: s.type === 'straight' ? 0.75 : (s.type === 'l-shape' ? 0.6 : 0.2), camY: 235 };
+      const v1 = mk(); renderKitchen(v1, rs);
+      const v2 = mk(); renderKitchen(v2, Object.assign({}, rs, { view: angle }));
+      const fr = mk(); drawFullFrontView(fr, s.hasUpper);
+      const pl = mk(); drawTopViewPlan(pl, s.hasUpper);
+      const mini = (sec, tier) => { const e = mk(); drawSectionCadScheme(e, tier, sec); return `<div class="mini">${out(e, 'width:100%;height:170px;display:block;')}<div class="mini-t">${tier === 'lower' ? 'Н' : 'В'}-${sec.id} · ${esc(sec.name)}</div></div>`; };
+      const minis = lowerSections.map(x => mini(x, 'lower')).join('') + (s.hasUpper ? upperSections.map(x => mini(x, 'upper')).join('') : '');
+      const d = new Date();
+      const date = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+      const client = el('clientName').value.trim() || t('notSet');
+      const shapeName = { 'straight': t('typeStraight'), 'l-shape': t('typeL'), 'u-shape': t('typeU') }[s.type] + (s.island ? ' + ' + t('typeIsland') : '');
+      const sw = (hex, title, sub) => `<div class="sw"><div class="sw-c" style="background:${hex}"></div><div><b>${esc(title)}</b><br><span>${esc(sub)}</span></div></div>`;
+      const rows = (arr, tier) => arr.map(x => `<tr><td>${tier === 'lower' ? 'Н' : 'В'}-${x.id}</td><td>${esc(x.name)}</td><td>${esc(wallText(x.wall))}</td><td>${MM(x.width)}</td><td>${x.shelves | 0}</td><td>${tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0)}</td><td>${esc(openText(x.openType))}</td></tr>`).join('');
+      const head = gas => `<tr><th>№</th><th>${esc(t('thName'))}</th><th>${esc(t('thWall'))}</th><th>${esc(t('thWidth'))}, мм</th><th>${esc(t('thShelves'))}</th><th>${esc(gas ? t('thGas') : t('thDrawers'))}</th><th>${esc(t('thOpen'))}</th></tr>`;
+      const master = LANG === 'uz' ? CONFIG.masterNameUz : CONFIG.masterName;
+
+      const html = `<!DOCTYPE html><html lang="${LANG}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(t('sketchTitle'))} — ${esc(client)}</title>
+<style>
+  body { font-family: Manrope, 'Segoe UI', Arial, sans-serif; margin: 0; background: #e5e7eb; color: #0f172a; }
+  .toolbar { position: sticky; top: 0; z-index: 5; background: #0f172a; padding: 10px 16px; display: flex; gap: 12px; align-items: center; }
+  .toolbar button { background: #f59e0b; color: #0f172a; border: none; border-radius: 6px; padding: 9px 16px; font-weight: 700; cursor: pointer; font-size: 14px; }
+  .page { max-width: 1050px; margin: 16px auto; background: #fff; padding: 28px 32px; box-shadow: 0 4px 18px rgba(0,0,0,.15); }
+  .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; border-bottom: 3px solid #f59e0b; padding-bottom: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 28px; }
+  .meta { font-size: 13px; color: #475569; line-height: 1.6; text-align: right; }
+  h2 { font-size: 16px; margin: 22px 0 10px; color: #b45309; text-transform: uppercase; letter-spacing: .4px; }
+  .views { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .view { background: #f3eee7; border-radius: 10px; overflow: hidden; border: 1px solid #e2d8ca; }
+  .view-t { font-size: 12px; font-weight: 700; color: #475569; padding: 6px 10px; background: #faf7f2; }
+  .sws { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .sw { display: flex; gap: 10px; align-items: center; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; font-size: 13px; }
+  .sw span { color: #64748b; }
+  .sw-c { width: 54px; height: 54px; border-radius: 8px; border: 1px solid rgba(0,0,0,.15); flex-shrink: 0; }
+  .tech { background: #f8f6f2; border-radius: 10px; padding: 8px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
+  .minis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .mini { background: #f8f6f2; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px; }
+  .mini-t { font-size: 11px; font-weight: 700; text-align: center; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; }
+  th, td { border: 1px solid #cbd5e1; padding: 5px 7px; text-align: left; }
+  th { background: #f1f5f9; }
+  .params td:first-child { width: 30%; font-weight: 700; background: #f8fafc; }
+  .price { margin-top: 14px; border: 2px solid #f59e0b; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .price b { font-size: 22px; color: #b45309; }
+  .note { margin-top: 12px; font-size: 12px; color: #64748b; background: #f8fafc; border-left: 4px solid #94a3b8; padding: 8px 12px; }
+  .pb { page-break-before: always; }
+  @media print { body { background: #fff; } .toolbar { display: none; } .page { box-shadow: none; margin: 0; max-width: none; padding: 0; } @page { size: A4 landscape; margin: 12mm; } }
+  @media (max-width: 760px) { .page { padding: 16px; } .views, .sws { grid-template-columns: 1fr; } .meta { text-align: left; } }
+</style></head><body>
+<div class="toolbar"><button onclick="window.print()">${esc(t('sketchPrint'))}</button></div>
+<div class="page">
+  <div class="top">
+    <div><h1>${esc(t('sketchTitle'))}</h1><div style="color:#475569;margin-top:4px;">${esc(t('customer'))}: <b>${esc(client)}</b></div></div>
+    <div class="meta">${esc(t('sketchDate'))}: ${date}<br>${esc(t('sketchMaster'))}: ${esc(master)} · ${esc(CONFIG.phoneDisplay)}<br>Telegram: @${esc(CONFIG.telegram)}</div>
+  </div>
+
+  <div class="views">
+    <div class="view"><div class="view-t">${esc(t('sketchView1'))}</div>${out(v1, 'width:100%;height:330px;display:block;overflow:hidden;')}</div>
+    <div class="view"><div class="view-t">${esc(t('sketchView2'))}</div>${out(v2, 'width:100%;height:330px;display:block;overflow:hidden;')}</div>
+  </div>
+
+  <h2>${esc(t('sketchMaterials'))}</h2>
+  <div class="sws">
+    ${sw(selectedFacadeColor.hex, t('facades') + ': ' + selectedFacadeColor.name, mat(CONFIG.facades[s.facade]))}
+    ${sw(selectedBodyColor.hex, t('body') + ': ' + selectedBodyColor.name, mat(CONFIG.bodies[s.body]))}
+    ${sw(CONFIG.countertops[s.top].color, t('countertop'), mat(CONFIG.countertops[s.top]))}
+  </div>
+
+  <h2 class="pb">${esc(t('sketchDrawings'))}</h2>
+  <div class="tech">${out(fr, 'width:100%;height:auto;display:block;max-height:430px;')}</div>
+  <div class="tech">${out(pl, 'width:100%;height:auto;display:block;max-height:520px;')}</div>
+
+  <h2 class="pb">${esc(t('cabSchemes'))}</h2>
+  <div class="minis">${minis}</div>
+
+  <h2>${esc(t('sketchSpec'))}</h2>
+  <table class="params">
+    <tr><td>${esc(t('sketchShape'))}</td><td>${esc(shapeName)}</td></tr>
+    <tr><td>${esc(t('dimensions'))}</td><td>${esc(dimsText(s))}</td></tr>
+    <tr><td>${esc(t('facades'))}</td><td>${esc(mat(CONFIG.facades[s.facade]))} — ${esc(colorLabel(selectedFacadeColor))}</td></tr>
+    <tr><td>${esc(t('body'))}</td><td>${esc(mat(CONFIG.bodies[s.body]))} — ${esc(colorLabel(selectedBodyColor))}</td></tr>
+    <tr><td>${esc(t('countertop'))}</td><td>${esc(mat(CONFIG.countertops[s.top]))}</td></tr>
+    <tr><td>${esc(t('extras'))}</td><td>${esc(extrasText(s))}</td></tr>
+  </table>
+  <b>${esc(t('lowerCabs'))}</b>
+  <table>${head(false)}${rows(lowerSections, 'lower')}</table>
+  ${s.hasUpper ? `<b>${esc(t('upperCabs'))}</b><table>${head(true)}${rows(upperSections, 'upper')}</table>` : ''}
+  <div class="price"><span>${esc(t('priceTitle'))}</span><b>${fmt(calculatedTotalPriceNumber)} ${esc(t('sum'))}</b></div>
+  <div class="note">${esc(t('sketchNote'))}</div>
+</div></body></html>`;
+
+      const w = window.open('', '_blank');
+      if (!w) { alert(t('popupBlocked')); return; }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
     }
 
     /* ===================== ДОГОВОР ===================== */
@@ -2606,7 +2735,6 @@
   <p>2.2. Заказчик вносит аванс в размере ${F(String(CONFIG.advancePercent), 40)}% — ${F(fmt(adv), 130)} сум в день подписания Договора.</p>
   <p>2.3. Оставшаяся сумма ${F(fmt(rest), 130)} сум оплачивается в день завершения монтажа после подписания Акта приёмки.</p>
   <p>2.4. В стоимость входят изготовление, доставка по г. Ташкенту и монтаж Изделия. Бытовая техника, мойка, смеситель и их подключение к коммуникациям в стоимость не входят, если это не указано в Спецификации.</p>
-  ${CONFIG.giftDesignFrom > 0 ? `<p>2.5. При стоимости Изделия по Договору от ${fmt(CONFIG.giftDesignFrom)} сум Исполнитель бесплатно разрабатывает для Заказчика дизайн-проект кухни. Стоимость дизайн-проекта в этом случае в цену Договора не включается и дополнительно не оплачивается.</p>` : ''}
 
   <h2>3. Сроки</h2>
   <p>3.1. Срок изготовления — ${F(CONFIG.productionDays, 70)} рабочих дней с даты внесения аванса и утверждения окончательных размеров.</p>
