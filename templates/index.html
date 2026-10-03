@@ -1721,6 +1721,22 @@
       };
     }
 
+    /* Снимок окна спецификации (как кнопка «Скачать спецификацию»), уходит боту вместе с заявкой */
+    async function captureSpecImage() {
+      if (typeof html2canvas !== 'function') return '';
+      try {
+        const shot = html2canvas(document.getElementById('captureArea'), { scale: 1.5, useCORS: true, backgroundColor: '#0f172a', logging: false });
+        const timeout = new Promise(resolve => setTimeout(() => resolve(null), 15000));
+        const canvas = await Promise.race([shot, timeout]);
+        if (!canvas) return '';
+        let data = canvas.toDataURL('image/jpeg', 0.85);
+        if (data.length > 9000000) data = canvas.toDataURL('image/jpeg', 0.6);
+        return data.length > 9000000 ? '' : data;
+      } catch (e) {
+        return '';
+      }
+    }
+
     async function sendLeadToMaster() {
       const btn = document.getElementById('sendLeadBtn');
       const phone = document.getElementById('leadPhone').value.trim();
@@ -1731,15 +1747,18 @@
       }
 
       btn.disabled = true;
-      btn.innerText = 'Отправляем...';
+      btn.innerText = 'Готовим спецификацию...';
       showLeadStatus('', '');
       const fallback = 'Не удалось отправить заявку. Позвоните +998 92 093-45-10 или напишите в Telegram @Kitchencalc.';
 
       try {
+        const payload = buildLeadPayload();
+        payload.image = await captureSpecImage();
+        btn.innerText = 'Отправляем...';
         const resp = await fetch('/lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(buildLeadPayload())
+          body: JSON.stringify(payload)
         });
         let data = {};
         try { data = await resp.json(); } catch (e) {}
