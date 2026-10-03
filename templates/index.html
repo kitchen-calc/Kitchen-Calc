@@ -64,7 +64,7 @@
     .master-contacts .telegram { font-size: 0.88rem; color: #38bdf8; text-decoration: none; font-weight: 600; }
 
     .container { max-width: 1280px; margin: 25px auto; padding: 0 20px; }
-    .app-layout { display: grid; grid-template-columns: 460px 1fr; gap: 25px; align-items: start; }
+    .app-layout { display: grid; grid-template-columns: 440px 1fr; gap: 25px; align-items: start; }
     .sticky-sidebar { position: sticky; top: 85px; display: flex; flex-direction: column; gap: 20px; }
 
     .card {
@@ -102,10 +102,35 @@
     .field-group { display: flex; flex-direction: column; gap: 5px; }
     .field-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
     .field-group input, .field-group select, .field-group textarea {
-      background: #1e293b !important; color: #f8fafc !important; border: 1px solid var(--border-dark); border-radius: 8px; padding: 10px 12px; font-size: 15px !important; outline: none;
+      background: #1e293b !important; color: #f8fafc !important; border: 1px solid var(--border-dark); border-radius: 8px; padding: 10px 12px; font-size: 14px !important; outline: none;
     }
     .field-group select option { background-color: #0f172a !important; color: #f8fafc !important; }
     .field-group input:focus, .field-group select:focus { border-color: var(--accent-gold); }
+
+    .btn-color-picker {
+      background: #1e293b;
+      border: 1px solid var(--border-gold);
+      color: var(--accent-gold);
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-color-picker:hover { background: rgba(251, 191, 36, 0.15); }
+    .color-preview-badge {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid #ffffff;
+      flex-shrink: 0;
+    }
 
     .number-stepper { display: flex; align-items: center; gap: 6px; }
     .btn-step {
@@ -119,7 +144,6 @@
     .checkbox-label input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-gold); }
     .sub-options { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-dark); display: block; }
 
-    /* КАРТОЧКА ОТСЕКА */
     .section-card-item {
       background: rgba(15, 23, 42, 0.7);
       border: 1.5px solid var(--border-dark);
@@ -158,7 +182,8 @@
     }
     .btn-submit:hover { background: linear-gradient(135deg, #f59e0b, #d97706); transform: translateY(-1px); }
 
-    #summaryModal {
+    /* МОДАЛЬНЫЕ ОКНА */
+    .modal-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -173,10 +198,59 @@
       background: #0f172a;
       border: 2px solid var(--accent-gold);
       border-radius: 14px;
-      padding: 30px;
+      padding: 25px;
       color: #f8fafc;
     }
-    .modal-header { font-size: 1.3rem; font-weight: bold; color: var(--accent-gold); border-bottom: 2px solid var(--accent-gold); padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; }
+    .modal-header { font-size: 1.3rem; font-weight: bold; color: var(--accent-gold); border-bottom: 2px solid var(--accent-gold); padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+    
+    /* КАТАЛОГ ЦВЕТОВ (СТИЛИ) */
+    .catalog-category-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin: 20px 0 10px 0;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+    }
+    .color-card {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 10px;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .color-card:hover {
+      border-color: var(--accent-gold);
+      transform: translateY(-2px);
+      background: rgba(251, 191, 36, 0.1);
+    }
+    .color-swatch-box {
+      width: 100%;
+      height: 75px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      object-fit: cover;
+      background-size: cover;
+      background-position: center;
+    }
+    .color-card-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #f8fafc;
+      line-height: 1.2;
+    }
+
     .modal-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
     .modal-table th, .modal-table td { border: 1px solid #334155; padding: 8px 10px; font-size: 0.85rem; text-align: left; }
     .modal-table th { background: #1e293b; color: var(--accent-gold); }
@@ -184,11 +258,11 @@
 
     .cad-drawing-box {
       width: 100%;
-      height: 260px;
+      height: 250px;
       background: #eef2f6;
       border: 1.5px solid #38bdf8;
       border-radius: 8px;
-      margin: 15px 0;
+      margin: 10px 0;
       position: relative;
       overflow: hidden;
     }
@@ -226,6 +300,7 @@
       .sticky-sidebar { position: static; }
       .section-card-item { grid-template-columns: 1fr; }
       .section-mini-svg { width: 100%; height: 110px; }
+      .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
     }
   </style>
 </head>
@@ -253,16 +328,6 @@
           <div class="price-title">Итоговая стоимость гарнитура</div>
           <div class="price-value" id="totalPriceDisplay">0</div>
           <div class="price-currency">Узбекских сум (UZS)</div>
-        </div>
-
-        <div class="card">
-          <div class="drawing-title">
-            <span>Образец фасада (3D)</span>
-            <small style="color:var(--text-muted);" id="panelSampleBadge">ЛДСП</small>
-          </div>
-          <div class="svg-container" style="height: 150px;">
-            <svg id="svgPanelSample" viewBox="0 0 350 180"></svg>
-          </div>
         </div>
 
         <!-- ЧЕРТЕЖ 1: ВИД СПЕРЕДИ 2D -->
@@ -386,35 +451,35 @@
           </div>
         </div>
 
-        <!-- 4. МАТЕРИАЛЫ И ФАСАДЫ -->
+        <!-- 4. МАТЕРИАЛЫ И ЦВЕТА -->
         <div class="card">
           <div class="section-title">
             <span class="step-badge">4</span>
-            <span>Параметры Фасада, Корпуса и Столешницы</span>
+            <span>Материалы, Столешница и Цвета (Каталог)</span>
           </div>
 
           <div class="inputs-grid">
+            <!-- Фасад -->
             <div class="field-group">
               <label>Материал фасада</label>
               <select id="facadeMaterial" onchange="updateCalculator()">
                 <option value="2500000">ЛДСП Эконом</option>
-                <option value="3200000" selected>ЛДСП Премиум (Egger)</option>
-                <option value="3800000">МДФ Пленочный</option>
+                <option value="2900000">ЛМДФ Эконом</option>
+                <option value="3400000" selected>ЛДСП Премиум (Egger)</option>
+                <option value="3900000">ЛМДФ Премиум</option>
                 <option value="4800000">МДФ Эмаль (Крашенный)</option>
                 <option value="6500000">Массив / Шпон</option>
               </select>
             </div>
             <div class="field-group">
               <label>Цвет фасада</label>
-              <select id="facadeColor" onchange="updateCalculator()">
-                <option value="#f8fafc" selected>Белый Матовый</option>
-                <option value="#ffffff">Белый Глянец</option>
-                <option value="#fef3c7">Слоновая Кость</option>
-                <option value="#334155">Антрацит / Графит</option>
-                <option value="#d97706">Дуб Сонома</option>
-                <option value="#b45309">Дуб Вотан</option>
-              </select>
+              <button type="button" class="btn-color-picker" onclick="openColorCatalogModal('facade')">
+                <span id="facadeColorText">Выбрать цвет</span>
+                <span class="color-preview-badge" id="facadeColorBadge" style="background:#f8fafc;"></span>
+              </button>
             </div>
+
+            <!-- Корпус -->
             <div class="field-group">
               <label>Материал корпуса</label>
               <select id="bodyMaterial" onchange="updateCalculator()">
@@ -423,6 +488,15 @@
               </select>
             </div>
             <div class="field-group">
+              <label>Цвет корпуса</label>
+              <button type="button" class="btn-color-picker" onclick="openColorCatalogModal('body')">
+                <span id="bodyColorText">Выбрать цвет</span>
+                <span class="color-preview-badge" id="bodyColorBadge" style="background:#ffffff;"></span>
+              </button>
+            </div>
+
+            <!-- Столешница -->
+            <div class="field-group" style="grid-column: span 2;">
               <label>Столешница</label>
               <select id="countertopMaterial" onchange="updateCalculator()">
                 <option value="200000" selected>ЛДСП 28 мм</option>
@@ -517,19 +591,39 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО -->
-  <div id="summaryModal">
+  <!-- МОДАЛЬНОЕ ОКНО: КАТАЛОГ ЦВЕТОВ -->
+  <div class="modal-overlay" id="colorCatalogModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="catalogModalTitle">Каталог цветов</span>
+        <button style="background:none; border:none; color:var(--accent-gold); font-size:1.5rem; cursor:pointer;" onclick="closeColorCatalogModal()">✕</button>
+      </div>
+
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">
+        Выберите цвет из каталога (отсортировано по ценовым категориям). Нажмите на карточку для выбора.
+      </p>
+
+      <div id="catalogContent"></div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО: СПЕЦИФИКАЦИЯ -->
+  <div class="modal-overlay" id="summaryModal">
     <div class="modal-content" id="captureArea">
-      <div class="modal-header">Спецификация и 2D-чертежи кухни</div>
+      <div class="modal-header">
+        <span>Спецификация и 2D-чертежи кухни</span>
+      </div>
       
       <div class="inputs-grid" style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
         <div><strong>Заказчик:</strong> <span id="resClientName">-</span></div>
         <div><strong>Телефон:</strong> <span id="resClientPhone">-</span></div>
-        <div style="grid-column: span 2;"><strong>Адрес:</strong> <span id="resClientNotes">-</span></div>
+        <div><strong>Фасад:</strong> <span id="resFacadeInfo">-</span></div>
+        <div><strong>Корпус:</strong> <span id="resBodyInfo">-</span></div>
+        <div style="grid-column: span 2;"><strong>Адрес / Доп:</strong> <span id="resClientNotes">-</span></div>
       </div>
 
       <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin-bottom: 5px;">Чертеж 1: Вид спереди 2D (Фасады и модули)</h3>
-      <div class="cad-drawing-box" style="height: 250px;">
+      <div class="cad-drawing-box">
         <svg id="modalSvgFront" viewBox="0 0 600 280"></svg>
       </div>
 
@@ -548,7 +642,7 @@
         <tbody id="resLowerTableBody"></tbody>
       </table>
 
-      <!-- ВЕРХНИЕ ОТСЕКИ (СКРЫВАЮТСЯ, ЕСЛИ ОПЦИЯ ОТКЛЮЧЕНА) -->
+      <!-- ВЕРХНИЕ ОТСЕКИ -->
       <div id="modalUpperTableBlock">
         <h3 style="color:var(--accent-gold); font-size: 0.95rem; margin: 15px 0 5px 0;">Верхние отсеки (шкафы)</h3>
         <table class="modal-table">
@@ -583,8 +677,55 @@
     let upperSections = [];
     let calculatedTotalPriceNumber = 0;
 
+    let activeColorTarget = 'facade'; // 'facade' или 'body'
+
+    // ТЕКУЩИЕ ВЫБРАННЫЕ ЦВЕТА
+    let selectedFacadeColor = { id: 'ec_1', name: 'Белый Матовый', hex: '#f8fafc', category: 'Эконом', img: '' };
+    let selectedBodyColor = { id: 'ec_2', name: 'Белый Стандарт', hex: '#ffffff', category: 'Эконом', img: '' };
+
+    /* КАТАЛОГ ЦВЕТОВ ПО КАТЕГОРИЯМ: ЭКОНОМ -> СТАДАРТ -> ПРЕМИУМ -> ПЛАТИНУМ */
+    /* В поле img вы можете вставить пути к вырезанным картинкам из PDF, например: "images/white_mat.jpg" */
+    const colorCatalog = [
+      {
+        categoryName: '1. Эконом цвета',
+        items: [
+          { id: 'ec_1', name: 'Белый Матовый', hex: '#f8fafc', img: '' },
+          { id: 'ec_2', name: 'Бук Светлый', hex: '#fef08a', img: '' },
+          { id: 'ec_3', name: 'Ольха Классик', hex: '#d97706', img: '' },
+          { id: 'ec_4', name: 'Серый Пепел', hex: '#94a3b8', img: '' }
+        ]
+      },
+      {
+        categoryName: '2. Стандарт цвета',
+        items: [
+          { id: 'st_1', name: 'Дуб Сонома', hex: '#ca8a04', img: '' },
+          { id: 'st_2', name: 'Венге Магия', hex: '#451a03', img: '' },
+          { id: 'st_3', name: 'Бежевый Песок', hex: '#fde68a', img: '' },
+          { id: 'st_4', name: 'Антрацит', hex: '#334155', img: '' }
+        ]
+      },
+      {
+        categoryName: '3. Премиум цвета',
+        items: [
+          { id: 'pr_1', name: 'Дуб Вотан (Egger)', hex: '#b45309', img: '' },
+          { id: 'pr_2', name: 'Белый Глянец Soft-Touch', hex: '#ffffff', img: '' },
+          { id: 'pr_3', name: 'Кашемир Серый', hex: '#a8a29e', img: '' },
+          { id: 'pr_4', name: 'Бетон Тёмный', hex: '#475569', img: '' }
+        ]
+      },
+      {
+        categoryName: '4. Платинум цвета',
+        items: [
+          { id: 'pl_1', name: 'Мрамор Марквина Чёрный', hex: '#0f172a', img: '' },
+          { id: 'pl_2', name: 'Золотой Деревянный Шпон', hex: '#854d0e', img: '' },
+          { id: 'pl_3', name: 'Изумруд Матовый Platinum', hex: '#064e3b', img: '' },
+          { id: 'pl_4', name: 'Металл Бронза', hex: '#78350f', img: '' }
+        ]
+      }
+    ];
+
     function initDefaultSections() {
-      let defaultW = 50; // 4 отсека по 50 см = 200 см (2-метровая кухня)
+      let defaultW = 50;
 
       lowerSections = [
         { id: 1, name: 'Модуль под мойку', width: defaultW, depth: 60, height: 85, shelves: 1, drawers: 0, openType: 'handles', wall: 'main' },
@@ -604,6 +745,59 @@
       syncWallsFromSections();
       renderSections('lower');
       renderSections('upper');
+      updateColorUIBadges();
+    }
+
+    function openColorCatalogModal(target) {
+      activeColorTarget = target;
+      const titleElem = document.getElementById('catalogModalTitle');
+      titleElem.innerText = target === 'facade' ? 'Выбор цвета для ФАСАДА' : 'Выбор цвета для КОРПУСА';
+
+      let html = '';
+      colorCatalog.forEach(cat => {
+        let catShortName = cat.categoryName.split('.')[1].trim().split(' ')[0]; // Эконом, Стандарт и т.д.
+        html += `<div class="catalog-category-title">📁 ${cat.categoryName}</div>`;
+        html += `<div class="catalog-grid">`;
+        
+        cat.items.forEach(item => {
+          let styleBg = item.img ? `background-image: url('${item.img}');` : `background-color: ${item.hex};`;
+          html += `
+            <div class="color-card" onclick="selectColorFromCatalog('${item.id}', '${item.name}', '${item.hex}', '${catShortName}', '${item.img}')">
+              <div class="color-swatch-box" style="${styleBg}"></div>
+              <div class="color-card-title">${item.name}</div>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+      });
+
+      document.getElementById('catalogContent').innerHTML = html;
+      document.getElementById('colorCatalogModal').style.display = 'block';
+    }
+
+    function closeColorCatalogModal() {
+      document.getElementById('colorCatalogModal').style.display = 'none';
+    }
+
+    function selectColorFromCatalog(id, name, hex, category, img) {
+      let colorObj = { id, name, hex, category, img };
+      if (activeColorTarget === 'facade') {
+        selectedFacadeColor = colorObj;
+      } else {
+        selectedBodyColor = colorObj;
+      }
+      updateColorUIBadges();
+      closeColorCatalogModal();
+      updateCalculator();
+    }
+
+    function updateColorUIBadges() {
+      document.getElementById('facadeColorText').innerText = `${selectedFacadeColor.name} (${selectedFacadeColor.category})`;
+      document.getElementById('facadeColorBadge').style.backgroundColor = selectedFacadeColor.hex;
+
+      document.getElementById('bodyColorText').innerText = `${selectedBodyColor.name} (${selectedBodyColor.category})`;
+      document.getElementById('bodyColorBadge').style.backgroundColor = selectedBodyColor.hex;
     }
 
     function syncWallAssignments() {
@@ -627,7 +821,6 @@
       }
     }
 
-    /* АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ: Модули -> Длина стен */
     function syncWallsFromSections() {
       if (currentType === 'straight') {
         let sumW = lowerSections.reduce((acc, s) => acc + (parseFloat(s.width) || 0), 0);
@@ -653,7 +846,6 @@
       }
     }
 
-    /* ОБРАТНАЯ СИНХРОНИЗАЦИЯ: Ручной ввод стены -> Пропорция ширины модулей */
     function onWallInputManual(wallId) {
       let targetVal = parseFloat(document.getElementById(wallId).value) || 0;
       if (targetVal <= 0) return;
@@ -800,7 +992,6 @@
       upperSections.forEach((sec, idx) => drawSectionCadScheme('cadMini_upper_' + idx, 'upper', sec));
     }
 
-    /* МИНИ CAD-СХЕМА КАРТОЧКИ МОДУЛЯ (С ДИНАМИЧЕСКИМИ РУЧКАМИ И ГАЗЛИФТАМИ) */
     function drawSectionCadScheme(svgElementId, type, sec) {
       const svg = document.getElementById(svgElementId);
       if (!svg) return;
@@ -814,29 +1005,20 @@
 
       let html = `<rect x="5" y="5" width="130" height="130" fill="#eef2f6" stroke="#0284c7" stroke-width="1"/>`;
 
-      // 1. ЕСЛИ ВЕРХНИЙ ОТСЕК С ГАЗЛИФТОМ -> Чертеж вид сбоку с открытой вверх дверцей
       if (!isLower && gasLifts > 0) {
         html += `
-          <!-- Корпус шкафа сбоку -->
           <rect x="25" y="45" width="45" height="70" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5"/>
           <text x="47" y="85" fill="#475569" font-size="8" font-weight="bold" text-anchor="middle">Корпус</text>
-          
-          <!-- Поднятая вверх дверь -->
           <polygon points="25,45 20,12 28,11 31,45" fill="#38bdf8" stroke="#0284c7" stroke-width="1.2"/>
           <line x1="20" y1="12" x2="28" y2="11" stroke="#0f172a" stroke-width="2"/>
-
-          <!-- Газлифт поршень сбоку -->
           <line x1="45" y1="75" x2="25" y2="28" stroke="#d97706" stroke-width="2.5"/>
           <line x1="45" y1="75" x2="35" y2="52" stroke="#b45309" stroke-width="4.5"/>
           <circle cx="45" cy="75" r="3" fill="#0f172a"/>
           <circle cx="25" cy="28" r="3" fill="#d97706"/>
-
-          <!-- Подписи -->
           <text x="82" y="30" fill="#d97706" font-size="9" font-weight="bold">↗ Газлифт</text>
           <text x="82" y="42" fill="#0f172a" font-size="8">Открыто вверх</text>
         `;
       } else {
-        // 2. ОБЫЧНЫЙ ВИД СПЕРЕДИ (Нижний или Верхний без газлифта)
         if (isLower) {
           html += `
             <rect x="25" y="115" width="8" height="10" fill="#64748b"/>
@@ -847,7 +1029,6 @@
         let topY = 25;
         let boxH = 90;
 
-        // Если ГОЛА профиль у нижнего отсека -> Прорисовываем верхний алюминиевый паз
         if (isLower && openType === 'gola') {
           html += `<rect x="20" y="25" width="100" height="8" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>`;
           topY = 33;
@@ -856,7 +1037,6 @@
 
         html += `<rect x="20" y="${topY}" width="100" height="${boxH}" fill="#cbd5e1" stroke="#334155" stroke-width="1.5"/>`;
 
-        // Полки
         if (shelves > 0 && drawers === 0) {
           let stepH = boxH / (shelves + 1);
           for (let s = 1; s <= shelves; s++) {
@@ -865,20 +1045,14 @@
           }
         }
 
-        // Выдвижные ящики (для нижних)
         if (isLower && drawers > 0) {
           let hBox = boxH / drawers;
           for (let d = 0; d < drawers; d++) {
             let yPos = topY + d * hBox;
-
-            // Если Гола между ящиками
             if (openType === 'gola' && d > 0) {
               html += `<rect x="20" y="${yPos}" width="100" height="5" fill="#1e293b"/>`;
             }
-
             html += `<rect x="22" y="${yPos + 2}" width="96" height="${hBox - 4}" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>`;
-
-            // Рисуем ручки / элементы в зависимости от открывания
             if (openType === 'handles') {
               html += `<line x1="50" y1="${yPos + hBox/2}" x2="90" y2="${yPos + hBox/2}" stroke="#0f172a" stroke-width="2.5"/>`;
             } else if (openType === 'push') {
@@ -886,9 +1060,7 @@
             }
           }
         } else {
-          // Распашная дверь
           html += `<line x1="70" y1="${topY}" x2="70" y2="${topY + boxH}" stroke="#0f172a" stroke-width="1.5"/>`;
-          
           if (openType === 'handles') {
             html += `<rect x="62" y="${topY + boxH/2 - 8}" width="3" height="16" rx="1" fill="#0f172a"/>`;
             html += `<rect x="75" y="${topY + boxH/2 - 8}" width="3" height="16" rx="1" fill="#0f172a"/>`;
@@ -902,8 +1074,8 @@
 
       html += `
         <rect x="45" y="3" width="50" height="15" rx="3" fill="#0f172a"/>
-        <text x="70" y="14" fill="#fbbf24" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">[${tag}]</text>
-        <text x="70" y="137" fill="#0284c7" font-size="8" font-weight="bold" font-family="sans-serif" text-anchor="middle">Ш: ${sec.width} см</text>
+        <text x="70" y="14" fill="#fbbf24" font-size="9" font-weight="bold" text-anchor="middle">[${tag}]</text>
+        <text x="70" y="137" fill="#0284c7" font-size="8" font-weight="bold" text-anchor="middle">Ш: ${sec.width} см</text>
       `;
 
       svg.innerHTML = html;
@@ -951,7 +1123,6 @@
 
     function updateCalculator() {
       const mainW = parseFloat(document.getElementById('mainWall').value) || 200;
-      const totalH = parseFloat(document.getElementById('totalHeight').value) || 240;
       const leftW = parseFloat(document.getElementById('leftWall').value) || 120;
       const rightW = parseFloat(document.getElementById('rightWall').value) || 120;
 
@@ -1007,30 +1178,14 @@
 
       drawFullFrontView('svgFront', hasUpper);
       drawTopViewPlan('svgTop', hasUpper);
-      drawPanelSample();
     }
 
-    function drawPanelSample() {
-      const svg = document.getElementById('svgPanelSample');
-      if (!svg) return;
-      svg.innerHTML = '';
-      const faceFill = document.getElementById('facadeColor').value;
-      const facadeMatText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text;
-
-      let html = `<polygon points="70,45 250,15 310,65 130,95" fill="${faceFill}" stroke="#fbbf24" stroke-width="1.5" />`;
-      html += `<polygon points="130,95 310,65 310,90 130,120" fill="#fbbf24" stroke="#fbbf24" stroke-width="1.5" />`;
-      html += `<polygon points="70,45 130,95 130,120 70,70" fill="#78350f" stroke="#fbbf24" stroke-width="1.5" />`;
-      svg.innerHTML = html;
-      document.getElementById('panelSampleBadge').innerText = `${facadeMatText}`;
-    }
-
-    /* 2D ВИД СПЕРЕДИ С ЕДИНЫМ МАСШТАБОМ */
     function drawFullFrontView(svgId, hasUpper) {
       const svg = document.getElementById(svgId);
       if (!svg) return;
       svg.innerHTML = '';
 
-      let faceFill = document.getElementById('facadeColor').value;
+      let faceFill = selectedFacadeColor.hex;
       let startX = 40;
       let endX = 560;
       let availW = endX - startX;
@@ -1038,13 +1193,12 @@
       let totalLowerWidth = lowerSections.reduce((acc, s) => acc + (parseFloat(s.width) || 50), 0);
       let totalUpperWidth = hasUpper ? upperSections.reduce((acc, s) => acc + (parseFloat(s.width) || 50), 0) : 0;
       
-      // Использование единого базового масштаба
       let maxTotalWidth = Math.max(totalLowerWidth, totalUpperWidth, 1);
       let scaleRatio = availW / maxTotalWidth;
 
       let html = `
         <rect x="5" y="5" width="590" height="270" fill="#f8fafc" stroke="#0284c7" stroke-width="1.5" rx="6"/>
-        <text x="300" y="22" fill="#0284c7" font-size="11" font-weight="bold" font-family="sans-serif" text-anchor="middle">ВИД СПЕРЕДИ 2D: ФАСАДЫ И МОДУЛИ (${Math.round(totalLowerWidth)} см)</text>
+        <text x="300" y="22" fill="#0284c7" font-size="11" font-weight="bold" text-anchor="middle">ВИД СПЕРЕДИ 2D: ФАСАДЫ И МОДУЛИ (${Math.round(totalLowerWidth)} см)</text>
       `;
 
       let lowerY = 160;
@@ -1072,7 +1226,7 @@
           let hBox = lowerH / drawers;
           for (let d = 0; d < drawers; d++) {
             let yD = lowerY + d * hBox;
-            html += `<rect x="${x + 3}" y="${yD + 2}" width="${Math.max(2, secW_px - 6)}" height="${hBox - 4}" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>`;
+            html += `<rect x="${x + 3}" y="${yD + 2}" width="${Math.max(2, secW_px - 6)}" height="${hBox - 4}" fill="${faceFill}" stroke="#0f172a" stroke-width="1"/>`;
             if (sec.openType === 'handles') {
               html += `<line x1="${x + secW_px*0.3}" y1="${yD + hBox/2}" x2="${x + secW_px*0.7}" y2="${yD + hBox/2}" stroke="#0f172a" stroke-width="2"/>`;
             }
@@ -1090,8 +1244,8 @@
 
         html += `
           <rect x="${x + secW_px/2 - 18}" y="${lowerY + 6}" width="36" height="14" rx="3" fill="#0f172a"/>
-          <text x="${x + secW_px/2}" y="${lowerY + 16}" fill="#fbbf24" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">[Н-${sec.id}]</text>
-          <text x="${x + secW_px/2}" y="${lowerY + lowerH + 22}" fill="#0284c7" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">${sec.width}см</text>
+          <text x="${x + secW_px/2}" y="${lowerY + 16}" fill="#fbbf24" font-size="9" font-weight="bold" text-anchor="middle">[Н-${sec.id}]</text>
+          <text x="${x + secW_px/2}" y="${lowerY + lowerH + 22}" fill="#0284c7" font-size="9" font-weight="bold" text-anchor="middle">${sec.width}см</text>
         `;
       });
 
@@ -1125,8 +1279,8 @@
 
           html += `
             <rect x="${x + secW_px/2 - 18}" y="${upperY + 4}" width="36" height="14" rx="3" fill="#0f172a"/>
-            <text x="${x + secW_px/2}" y="${upperY + 14}" fill="#38bdf8" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">[В-${sec.id}]</text>
-            <text x="${x + secW_px/2}" y="${upperY - 4}" fill="#0284c7" font-size="8" font-weight="bold" font-family="sans-serif" text-anchor="middle">${sec.width}см</text>
+            <text x="${x + secW_px/2}" y="${upperY + 14}" fill="#38bdf8" font-size="9" font-weight="bold" text-anchor="middle">[В-${sec.id}]</text>
+            <text x="${x + secW_px/2}" y="${upperY - 4}" fill="#0284c7" font-size="8" font-weight="bold" text-anchor="middle">${sec.width}см</text>
           `;
         });
       }
@@ -1145,7 +1299,7 @@
 
       let html = `
         <rect x="5" y="5" width="590" height="310" fill="#f8fafc" stroke="#0284c7" stroke-width="1.5" rx="6"/>
-        <text x="300" y="22" fill="#0284c7" font-size="11" font-weight="bold" font-family="sans-serif" text-anchor="middle">ВИД СВЕРХУ 2D: ПЛАН ПОМЕЩЕНИЯ И МОДУЛЕЙ</text>
+        <text x="300" y="22" fill="#0284c7" font-size="11" font-weight="bold" text-anchor="middle">ВИД СВЕРХУ 2D: ПЛАН ПОМЕЩЕНИЯ И МОДУЛЕЙ</text>
       `;
 
       if (currentType === 'straight') {
@@ -1271,6 +1425,12 @@
       document.getElementById('resClientPhone').innerText = document.getElementById('clientPhone').value || 'Не указано';
       document.getElementById('resClientNotes').innerText = document.getElementById('clientNotes').value || 'Стандарт';
 
+      const facadeMatText = document.getElementById('facadeMaterial').options[document.getElementById('facadeMaterial').selectedIndex].text;
+      const bodyMatText = document.getElementById('bodyMaterial').options[document.getElementById('bodyMaterial').selectedIndex].text;
+
+      document.getElementById('resFacadeInfo').innerText = `${facadeMatText} — ${selectedFacadeColor.name} (${selectedFacadeColor.category})`;
+      document.getElementById('resBodyInfo').innerText = `${bodyMatText} — ${selectedBodyColor.name} (${selectedBodyColor.category})`;
+
       const hasUpper = document.getElementById('hasUpperTier').checked;
 
       drawFullFrontView('modalSvgFront', hasUpper);
@@ -1284,7 +1444,6 @@
       });
       document.getElementById('resLowerTableBody').innerHTML = lowerHtml;
 
-      // СКРЫВАЕМ ВЕРХНИЙ БЛОК В МОДАЛЬНОМ ОКНЕ ЕСЛИ ОТКЛЮЧЕН
       const modalUpperBlock = document.getElementById('modalUpperTableBlock');
       if (hasUpper) {
         modalUpperBlock.style.display = 'block';
