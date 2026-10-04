@@ -127,6 +127,24 @@
     .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #111827; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 0.9rem; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 200; }
     .toast.show { opacity: 1; }
 
+    .tpl-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tpl-tab { font: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; border: 1px solid var(--border-dark); background: #fff; color: var(--text-main); border-radius: 999px; padding: 6px 14px; }
+    .tpl-tab.active { background: var(--accent-gold); border-color: var(--accent-gold); color: #fff; }
+    .tpl-tab:disabled { opacity: 0.45; cursor: default; }
+    .tpl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: end; }
+    .chips { display: flex; gap: 5px; flex-wrap: wrap; }
+    .chip { font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; border: 1px solid var(--border-dark); background: #fff; color: var(--text-muted); border-radius: 6px; padding: 2px 7px; }
+    .chip.active { border-color: var(--accent-gold); color: var(--accent-gold); background: #fdf8ec; }
+    .tpl-preview { margin-top: 12px; font-size: 0.85rem; background: #fffdf8; border: 1px dashed var(--border-gold); border-radius: 10px; padding: 10px 12px; }
+    .tpl-preview b { color: var(--accent-gold); }
+    .tpl-preview ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 2px 14px; margin-top: 4px; }
+    .tpl-preview .err { color: var(--danger); font-weight: 700; }
+    .cab-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .cab { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-gold); background: #fdf8ec; border-radius: 999px; padding: 3px 4px 3px 12px; font-size: 0.85rem; font-weight: 700; }
+    .cab button { border: none; background: transparent; cursor: pointer; color: var(--text-muted); font-size: 0.9rem; padding: 2px 6px; border-radius: 50%; }
+    .cab button:hover { color: var(--danger); background: #fff; }
+    table.edit td.grp-start { border-top: 2px solid var(--border-gold); }
+
     .print-only { display: none; }
 
     @media (max-width: 720px) {
@@ -198,7 +216,50 @@
     </section>
 
     <section class="card no-print">
-      <h2><span class="step">3</span> Детали
+      <h2><span class="step">3</span> Шкафы по шаблону
+        <span class="hint" style="font-weight:600">детали создаются сами</span>
+      </h2>
+      <div class="tpl-tabs" id="tplTabs"></div>
+      <div class="tpl-grid">
+        <label class="f">Ширина, мм
+          <div class="chips" id="tplWidths"></div>
+          <input type="number" id="tplW" min="150" max="1200">
+        </label>
+        <label class="f">Высота, мм
+          <input type="number" id="tplH" min="200" max="2400">
+        </label>
+        <label class="f">Глубина с дверьми, мм
+          <input type="number" id="tplD" min="200" max="800">
+        </label>
+        <label class="f">Сколько шкафов
+          <input type="number" id="tplQty" min="1" max="50" value="1">
+        </label>
+        <label class="f">Дверей
+          <select id="tplDoors"><option value="auto">Авто</option><option value="1">1</option><option value="2">2</option></select>
+        </label>
+        <label class="f">Материал корпуса
+          <select id="tplBodyMat"></select>
+        </label>
+        <label class="f">Материал дверей
+          <select id="tplFacadeMat"></select>
+        </label>
+      </div>
+      <details class="paste">
+        <summary>Толщины</summary>
+        <div class="tpl-grid" style="margin-top:8px">
+          <label class="f">Корпус (ЛДСП), мм <input type="number" id="tplT" min="8" max="30"></label>
+          <label class="f">Дверь (фасад), мм <input type="number" id="tplFT" min="8" max="30"></label>
+        </div>
+      </details>
+      <div class="tpl-preview" id="tplPreview"></div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn primary" id="btnTplAdd">＋ Добавить шкаф</button>
+      </div>
+      <div class="cab-list" id="cabList"></div>
+    </section>
+
+    <section class="card no-print">
+      <h2><span class="step">4</span> Детали
         <span class="hint" style="font-weight:600">Д — длина (вдоль текстуры), Ш — ширина</span>
       </h2>
       <div class="table-wrap">
@@ -242,7 +303,7 @@
     </div>
 
     <section class="card" id="resultCard">
-      <h2 class="no-print"><span class="step">4</span> Раскрой</h2>
+      <h2 class="no-print"><span class="step">5</span> Раскрой</h2>
       <div id="result"><div class="empty">Добавьте детали — раскрой появится здесь.</div></div>
       <div class="actions no-print" id="resultActions" style="margin-top:14px; display:none">
         <button class="btn primary" id="btnPrint">🖨 Печать / PDF</button>
@@ -269,20 +330,51 @@
     var CURRENT_KEY = 'raskroy.current.v1';
     var PALETTE = ['#fde68a', '#bfdbfe', '#bbf7d0', '#fecaca', '#ddd6fe', '#fed7aa', '#a5f3fc', '#f5d0fe', '#d9f99d', '#e5e7eb'];
 
+    // Шаблоны шкафов. W/H/D — габариты шкафа (глубина вместе с дверьми),
+    // t — толщина корпуса, ft — толщина двери, doors — число дверей.
+    // L детали — сторона, вдоль которой идёт текстура и считается «Кромка Д».
+    var half = function (v) { return Math.round(v * 2) / 2; };
+    var TEMPLATES = {
+      lower: {
+        title: 'Нижний шкаф',
+        short: 'Н',
+        defaults: { W: 600, H: 720, D: 580 },
+        widths: [400, 450, 500, 600, 800],
+        autoDoors: function (W) { return W <= 450 ? 1 : 2; },
+        build: function (c) {
+          var t = c.t, depth = c.D - t - c.ft;      // спина сзади и дверь спереди
+          var inner = c.W - 2 * t;
+          var doorW = half((c.W - 2 * (c.doors + 1)) / c.doors); // зазор 2 мм по краям и между дверями
+          return [
+            // боковины стоят на дне
+            { name: 'Бок', L: c.H - t, W: depth, qty: 2, mat: 'body', rot: false, eL: 1, eW: 0 },
+            { name: 'Дно', L: c.W, W: depth, qty: 1, mat: 'body', rot: true, eL: 1, eW: 0 },
+            // планки крепятся изнутри между боковинами
+            { name: 'Планка', L: inner, W: 70, qty: 2, mat: 'body', rot: true, eL: 1, eW: 0 },
+            // спина лежит на торцах боковин и дна
+            { name: 'Спина', L: c.H, W: c.W, qty: 1, mat: 'body', rot: true, eL: 0, eW: 0 },
+            // дверь на всю высоту корпуса минус 5 мм сверху
+            { name: 'Дверь', L: c.H - 5, W: doorW, qty: c.doors, mat: 'facade', rot: false, eL: 2, eW: 2 }
+          ];
+        }
+      },
+      upper: { title: 'Навесной шкаф', soon: true }
+    };
+
     var uid = (function () { var n = Date.now() % 100000; return function () { return 'i' + (n++).toString(36); }; })();
 
     function defaultState() {
       var m = { id: uid(), name: 'ЛДСП белый 16 мм', L: 2750, W: 1830 };
+      var f = { id: uid(), name: 'Фасад 16 мм', L: 2750, W: 1830 };
       return {
         name: '',
         kerf: 4,
         trim: 10,
-        materials: [m],
-        parts: [
-          { id: uid(), name: 'Бок', L: 720, W: 560, qty: 2, mat: m.id, rot: false, eL: 1, eW: 0 },
-          { id: uid(), name: 'Дно', L: 568, W: 560, qty: 1, mat: m.id, rot: true, eL: 1, eW: 0 },
-          { id: uid(), name: 'Полка', L: 566, W: 540, qty: 2, mat: m.id, rot: true, eL: 1, eW: 0 }
-        ]
+        tplT: 16,
+        tplFT: 16,
+        materials: [m, f],
+        groups: [],
+        parts: []
       };
     }
 
@@ -300,6 +392,8 @@
     function normalize(s) {
       if (!s || !Array.isArray(s.materials) || !Array.isArray(s.parts)) return defaultState();
       s.kerf = num(s.kerf, 4); s.trim = num(s.trim, 10); s.name = String(s.name || '');
+      s.tplT = num(s.tplT, 16); s.tplFT = num(s.tplFT, 16);
+      if (!Array.isArray(s.groups)) s.groups = [];
       if (!s.materials.length) s.materials.push({ id: uid(), name: 'Материал', L: 2750, W: 1830 });
       s.materials.forEach(function (m) { m.id = m.id || uid(); m.L = num(m.L, 2750); m.W = num(m.W, 1830); m.name = String(m.name || 'Материал'); });
       var ids = s.materials.map(function (m) { return m.id; });
@@ -308,7 +402,12 @@
         p.L = num(p.L, 0); p.W = num(p.W, 0); p.qty = Math.max(1, Math.round(num(p.qty, 1)));
         if (ids.indexOf(p.mat) < 0) p.mat = ids[0];
         p.rot = !!p.rot; p.eL = clampInt(p.eL, 0, 2); p.eW = clampInt(p.eW, 0, 2);
+        p.grp = String(p.grp || '');
       });
+      var used = {};
+      s.parts.forEach(function (p) { if (p.grp) used[p.grp] = true; });
+      s.groups = s.groups.filter(function (g) { return g && used[g.id]; });
+      s.parts.forEach(function (p) { if (p.grp && !s.groups.some(function (g) { return g.id === p.grp; })) p.grp = ''; });
       return s;
     }
 
@@ -322,7 +421,8 @@
       var compact = {
         n: s.name, k: s.kerf, t: s.trim,
         m: s.materials.map(function (m) { return [m.id, m.name, m.L, m.W]; }),
-        p: s.parts.map(function (p) { return [p.name, p.L, p.W, p.qty, p.mat, p.rot ? 1 : 0, p.eL, p.eW]; })
+        g: s.groups.map(function (g) { return [g.id, g.label]; }),
+        p: s.parts.map(function (p) { return [p.name, p.L, p.W, p.qty, p.mat, p.rot ? 1 : 0, p.eL, p.eW, p.grp]; })
       };
       var json = JSON.stringify(compact);
       var b64 = btoa(unescape(encodeURIComponent(json)));
@@ -335,7 +435,8 @@
       return normalize({
         name: c.n, kerf: c.k, trim: c.t,
         materials: (c.m || []).map(function (a) { return { id: a[0], name: a[1], L: a[2], W: a[3] }; }),
-        parts: (c.p || []).map(function (a) { return { id: uid(), name: a[0], L: a[1], W: a[2], qty: a[3], mat: a[4], rot: !!a[5], eL: a[6], eW: a[7] }; })
+        groups: (c.g || []).map(function (a) { return { id: a[0], label: a[1] }; }),
+        parts: (c.p || []).map(function (a) { return { id: uid(), name: a[0], L: a[1], W: a[2], qty: a[3], mat: a[4], rot: !!a[5], eL: a[6], eW: a[7], grp: a[8] }; })
       });
     }
     function shareUrl() { return location.origin + location.pathname + '#r=' + encodeState(state); }
@@ -697,6 +798,7 @@
     function refreshMatSelects() {
       document.querySelectorAll('select[data-k=mat]').forEach(function (s) { var v = s.value; s.innerHTML = matOptions(v); });
       var ps = document.getElementById('pasteMat'); var pv = ps.value; ps.innerHTML = matOptions(pv || state.materials[0].id);
+      refreshTplMats();
     }
 
     function edgeSelect(v) {
@@ -769,13 +871,154 @@
       if (state.name && projects[state.name]) sel.value = state.name;
     }
 
-    function renderAll() { renderSettings(); renderMaterials(); renderParts(); renderProjects(); renderResult(); }
+    function renderAll() { renderSettings(); renderMaterials(); renderTemplates(); renderParts(); renderProjects(); renderResult(); }
 
     var timer = null;
     function changed(recalc) {
       persistCurrent();
       if (state.name) { var pr = loadProjects(); if (pr[state.name]) { pr[state.name] = state; saveProjects(pr); } }
       if (recalc) { clearTimeout(timer); timer = setTimeout(renderResult, 250); }
+    }
+
+    // ------------------------------------------------------------ templates
+    var tpl = { kind: 'lower', W: 600, H: 720, D: 580, qty: 1, doors: 'auto', bodyMat: '', facadeMat: '' };
+    var NEW_FACADE = '__new_facade';
+
+    function tplConfig() {
+      var T = TEMPLATES[tpl.kind];
+      var W = num(tpl.W, 0);
+      return {
+        W: W, H: num(tpl.H, 0), D: num(tpl.D, 0),
+        t: num(state.tplT, 16), ft: num(state.tplFT, 16),
+        doors: tpl.doors === 'auto' ? T.autoDoors(W) : +tpl.doors
+      };
+    }
+
+    function tplErrors(c, parts) {
+      var errs = [];
+      if (c.W < 150 || c.H < 200 || c.D < 200) errs.push('Проверьте размеры шкафа');
+      parts.forEach(function (p) { if (!(p.L > 0 && p.W > 0)) errs.push(p.name + ' получается нулевого размера'); });
+      return errs;
+    }
+
+    function renderTemplates() {
+      var tabs = document.getElementById('tplTabs');
+      tabs.innerHTML = Object.keys(TEMPLATES).map(function (k) {
+        var T = TEMPLATES[k];
+        return '<button class="tpl-tab' + (k === tpl.kind ? ' active' : '') + '" data-k="' + k + '"' + (T.soon ? ' disabled title="Скоро"' : '') + '>' + T.title + (T.soon ? ' · скоро' : '') + '</button>';
+      }).join('');
+      tabs.querySelectorAll('.tpl-tab').forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (TEMPLATES[b.dataset.k].soon) return;
+          tpl.kind = b.dataset.k; var d = TEMPLATES[tpl.kind].defaults; tpl.W = d.W; tpl.H = d.H; tpl.D = d.D;
+          renderTemplates();
+        });
+      });
+      var T = TEMPLATES[tpl.kind];
+      document.getElementById('tplWidths').innerHTML = T.widths.map(function (w) {
+        return '<button type="button" class="chip' + (num(tpl.W, 0) === w ? ' active' : '') + '" data-w="' + w + '">' + w + '</button>';
+      }).join('');
+      document.querySelectorAll('#tplWidths .chip').forEach(function (b) {
+        b.addEventListener('click', function (e) { e.preventDefault(); tpl.W = +b.dataset.w; document.getElementById('tplW').value = tpl.W; renderTemplates(); });
+      });
+      document.getElementById('tplW').value = tpl.W;
+      document.getElementById('tplH').value = tpl.H;
+      document.getElementById('tplD').value = tpl.D;
+      document.getElementById('tplQty').value = tpl.qty;
+      document.getElementById('tplDoors').value = tpl.doors;
+      document.getElementById('tplT').value = state.tplT;
+      document.getElementById('tplFT').value = state.tplFT;
+      refreshTplMats();
+      renderTplPreview();
+      renderCabList();
+    }
+
+    function refreshTplMats() {
+      var mats = state.materials;
+      if (!matById(tpl.bodyMat)) tpl.bodyMat = mats[0].id;
+      if (tpl.facadeMat !== NEW_FACADE && !matById(tpl.facadeMat)) {
+        var f = mats.filter(function (m) { return /фасад|мдф|дверь/i.test(m.name); })[0] || mats[1];
+        tpl.facadeMat = f ? f.id : NEW_FACADE;
+      }
+      document.getElementById('tplBodyMat').innerHTML = matOptions(tpl.bodyMat);
+      document.getElementById('tplFacadeMat').innerHTML = matOptions(tpl.facadeMat) +
+        '<option value="' + NEW_FACADE + '"' + (tpl.facadeMat === NEW_FACADE ? ' selected' : '') + '>＋ Новый материал «Фасад»</option>';
+    }
+
+    function renderTplPreview() {
+      var c = tplConfig();
+      var parts = TEMPLATES[tpl.kind].build(c);
+      var errs = tplErrors(c, parts);
+      var q = Math.max(1, Math.round(num(tpl.qty, 1)));
+      var total = parts.reduce(function (s, p) { return s + p.qty; }, 0);
+      var box = document.getElementById('tplPreview');
+      if (errs.length) { box.innerHTML = '<span class="err">' + esc(errs.join('. ')) + '</span>'; return; }
+      box.innerHTML = '<b>' + c.W + '×' + c.H + '×' + c.D + '</b>: ' + total + ' ' + plural(total, 'деталь', 'детали', 'деталей') + ' на шкаф' +
+        (q > 1 ? ', всего ' + total * q : '') + '<ul>' +
+        parts.map(function (p) {
+          var e = [];
+          if (p.eL) e.push(p.eL + '×Д'); if (p.eW) e.push(p.eW + '×Ш');
+          return '<li>' + esc(p.name) + ' — ' + p.L + '×' + p.W + ' · ' + (p.qty * q) + ' шт' + (e.length ? ' · кромка ' + e.join(' ') : '') + '</li>';
+        }).join('') + '</ul>';
+    }
+
+    function addFromTemplate() {
+      var T = TEMPLATES[tpl.kind];
+      var c = tplConfig();
+      var parts = T.build(c);
+      var errs = tplErrors(c, parts);
+      if (errs.length) { toast(errs[0]); return; }
+      var q = Math.max(1, Math.round(num(tpl.qty, 1)));
+      if (tpl.facadeMat === NEW_FACADE) {
+        var b = matById(tpl.bodyMat) || state.materials[0];
+        var nf = { id: uid(), name: 'Фасад ' + state.tplFT + ' мм', L: b.L, W: b.W };
+        state.materials.push(nf);
+        tpl.facadeMat = nf.id;
+      }
+      var g = { id: uid(), label: T.short + c.W + '×' + c.H + '×' + c.D + (q > 1 ? ' ×' + q : '') };
+      state.groups.push(g);
+      // если в таблице осталась одна пустая строка — заменяем её
+      state.parts = state.parts.filter(function (p) { return p.L > 0 || p.W > 0 || p.name; });
+      parts.forEach(function (p) {
+        state.parts.push({
+          id: uid(), name: T.short + c.W + ' · ' + p.name, L: p.L, W: p.W, qty: p.qty * q,
+          mat: p.mat === 'facade' ? tpl.facadeMat : tpl.bodyMat,
+          rot: p.rot, eL: p.eL, eW: p.eW, grp: g.id
+        });
+      });
+      renderMaterials(); renderParts(); renderTemplates(); changed(true);
+      toast('Добавлен ' + T.title.toLowerCase() + ' ' + g.label);
+    }
+
+    function renderCabList() {
+      var box = document.getElementById('cabList');
+      if (!state.groups.length) { box.innerHTML = ''; return; }
+      box.innerHTML = '<span class="hint" style="align-self:center">Добавлено:</span>' + state.groups.map(function (g) {
+        return '<span class="cab">' + esc(g.label) + '<button data-g="' + g.id + '" title="Убрать шкаф и его детали">✕</button></span>';
+      }).join('');
+      box.querySelectorAll('button[data-g]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var id = b.dataset.g;
+          state.parts = state.parts.filter(function (p) { return p.grp !== id; });
+          state.groups = state.groups.filter(function (g) { return g.id !== id; });
+          renderParts(); renderCabList(); changed(true);
+        });
+      });
+    }
+
+    function bindTemplateInputs() {
+      function on(id, key, ev) {
+        document.getElementById(id).addEventListener(ev || 'input', function (e) {
+          tpl[key] = e.target.value;
+          if (key === 'W') document.querySelectorAll('#tplWidths .chip').forEach(function (c) { c.classList.toggle('active', +c.dataset.w === num(tpl.W, 0)); });
+          renderTplPreview();
+        });
+      }
+      on('tplW', 'W'); on('tplH', 'H'); on('tplD', 'D'); on('tplQty', 'qty');
+      on('tplDoors', 'doors', 'change'); on('tplBodyMat', 'bodyMat', 'change'); on('tplFacadeMat', 'facadeMat', 'change');
+      document.getElementById('tplT').addEventListener('input', function (e) { state.tplT = num(e.target.value, 16); persistCurrent(); renderTplPreview(); });
+      document.getElementById('tplFT').addEventListener('input', function (e) { state.tplFT = num(e.target.value, 16); persistCurrent(); renderTplPreview(); });
+      document.getElementById('btnTplAdd').addEventListener('click', addFromTemplate);
     }
 
     // --------------------------------------------------------------- paste
@@ -862,6 +1105,7 @@
         renderMaterials(); renderParts(); changed(true);
       });
       document.getElementById('btnAddPart').addEventListener('click', addPart);
+      bindTemplateInputs();
       document.getElementById('btnRotAll').addEventListener('click', function () { state.parts.forEach(function (p) { p.rot = true; }); renderParts(); changed(true); });
       document.getElementById('btnRotNone').addEventListener('click', function () { state.parts.forEach(function (p) { p.rot = false; }); renderParts(); changed(true); });
       document.getElementById('btnPaste').addEventListener('click', function () {
@@ -898,7 +1142,7 @@
       document.getElementById('btnNew').addEventListener('click', function () {
         if (!confirm('Начать новый раскрой? Текущий останется в «Моих проектах», если вы его сохраняли.')) return;
         var keepMats = state.materials.map(function (m) { return { id: m.id, name: m.name, L: m.L, W: m.W }; });
-        state = { name: '', kerf: state.kerf, trim: state.trim, materials: keepMats, parts: [] };
+        state = { name: '', kerf: state.kerf, trim: state.trim, tplT: state.tplT, tplFT: state.tplFT, materials: keepMats, groups: [], parts: [] };
         state.parts.push({ id: uid(), name: '', L: 0, W: 0, qty: 1, mat: keepMats[0].id, rot: true, eL: 0, eW: 0 });
         persistCurrent(); renderAll();
       });
