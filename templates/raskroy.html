@@ -285,8 +285,14 @@
           <div class="chips" id="tplRatioChips"></div>
           <input type="text" id="tplRatio" placeholder="например 1:2:2">
         </label>
-        <label class="f" id="tplSlideBox">Направляющие, мм
-          <select id="tplSlide"><option value="350">350</option><option value="400">400</option><option value="450">450</option><option value="500">500</option></select>
+        <label class="f" id="tplSysBox">Система ящиков
+          <select id="tplSys"></select>
+        </label>
+        <label class="f" id="tplSlideBox">Длина направляющих, мм
+          <select id="tplSlide"></select>
+        </label>
+        <label class="f" id="tplBlumBox">Высота царг Blum (сверху вниз)
+          <div class="chips" id="tplBlumH"></div>
         </label>
         <label class="f" id="tplDoorsBox">Дверей
           <select id="tplDoors"><option value="auto">Авто</option><option value="1">1</option><option value="2">2</option></select>
@@ -431,6 +437,31 @@
       }
       return out;
     }
+    // Системы ящиков. Для Blum размеры дна и задней стенки (ДСП 16 мм) — из «Информации для заказа
+    // и проектирования» Blum: LW — внутренняя ширина корпуса, NL — номинальная длина направляющей.
+    var DRAWER_SYSTEMS = {
+      gtv: { title: 'Обычные (GTV и т.п.), шариковые', slides: [300, 350, 400, 450, 500, 550] },
+      tbx: {
+        title: 'Blum TANDEMBOX antaro',
+        slides: [270, 300, 350, 400, 450, 500, 550, 600, 650],
+        bottomW: 75, bottomL: 24, backW: 87,
+        heights: { N: 69, M: 84, K: 116, C: 167, D: 199 },
+        auto: function (fh) { return fh < 120 ? 'N' : fh < 160 ? 'M' : fh < 220 ? 'K' : fh < 290 ? 'C' : 'D'; }
+      },
+      lbx: {
+        title: 'Blum LEGRABOX',
+        slides: [270, 300, 350, 400, 450, 500, 550, 600, 650],
+        bottomW: 35, bottomL: 10, backW: 38,
+        heights: { N: 39, M: 63, K: 101, C: 148, F: 212 },
+        auto: function (fh) { return fh < 110 ? 'N' : fh < 150 ? 'M' : fh < 200 ? 'K' : fh < 280 ? 'C' : 'F'; }
+      }
+    };
+    // Направляющая Blum требует глубину корпуса внутри не меньше NL + 3 мм
+    function maxSlide(sys, innerDepth) {
+      var s = DRAWER_SYSTEMS[sys].slides.filter(function (n) { return n + 3 <= innerDepth; });
+      return s.length ? s[s.length - 1] : DRAWER_SYSTEMS[sys].slides[0];
+    }
+
     var RATIO_PRESETS = {
       2: ['1:1', '1:2'],
       3: ['1:1:1', '1:2:2', '1:1:2'],
@@ -467,21 +498,29 @@
           var t = c.t;
           var parts = lowerBody(c);
           var heights = drawerFronts(c.H, c.n, c.ratio);
-          var boxOuter = c.W - 2 * t - 2 * 13;       // по 13 мм на шариковую направляющую с каждой стороны
+          var LW = c.W - 2 * t;                       // внутренняя ширина корпуса
           var frontW = c.W - 4;                       // зазор 2 мм слева и справа
+          var sys = DRAWER_SYSTEMS[c.sys];
           var merged = {};
           function add(p) {
             var k = p.name + '|' + p.L + '|' + p.W + '|' + p.mat;
             if (merged[k]) merged[k].qty += p.qty; else { merged[k] = p; parts.push(p); }
           }
-          heights.forEach(function (fh) {
-            var boxH = Math.round(fh * 3 / 5);          // короб : фасад = 3 : 5
+          heights.forEach(function (fh, i) {
             add({ name: 'Фасад ящика', L: fh, W: frontW, qty: 1, mat: 'facade', rot: false, eL: 2, eW: 2 });
-            // перед и зад короба стоят между боковинами
-            add({ name: 'Ящик · бок', L: c.slide, W: boxH, qty: 2, mat: 'body', rot: true, eL: 1, eW: 0 });
-            add({ name: 'Ящик · перед/зад', L: boxOuter - 2 * t, W: boxH, qty: 2, mat: 'body', rot: true, eL: 1, eW: 0 });
-            // дно ДСП снизу на весь короб
-            add({ name: 'Ящик · дно', L: boxOuter, W: c.slide, qty: 1, mat: 'body', rot: true, eL: 0, eW: 0 });
+            if (c.sys === 'gtv') {
+              var boxOuter = LW - 2 * 13;               // по 13 мм на шариковую направляющую с каждой стороны
+              var boxH = Math.round(fh * 3 / 5);        // короб : фасад = 3 : 5
+              // перед и зад короба стоят между боковинами
+              add({ name: 'Ящик · бок', L: c.slide, W: boxH, qty: 2, mat: 'body', rot: true, eL: 1, eW: 0 });
+              add({ name: 'Ящик · перед/зад', L: boxOuter - 2 * t, W: boxH, qty: 2, mat: 'body', rot: true, eL: 1, eW: 0 });
+              // дно ДСП снизу на весь короб
+              add({ name: 'Ящик · дно', L: boxOuter, W: c.slide, qty: 1, mat: 'body', rot: true, eL: 0, eW: 0 });
+            } else {
+              var letter = c.bh[i];
+              add({ name: 'Ящик · дно', L: LW - sys.bottomW, W: c.slide - sys.bottomL, qty: 1, mat: 'body', rot: true, eL: 0, eW: 0 });
+              add({ name: 'Ящик · задняя стенка ' + letter, L: LW - sys.backW, W: sys.heights[letter], qty: 1, mat: 'body', rot: true, eL: 1, eW: 0 });
+            }
           });
           return parts;
         }
@@ -1219,7 +1258,7 @@
     }
 
     // ------------------------------------------------------------ templates
-    var tpl = { kind: 'lower', W: 600, H: 720, D: 580, qty: 1, doors: 'auto', shelves: 'auto', end: false, n: 3, ratio: '1:1:1', slide: 450, bodyMat: '', facadeMat: '' };
+    var tpl = { kind: 'lower', W: 600, H: 720, D: 580, qty: 1, doors: 'auto', shelves: 'auto', end: false, n: 3, ratio: '1:1:1', sys: 'gtv', slide: 450, bh: [], bodyMat: '', facadeMat: '' };
     var NEW_FACADE = '__new_facade';
 
     function tplConfig() {
@@ -1229,7 +1268,8 @@
         W: W, H: H, D: num(tpl.D, 0),
         t: num(state.tplT, 16), ft: num(state.tplFT, 16),
         doors: !T.autoDoors ? 0 : tpl.doors === 'auto' ? T.autoDoors(W) : +tpl.doors,
-        n: +tpl.n, ratio: tpl.ratio, slide: num(tpl.slide, 450),
+        n: +tpl.n, ratio: tpl.ratio, slide: num(tpl.slide, 450), sys: tpl.sys,
+        bh: blumHeights(H),
         shelves: !T.hasShelves ? 0 : tpl.shelves === 'auto' ? T.autoShelves(H) : +tpl.shelves,
         end: !!(T.hasEnd && tpl.end)
       };
@@ -1239,6 +1279,11 @@
       var errs = [];
       if (c.W < 150 || c.H < 200 || c.D < 200) errs.push('Проверьте размеры шкафа');
       parts.forEach(function (p) { if (!(p.L > 0 && p.W > 0)) errs.push(p.name + ' получается нулевого размера'); });
+      if (TEMPLATES[tpl.kind].hasDrawers) {
+        var inner = c.D - c.t - c.ft;               // глубина корпуса внутри
+        var need = c.sys === 'gtv' ? c.slide : c.slide + 3;
+        if (need > inner) errs.push('Направляющие ' + c.slide + ' мм не помещаются: внутри корпуса ' + inner + ' мм' + (c.sys === 'gtv' ? '' : ' (Blum требует NL + 3)'));
+      }
       return errs;
     }
 
@@ -1262,7 +1307,8 @@
       renderChips('tplDepths', T.depths.length > 1 ? T.depths : [], 'D', 'tplD');
       document.getElementById('tplDLabel').textContent = T.depthLabel;
       document.getElementById('tplShelvesBox').style.display = T.hasShelves ? '' : 'none';
-      ['tplNBox', 'tplRatioBox', 'tplSlideBox'].forEach(function (id) { document.getElementById(id).style.display = T.hasDrawers ? '' : 'none'; });
+      ['tplNBox', 'tplRatioBox', 'tplSlideBox', 'tplSysBox'].forEach(function (id) { document.getElementById(id).style.display = T.hasDrawers ? '' : 'none'; });
+      document.getElementById('tplBlumBox').style.display = T.hasDrawers && tpl.sys !== 'gtv' ? '' : 'none';
       document.getElementById('tplDoorsBox').style.display = T.hasDrawers ? 'none' : '';
       if (T.hasDrawers) renderDrawerControls();
       document.getElementById('tplEndBox').style.display = T.hasEnd ? '' : 'none';
@@ -1302,7 +1348,7 @@
       nBox.querySelectorAll('.chip').forEach(function (b) {
         b.addEventListener('click', function (e) {
           e.preventDefault();
-          tpl.n = +b.dataset.n; tpl.ratio = RATIO_PRESETS[tpl.n][0];
+          tpl.n = +b.dataset.n; tpl.ratio = RATIO_PRESETS[tpl.n][0]; tpl.bh = [];
           renderDrawerControls(); renderTplPreview();
         });
       });
@@ -1313,11 +1359,45 @@
           e.preventDefault();
           tpl.ratio = b.dataset.r; document.getElementById('tplRatio').value = tpl.ratio;
           rBox.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('active', c === b); });
+          tpl.bh = []; renderBlumHeights();
           renderTplPreview();
         });
       });
       document.getElementById('tplRatio').value = tpl.ratio;
-      document.getElementById('tplSlide').value = String(tpl.slide);
+      document.getElementById('tplSys').innerHTML = Object.keys(DRAWER_SYSTEMS).map(function (k) {
+        return '<option value="' + k + '"' + (tpl.sys === k ? ' selected' : '') + '>' + DRAWER_SYSTEMS[k].title + '</option>';
+      }).join('');
+      document.getElementById('tplSlide').innerHTML = DRAWER_SYSTEMS[tpl.sys].slides.map(function (s) {
+        return '<option value="' + s + '"' + (+tpl.slide === s ? ' selected' : '') + '>' + s + '</option>';
+      }).join('');
+      document.getElementById('tplBlumBox').style.display = tpl.sys !== 'gtv' ? '' : 'none';
+      renderBlumHeights();
+    }
+
+    // Высота царги каждого ящика Blum: 'auto' — по высоте фасада, или выбранная буква
+    function blumHeights(H) {
+      var sys = DRAWER_SYSTEMS[tpl.sys];
+      if (!sys.heights) return [];
+      var fronts = drawerFronts(H, +tpl.n, tpl.ratio);
+      return fronts.map(function (fh, i) {
+        var v = tpl.bh[i];
+        return v && sys.heights[v] ? v : sys.auto(fh);
+      });
+    }
+
+    function renderBlumHeights() {
+      var box = document.getElementById('tplBlumH');
+      var sys = DRAWER_SYSTEMS[tpl.sys];
+      if (!sys.heights) { box.innerHTML = ''; return; }
+      var cur = blumHeights(num(tpl.H, 720));
+      box.innerHTML = cur.map(function (letter, i) {
+        return '<select data-i="' + i + '" title="Ящик ' + (i + 1) + '">' + Object.keys(sys.heights).map(function (k) {
+          return '<option value="' + k + '"' + (k === letter ? ' selected' : '') + '>' + (i + 1) + ': ' + k + ' (' + sys.heights[k] + ')</option>';
+        }).join('') + '</select>';
+      }).join('');
+      box.querySelectorAll('select').forEach(function (s) {
+        s.addEventListener('change', function () { tpl.bh[+s.dataset.i] = s.value; renderTplPreview(); });
+      });
     }
 
     function syncChips(boxId, key) {
@@ -1373,7 +1453,8 @@
         tpl.facadeMat = nf.id;
       }
       var g = { id: uid(), label: T.short + c.W + '×' + c.H + '×' + c.D + (c.end ? ' крайний' : '') +
-        (T.hasDrawers ? ' · ' + c.n + ' ящ. ' + parseRatio(c.ratio, c.n).join(':') : '') + (q > 1 ? ' ×' + q : '') };
+        (T.hasDrawers ? ' · ' + c.n + ' ящ. ' + parseRatio(c.ratio, c.n).join(':') + (c.sys === 'tbx' ? ' · Tandembox' : c.sys === 'lbx' ? ' · Legrabox' : '') : '') +
+        (q > 1 ? ' ×' + q : '') };
       state.groups.push(g);
       // если в таблице осталась одна пустая строка — заменяем её
       state.parts = state.parts.filter(function (p) { return p.L > 0 || p.W > 0 || p.name; });
@@ -1417,9 +1498,17 @@
       on('tplW', 'W'); on('tplH', 'H'); on('tplD', 'D'); on('tplQty', 'qty');
       on('tplDoors', 'doors', 'change'); on('tplShelves', 'shelves', 'change'); on('tplEnd', 'end', 'change');
       on('tplSlide', 'slide', 'change');
+      document.getElementById('tplSys').addEventListener('change', function (e) {
+        tpl.sys = e.target.value; tpl.bh = [];
+        // для Blum — самая длинная направляющая, что помещается в корпус; для обычных — 450
+        var c = tplConfig();
+        tpl.slide = tpl.sys === 'gtv' ? 450 : maxSlide(tpl.sys, c.D - c.t - c.ft);
+        renderDrawerControls(); renderTplPreview();
+      });
       document.getElementById('tplRatio').addEventListener('input', function (e) {
         tpl.ratio = e.target.value;
         document.querySelectorAll('#tplRatioChips .chip').forEach(function (c) { c.classList.toggle('active', c.dataset.r === tpl.ratio.trim()); });
+        tpl.bh = []; renderBlumHeights();
         renderTplPreview();
       });
       on('tplBodyMat', 'bodyMat', 'change'); on('tplFacadeMat', 'facadeMat', 'change');
