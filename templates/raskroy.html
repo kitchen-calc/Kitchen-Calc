@@ -278,7 +278,17 @@
         <label class="f">Сколько шкафов
           <input type="number" id="tplQty" min="1" max="50" value="1">
         </label>
-        <label class="f">Дверей
+        <label class="f" id="tplNBox">Ящиков
+          <div class="chips" id="tplNChips"></div>
+        </label>
+        <label class="f" id="tplRatioBox">Размеры сверху вниз (соотношение)
+          <div class="chips" id="tplRatioChips"></div>
+          <input type="text" id="tplRatio" placeholder="например 1:2:2">
+        </label>
+        <label class="f" id="tplSlideBox">Направляющие, мм
+          <select id="tplSlide"><option value="350">350</option><option value="400">400</option><option value="450">450</option><option value="500">500</option></select>
+        </label>
+        <label class="f" id="tplDoorsBox">Дверей
           <select id="tplDoors"><option value="auto">Авто</option><option value="1">1</option><option value="2">2</option></select>
         </label>
         <label class="f" id="tplShelvesBox">Полок
@@ -290,7 +300,7 @@
         <label class="f">Материал корпуса
           <select id="tplBodyMat"></select>
         </label>
-        <label class="f">Материал дверей
+        <label class="f">Материал фасадов
           <select id="tplFacadeMat"></select>
         </label>
       </div>
@@ -388,6 +398,44 @@
     // t — толщина корпуса, ft — толщина двери, doors — число дверей.
     // L детали — сторона, вдоль которой идёт текстура и считается «Кромка Д».
     var half = function (v) { return Math.round(v * 2) / 2; };
+
+    // Корпус нижнего шкафа: общий для шкафа с дверьми и ящичного
+    function lowerBody(c) {
+      var t = c.t, depth = c.D - t - c.ft;        // спина сзади и фасад спереди
+      return [
+        // боковины стоят на дне
+        { name: 'Бок', L: c.H - t, W: depth, qty: 2, mat: 'body', rot: false, eL: 1, eW: 0 },
+        { name: 'Дно', L: c.W, W: depth, qty: 1, mat: 'body', rot: true, eL: 1, eW: 0 },
+        // планки крепятся изнутри между боковинами
+        { name: 'Планка', L: c.W - 2 * t, W: 70, qty: 2, mat: 'body', rot: true, eL: 1, eW: 0 },
+        // спина лежит на торцах боковин и дна
+        { name: 'Спина', L: c.H, W: c.W, qty: 1, mat: 'body', rot: true, eL: 0, eW: 0 }
+      ];
+    }
+
+    // Высоты фасадов ящиков сверху вниз: верх −5 мм под столешницу, 2 мм между фасадами,
+    // остальное делится по соотношению (например «1:2:2»). Целые мм, остаток округления — нижнему.
+    function parseRatio(str, n) {
+      var w = String(str || '').split(/[:\s,;\/-]+/).map(function (x) { return num(x, 0); }).filter(function (x) { return x > 0; });
+      if (w.length !== n) { w = []; for (var i = 0; i < n; i++) w.push(1); }
+      return w;
+    }
+    function drawerFronts(H, n, ratio) {
+      var w = parseRatio(ratio, n);
+      var total = H - 5 - 2 * (n - 1);
+      var sum = w.reduce(function (a, b) { return a + b; }, 0);
+      var out = [], used = 0;
+      for (var i = 0; i < n; i++) {
+        var h = i === n - 1 ? total - used : Math.floor(total * w[i] / sum);
+        out.push(h); used += h;
+      }
+      return out;
+    }
+    var RATIO_PRESETS = {
+      2: ['1:1', '1:2'],
+      3: ['1:1:1', '1:2:2', '1:1:2'],
+      4: ['1:1:1:1', '1:1:2:2', '1:1:1:2']
+    };
     var TEMPLATES = {
       lower: {
         title: 'Нижний шкаф',
@@ -399,20 +447,43 @@
         depthLabel: 'Глубина с дверьми, мм',
         autoDoors: function (W) { return W <= 450 ? 1 : 2; },
         build: function (c) {
-          var t = c.t, depth = c.D - t - c.ft;      // спина сзади и дверь спереди
-          var inner = c.W - 2 * t;
           var doorW = half((c.W - 2 * (c.doors + 1)) / c.doors); // зазор 2 мм по краям и между дверями
-          return [
-            // боковины стоят на дне
-            { name: 'Бок', L: c.H - t, W: depth, qty: 2, mat: 'body', rot: false, eL: 1, eW: 0 },
-            { name: 'Дно', L: c.W, W: depth, qty: 1, mat: 'body', rot: true, eL: 1, eW: 0 },
-            // планки крепятся изнутри между боковинами
-            { name: 'Планка', L: inner, W: 70, qty: 2, mat: 'body', rot: true, eL: 1, eW: 0 },
-            // спина лежит на торцах боковин и дна
-            { name: 'Спина', L: c.H, W: c.W, qty: 1, mat: 'body', rot: true, eL: 0, eW: 0 },
+          return lowerBody(c).concat([
             // дверь на всю высоту корпуса минус 5 мм сверху
             { name: 'Дверь', L: c.H - 5, W: doorW, qty: c.doors, mat: 'facade', rot: false, eL: 2, eW: 2 }
-          ];
+          ]);
+        }
+      },
+      drawers: {
+        title: 'Ящичный шкаф',
+        short: 'Я',
+        defaults: { W: 600, H: 720, D: 580 },
+        widths: [400, 450, 500, 600, 800],
+        heights: [720],
+        depths: [580],
+        depthLabel: 'Глубина с фасадами, мм',
+        hasDrawers: true,
+        build: function (c) {
+          var t = c.t;
+          var parts = lowerBody(c);
+          var heights = drawerFronts(c.H, c.n, c.ratio);
+          var boxOuter = c.W - 2 * t - 2 * 13;       // по 13 мм на шариковую направляющую с каждой стороны
+          var frontW = c.W - 4;                       // зазор 2 мм слева и справа
+          var merged = {};
+          function add(p) {
+            var k = p.name + '|' + p.L + '|' + p.W + '|' + p.mat;
+            if (merged[k]) merged[k].qty += p.qty; else { merged[k] = p; parts.push(p); }
+          }
+          heights.forEach(function (fh) {
+            var boxH = Math.round(fh * 3 / 5);          // короб : фасад = 3 : 5
+            add({ name: 'Фасад ящика', L: fh, W: frontW, qty: 1, mat: 'facade', rot: false, eL: 2, eW: 2 });
+            // перед и зад короба стоят между боковинами
+            add({ name: 'Ящик · бок', L: c.slide, W: boxH, qty: 2, mat: 'body', rot: true, eL: 1, eW: 0 });
+            add({ name: 'Ящик · перед/зад', L: boxOuter - 2 * t, W: boxH, qty: 2, mat: 'body', rot: true, eL: 1, eW: 0 });
+            // дно ДСП снизу на весь короб
+            add({ name: 'Ящик · дно', L: boxOuter, W: c.slide, qty: 1, mat: 'body', rot: true, eL: 0, eW: 0 });
+          });
+          return parts;
         }
       },
       upper: {
@@ -1148,7 +1219,7 @@
     }
 
     // ------------------------------------------------------------ templates
-    var tpl = { kind: 'lower', W: 600, H: 720, D: 580, qty: 1, doors: 'auto', shelves: 'auto', end: false, bodyMat: '', facadeMat: '' };
+    var tpl = { kind: 'lower', W: 600, H: 720, D: 580, qty: 1, doors: 'auto', shelves: 'auto', end: false, n: 3, ratio: '1:1:1', slide: 450, bodyMat: '', facadeMat: '' };
     var NEW_FACADE = '__new_facade';
 
     function tplConfig() {
@@ -1157,7 +1228,8 @@
       return {
         W: W, H: H, D: num(tpl.D, 0),
         t: num(state.tplT, 16), ft: num(state.tplFT, 16),
-        doors: tpl.doors === 'auto' ? T.autoDoors(W) : +tpl.doors,
+        doors: !T.autoDoors ? 0 : tpl.doors === 'auto' ? T.autoDoors(W) : +tpl.doors,
+        n: +tpl.n, ratio: tpl.ratio, slide: num(tpl.slide, 450),
         shelves: !T.hasShelves ? 0 : tpl.shelves === 'auto' ? T.autoShelves(H) : +tpl.shelves,
         end: !!(T.hasEnd && tpl.end)
       };
@@ -1190,6 +1262,9 @@
       renderChips('tplDepths', T.depths.length > 1 ? T.depths : [], 'D', 'tplD');
       document.getElementById('tplDLabel').textContent = T.depthLabel;
       document.getElementById('tplShelvesBox').style.display = T.hasShelves ? '' : 'none';
+      ['tplNBox', 'tplRatioBox', 'tplSlideBox'].forEach(function (id) { document.getElementById(id).style.display = T.hasDrawers ? '' : 'none'; });
+      document.getElementById('tplDoorsBox').style.display = T.hasDrawers ? 'none' : '';
+      if (T.hasDrawers) renderDrawerControls();
       document.getElementById('tplEndBox').style.display = T.hasEnd ? '' : 'none';
       document.getElementById('tplShelves').value = tpl.shelves;
       document.getElementById('tplEnd').checked = !!tpl.end;
@@ -1221,6 +1296,30 @@
       });
     }
 
+    function renderDrawerControls() {
+      var nBox = document.getElementById('tplNChips');
+      nBox.innerHTML = [2, 3, 4].map(function (n) { return '<button type="button" class="chip' + (+tpl.n === n ? ' active' : '') + '" data-n="' + n + '">' + n + '</button>'; }).join('');
+      nBox.querySelectorAll('.chip').forEach(function (b) {
+        b.addEventListener('click', function (e) {
+          e.preventDefault();
+          tpl.n = +b.dataset.n; tpl.ratio = RATIO_PRESETS[tpl.n][0];
+          renderDrawerControls(); renderTplPreview();
+        });
+      });
+      var rBox = document.getElementById('tplRatioChips');
+      rBox.innerHTML = RATIO_PRESETS[tpl.n].map(function (r) { return '<button type="button" class="chip' + (tpl.ratio === r ? ' active' : '') + '" data-r="' + r + '">' + r + '</button>'; }).join('');
+      rBox.querySelectorAll('.chip').forEach(function (b) {
+        b.addEventListener('click', function (e) {
+          e.preventDefault();
+          tpl.ratio = b.dataset.r; document.getElementById('tplRatio').value = tpl.ratio;
+          rBox.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('active', c === b); });
+          renderTplPreview();
+        });
+      });
+      document.getElementById('tplRatio').value = tpl.ratio;
+      document.getElementById('tplSlide').value = String(tpl.slide);
+    }
+
     function syncChips(boxId, key) {
       document.querySelectorAll('#' + boxId + ' .chip').forEach(function (c) { c.classList.toggle('active', +c.dataset.v === num(tpl[key], 0)); });
     }
@@ -1245,7 +1344,13 @@
       var total = parts.reduce(function (s, p) { return s + p.qty; }, 0);
       var box = document.getElementById('tplPreview');
       if (errs.length) { box.innerHTML = '<span class="err">' + esc(errs.join('. ')) + '</span>'; return; }
-      box.innerHTML = '<b>' + c.W + '×' + c.H + '×' + c.D + '</b>: ' + total + ' ' + plural(total, 'деталь', 'детали', 'деталей') + ' на шкаф' +
+      var note = '';
+      if (TEMPLATES[tpl.kind].hasDrawers) {
+        var given = String(tpl.ratio || '').split(/[:\s,;\/-]+/).filter(function (x) { return num(x, 0) > 0; }).length;
+        note = (given !== c.n ? '<div class="err">Соотношение «' + esc(tpl.ratio) + '» не на ' + c.n + ' ящ. — делю поровну.</div>' : '') +
+          '<div>Фасады сверху вниз: <b>' + drawerFronts(c.H, c.n, c.ratio).join(' / ') + '</b> мм</div>';
+      }
+      box.innerHTML = note + '<b>' + c.W + '×' + c.H + '×' + c.D + '</b>: ' + total + ' ' + plural(total, 'деталь', 'детали', 'деталей') + ' на шкаф' +
         (q > 1 ? ', всего ' + total * q : '') + '<ul>' +
         parts.map(function (p) {
           var e = [];
@@ -1267,7 +1372,8 @@
         state.materials.push(nf);
         tpl.facadeMat = nf.id;
       }
-      var g = { id: uid(), label: T.short + c.W + '×' + c.H + '×' + c.D + (c.end ? ' крайний' : '') + (q > 1 ? ' ×' + q : '') };
+      var g = { id: uid(), label: T.short + c.W + '×' + c.H + '×' + c.D + (c.end ? ' крайний' : '') +
+        (T.hasDrawers ? ' · ' + c.n + ' ящ. ' + parseRatio(c.ratio, c.n).join(':') : '') + (q > 1 ? ' ×' + q : '') };
       state.groups.push(g);
       // если в таблице осталась одна пустая строка — заменяем её
       state.parts = state.parts.filter(function (p) { return p.L > 0 || p.W > 0 || p.name; });
@@ -1310,6 +1416,12 @@
       }
       on('tplW', 'W'); on('tplH', 'H'); on('tplD', 'D'); on('tplQty', 'qty');
       on('tplDoors', 'doors', 'change'); on('tplShelves', 'shelves', 'change'); on('tplEnd', 'end', 'change');
+      on('tplSlide', 'slide', 'change');
+      document.getElementById('tplRatio').addEventListener('input', function (e) {
+        tpl.ratio = e.target.value;
+        document.querySelectorAll('#tplRatioChips .chip').forEach(function (c) { c.classList.toggle('active', c.dataset.r === tpl.ratio.trim()); });
+        renderTplPreview();
+      });
       on('tplBodyMat', 'bodyMat', 'change'); on('tplFacadeMat', 'facadeMat', 'change');
       document.getElementById('tplT').addEventListener('input', function (e) { state.tplT = num(e.target.value, 16); persistCurrent(); renderTplPreview(); });
       document.getElementById('tplFT').addEventListener('input', function (e) { state.tplFT = num(e.target.value, 16); persistCurrent(); renderTplPreview(); });
