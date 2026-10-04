@@ -145,6 +145,14 @@
     .cab button:hover { color: var(--danger); background: #fff; }
     table.edit td.grp-start { border-top: 2px solid var(--border-gold); }
 
+    .price-group + .price-group { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border-dark); }
+    .price-group h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 8px; }
+    .cut-opt { border: 1px solid var(--border-dark); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
+    .cut-opt.active { border-color: var(--accent-gold); background: #fdf8ec; box-shadow: 0 0 0 1px var(--accent-gold) inset; }
+    .cut-opt .cut-head { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.9rem; }
+    .cut-opt input[type=radio] { width: 18px; height: 18px; accent-color: var(--accent-gold); }
+    .stat.total { background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), #fffdf8); border-color: var(--accent-gold); }
+
     .print-only { display: none; }
 
     @media (max-width: 720px) {
@@ -204,26 +212,44 @@
         </label>
       </div>
       <p class="hint" style="margin-top:8px">Отступ срезает заводской край листа (обычно 10–15 мм с каждой стороны). Текстура листа считается идущей вдоль длинной стороны.</p>
-      <h3 style="font-size:0.95rem;font-weight:800;margin:16px 0 8px">Кромка</h3>
-      <div class="grid-settings">
-        <label class="f">Запас на каждую линию, см
-          <input type="number" id="edgeAllow" min="0" max="50" step="0.5">
-        </label>
-        <label class="f">Цена 0,4 мм, сум/м
-          <input type="number" id="edgePrice04" min="0" step="100" placeholder="впишите цену">
-        </label>
-        <label class="f">Цена 2 мм, сум/м
-          <input type="number" id="edgePrice2" min="0" step="100" placeholder="впишите цену">
-        </label>
-        <label class="f">Цена 4 мм, сум/м
-          <input type="number" id="edgePrice4" min="0" step="100" placeholder="впишите цену">
-        </label>
-      </div>
-      <p class="hint" style="margin-top:8px">Каждая сторона с кромкой — отдельная линия: к её длине добавляется запас, который станок уходит на обрезку.</p>
     </section>
 
     <section class="card no-print">
-      <h2><span class="step">2</span> Материалы</h2>
+      <h2><span class="step">2</span> Цены <span class="hint" style="font-weight:600">впишите свои — итог посчитается сам</span></h2>
+
+      <div class="price-group">
+        <h3>Лист, сум за лист</h3>
+        <div class="grid-settings" id="sheetPriceGrid"></div>
+      </div>
+
+      <div class="price-group">
+        <h3>Кромка, сум за метр</h3>
+        <div class="grid-settings">
+          <label class="f">0,4 мм
+            <input type="number" id="edgePrice04" min="0" step="100" placeholder="впишите цену">
+          </label>
+          <label class="f">2 мм
+            <input type="number" id="edgePrice2" min="0" step="100" placeholder="впишите цену">
+          </label>
+          <label class="f">4 мм
+            <input type="number" id="edgePrice4" min="0" step="100" placeholder="впишите цену">
+          </label>
+          <label class="f">Запас на каждую линию, см
+            <input type="number" id="edgeAllow" min="0" max="50" step="0.5">
+          </label>
+        </div>
+        <p class="hint" style="margin-top:6px">Каждая сторона с кромкой — отдельная линия: к её длине добавляется запас, который станок уходит на обрезку.</p>
+      </div>
+
+      <div class="price-group">
+        <h3>Распил, сум за лист</h3>
+        <div class="grid-settings" id="cutPriceGrid"></div>
+        <p class="hint" style="margin-top:6px">Отметьте, какой вариант распила считать в итог.</p>
+      </div>
+    </section>
+
+    <section class="card no-print">
+      <h2><span class="step">3</span> Материалы</h2>
       <div class="mat-list" id="matList"></div>
       <div class="actions" style="margin-top:10px">
         <button class="btn small" id="btnAddMat">＋ Материал</button>
@@ -232,7 +258,7 @@
     </section>
 
     <section class="card no-print">
-      <h2><span class="step">3</span> Шкафы по шаблону
+      <h2><span class="step">4</span> Шкафы по шаблону
         <span class="hint" style="font-weight:600">детали создаются сами</span>
       </h2>
       <div class="tpl-tabs" id="tplTabs"></div>
@@ -283,7 +309,7 @@
     </section>
 
     <section class="card no-print">
-      <h2><span class="step">4</span> Детали
+      <h2><span class="step">5</span> Детали
         <span class="hint" style="font-weight:600">Д — длина (вдоль текстуры), Ш — ширина</span>
       </h2>
       <div class="table-wrap">
@@ -328,7 +354,7 @@
     </div>
 
     <section class="card" id="resultCard">
-      <h2 class="no-print"><span class="step">5</span> Раскрой</h2>
+      <h2 class="no-print"><span class="step">6</span> Раскрой</h2>
       <div id="result"><div class="empty">Добавьте детали — раскрой появится здесь.</div></div>
       <div class="actions no-print" id="resultActions" style="margin-top:14px; display:none">
         <button class="btn primary" id="btnPrint">🖨 Печать / PDF</button>
@@ -352,6 +378,8 @@
       { L: 2440, W: 1220, label: '2440 × 1220' }
     ];
     var EDGE_T = ['0.4', '2', '4'];
+    var CUT_TIERS = [{ k: 'eco', label: 'Эконом' }, { k: 'prem', label: 'Премиум' }, { k: 'urgent', label: 'Срочно' }];
+    function sizeKey(m) { return m.L + 'x' + m.W; }
     var STORE_KEY = 'raskroy.projects.v1';
     var CURRENT_KEY = 'raskroy.current.v1';
     var PALETTE = ['#fde68a', '#bfdbfe', '#bbf7d0', '#fecaca', '#ddd6fe', '#fed7aa', '#a5f3fc', '#f5d0fe', '#d9f99d', '#e5e7eb'];
@@ -432,6 +460,9 @@
         trim: 10,
         edgeAllow: 5,
         edgePrices: { '0.4': 0, '2': 0, '4': 0 },
+        sheetPrices: {},
+        cutPrices: { eco: 0, prem: 0, urgent: 0 },
+        cutTier: 'eco',
         tplT: 16,
         tplFT: 16,
         materials: [m, f],
@@ -459,6 +490,13 @@
       var ep = s.edgePrices || {};
       s.edgePrices = {};
       EDGE_T.forEach(function (t) { s.edgePrices[t] = Math.max(0, num(ep[t], 0)); });
+      var sp = s.sheetPrices || {};
+      s.sheetPrices = {};
+      Object.keys(sp).forEach(function (k) { if (/^\d+(\.\d+)?x\d+(\.\d+)?$/.test(k)) s.sheetPrices[k] = Math.max(0, num(sp[k], 0)); });
+      var cp = s.cutPrices || {};
+      s.cutPrices = {};
+      CUT_TIERS.forEach(function (c) { s.cutPrices[c.k] = Math.max(0, num(cp[c.k], 0)); });
+      if (!CUT_TIERS.some(function (c) { return c.k === s.cutTier; })) s.cutTier = 'eco';
       if (!Array.isArray(s.groups)) s.groups = [];
       if (!s.materials.length) s.materials.push({ id: uid(), name: 'Материал', L: 2750, W: 1830 });
       s.materials.forEach(function (m) {
@@ -493,6 +531,9 @@
       var compact = {
         n: s.name, k: s.kerf, t: s.trim, ea: s.edgeAllow,
         ep: EDGE_T.map(function (t) { return s.edgePrices[t]; }),
+        sp: s.sheetPrices,
+        cp: CUT_TIERS.map(function (c) { return s.cutPrices[c.k]; }),
+        ct: s.cutTier,
         m: s.materials.map(function (m) { return [m.id, m.name, m.L, m.W, m.et]; }),
         g: s.groups.map(function (g) { return [g.id, g.label]; }),
         p: s.parts.map(function (p) { return [p.name, p.L, p.W, p.qty, p.mat, p.rot ? 1 : 0, p.eL, p.eW, p.grp, p.et]; })
@@ -508,6 +549,9 @@
       return normalize({
         name: c.n, kerf: c.k, trim: c.t, edgeAllow: c.ea,
         edgePrices: (function () { var o = {}; EDGE_T.forEach(function (t, i) { o[t] = (c.ep || [])[i]; }); return o; })(),
+        sheetPrices: c.sp,
+        cutPrices: (function () { var o = {}; CUT_TIERS.forEach(function (t, i) { o[t.k] = (c.cp || [])[i]; }); return o; })(),
+        cutTier: c.ct,
         materials: (c.m || []).map(function (a) { return { id: a[0], name: a[1], L: a[2], W: a[3], et: a[4] }; }),
         groups: (c.g || []).map(function (a) { return { id: a[0], label: a[1] }; }),
         parts: (c.p || []).map(function (a) { return { id: uid(), name: a[0], L: a[1], W: a[2], qty: a[3], mat: a[4], rot: !!a[5], eL: a[6], eW: a[7], grp: a[8], et: a[9] }; })
@@ -804,10 +848,12 @@
       html.push(stat(r.partsCount, plural(r.partsCount, 'деталь', 'детали', 'деталей')));
       html.push(stat(fmt(totalSheetArea ? totalArea / totalSheetArea * 100 : 0, 0) + '%', 'использование листов'));
       html.push(stat(fmt(r.edge.gross, 1) + ' м', 'кромки с запасом'));
-      if (r.edge.rows.length) {
-        html.push(stat(r.edge.priced ? fmt(r.edge.cost, 0) + ' сум' : '—', r.edge.priced ? 'стоимость кромки' : 'впишите цены кромки'));
-      }
+      var cost = costStats(r);
+      r.cost = cost;
+      html.push('<div class="stat total"><div class="v">' + (cost.total ? fmt(cost.total, 0) + ' сум' : '—') + '</div><div class="l">' +
+        (cost.total ? 'итого: листы, распил, кромка' + (cost.missing ? ' (не все цены вписаны)' : '') : 'впишите цены в блоке «Цены»') + '</div></div>');
       html.push('</div>');
+      html.push(costTable(cost));
       html.push(edgeTable(r.edge));
       html.push('<div class="legend"><span><i></i>кромка</span><span>↻ — деталь повёрнута</span><span>пунктир — отступ по краю ' + r.trim + ' мм</span><span>пропил ' + r.kerf + ' мм</span></div>');
 
@@ -843,6 +889,89 @@
 
       document.getElementById('printTitle').textContent = state.name || 'Раскрой листов';
       document.getElementById('printMeta').textContent = new Date().toLocaleDateString('ru-RU') + ' · пропил ' + r.kerf + ' мм · отступ ' + r.trim + ' мм';
+    }
+
+    // ------------------------------------------------------------- prices
+    function sheetSizes() {
+      var keys = SHEET_PRESETS.map(function (p) { return sizeKey(p); });
+      state.materials.forEach(function (m) { var k = sizeKey(m); if (keys.indexOf(k) < 0) keys.push(k); });
+      return keys;
+    }
+
+    function renderSheetPrices() {
+      var grid = document.getElementById('sheetPriceGrid');
+      var focusedKey = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.size : null;
+      grid.innerHTML = sheetSizes().map(function (k) {
+        var v = state.sheetPrices[k];
+        return '<label class="f">' + k.replace('x', ' × ') + '<input type="number" min="0" step="1000" data-size="' + k + '" value="' + (v ? v : '') + '" placeholder="впишите цену"></label>';
+      }).join('');
+      grid.querySelectorAll('input[data-size]').forEach(function (inp) {
+        inp.addEventListener('input', function () { state.sheetPrices[inp.dataset.size] = Math.max(0, num(inp.value, 0)); changed(true); });
+        if (inp.dataset.size === focusedKey) inp.focus();
+      });
+    }
+
+    function renderCutPrices() {
+      var grid = document.getElementById('cutPriceGrid');
+      grid.innerHTML = CUT_TIERS.map(function (c) {
+        var v = state.cutPrices[c.k];
+        return '<label class="cut-opt' + (state.cutTier === c.k ? ' active' : '') + '" data-tier="' + c.k + '">' +
+          '<span class="cut-head"><input type="radio" name="cutTier" value="' + c.k + '"' + (state.cutTier === c.k ? ' checked' : '') + '> ' + c.label + '</span>' +
+          '<input type="number" min="0" step="1000" data-cut="' + c.k + '" value="' + (v ? v : '') + '" placeholder="цена за лист"></label>';
+      }).join('');
+      grid.querySelectorAll('input[type=radio]').forEach(function (r) {
+        r.addEventListener('change', function () {
+          state.cutTier = r.value;
+          grid.querySelectorAll('.cut-opt').forEach(function (o) { o.classList.toggle('active', o.dataset.tier === state.cutTier); });
+          changed(true);
+        });
+      });
+      grid.querySelectorAll('input[data-cut]').forEach(function (inp) {
+        inp.addEventListener('input', function () { state.cutPrices[inp.dataset.cut] = Math.max(0, num(inp.value, 0)); changed(true); });
+      });
+    }
+
+    function renderPrices() {
+      renderSheetPrices();
+      renderCutPrices();
+      document.getElementById('edgeAllow').value = state.edgeAllow;
+      EDGE_IDS.forEach(function (x) { document.getElementById(x.id).value = state.edgePrices[x.t] || ''; });
+    }
+
+    // Итог: листы по размерам + распил за лист + кромка. Строка без цены не входит в сумму и помечается.
+    function costStats(r) {
+      var rows = [], total = 0, missing = false;
+      var bySize = {};
+      r.blocks.forEach(function (b) {
+        var k = sizeKey(b.mat);
+        bySize[k] = (bySize[k] || 0) + b.res.sheets.length;
+      });
+      Object.keys(bySize).forEach(function (k) {
+        var price = num(state.sheetPrices[k], 0), n = bySize[k];
+        var sum = price > 0 ? price * n : null;
+        rows.push({ name: 'Лист ' + k.replace('x', '×'), qty: n + ' шт', price: price, sum: sum });
+        if (sum == null) missing = true; else total += sum;
+      });
+      var tier = CUT_TIERS.filter(function (c) { return c.k === state.cutTier; })[0];
+      var cutPrice = num(state.cutPrices[tier.k], 0);
+      var cutSum = cutPrice > 0 ? cutPrice * r.sheets : null;
+      rows.push({ name: 'Распил: ' + tier.label.toLowerCase(), qty: r.sheets + ' ' + plural(r.sheets, 'лист', 'листа', 'листов'), price: cutPrice, sum: cutSum });
+      if (cutSum == null) missing = true; else total += cutSum;
+      r.edge.rows.forEach(function (e) {
+        rows.push({ name: 'Кромка ' + tLabel(e.t), qty: fmt(e.gross, 2) + ' м', price: e.price, sum: e.cost });
+        if (e.cost == null) missing = true; else total += e.cost;
+      });
+      return { rows: rows, total: total, missing: missing };
+    }
+
+    function costTable(c) {
+      var h = ['<div class="table-wrap" style="margin-bottom:14px"><table class="list"><thead><tr><th>Стоимость</th><th>Количество</th><th>Цена, сум</th><th>Сумма, сум</th></tr></thead><tbody>'];
+      c.rows.forEach(function (row) {
+        h.push('<tr><td>' + esc(row.name) + '</td><td class="r">' + row.qty + '</td><td class="r">' + (row.price > 0 ? fmt(row.price, 0) : '<span class="hint">не указана</span>') + '</td><td class="r"><b>' + (row.sum != null ? fmt(row.sum, 0) : '—') + '</b></td></tr>');
+      });
+      h.push('<tr><td colspan="3"><b>Итого' + (c.missing ? ' (без строк без цены)' : '') + '</b></td><td class="r"><b>' + fmt(c.total, 0) + '</b></td></tr>');
+      h.push('</tbody></table></div>');
+      return h.join('');
     }
 
     function edgeTable(e) {
@@ -896,9 +1025,10 @@
         sel.addEventListener('change', function () {
           if (sel.value !== 'custom') { var p = SHEET_PRESETS[+sel.value]; m.L = p.L; m.W = p.W; inL.value = p.L; inW.value = p.W; }
           else inL.focus();
+          renderSheetPrices();
           changed(true);
         });
-        function dim() { m.L = num(inL.value, m.L); m.W = num(inW.value, m.W); if (m.W > m.L) { /* keep length as the long side */ } sel.value = presetValue(m); changed(true); }
+        function dim() { m.L = num(inL.value, m.L); m.W = num(inW.value, m.W); sel.value = presetValue(m); renderSheetPrices(); changed(true); }
         inL.addEventListener('input', dim); inW.addEventListener('input', dim);
         row.querySelector('[data-k=et]').addEventListener('change', function (e) {
           // детали этого материала со старой толщиной переходят на новую
@@ -996,8 +1126,6 @@
       document.getElementById('projName').value = state.name;
       document.getElementById('kerf').value = state.kerf;
       document.getElementById('trim').value = state.trim;
-      document.getElementById('edgeAllow').value = state.edgeAllow;
-      EDGE_IDS.forEach(function (x) { document.getElementById(x.id).value = state.edgePrices[x.t] || ''; });
     }
 
     var EDGE_IDS = [{ id: 'edgePrice04', t: '0.4' }, { id: 'edgePrice2', t: '2' }, { id: 'edgePrice4', t: '4' }];
@@ -1010,7 +1138,7 @@
       if (state.name && projects[state.name]) sel.value = state.name;
     }
 
-    function renderAll() { renderSettings(); renderMaterials(); renderTemplates(); renderParts(); renderProjects(); renderResult(); }
+    function renderAll() { renderSettings(); renderPrices(); renderMaterials(); renderTemplates(); renderParts(); renderProjects(); renderResult(); }
 
     var timer = null;
     function changed(recalc) {
@@ -1240,7 +1368,12 @@
       r.edge.rows.forEach(function (e) {
         lines.push('Кромка ' + tLabel(e.t) + ': ' + fmt(e.gross, 1) + ' м с запасом (' + e.lines + ' ' + plural(e.lines, 'линия', 'линии', 'линий') + ')' + (e.cost != null ? ' — ' + fmt(e.cost, 0) + ' сум' : ''));
       });
-      if (r.edge.rows.length > 1 && r.edge.priced) lines.push('Кромка всего: ' + fmt(r.edge.cost, 0) + ' сум');
+      var cost = r.cost || costStats(r);
+      if (cost.total) {
+        lines.push('');
+        cost.rows.forEach(function (row) { if (row.sum != null) lines.push(row.name + ': ' + row.qty + ' — ' + fmt(row.sum, 0) + ' сум'); });
+        lines.push('Итого: ' + fmt(cost.total, 0) + ' сум' + (cost.missing ? ' (не все цены вписаны)' : ''));
+      }
       lines.push('');
       state.parts.forEach(function (p) {
         if (!(p.L > 0 && p.W > 0)) return;
@@ -1320,6 +1453,7 @@
         state = {
           name: '', kerf: state.kerf, trim: state.trim, tplT: state.tplT, tplFT: state.tplFT,
           edgeAllow: state.edgeAllow, edgePrices: JSON.parse(JSON.stringify(state.edgePrices)),
+          sheetPrices: JSON.parse(JSON.stringify(state.sheetPrices)), cutPrices: JSON.parse(JSON.stringify(state.cutPrices)), cutTier: state.cutTier,
           materials: keepMats, groups: [], parts: []
         };
         state.parts.push({ id: uid(), name: '', L: 0, W: 0, qty: 1, mat: keepMats[0].id, rot: true, eL: 0, eW: 0, et: keepMats[0].et });
