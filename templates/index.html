@@ -7,23 +7,23 @@
   <meta name="description" content="Соберите кухню онлайн и узнайте цену за 2 минуты. Кухни на заказ в Ташкенте: бесплатный замер, договор, гарантия, доставка и монтаж.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
-      --bg-dark: #090d16;
-      --card-bg: rgba(15, 23, 42, 0.90);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent-gold: #fbbf24;
-      --border-gold: rgba(251, 191, 36, 0.35);
-      --border-dark: #334155;
+      --bg-dark: #f7f4ee;
+      --card-bg: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --accent-gold: #b07d12;
+      --border-gold: rgba(176, 125, 18, 0.32);
+      --border-dark: #e6e0d4;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #090d16 100%);
+      background: linear-gradient(135deg, #ffffff 0%, #faf8f4 50%, #f7f4ee 100%);
       background-attachment: fixed;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       color: var(--text-main);
@@ -32,7 +32,7 @@
     }
 
     .header {
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(255, 255, 255, 0.95);
       border-bottom: 1px solid var(--border-gold);
       padding: 15px 20px;
       position: sticky;
@@ -55,7 +55,7 @@
     .brand p { font-size: 0.85rem; color: var(--text-muted); }
 
     .master-contacts {
-      background: rgba(30, 41, 59, 0.8);
+      background: rgba(255, 255, 255, 0.92);
       border: 1px solid var(--border-gold);
       padding: 8px 16px;
       border-radius: 10px;
@@ -63,7 +63,7 @@
     }
 
     .master-contacts .phone { font-size: 1.05rem; font-weight: 700; color: var(--accent-gold); }
-    .master-contacts .telegram { font-size: 0.88rem; color: #38bdf8; text-decoration: none; font-weight: 600; }
+    .master-contacts .telegram { font-size: 0.88rem; color: #0369a1; text-decoration: none; font-weight: 600; }
 
     .container { max-width: 1280px; margin: 25px auto; padding: 0 20px; }
     .app-layout { display: grid; grid-template-columns: 440px 1fr; gap: 25px; align-items: start; }
@@ -75,18 +75,18 @@
       border-radius: 14px;
       padding: 20px;
       backdrop-filter: blur(12px);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.10);
     }
 
     .price-box {
-      background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(15, 23, 42, 0.9));
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(255, 255, 255, 0.92));
       border: 1.5px solid var(--accent-gold); color: #ffffff; text-align: center;
-      padding: 22px; border-radius: 14px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+      padding: 22px; border-radius: 14px; box-shadow: 0 8px 25px rgba(15, 23, 42, 0.12);
     }
 
     .price-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); }
     .price-value { font-size: 2.2rem; font-weight: 800; color: var(--accent-gold); margin: 6px 0; }
-    .price-currency { color: #f8fafc; font-size: 0.95rem; }
+    .price-currency { color: #111827; font-size: 0.95rem; }
 
     .drawing-title { font-size: 0.95rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     .svg-container { width: 100%; height: 250px; background: #eef2f6; border: 1px solid var(--border-gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -96,7 +96,7 @@
     .step-badge { background: var(--accent-gold); color: #0f172a; font-weight: bold; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
 
     .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-    .type-btn { background: rgba(30, 41, 59, 0.6); border: 1.5px solid var(--border-dark); border-radius: 8px; padding: 12px 8px; text-align: center; cursor: pointer; font-weight: 600; color: var(--text-main); transition: all 0.2s; }
+    .type-btn { background: rgba(255, 255, 255, 0.92); border: 1.5px solid var(--border-dark); border-radius: 8px; padding: 12px 8px; text-align: center; cursor: pointer; font-weight: 600; color: var(--text-main); transition: all 0.2s; }
     .type-btn:hover { border-color: var(--accent-gold); }
     .type-btn.active { border-color: var(--accent-gold); background: rgba(251, 191, 36, 0.15); color: var(--accent-gold); }
 
@@ -104,13 +104,13 @@
     .field-group { display: flex; flex-direction: column; gap: 5px; }
     .field-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
     .field-group input, .field-group select, .field-group textarea {
-      background: #1e293b !important; color: #f8fafc !important; border: 1px solid var(--border-dark); border-radius: 8px; padding: 10px 12px; font-size: 14px !important; outline: none;
+      background: #faf8f4 !important; color: #111827 !important; border: 1px solid var(--border-dark); border-radius: 8px; padding: 10px 12px; font-size: 14px !important; outline: none;
     }
-    .field-group select option { background-color: #0f172a !important; color: #f8fafc !important; }
+    .field-group select option { background-color: #ffffff !important; color: #111827 !important; }
     .field-group input:focus, .field-group select:focus { border-color: var(--accent-gold); }
 
     .btn-color-picker {
-      background: #1e293b;
+      background: #faf8f4;
       border: 1px solid var(--border-gold);
       color: var(--accent-gold);
       padding: 10px;
@@ -136,18 +136,18 @@
 
     .number-stepper { display: flex; align-items: center; gap: 6px; }
     .btn-step {
-      background: #334155; color: var(--accent-gold); border: 1px solid var(--border-gold); border-radius: 8px; width: 44px; height: 44px; font-size: 1.3rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
+      background: #ece6da; color: var(--accent-gold); border: 1px solid var(--border-gold); border-radius: 8px; width: 44px; height: 44px; font-size: 1.3rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
     }
     .btn-step:hover { background: var(--accent-gold); color: #0f172a; }
     .number-stepper input { text-align: center; width: 100%; }
 
-    .toggle-box { background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border-dark); border-radius: 8px; padding: 12px; margin-top: 10px; }
+    .toggle-box { background: rgba(15, 23, 42, 0.05); border: 1px solid var(--border-dark); border-radius: 8px; padding: 12px; margin-top: 10px; }
     .checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; color: var(--text-main); }
     .checkbox-label input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-gold); }
     .sub-options { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-dark); display: block; }
 
     .section-card-item {
-      background: rgba(15, 23, 42, 0.7);
+      background: rgba(255, 255, 255, 0.92);
       border: 1.5px solid var(--border-dark);
       border-radius: 12px;
       padding: 15px;
@@ -189,7 +189,7 @@
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(15, 23, 42, 0.50);
       z-index: 1000;
       overflow-y: auto;
       padding: 20px;
@@ -197,11 +197,11 @@
     .modal-content {
       max-width: 850px;
       margin: 20px auto;
-      background: #0f172a;
+      background: #ffffff;
       border: 2px solid var(--accent-gold);
       border-radius: 14px;
       padding: 25px;
-      color: #f8fafc;
+      color: #111827;
     }
     .modal-header { font-size: 1.3rem; font-weight: bold; color: var(--accent-gold); border-bottom: 2px solid var(--accent-gold); padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
     
@@ -209,7 +209,7 @@
     .catalog-category-title {
       font-size: 1rem;
       font-weight: 700;
-      color: #38bdf8;
+      color: #0369a1;
       margin: 20px 0 10px 0;
       padding-bottom: 4px;
       border-bottom: 1px solid var(--border-dark);
@@ -223,7 +223,7 @@
       gap: 12px;
     }
     .color-card {
-      background: rgba(30, 41, 59, 0.7);
+      background: rgba(255, 255, 255, 0.92);
       border: 1.5px solid var(--border-dark);
       border-radius: 10px;
       padding: 8px;
@@ -241,7 +241,7 @@
       height: 75px;
       border-radius: 6px;
       margin-bottom: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(15, 23, 42, 0.14);
       object-fit: cover;
       background-size: cover;
       background-position: center;
@@ -249,14 +249,14 @@
     .color-card-title {
       font-size: 0.78rem;
       font-weight: 600;
-      color: #f8fafc;
+      color: #111827;
       line-height: 1.2;
     }
 
     .modal-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-    .modal-table th, .modal-table td { border: 1px solid #334155; padding: 8px 10px; font-size: 0.85rem; text-align: left; }
-    .modal-table th { background: #1e293b; color: var(--accent-gold); }
-    .modal-table td { background: rgba(15, 23, 42, 0.6); }
+    .modal-table th, .modal-table td { border: 1px solid #e6e0d4; padding: 8px 10px; font-size: 0.85rem; text-align: left; }
+    .modal-table th { background: #faf8f4; color: var(--accent-gold); }
+    .modal-table td { background: rgba(255, 255, 255, 0.92); }
 
     .cad-drawing-box {
       width: 100%;
@@ -276,7 +276,7 @@
       margin: 15px 0;
     }
     .modal-mini-card {
-      background: #1e293b;
+      background: #faf8f4;
       border: 1px solid var(--border-dark);
       border-radius: 8px;
       padding: 8px;
@@ -308,7 +308,7 @@
     /* ФИЛЬТР КАТАЛОГА ЦВЕТОВ */
     .catalog-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
     .filter-chip {
-      background: rgba(30, 41, 59, 0.7);
+      background: rgba(255, 255, 255, 0.92);
       border: 1.5px solid var(--border-dark);
       color: var(--text-main);
       border-radius: 20px;
@@ -327,20 +327,20 @@
 
     /* ЗАЯВКА МАСТЕРУ */
     .lead-box {
-      max-width: 850px; margin: 15px auto; background: #0f172a; border: 2px solid var(--accent-gold);
-      border-radius: 14px; padding: 18px 20px; position: relative; color: #f8fafc;
+      max-width: 850px; margin: 15px auto; background: #ffffff; border: 2px solid var(--accent-gold);
+      border-radius: 14px; padding: 18px 20px; position: relative; color: #111827;
     }
     .lead-title { font-size: 1rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 10px; }
     .lead-status { display: none; margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; }
-    .lead-status.success { background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #bbf7d0; }
-    .lead-status.error { background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fecaca; }
+    .lead-status.success { background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #166534; }
+    .lead-status.error { background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #b91c1c; }
     .lead-hint { margin-top: 10px; font-size: 0.85rem; color: var(--text-muted); text-align: center; }
-    .lead-hint a { color: #38bdf8; font-weight: 600; text-decoration: none; }
+    .lead-hint a { color: #0369a1; font-weight: 600; text-decoration: none; }
 
     /* НИЖНЯЯ ПАНЕЛЬ СВЯЗИ (только на телефоне) */
     .contact-bar {
       display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; gap: 8px;
-      padding: 8px 12px; background: rgba(15, 23, 42, 0.97); border-top: 1px solid var(--border-gold);
+      padding: 8px 12px; background: rgba(255, 255, 255, 0.97); border-top: 1px solid var(--border-gold);
       backdrop-filter: blur(10px);
     }
     .contact-bar a { flex: 1; text-align: center; padding: 12px 8px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; text-decoration: none; color: #ffffff; }
@@ -379,14 +379,14 @@
     .hero { padding: 40px 20px 10px; }
     .hero-inner { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 1.05fr 1fr; gap: 36px; align-items: center; }
     .hero h1 { font-size: 2.5rem; line-height: 1.15; font-weight: 800; letter-spacing: -0.5px; }
-    .hero-lead { margin-top: 14px; font-size: 1.08rem; color: #cbd5e1; max-width: 560px; }
+    .hero-lead { margin-top: 14px; font-size: 1.08rem; color: #374151; max-width: 560px; }
     .hero-badges { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 22px; max-width: 560px; }
-    .hero-badges li { background: rgba(30, 41, 59, 0.7); border: 1px solid var(--border-dark); border-radius: 10px; padding: 10px 12px; font-weight: 600; font-size: 0.92rem; }
+    .hero-badges li { background: rgba(255, 255, 255, 0.92); border: 1px solid var(--border-dark); border-radius: 10px; padding: 10px 12px; font-weight: 600; font-size: 0.92rem; }
     .hero-cta { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
     .btn-primary, .btn-ghost { display: inline-block; padding: 14px 24px; border-radius: 10px; font-weight: 800; text-decoration: none; font-size: 1rem; }
     .btn-primary { background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; box-shadow: 0 8px 20px rgba(217, 119, 6, 0.35); }
     .btn-ghost { border: 1.5px solid var(--border-gold); color: var(--accent-gold); }
-    .hero-visual { background: #f3eee7; border-radius: 18px; border: 1px solid var(--border-gold); padding: 10px; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45); }
+    .hero-visual { background: #f3eee7; border-radius: 18px; border: 1px solid var(--border-gold); padding: 10px; box-shadow: 0 20px 45px rgba(15, 23, 42, 0.11); }
     .hero-visual .render-svg { height: 330px; }
 
     /* СЕКЦИИ */
@@ -407,7 +407,7 @@
     /* ГОТОВЫЕ ВАРИАНТЫ */
     .presets-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     .preset-card { background: var(--card-bg); border: 1.5px solid var(--border-dark); border-radius: 14px; overflow: hidden; cursor: pointer; transition: all 0.2s; text-align: left; color: var(--text-main); font-family: inherit; padding: 0; }
-    .preset-card:hover { border-color: var(--accent-gold); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
+    .preset-card:hover { border-color: var(--accent-gold); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(15, 23, 42, 0.10); }
     .preset-card.active { border-color: var(--accent-gold); box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.35); }
     .preset-render { background: #f3eee7; height: 170px; position: relative; }
     .preset-render .render-svg { height: 170px; }
@@ -423,34 +423,34 @@
     .render-svg { width: 100%; height: 300px; display: block; }
     .render-note { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; text-align: center; }
     .price-value { font-size: 2.1rem; }
-    .price-currency { font-size: 1rem; font-weight: 600; color: #f8fafc; }
-    .installment-line { color: #fde68a; font-weight: 700; margin-top: 2px; }
+    .price-currency { font-size: 1rem; font-weight: 600; color: #111827; }
+    .installment-line { color: #8a5a00; font-weight: 700; margin-top: 2px; }
     .share-row { display: flex; gap: 8px; margin-top: 14px; }
-    .share-btn { flex: 1; background: rgba(30, 41, 59, 0.9); color: #f8fafc; border: 1px solid var(--border-dark); border-radius: 8px; padding: 10px 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; text-decoration: none; font-family: inherit; text-align: center; }
+    .share-btn { flex: 1; background: rgba(255, 255, 255, 0.92); color: #111827; border: 1px solid var(--border-dark); border-radius: 8px; padding: 10px 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; text-decoration: none; font-family: inherit; text-align: center; }
     .share-btn.tg { background: #2563eb; border-color: #2563eb; }
-    .share-status { color: #86efac; font-size: 0.82rem; margin-top: 6px; min-height: 1em; }
+    .share-status { color: #15803d; font-size: 0.82rem; margin-top: 6px; min-height: 1em; }
     .share-hint { color: var(--text-muted); font-size: 0.75rem; }
     .tech-details summary { cursor: pointer; font-weight: 700; color: var(--accent-gold); }
     .type-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; font-family: inherit; font-size: 0.92rem; }
     .type-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .island-toggle { border-style: dashed; position: relative; }
     .island-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
-    .island-toggle.active { border-style: solid; border-color: #10b981; background: rgba(16, 185, 129, 0.14); color: #a7f3d0; }
+    .island-toggle.active { border-style: solid; border-color: #10b981; background: rgba(16, 185, 129, 0.14); color: #166534; }
     .island-check { font-weight: 800; }
     .island-box { margin: 0 0 14px; padding: 12px; border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 10px; border-top: 1px solid rgba(16, 185, 129, 0.5); }
     .wall-hint { font-size: 0.78rem; color: var(--text-muted); margin: -4px 0 10px; }
     .type-btn svg { width: 46px; height: 32px; fill: none; stroke: currentColor; stroke-width: 2; }
-    .sub-title { font-weight: 700; color: #cbd5e1; margin-bottom: 10px; font-size: 0.92rem; }
+    .sub-title { font-weight: 700; color: #374151; margin-bottom: 10px; font-size: 0.92rem; }
     .tiers-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
-    .tier-card { background: rgba(30, 41, 59, 0.6); border: 1.5px solid var(--border-dark); border-radius: 10px; padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.2s; color: var(--text-main); font-family: inherit; }
+    .tier-card { background: rgba(255, 255, 255, 0.92); border: 1.5px solid var(--border-dark); border-radius: 10px; padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.2s; color: var(--text-main); font-family: inherit; }
     .tier-card:hover { border-color: var(--accent-gold); }
     .tier-card.active { border-color: var(--accent-gold); background: rgba(251, 191, 36, 0.13); }
     .tier-name { font-weight: 800; }
     .tier-desc { font-size: 0.74rem; color: var(--text-muted); min-height: 2.5em; margin-top: 2px; }
     .tier-price { color: var(--accent-gold); font-weight: 800; margin-top: 6px; font-size: 0.98rem; }
-    .tier-pick { margin-top: 6px; font-size: 0.75rem; font-weight: 700; color: #38bdf8; }
+    .tier-pick { margin-top: 6px; font-size: 0.75rem; font-weight: 700; color: #0369a1; }
     .options-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .option-chip { display: flex; align-items: center; gap: 10px; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-dark); border-radius: 8px; padding: 12px; cursor: pointer; font-weight: 600; }
+    .option-chip { display: flex; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.06); border: 1px solid var(--border-dark); border-radius: 8px; padding: 12px; cursor: pointer; font-weight: 600; }
     .option-chip input { width: 20px; height: 20px; accent-color: var(--accent-gold); flex-shrink: 0; }
     .catalog-badge { font-size: 0.72rem; font-weight: 700; color: #0f172a; background: var(--accent-gold); border-radius: 10px; padding: 1px 8px; }
 
@@ -461,14 +461,14 @@
     .how-step h3 { font-size: 1rem; margin-bottom: 4px; }
     .how-step p { font-size: 0.85rem; color: var(--text-muted); }
     .how-turnkey { margin-top: 10px; font-size: 0.85rem; color: var(--text-muted); }
-    .how-warranty { margin-top: 16px; background: rgba(251, 191, 36, 0.1); border: 1px solid var(--border-gold); border-radius: 12px; padding: 14px 16px; font-weight: 700; color: #fde68a; }
+    .how-warranty { margin-top: 16px; background: rgba(251, 191, 36, 0.1); border: 1px solid var(--border-gold); border-radius: 12px; padding: 14px 16px; font-weight: 700; color: #8a5a00; }
     .footer { max-width: 1280px; margin: 40px auto 0; padding: 20px; border-top: 1px solid var(--border-dark); color: var(--text-muted); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 0.88rem; }
-    .footer a { color: #38bdf8; text-decoration: none; }
+    .footer a { color: #0369a1; text-decoration: none; }
 
     /* МОДАЛЬНЫЕ ОКНА */
     .modal-close { background: none; border: none; color: var(--accent-gold); font-size: 1.5rem; cursor: pointer; }
     .modal-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; }
-    .summary-info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; background: rgba(30, 41, 59, 0.6); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; }
+    .summary-info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; background: rgba(255, 255, 255, 0.92); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; }
     .modal-h3 { color: var(--accent-gold); font-size: 0.95rem; margin: 15px 0 6px; }
     .modal-render .render-svg { height: 320px; }
     .table-wrap { overflow-x: auto; }
@@ -481,25 +481,25 @@
     .seg-badge { position: absolute; top: 8px; left: 8px; z-index: 2; font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; letter-spacing: 0.3px; }
     .seg-econ { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
     .seg-mid { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
-    .seg-prem { background: #1f2937; color: #fbbf24; border: 1px solid #fbbf24; }
+    .seg-prem { background: #f3f4f6; color: #a16207; border: 1px solid #fbbf24; }
     .hw-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
-    .hw-desc b { color: #fde68a; }
+    .hw-desc b { color: #8a5a00; }
     .hw-note { font-size: 0.78rem; color: var(--text-muted); margin: 2px 0 0; }
     .led-card { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border-dark); }
     .led-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-    .led-chip { background: rgba(30, 41, 59, 0.6); color: #cbd5e1; border: 1.5px solid var(--border-dark); border-radius: 10px; padding: 11px 6px; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; }
+    .led-chip { background: rgba(255, 255, 255, 0.92); color: #374151; border: 1.5px solid var(--border-dark); border-radius: 10px; padding: 11px 6px; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; }
     .led-chip:hover { border-color: var(--accent-gold); }
-    .led-chip.active { background: rgba(253, 224, 71, 0.16); border-color: #facc15; color: #fde047; box-shadow: 0 0 14px rgba(250, 204, 21, 0.25); }
+    .led-chip.active { background: rgba(253, 224, 71, 0.16); border-color: #facc15; color: #8a5a00; box-shadow: 0 0 14px rgba(250, 204, 21, 0.25); }
     .led-desc { font-size: 0.78rem; color: var(--text-muted); min-height: 1.2em; margin: 8px 0 6px; }
     .led-zones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
-    .led-zone em { font-style: normal; color: #fca5a5; font-size: 0.78rem; }
+    .led-zone em { font-style: normal; color: #b91c1c; font-size: 0.78rem; }
     .led-zone.disabled, .led-shelves.disabled { opacity: 0.45; }
-    .led-shelves { grid-column: span 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-dark); border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 0.9rem; }
+    .led-shelves { grid-column: span 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: rgba(15, 23, 42, 0.06); border: 1px solid var(--border-dark); border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 0.9rem; }
     .led-shelves .number-stepper { flex: 0 0 150px; width: 150px; max-width: 150px; }
-    .led-shelves .number-stepper input { min-width: 0; width: 100%; text-align: center; background: #1e293b; color: #f8fafc; border: 1px solid var(--border-dark); border-radius: 8px; font-weight: 700; }
+    .led-shelves .number-stepper input { min-width: 0; width: 100%; text-align: center; background: #faf8f4; color: #111827; border: 1px solid var(--border-dark); border-radius: 8px; font-weight: 700; }
     .led-shelves > span { min-width: 0; }
     .led-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; }
-    .led-cost { color: #fde047; }
+    .led-cost { color: #8a5a00; }
 
     /* ЛИСТ ЗАМЕРА */
     .ms-head-right { display: flex; align-items: center; gap: 12px; }
@@ -510,38 +510,38 @@
     .ms-open-btn:hover { background: rgba(56, 189, 248, 0.18); }
     .ms-open-hint { font-size: 0.76rem; color: var(--text-muted); margin-top: 5px; }
     .ms-modal { max-width: 920px; }
-    .ms-sec { background: rgba(30, 41, 59, 0.45); border: 1px solid var(--border-dark); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .ms-sec { background: rgba(15, 23, 42, 0.05); border: 1px solid var(--border-dark); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
     .ms-sec h3 { color: var(--accent-gold); font-size: 1rem; margin-bottom: 10px; }
     .ms-walls { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 12px; }
-    .ms-wall { background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-dark); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .ms-wall-title { font-weight: 800; color: #fde68a; }
+    .ms-wall { background: rgba(255, 255, 255, 0.92); border: 1px solid var(--border-dark); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .ms-wall-title { font-weight: 800; color: #8a5a00; }
     .ms-row { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: flex-end; margin-top: 8px; }
-    .ms-item { background: rgba(15, 23, 42, 0.55); border: 1px solid var(--border-dark); border-radius: 10px; padding: 8px 10px; position: relative; }
+    .ms-item { background: rgba(255, 255, 255, 0.92); border: 1px solid var(--border-dark); border-radius: 10px; padding: 8px 10px; position: relative; }
     .ms-no { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-gold); color: #0f172a; font-weight: 800; display: flex; align-items: center; justify-content: center; align-self: center; flex-shrink: 0; }
     .ms-f { display: flex; flex-direction: column; gap: 3px; flex: 1 1 105px; min-width: 0; }
     .ms-wall .ms-f { flex: 0 0 auto; }
     .ms-f.ms-wide { flex: 2 1 170px; }
     .ms-f span { font-size: 0.74rem; font-weight: 600; color: var(--text-muted); }
-    .ms-f input, .ms-f select, .ms-sec textarea, .ms-line { background: #1e293b; color: #f8fafc; border: 1px solid var(--border-dark); border-radius: 8px; padding: 9px 10px; font-size: 14px; outline: none; width: 100%; min-width: 0; font-family: inherit; }
+    .ms-f input, .ms-f select, .ms-sec textarea, .ms-line { background: #faf8f4; color: #111827; border: 1px solid var(--border-dark); border-radius: 8px; padding: 9px 10px; font-size: 14px; outline: none; width: 100%; min-width: 0; font-family: inherit; }
     .ms-f input:focus, .ms-f select:focus, .ms-sec textarea:focus, .ms-line:focus { border-color: var(--accent-gold); }
-    .ms-f select option { background: #0f172a; color: #f8fafc; }
+    .ms-f select option { background: #ffffff; color: #111827; }
     .ms-line { margin-top: 8px; }
-    .ms-used { font-size: 0.85rem; color: #86efac; min-height: 1.2em; align-self: center; }
+    .ms-used { font-size: 0.85rem; color: #15803d; min-height: 1.2em; align-self: center; }
     .ms-diff { color: #fcd34d; font-size: 0.78rem; }
     .ms-tip { font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; }
-    .ms-plan-title { font-weight: 700; color: #cbd5e1; font-size: 0.88rem; margin: 14px 0 6px; }
+    .ms-plan-title { font-weight: 700; color: #374151; font-size: 0.88rem; margin: 14px 0 6px; }
     .ms-plan { border-radius: 8px; overflow: hidden; border: 1px solid var(--border-gold); background: #fff; }
     .ms-add { margin-top: 10px; background: transparent; color: var(--accent-gold); border: 1px dashed var(--border-gold); border-radius: 8px; padding: 9px 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
-    .ms-del { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; width: 34px; height: 34px; cursor: pointer; align-self: center; flex-shrink: 0; }
+    .ms-del { background: rgba(239, 68, 68, 0.15); color: #b91c1c; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; width: 34px; height: 34px; cursor: pointer; align-self: center; flex-shrink: 0; }
     .ms-checks { display: flex; flex-direction: column; gap: 6px; }
     .ms-check { display: flex; align-items: center; gap: 9px; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
     .ms-check input { width: 20px; height: 20px; accent-color: var(--accent-gold); flex-shrink: 0; }
     .ms-app-name { flex: 1 1 170px; align-self: center; }
     .ms-sec textarea { resize: vertical; }
-    .ms-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 4px; position: sticky; bottom: 0; background: linear-gradient(to top, #0f172a 78%, rgba(15, 23, 42, 0)); padding: 14px 0 4px; }
+    .ms-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 4px; position: sticky; bottom: 0; background: linear-gradient(to top, #ffffff 78%, rgba(15, 23, 42, 0.00)); padding: 14px 0 4px; }
     .ms-actions .btn-submit { margin-top: 0; font-size: 0.85rem; padding: 13px 8px; }
     .ms-actions .ms-apply { background: linear-gradient(135deg, #16a34a, #15803d); }
-    .ms-toast { position: fixed; left: 50%; bottom: 76px; transform: translate(-50%, 20px); max-width: min(560px, 92vw); background: #14532d; color: #dcfce7; border: 1px solid #22c55e; padding: 12px 16px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); z-index: 1200; opacity: 0; pointer-events: none; transition: all 0.25s; }
+    .ms-toast { position: fixed; left: 50%; bottom: 76px; transform: translate(-50%, 20px); max-width: min(560px, 92vw); background: #14532d; color: #166534; border: 1px solid #22c55e; padding: 12px 16px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12); z-index: 1200; opacity: 0; pointer-events: none; transition: all 0.25s; }
     .ms-toast.show { opacity: 1; transform: translate(-50%, 0); }
     @media (max-width: 900px) {
       .ms-modal { padding: 14px; }
@@ -593,30 +593,30 @@
     .cat-modal { max-width: 1100px; position: relative; }
     .cat-intro { color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 12px; }
     .cat-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .cat-tab { background: rgba(255,255,255,0.04); border: 1px solid var(--border-dark); color: var(--text-main, #e2e8f0); padding: 7px 12px; border-radius: 999px; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.88rem; }
+    .cat-tab { background: rgba(15, 23, 42, 0.04); border: 1px solid var(--border-dark); color: var(--text-main, #1f2937); padding: 7px 12px; border-radius: 999px; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.88rem; }
     .cat-tab span { color: var(--text-muted); font-weight: 600; margin-left: 2px; }
     .cat-tab.active { background: var(--accent-gold); border-color: var(--accent-gold); color: #0f172a; }
     .cat-tab.active span { color: #0f172a; }
     .cat-tools { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .cat-search { flex: 1; min-width: 0; background: #0f172a; border: 1px solid var(--border-dark); color: #e2e8f0; border-radius: 8px; padding: 9px 12px; font-family: inherit; font-size: 0.95rem; }
+    .cat-search { flex: 1; min-width: 0; background: #ffffff; border: 1px solid var(--border-dark); color: #1f2937; border-radius: 8px; padding: 9px 12px; font-family: inherit; font-size: 0.95rem; }
     .cat-count { color: var(--text-muted); font-size: 0.85rem; white-space: nowrap; }
     .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
     .cat-sec-title { grid-column: 1 / -1; color: var(--accent-gold); font-size: 1.05rem; margin: 10px 0 0; }
-    .cat-item { padding: 0; border: 1px solid var(--border-dark); border-radius: 10px; overflow: hidden; background: #0b1220; cursor: zoom-in; text-align: left; font-family: inherit; display: flex; flex-direction: column; }
+    .cat-item { padding: 0; border: 1px solid var(--border-dark); border-radius: 10px; overflow: hidden; background: #faf8f4; cursor: zoom-in; text-align: left; font-family: inherit; display: flex; flex-direction: column; }
     .cat-item:hover { border-color: var(--accent-gold); }
-    .cat-item img { display: block; width: 100%; height: auto; aspect-ratio: 520 / 367; object-fit: cover; background: #1e293b; }
-    .cat-cap { padding: 7px 9px; font-size: 0.82rem; color: #e2e8f0; line-height: 1.3; }
+    .cat-item img { display: block; width: 100%; height: auto; aspect-ratio: 520 / 367; object-fit: cover; background: #faf8f4; }
+    .cat-cap { padding: 7px 9px; font-size: 0.82rem; color: #1f2937; line-height: 1.3; }
     .cat-cap b { color: var(--accent-gold); }
     .cat-none { color: var(--text-muted); grid-column: 1 / -1; padding: 20px 0; }
-    .cat-view { display: none; position: fixed; inset: 0; z-index: 3000; background: rgba(2, 6, 23, 0.86); align-items: center; justify-content: center; padding: 16px; }
-    .cat-view-box { position: relative; background: #0f172a; border: 1px solid var(--border-gold); border-radius: 14px; padding: 14px; width: 100%; max-width: 560px; }
+    .cat-view { display: none; position: fixed; inset: 0; z-index: 3000; background: rgba(255, 255, 255, 0.92); align-items: center; justify-content: center; padding: 16px; }
+    .cat-view-box { position: relative; background: #ffffff; border: 1px solid var(--border-gold); border-radius: 14px; padding: 14px; width: 100%; max-width: 560px; }
     .cat-view-box img { display: block; width: 100%; height: auto; border-radius: 8px; }
-    .cat-view-close { position: absolute; top: -14px; right: -10px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-gold); background: #0f172a; color: var(--accent-gold); font-size: 1rem; cursor: pointer; }
-    .cat-view-cap { margin: 10px 2px; color: #e2e8f0; font-size: 0.95rem; }
+    .cat-view-close { position: absolute; top: -14px; right: -10px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-gold); background: #ffffff; color: var(--accent-gold); font-size: 1rem; cursor: pointer; }
+    .cat-view-cap { margin: 10px 2px; color: #1f2937; font-size: 0.95rem; }
     .cat-view-cap b { color: var(--accent-gold); }
     .cat-view-actions { display: flex; gap: 8px; align-items: stretch; }
     .cat-view-actions .cat-pick { flex: 1; margin: 0; padding: 10px; font-size: 0.9rem; }
-    .cat-nav { background: rgba(255,255,255,0.06); border: 1px solid var(--border-dark); color: #e2e8f0; border-radius: 8px; padding: 0 12px; cursor: pointer; font-family: inherit; font-weight: 600; white-space: nowrap; }
+    .cat-nav { background: rgba(15, 23, 42, 0.06); border: 1px solid var(--border-dark); color: #1f2937; border-radius: 8px; padding: 0 12px; cursor: pointer; font-family: inherit; font-weight: 600; white-space: nowrap; }
     @media (max-width: 640px) {
       .cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
       .cat-cap { font-size: 0.76rem; padding: 6px 7px; }
@@ -624,6 +624,78 @@
       .header-catalog { padding: 7px 9px; font-size: 0.85rem; }
     }
     @media (max-width: 360px) { .header-catalog span { display: none; } }
+
+    /* ===== Светлая тема: точечные правки поверх автоматической замены ===== */
+    body { background: linear-gradient(180deg, #fbfaf7 0%, #f5f1e8 100%) !important; background-attachment: fixed; color: var(--text-main); }
+    .header { background: rgba(255, 255, 255, 0.96) !important; box-shadow: 0 1px 0 rgba(176, 125, 18, 0.25), 0 6px 20px rgba(15, 23, 42, 0.04); }
+    .card, .modal-content { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px rgba(15, 23, 42, 0.07) !important; backdrop-filter: none !important; }
+    select, .field-group textarea, input[type="text"], input[type="tel"], input[type="number"], input[type="search"] { background: #ffffff !important; color: #111827 !important; border-color: #ddd5c6 !important; }
+    select:focus, input:focus, textarea:focus { border-color: var(--accent-gold) !important; box-shadow: 0 0 0 3px rgba(176, 125, 18, 0.15); }
+    .modal-overlay { background: rgba(15, 23, 42, 0.45) !important; }
+    .color-swatch-box { position: relative; overflow: hidden; border-color: rgba(15, 23, 42, 0.12) !important; }
+    .color-swatch-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.45); }
+    .color-card-title b { color: var(--accent-gold); }
+    .color-preview-badge { background-size: 260% !important; background-position: center !important; }
+    .color-search { width: 100%; margin: 0 0 12px; }
+    .color-mat-hint { background: #fff8e6; border: 1px solid var(--border-gold); color: #7a5500; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; margin: 0 0 12px; }
+    .cat-item { background: #ffffff !important; }
+    .cat-cap, .cat-view-cap { color: #111827 !important; }
+    .cat-view { background: rgba(15, 23, 42, 0.6) !important; }
+    .cat-view-box { background: #ffffff !important; }
+    .cat-view-close { background: #ffffff !important; }
+    .cat-tab { color: #1f2937 !important; background: #ffffff !important; }
+    .cat-tab.active { background: var(--accent-gold) !important; color: #ffffff !important; }
+    .cat-tab.active span { color: rgba(255, 255, 255, 0.85) !important; }
+    .cat-pick-body { background: linear-gradient(135deg, #334155, #1f2937) !important; }
+    .cat-nav { color: #1f2937 !important; background: #f6f3ec !important; }
+    .share-btn.tg, .share-btn.tg span { color: #ffffff !important; }
+    .ms-open-btn { color: #075985 !important; background: #f0f9ff !important; border-color: #7dd3fc !important; }
+    .catalog-category-title { color: var(--accent-gold) !important; }
+    .color-preview-badge { width: 26px !important; height: 26px !important; border-radius: 6px !important; flex-shrink: 0; border: 1px solid rgba(15, 23, 42, 0.15) !important; }
+    @media (max-width: 640px) {
+      .btn-color-picker { padding-top: 8px !important; padding-bottom: 8px !important; }
+      .btn-color-picker span:first-child { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; font-size: 0.8rem; line-height: 1.25; text-align: left; }
+    }
+
+    .mat-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+    .color-mat-hint { display: block; }
+.ms-toast { background: #14532d !important; color: #ffffff !important; border-color: #22c55e !important; }
+
+    /* ===== Светлая тема: точечные правки поверх автоматической замены ===== */
+    body { background: linear-gradient(180deg, #fbfaf7 0%, #f5f1e8 100%) !important; background-attachment: fixed; color: var(--text-main); }
+    .header { background: rgba(255, 255, 255, 0.96) !important; box-shadow: 0 1px 0 rgba(176, 125, 18, 0.25), 0 6px 20px rgba(15, 23, 42, 0.04); }
+    .card, .modal-content { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px rgba(15, 23, 42, 0.07) !important; backdrop-filter: none !important; }
+    select, .field-group textarea, input[type="text"], input[type="tel"], input[type="number"], input[type="search"] { background: #ffffff !important; color: #111827 !important; border-color: #ddd5c6 !important; }
+    select:focus, input:focus, textarea:focus { border-color: var(--accent-gold) !important; box-shadow: 0 0 0 3px rgba(176, 125, 18, 0.15); }
+    .modal-overlay { background: rgba(15, 23, 42, 0.45) !important; }
+    .color-swatch-box { position: relative; overflow: hidden; border-color: rgba(15, 23, 42, 0.12) !important; }
+    .color-swatch-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.45); }
+    .color-card-title b { color: var(--accent-gold); }
+    .color-preview-badge { background-size: 260% !important; background-position: center !important; }
+    .color-search { width: 100%; margin: 0 0 12px; }
+    .color-mat-hint { background: #fff8e6; border: 1px solid var(--border-gold); color: #7a5500; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; margin: 0 0 12px; }
+    .cat-item { background: #ffffff !important; }
+    .cat-cap, .cat-view-cap { color: #111827 !important; }
+    .cat-view { background: rgba(15, 23, 42, 0.6) !important; }
+    .cat-view-box { background: #ffffff !important; }
+    .cat-view-close { background: #ffffff !important; }
+    .cat-tab { color: #1f2937 !important; background: #ffffff !important; }
+    .cat-tab.active { background: var(--accent-gold) !important; color: #ffffff !important; }
+    .cat-tab.active span { color: rgba(255, 255, 255, 0.85) !important; }
+    .cat-pick-body { background: linear-gradient(135deg, #334155, #1f2937) !important; }
+    .cat-nav { color: #1f2937 !important; background: #f6f3ec !important; }
+    .share-btn.tg, .share-btn.tg span { color: #ffffff !important; }
+    .ms-open-btn { color: #075985 !important; background: #f0f9ff !important; border-color: #7dd3fc !important; }
+    .catalog-category-title { color: var(--accent-gold) !important; }
+    .color-preview-badge { width: 26px !important; height: 26px !important; border-radius: 6px !important; flex-shrink: 0; border: 1px solid rgba(15, 23, 42, 0.15) !important; }
+    @media (max-width: 640px) {
+      .btn-color-picker { padding-top: 8px !important; padding-bottom: 8px !important; }
+      .btn-color-picker span:first-child { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; font-size: 0.8rem; line-height: 1.25; text-align: left; }
+    }
+
+    .mat-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+    .color-mat-hint { display: block; }
+.ms-toast { background: #14532d !important; color: #ffffff !important; border-color: #22c55e !important; }
   </style>
 </head>
 <body>
@@ -788,7 +860,8 @@
             <div class="inputs-grid">
               <div class="field-group">
                 <label data-i18n="facades">Фасады</label>
-                <select id="facadeMaterial" onchange="updateCalculator()"></select>
+                <select id="facadeMaterial" onchange="matChanged('facade')"></select>
+                <div class="mat-note" id="facadeMatNote"></div>
               </div>
               <div class="field-group">
                 <label data-i18n="facadeColor">Цвет фасадов</label>
@@ -799,7 +872,8 @@
               </div>
               <div class="field-group">
                 <label data-i18n="body">Корпус</label>
-                <select id="bodyMaterial" onchange="updateCalculator()"></select>
+                <select id="bodyMaterial" onchange="matChanged('body')"></select>
+                <div class="mat-note" id="bodyMatNote"></div>
               </div>
               <div class="field-group">
                 <label data-i18n="bodyColor">Цвет корпуса</label>
@@ -945,8 +1019,10 @@
         <span id="catalogModalTitle">—</span>
         <button class="modal-close" onclick="closeColorCatalogModal()" aria-label="close">✕</button>
       </div>
-      <p class="modal-desc" data-i18n="catalogDesc">Цвета разделены по ценовым категориям. Нажмите на образец, чтобы выбрать.</p>
+      <p class="modal-desc" data-i18n="catalogDesc">Реальные декоры из каталога поставщика, по разделам. Нажмите на образец, чтобы выбрать.</p>
       <div class="catalog-filters" id="catalogFilters"></div>
+      <input type="search" id="colorSearch" class="cat-search color-search" oninput="renderCatalog()" autocomplete="off">
+      <p class="color-mat-hint" id="colorTierNote"></p>
       <div id="catalogContent"></div>
     </div>
   </div>
@@ -1055,7 +1131,8 @@
           <div class="cat-view-cap" id="catViewCap"></div>
           <div class="cat-view-actions">
             <button type="button" class="cat-nav" onclick="catStep(-1)">‹ <span data-i18n="catPrev">Назад</span></button>
-            <button type="button" class="btn-submit cat-pick" onclick="catPick()">✅ <span data-i18n="catPick">Указать в заявке</span></button>
+            <button type="button" class="btn-submit cat-pick" onclick="catPick('facade')"><span data-i18n="catToFacade">На фасад</span></button>
+            <button type="button" class="btn-submit cat-pick cat-pick-body" onclick="catPick('body')"><span data-i18n="catToBody">На корпус</span></button>
             <button type="button" class="cat-nav" onclick="catStep(1)"><span data-i18n="catNext">Вперёд</span> ›</button>
           </div>
         </div>
@@ -1079,26 +1156,46 @@
       warrantyMonths: 12,               // гарантия, месяцев
       advancePercent: 75,               // аванс по договору, % (в спецификации клиенту не показывается)
       installmentMonths: 0,             // рассрочка: 0 = не показывать; например 6 = «или от X сум/мес»
-      // Надбавка к стоимости фасадов за категорию цвета: Эконом, Стандарт, Премиум, Платинум
-      colorMarkup: [0, 0.03, 0.07, 0.12],
+      // Цвет сам цену не меняет: цена зависит от выбранного МАТЕРИАЛА (ступень каталога), а цвета показываются только из этой ступени.
+      colorMarkup: [0, 0, 0, 0, 0, 0],
       /* ЦЕНЫ: средний уровень рынка Ташкента (осень 2026), с учётом ввоза и доставки материалов.
          Ориентир для кухни 3 м с верхними шкафами: Эконом ≈ 8–15 млн, Стандарт ≈ 15–30 млн, Премиум ≈ 30–50 млн сум.
          Источники: обзор цен ustabor.uz (май 2026), прайсы kis.uz (фурнитура Blum), service-eco.uz (столешницы), glotr.uz (плиты). */
-      // Фасады: цена за погонный метр кухни (как в прежнем калькуляторе), по возрастанию цены
-      facades: [
-        { price: 2500000,  ru: 'ЛДСП Эконом',           uz: 'LDSP Ekonom' },
-        { price: 3000000,  ru: 'ЛМДФ Эконом',           uz: 'LMDF Ekonom' },
-        { price: 3800000,  ru: 'ЛДСП Премиум (Egger)',  uz: 'LDSP Premium (Egger)' },
-        { price: 5200000,  ru: 'МДФ Пленка (ПВХ)',      uz: 'MDF plyonka (PVX)' },
-        { price: 5800000,  ru: 'ЛМДФ Премиум',          uz: 'LMDF Premium' },
-        { price: 7200000,  ru: 'МДФ Эмаль (Крашенный)', uz: 'MDF Emal (boʻyalgan)' },
-        { price: 8600000,  ru: 'Акрил (глянец)',        uz: 'Akril (yaltiroq)' },
-        { price: 10000000, ru: 'Массив / Шпон',         uz: 'Massiv / Shpon' }
-      ],
-      bodies: [
-        { price: 0,      ru: 'ЛДСП Стандарт',             uz: 'LDSP Standart' },
-        { price: 300000, ru: 'ЛДСП Премиум Влагостойкий', uz: 'LDSP Premium (namga chidamli)' }
-      ],
+
+      /* МАТЕРИАЛЫ ФАСАДОВ И КОРПУСА — считаются от цены ЛИСТА (в долларах) до цены погонного метра:
+         лист → сколько листов уходит на 1 п.м. кухни (с отходами) → + распил + кромка → разница с «ЛДСП Эконом» × наценка.
+         «ЛДСП Эконом» — опорная точка (2,5 млн/п.м. фасада, как в прежнем прайсе); всё остальное считается от неё.
+         Доставка материалов не внесена в лист: она есть ниже, в logistics (4% + фиксированная сумма). */
+      mat: {
+        usdRate: 11800,        // курс, сум за $ (ЦБ РУз 04.10.2026: 11 773; банки продают ≈ 11 800–11 850)
+        retailK: 2.5,          // во сколько раз цена для клиента выше себестоимости (материалы ≈ 40% цены кухни)
+        facadeArea: 1.4,       // м² фасадов на 1 п.м. кухни (нижний + верхний ряд)
+        bodyArea: 4.7,         // м² корпуса (стенки, дно, полки) на 1 п.м. кухни
+        cutPerM2: 9000,        // распил, сум за м² листа (ОЦЕНКА — уточните у цеха)
+        edgeFacadeM: 8,        // кромка фасадов, п.м. на 1 п.м. кухни
+        edgeBodyM: 14,         // кромка корпуса, п.м. на 1 п.м. кухни
+        edgeFacade: 6000,      // кромка ПВХ 2 мм, сум за п.м. (ОЦЕНКА)
+        edgeBody: 2500,        // кромка ПВХ 0,4 мм, сум за п.м. (ОЦЕНКА)
+        edgeAcrylic: 12000,    // кромка/торец акрила, сум за п.м. (ОЦЕНКА)
+        mdfExtra: 30000,       // ЛМДФ вместо ЛДСП: небольшая надбавка за обработку, сум на п.м. фасада (чтобы цены шли строго по возрастанию в порядке списка)
+        acrylicExtra: 900000,  // акрил: плёнка, шлифовка торцов, брак при монтаже, сум на п.м. фасада
+        // формат листа, м, и коэффициент отходов (акрил — с большими отходами)
+        sheet: { dsp: { w: 2.75, h: 1.83, waste: 1.15 }, mdf: { w: 2.8, h: 2.07, waste: 1.15 }, acr: { w: 2.4, h: 1.2, waste: 1.25 } },
+        // ступени каталога: цена листа, $ (ЛДСП и ЛМДФ) — от Эконом $35 по возрастанию
+        tiers: [
+          { ru: 'Эконом',   uz: 'Ekonom',            dsp: 35, mdf: 44 },
+          { ru: 'Сильвер',  uz: 'Silver',            dsp: 42, mdf: 52 },
+          { ru: 'Премиум',  uz: 'Premium',           dsp: 52, mdf: 65 },
+          { ru: 'Цветной',  uz: 'Rangli (monoton)',  dsp: 60, mdf: 75 },
+          { ru: 'Платинум', uz: 'Platinum',          dsp: 70, mdf: 88 }
+        ],
+        acrylic: [
+          { ru: 'Акрил Китай',  uz: 'Akril (Xitoy)',    usd: 60 },
+          { ru: 'Акрил Турция', uz: 'Akril (Turkiya)',  usd: 90 }
+        ]
+      },
+      facades: [],   // заполняются автоматически из mat (см. buildMaterialPrices ниже)
+      bodies: [],
       countertops: [
         { price: 400000,  ru: 'ЛДСП 28 мм',           uz: 'LDSP 28 mm',      color: '#c9a273', thick: 2.8 },
         { price: 550000,  ru: 'ЛДСП 38 мм',           uz: 'LDSP 38 mm',      color: '#b98c5c', thick: 3.8 },
@@ -1132,11 +1229,38 @@
       // Сравнение «Эконом / Стандарт / Премиум»: номера материалов из списков выше (с нуля)
       tiers: [
         { key: 'econ', facade: 0, body: 0, top: 0, hw: 0 },
-        { key: 'std',  facade: 3, body: 0, top: 1, hw: 1 },
-        { key: 'prem', facade: 5, body: 1, top: 2, hw: 2 }
+        { key: 'std',  facade: 5, body: 4, top: 1, hw: 1 },
+        { key: 'prem', facade: 11, body: 9, top: 2, hw: 2 }
       ],
-      defaults: { facade: 2, body: 0, top: 0, hw: 1 }
+      defaults: { facade: 4, body: 0, top: 0, hw: 1 }
     };
+
+    /* ===================== РАСЧЁТ ЦЕН МАТЕРИАЛОВ (из CONFIG.mat) ===================== */
+    (function buildMaterialPrices() {
+      const M = CONFIG.mat, round = v => Math.round(v / 10000) * 10000;
+      const area = k => M.sheet[k].w * M.sheet[k].h;
+      // себестоимость материала на 1 п.м. кухни: листы с отходами + распил + кромка, сум
+      const costF = (k, usd, edge) => { const g = M.facadeArea * M.sheet[k].waste; return g / area(k) * usd * M.usdRate + g * M.cutPerM2 + M.edgeFacadeM * edge; };
+      const costB = (k, usd) => { const g = M.bodyArea * M.sheet[k].waste; return g / area(k) * usd * M.usdRate + g * M.cutPerM2 + M.edgeBodyM * M.edgeBody; };
+      const baseF = costF('dsp', M.tiers[0].dsp, M.edgeFacade), baseB = costB('dsp', M.tiers[0].dsp);
+      const ANCHOR = 2500000;      // «ЛДСП Эконом», сум за п.м. фасада
+      const facades = [], bodies = [];
+      M.tiers.forEach((tr, ci) => {
+        [['dsp', 'ЛДСП', 'LDSP', 0], ['mdf', 'ЛМДФ', 'LMDF', M.mdfExtra]].forEach(([k, ru, uz, extra]) => {
+          const f = ANCHOR + M.retailK * (costF(k, tr[k], M.edgeFacade) - baseF) + extra;
+          // корпус: в формуле нижний ряд берёт 0,5 и верхний 0,4 от коэффициента — делим на 0,9, чтобы метр кухни получил ровно свою разницу
+          const b = M.retailK * (costB(k, tr[k]) - baseB) / 0.9;
+          facades.push({ price: round(f), ru: ru + ' ' + tr.ru, uz: uz + ' ' + tr.uz, kind: k, cat: ci, usd: tr[k] });
+          bodies.push({ price: round(b), ru: ru + ' ' + tr.ru, uz: uz + ' ' + tr.uz, kind: k, cat: ci, usd: tr[k] });
+        });
+      });
+      M.acrylic.forEach(a => {
+        const f = ANCHOR + M.retailK * (costF('acr', a.usd, M.edgeAcrylic) - baseF) + M.acrylicExtra;
+        facades.push({ price: round(f), ru: a.ru, uz: a.uz, kind: 'acr', cat: 5, usd: a.usd });
+      });
+      CONFIG.facades = facades;
+      CONFIG.bodies = bodies;
+    })();
 
     /* ===================== ПЕРЕВОДЫ RU / UZ ===================== */
     const I18N = {
@@ -1161,7 +1285,7 @@
         mainWall: 'Длина основной стены, см', wallHint: 'Шкафы по 60 см подставятся сами — ширину любого можно поменять в шаге 3.', ceiling: 'Высота потолка, см', leftWall: 'Левая стена, см', rightWall: 'Правая стена, см',
         step2: 'Материалы и цвет', tiersTitle: 'Сравните варианты для ваших размеров',
         tier_econ: 'Эконом', tier_std: 'Стандарт', tier_prem: 'Премиум',
-        tierDesc_econ: 'ЛДСП, столешница 28 мм, фурнитура эконом', tierDesc_std: 'МДФ плёнка, столешница 38 мм, фурнитура GTV/Hettich', tierDesc_prem: 'МДФ эмаль, искусственный камень, фурнитура Blum',
+        tierDesc_econ: 'ЛДСП Эконом, столешница 28 мм, фурнитура эконом', tierDesc_std: 'ЛМДФ Премиум, корпус ЛДСП Премиум, столешница 38 мм, GTV/Hettich', tierDesc_prem: 'Акрил Турция, корпус ЛМДФ Платинум, искусственный камень, Blum',
         tierPick: 'Выбрать', tierPicked: '✓ Выбрано',
         facades: 'Фасады', facadeColor: 'Цвет фасадов', body: 'Корпус', bodyColor: 'Цвет корпуса', countertop: 'Столешница',
         step3: 'Шкафы', needUpper: 'Нужны верхние шкафы', detailMode: 'Настроить каждый шкаф отдельно (для мастеров)',
@@ -1185,10 +1309,16 @@
         howTurnkey: 'Под ключ — это замер, изготовление, доставка, монтаж и подсветка. Подключение техники, мойки, воды и электричества 220 В не входит в цену — подскажем проверенных мастеров.',
         footer: '{name} · Кухни на заказ в Ташкенте',
         catalogFacade: 'Выбор цвета фасадов', catalogBody: 'Выбор цвета корпуса',
-        catalogDesc: 'Цвета разделены по ценовым категориям. Нажмите на образец, чтобы выбрать.',
+        catalogDesc: 'Реальные декоры из каталога поставщика, по разделам. Нажмите на образец, чтобы выбрать.',
         catalogEmpty: 'В этой группе пока нет цветов.', markup: '+{p}% к фасадам',
-        tone_all: 'Все цвета', tone_white: 'Белые и светлые', tone_wood: 'Дерево', tone_gray: 'Серые и бетон', tone_dark: 'Тёмные и чёрные', tone_color: 'Цветные',
-        cat0: 'Эконом', cat1: 'Стандарт', cat2: 'Премиум', cat3: 'Платинум', catSuffix: 'цвета',
+        tone_all: 'Все цвета', tone_white: 'Белые и светлые', tone_wood: 'Дерево', tone_gray: 'Серые и камень', tone_dark: 'Тёмные и чёрные', tone_color: 'Цветные',
+        cat0: 'Эконом', cat1: 'Сильвер', cat2: 'Премиум', cat3: 'Цветной', cat4: 'Платинум', cat5: 'Акрил', catSuffix: '',
+        colorSearch: 'Поиск по названию или номеру…',
+        colorTierNote: 'Показаны цвета раздела «{t}». Чтобы выбрать цвет из другого раздела, поменяйте материал в списке выше — цена зависит от материала.',
+        colorAcrylNote: 'У акрила фото в каталоге нет: показаны ориентировочные оттенки. Точный цвет подберём по образцам на замере.',
+        matNoteCat: 'Цвета из раздела каталога «{t}»: {n} шт.', matNoteAcr: 'Акрил — оттенки ориентировочные, фото нет',
+        colorFitted: 'Цвет {w} заменён на ближайший из раздела «{t}»: {name}', matSwitched: 'Материал {w} изменён на «{m}» — под раздел каталога', wFacade: 'фасадов', wBody: 'корпуса',
+        catToFacade: 'На фасад', catToBody: 'На корпус', catSetFacade: 'Цвет фасадов: {name}', catSetBody: 'Цвет корпуса: {name}',
         summaryTitle: 'Итог: ваша кухня', customer: 'Заказчик', dimensions: 'Размеры', extras: 'Дополнительно', none: 'нет', notSet: 'Не указано',
         visualization: 'Визуализация', lowerCabs: 'Нижние шкафы', upperCabs: 'Верхние шкафы', cabSchemes: 'Схемы шкафов',
         thName: 'Название', thWall: 'Стена', thWidth: 'Ширина', thShelves: 'Полки', thDrawers: 'Ящики', thGas: 'Газлифты', thOpen: 'Открывание',
@@ -1209,16 +1339,16 @@
         popupBlocked: 'Браузер заблокировал окно договора. Разрешите всплывающие окна для этого сайта.',
         mod_sink: 'Модуль под мойку', mod_drawers: 'Тумба с ящиками', mod_hob: 'Под варочную панель', mod_door: 'Шкаф распашной',
         mod_dryer: 'Шкаф сушка', mod_hood: 'Шкаф над вытяжкой', mod_side: 'Шкаф боковой', mod_lower: 'Нижний модуль {i}', mod_upper: 'Верхний модуль {i}',
-        p_compact: 'Компакт', p_compact_d: 'Прямая 1,8 м · ЛДСП · белая',
-        p_scandi: 'Скандинавия', p_scandi_d: 'Прямая 2,4 м · Egger · светлая, столешница под дерево',
-        p_loft: 'Лофт', p_loft_d: 'Угловая 2,4 × 1,8 м · графит и дерево · без ручек',
-        p_classic: 'Классика', p_classic_d: 'П-образная · МДФ эмаль · крем · искусственный камень',
+        p_compact: 'Компакт', p_compact_d: 'Прямая 1,8 м · ЛДСП Эконом · белая',
+        p_scandi: 'Скандинавия', p_scandi_d: 'Прямая 2,4 м · ЛДСП Премиум · белая, столешница под дерево',
+        p_loft: 'Лофт', p_loft_d: 'Угловая 2,4 × 1,8 м · ЛМДФ Премиум · дуб графит · без ручек',
+        p_classic: 'Классика', p_classic_d: 'П-образная · ЛМДФ Премиум · беж · искусственный камень',
         seg_econ: 'Эконом', seg_mid: 'Стандарт', seg_prem: 'Премиум',
-        p_practic: 'Практик', p_practic_d: 'Прямая 3 м · ЛДСП · светло-серая · фурнитура эконом',
-        p_duo: 'Дуэт', p_duo_d: 'Угловая 3 × 1,2 м · ЛМДФ · ваниль · фурнитура эконом',
-        p_comfort: 'Комфорт', p_comfort_d: 'Угловая 2,4 × 1,2 м · МДФ плёнка · ясень · без ручек · подсветка',
-        p_enamel: 'Эмаль Люкс', p_enamel_d: 'Угловая 3 × 1,8 м · МДФ эмаль navy · камень · Blum · подсветка',
-        p_prestige: 'Престиж с островом', p_prestige_d: 'Угловая 2,4 × 1,8 м + остров · акрил · кварц · Blum · подсветка',
+        p_practic: 'Практик', p_practic_d: 'Прямая 3 м · ЛДСП Эконом · светло-серая · фурнитура эконом',
+        p_duo: 'Дуэт', p_duo_d: 'Угловая 3 × 1,2 м · ЛМДФ Эконом · крем · фурнитура эконом',
+        p_comfort: 'Комфорт', p_comfort_d: 'Угловая 2,4 × 1,2 м · ЛМДФ Сильвер · светлое дерево · без ручек · подсветка',
+        p_enamel: 'Индиго Люкс', p_enamel_d: 'Угловая 3 × 1,8 м · ЛМДФ Цветной · индиго · камень · Blum · подсветка',
+        p_prestige: 'Престиж с островом', p_prestige_d: 'Угловая 2,4 × 1,8 м + остров · акрил Турция · кварц · Blum · подсветка',
         hardware: 'Фурнитура', hardwareLabel: 'Фурнитура (петли, ящики, подъёмники)',
         hwDesc_econ: 'Базовый класс: DTC и аналоги. Петли и направляющие проще, доводчики не везде.',
         hwDesc_std: 'GTV, Boyard, Hettich (базовые линейки): петли с доводчиком, ящики с плавным закрыванием.',
@@ -1232,7 +1362,7 @@
         ledHint: 'Лента считается по погонным метрам: длина берётся из ваших шкафов сама. Подсвеченные полки считаются штуками.',
         ledCostLine: 'Подсветка в цене: {x} сум',
         lighting: 'Подсветка', ledNone: 'нет', ledPartWork: 'рабочая зона {m} п.м.', ledPartPlinth: 'цоколь {m} п.м.', ledPartShelves: 'полок: {n}',
-        logisticsNote: 'В цену входят ввоз и доставка материалов, доставка готовой кухни по Ташкенту и монтаж.'
+        logisticsNote: 'В цену входят материалы, распил и кромка, ввоз и доставка материалов, доставка готовой кухни по Ташкенту и монтаж.'
       },
       uz: {
         pageTitle: 'Toshkentda buyurtma asosida oshxona mebeli — onlayn hisob | AbdulAziz',
@@ -1255,7 +1385,7 @@
         mainWall: 'Asosiy devor uzunligi, sm', wallHint: '60 sm lik shkaflar avtomatik qoʻyiladi — istalganining kengligini 3-qadamda oʻzgartirish mumkin.', ceiling: 'Shift balandligi, sm', leftWall: 'Chap devor, sm', rightWall: 'Oʻng devor, sm',
         step2: 'Materiallar va rang', tiersTitle: 'Oʻlchamlaringiz uchun variantlarni solishtiring',
         tier_econ: 'Ekonom', tier_std: 'Standart', tier_prem: 'Premium',
-        tierDesc_econ: 'LDSP, 28 mm stoleshnitsa, ekonom furnitura', tierDesc_std: 'MDF plyonka, 38 mm stoleshnitsa, GTV/Hettich furnitura', tierDesc_prem: 'MDF emal, sunʼiy tosh, Blum furnitura',
+        tierDesc_econ: 'LDSP Ekonom, 28 mm stoleshnitsa, ekonom furnitura', tierDesc_std: 'LMDF Premium, LDSP Premium korpus, 38 mm stoleshnitsa, GTV/Hettich', tierDesc_prem: 'Akril (Turkiya), LMDF Platinum korpus, sunʼiy tosh, Blum',
         tierPick: 'Tanlash', tierPicked: '✓ Tanlangan',
         facades: 'Fasadlar', facadeColor: 'Fasad rangi', body: 'Korpus', bodyColor: 'Korpus rangi', countertop: 'Stoleshnitsa',
         step3: 'Shkaflar', needUpper: 'Yuqori shkaflar kerak', detailMode: 'Har bir shkafni alohida sozlash (ustalar uchun)',
@@ -1279,10 +1409,16 @@
         howTurnkey: 'Kalit topshirish: oʻlchov, tayyorlash, yetkazish, oʻrnatish va yoritish. Texnika, kranlar, suv va 220 V elektr ulanishi narxga kirmaydi — ishonchli ustalarni tavsiya qilamiz.',
         footer: '{name} · Toshkentda buyurtma oshxonalar',
         catalogFacade: 'Fasad rangini tanlash', catalogBody: 'Korpus rangini tanlash',
-        catalogDesc: 'Ranglar narx toifalariga boʻlingan. Tanlash uchun namunani bosing.',
+        catalogDesc: 'Yetkazib beruvchi katalogidagi haqiqiy dekorlar, boʻlimlar boʻyicha. Tanlash uchun namunani bosing.',
         catalogEmpty: 'Bu guruhda hozircha rang yoʻq.', markup: 'fasadlarga +{p}%',
-        tone_all: 'Barcha ranglar', tone_white: 'Oq va och', tone_wood: 'Yogʻoch', tone_gray: 'Kulrang va beton', tone_dark: 'Toʻq va qora', tone_color: 'Rangli',
-        cat0: 'Ekonom', cat1: 'Standart', cat2: 'Premium', cat3: 'Platinum', catSuffix: 'ranglar',
+        tone_all: 'Barcha ranglar', tone_white: 'Oq va och', tone_wood: 'Yogʻoch', tone_gray: 'Kulrang va tosh', tone_dark: 'Toʻq va qora', tone_color: 'Rangli',
+        cat0: 'Ekonom', cat1: 'Silver', cat2: 'Premium', cat3: 'Rangli', cat4: 'Platinum', cat5: 'Akril', catSuffix: '',
+        colorSearch: 'Nomi yoki raqami boʻyicha qidirish…',
+        colorTierNote: '«{t}» boʻlimi ranglari koʻrsatilgan. Boshqa boʻlimdan rang tanlash uchun yuqoridagi roʻyxatdan materialni oʻzgartiring — narx materialga bogʻliq.',
+        colorAcrylNote: 'Akril uchun katalogda surat yoʻq: taxminiy ranglar koʻrsatilgan. Aniq rangni oʻlchovda namunalar boʻyicha tanlaymiz.',
+        matNoteCat: 'Katalogning «{t}» boʻlimi ranglari: {n} ta', matNoteAcr: 'Akril — taxminiy ranglar, surat yoʻq',
+        colorFitted: '{w} rangi «{t}» boʻlimidagi eng yaqin rangga almashtirildi: {name}', matSwitched: '{w} materiali katalog boʻlimiga moslab «{m}» ga oʻzgartirildi', wFacade: 'fasad', wBody: 'korpus',
+        catToFacade: 'Fasadga', catToBody: 'Korpusga', catSetFacade: 'Fasad rangi: {name}', catSetBody: 'Korpus rangi: {name}',
         summaryTitle: 'Natija: sizning oshxonangiz', customer: 'Buyurtmachi', dimensions: 'Oʻlchamlar', extras: 'Qoʻshimcha', none: 'yoʻq', notSet: 'Koʻrsatilmagan',
         visualization: 'Vizualizatsiya', lowerCabs: 'Pastki shkaflar', upperCabs: 'Yuqori shkaflar', cabSchemes: 'Shkaflar sxemasi',
         thName: 'Nomi', thWall: 'Devor', thWidth: 'Kenglik', thShelves: 'Tokcha', thDrawers: 'Tortma', thGas: 'Gazlift', thOpen: 'Ochilishi',
@@ -1303,16 +1439,16 @@
         popupBlocked: 'Brauzer shartnoma oynasini blokladi. Ushbu sayt uchun qalqib chiquvchi oynalarga ruxsat bering.',
         mod_sink: 'Rakovina osti moduli', mod_drawers: 'Tortmali tumba', mod_hob: 'Plita osti moduli', mod_door: 'Eshikli shkaf',
         mod_dryer: 'Idish quritgich shkafi', mod_hood: 'Vytyajka usti shkafi', mod_side: 'Yon shkaf', mod_lower: 'Pastki modul {i}', mod_upper: 'Yuqori modul {i}',
-        p_compact: 'Kompakt', p_compact_d: 'Toʻgʻri 1,8 m · LDSP · oq',
-        p_scandi: 'Skandinaviya', p_scandi_d: 'Toʻgʻri 2,4 m · Egger · och rang, yogʻoch stoleshnitsa',
-        p_loft: 'Loft', p_loft_d: 'Burchakli 2,4 × 1,8 m · grafit va yogʻoch · dastasiz',
-        p_classic: 'Klassika', p_classic_d: 'P-shaklida · MDF emal · krem · sunʼiy tosh',
+        p_compact: 'Kompakt', p_compact_d: 'Toʻgʻri 1,8 m · LDSP Ekonom · oq',
+        p_scandi: 'Skandinaviya', p_scandi_d: 'Toʻgʻri 2,4 m · LDSP Premium · oq, yogʻoch stoleshnitsa',
+        p_loft: 'Loft', p_loft_d: 'Burchakli 2,4 × 1,8 m · LMDF Premium · grafit eman · dastasiz',
+        p_classic: 'Klassika', p_classic_d: 'P-shaklida · LMDF Premium · bej · sunʼiy tosh',
         seg_econ: 'Ekonom', seg_mid: 'Standart', seg_prem: 'Premium',
-        p_practic: 'Praktik', p_practic_d: 'Toʻgʻri 3 m · LDSP · och kulrang · ekonom furnitura',
-        p_duo: 'Duet', p_duo_d: 'Burchakli 3 × 1,2 m · LMDF · vanil · ekonom furnitura',
-        p_comfort: 'Komfort', p_comfort_d: 'Burchakli 2,4 × 1,2 m · MDF plyonka · zarang · dastasiz · yoritgich',
-        p_enamel: 'Emal Lyuks', p_enamel_d: 'Burchakli 3 × 1,8 m · MDF emal navy · tosh · Blum · yoritgich',
-        p_prestige: 'Orolli Prestij', p_prestige_d: 'Burchakli 2,4 × 1,8 m + orol · akril · kvars · Blum · yoritgich',
+        p_practic: 'Praktik', p_practic_d: 'Toʻgʻri 3 m · LDSP Ekonom · och kulrang · ekonom furnitura',
+        p_duo: 'Duet', p_duo_d: 'Burchakli 3 × 1,2 m · LMDF Ekonom · krem · ekonom furnitura',
+        p_comfort: 'Komfort', p_comfort_d: 'Burchakli 2,4 × 1,2 m · LMDF Silver · och yogʻoch · dastasiz · yoritgich',
+        p_enamel: 'Indigo Lyuks', p_enamel_d: 'Burchakli 3 × 1,8 m · LMDF Rangli · indigo · tosh · Blum · yoritgich',
+        p_prestige: 'Orolli Prestij', p_prestige_d: 'Burchakli 2,4 × 1,8 m + orol · akril (Turkiya) · kvars · Blum · yoritgich',
         hardware: 'Furnitura', hardwareLabel: 'Furnitura (ilmoqlar, tortmalar, koʻtargichlar)',
         hwDesc_econ: 'Asosiy sinf: DTC va analoglar. Ilmoq va yoʻnaltirgichlar oddiyroq, yumshoq yopgich hamma joyda emas.',
         hwDesc_std: 'GTV, Boyard, Hettich (asosiy qatorlar): yumshoq yopiladigan ilmoqlar va tortmalar.',
@@ -1326,97 +1462,46 @@
         ledHint: 'Lenta pogonli metr boʻyicha hisoblanadi: uzunlik shkaflaringizdan oʻzi olinadi. Yoritiladigan javonlar dona hisobida.',
         ledCostLine: 'Narxga kiritilgan yoritgich: {x} soʻm',
         lighting: 'Yoritgich', ledNone: 'yoʻq', ledPartWork: 'ish zonasi {m} p.m.', ledPartPlinth: 'sokol {m} p.m.', ledPartShelves: 'javonlar: {n}',
-        logisticsNote: 'Narxga materiallarni olib kelish va yetkazish, tayyor oshxonani Toshkent boʻylab yetkazish va oʻrnatish kiritilgan.'
+        logisticsNote: 'Narxga materiallar, kesish va kromka, materiallarni olib kelish va yetkazish, tayyor oshxonani Toshkent boʻylab yetkazish va oʻrnatish kiritilgan.'
       }
     };
 
-    /* ===================== КАТАЛОГ ЦВЕТОВ (данные) ===================== */
-    const colorCatalog = [
-      {
-        categoryName: '1. Эконом цвета',
-        items: [
-          { id: 'ec_1', name: 'Белый Матовый', hex: '#f8fafc', tone: 'white', img: '' },
-          { id: 'ec_2', name: 'Бук Светлый', hex: '#fef08a', tone: 'wood', img: '' },
-          { id: 'ec_3', name: 'Ольха Классик', hex: '#d97706', tone: 'wood', img: '' },
-          { id: 'ec_4', name: 'Серый Пепел', hex: '#94a3b8', tone: 'gray', img: '' },
-          { id: 'ec_5', name: 'Слоновая Кость', hex: '#f5efdc', tone: 'white', img: '' },
-          { id: 'ec_6', name: 'Ваниль', hex: '#f3e5ab', tone: 'white', img: '' },
-          { id: 'ec_7', name: 'Светло-серый', hex: '#cbd5e1', tone: 'gray', img: '' },
-          { id: 'ec_8', name: 'Графит Эконом', hex: '#4b5563', tone: 'dark', img: '' },
-          { id: 'ec_9', name: 'Дуб Молочный', hex: '#e5cfa5', tone: 'wood', img: '' },
-          { id: 'ec_10', name: 'Орех Светлый', hex: '#a0764a', tone: 'wood', img: '' },
-          { id: 'ec_11', name: 'Вишня Оксфорд', hex: '#7f2f26', tone: 'wood', img: '' },
-          { id: 'ec_12', name: 'Чёрный Матовый', hex: '#1f2937', tone: 'dark', img: '' },
-          { id: 'ec_13', name: 'Белый Стандарт', hex: '#ffffff', tone: 'white', img: '' }
-        ]
-      },
-      {
-        categoryName: '2. Стандарт цвета',
-        items: [
-          { id: 'st_1', name: 'Дуб Сонома', hex: '#ca8a04', tone: 'wood', img: '' },
-          { id: 'st_2', name: 'Венге Магия', hex: '#451a03', tone: 'dark', img: '' },
-          { id: 'st_3', name: 'Бежевый Песок', hex: '#fde68a', tone: 'white', img: '' },
-          { id: 'st_4', name: 'Антрацит', hex: '#334155', tone: 'dark', img: '' },
-          { id: 'st_5', name: 'Дуб Серый', hex: '#8d8579', tone: 'wood', img: '' },
-          { id: 'st_6', name: 'Орех Американский', hex: '#6b4423', tone: 'wood', img: '' },
-          { id: 'st_7', name: 'Ясень Шимо Светлый', hex: '#c9b8a0', tone: 'wood', img: '' },
-          { id: 'st_8', name: 'Капучино', hex: '#b89b80', tone: 'white', img: '' },
-          { id: 'st_9', name: 'Мокко', hex: '#6f4e37', tone: 'dark', img: '' },
-          { id: 'st_10', name: 'Серый Камень', hex: '#6b7280', tone: 'gray', img: '' },
-          { id: 'st_11', name: 'Бетон Светлый', hex: '#b7bcc2', tone: 'gray', img: '' },
-          { id: 'st_12', name: 'Пудровый Розовый', hex: '#e8c4c0', tone: 'color', img: '' },
-          { id: 'st_13', name: 'Голубой Туман', hex: '#a9c4d6', tone: 'color', img: '' },
-          { id: 'st_14', name: 'Оливковый', hex: '#6b705c', tone: 'color', img: '' }
-        ]
-      },
-      {
-        categoryName: '3. Премиум цвета',
-        items: [
-          { id: 'pr_1', name: 'Дуб Вотан (Egger)', hex: '#b45309', tone: 'wood', img: '' },
-          { id: 'pr_2', name: 'Белый Глянец Soft-Touch', hex: '#ffffff', tone: 'white', img: '' },
-          { id: 'pr_3', name: 'Кашемир Серый', hex: '#a8a29e', tone: 'gray', img: '' },
-          { id: 'pr_4', name: 'Бетон Тёмный', hex: '#475569', tone: 'gray', img: '' },
-          { id: 'pr_5', name: 'Дуб Артизан', hex: '#a67c52', tone: 'wood', img: '' },
-          { id: 'pr_6', name: 'Дуб Craft Золотой', hex: '#b8895a', tone: 'wood', img: '' },
-          { id: 'pr_7', name: 'Орех Миланский', hex: '#7a5233', tone: 'wood', img: '' },
-          { id: 'pr_8', name: 'Белый Шёлк Супермат', hex: '#f1f1ee', tone: 'white', img: '' },
-          { id: 'pr_9', name: 'Крем-брюле Soft-Touch', hex: '#ecdcb8', tone: 'white', img: '' },
-          { id: 'pr_10', name: 'Шалфей Матовый', hex: '#9caf88', tone: 'color', img: '' },
-          { id: 'pr_11', name: 'Синий Navy', hex: '#1e3a5f', tone: 'color', img: '' },
-          { id: 'pr_12', name: 'Терракота', hex: '#b5593c', tone: 'color', img: '' },
-          { id: 'pr_13', name: 'Горчичный', hex: '#c9962b', tone: 'color', img: '' },
-          { id: 'pr_14', name: 'Бордо', hex: '#5e1f2b', tone: 'color', img: '' },
-          { id: 'pr_15', name: 'Графит Soft-Touch', hex: '#3a3f47', tone: 'dark', img: '' },
-          { id: 'pr_16', name: 'Серый Дым', hex: '#8a8f96', tone: 'gray', img: '' }
-        ]
-      },
-      {
-        categoryName: '4. Платинум цвета',
-        items: [
-          { id: 'pl_1', name: 'Мрамор Марквина Чёрный', hex: '#0f172a', tone: 'dark', img: '' },
-          { id: 'pl_2', name: 'Золотой Деревянный Шпон', hex: '#854d0e', tone: 'wood', img: '' },
-          { id: 'pl_3', name: 'Изумруд Матовый Platinum', hex: '#064e3b', tone: 'color', img: '' },
-          { id: 'pl_4', name: 'Металл Бронза', hex: '#78350f', tone: 'color', img: '' },
-          { id: 'pl_5', name: 'Мрамор Каррара Белый', hex: '#e9e9e6', tone: 'white', img: '' },
-          { id: 'pl_6', name: 'Камень Тёмный Сланец', hex: '#2f3640', tone: 'dark', img: '' },
-          { id: 'pl_7', name: 'Дуб Шпон Натуральный', hex: '#c19a6b', tone: 'wood', img: '' },
-          { id: 'pl_8', name: 'Орех Шпон Американский', hex: '#5a3b22', tone: 'wood', img: '' },
-          { id: 'pl_9', name: 'Чёрный Супермат Anti-Fingerprint', hex: '#121212', tone: 'dark', img: '' },
-          { id: 'pl_10', name: 'Сапфир Матовый', hex: '#1d4e89', tone: 'color', img: '' },
-          { id: 'pl_11', name: 'Бордовый Велюр', hex: '#6d1a36', tone: 'color', img: '' },
-          { id: 'pl_12', name: 'Шампань Металлик', hex: '#cdb892', tone: 'color', img: '' },
-          { id: 'pl_13', name: 'Графитовый Металлик', hex: '#4a4f57', tone: 'dark', img: '' },
-          { id: 'pl_14', name: 'Жемчуг Серый', hex: '#d1d5db', tone: 'gray', img: '' }
-        ]
-      }
+    /* ===================== ЦВЕТА: декоры из каталога поставщика (фото в static/catalog) ===================== */
+    const CATALOG_BASE = '/static/catalog/';
+    const CATALOG_VER = '?v=2';
+    // items — названия, hex — средний цвет фото (для визуализации), tone — w белые, d дерево, g серые/камень, k тёмные, c цветные
+    const CATALOG = [{"key":"econom","title":"Эконом","items":["Азия","Антик Светлый","Астана","Белая Корона","Белый Уз","Белый","Вермонт Синий","Виктория","Дуб Ватан","Дуб Каньон Крофт","Дуб Каньон Светлый","Дуб Каньон Темный","Дуб Светлый","Дуб Сонома","Дуб Юконь Светлый","Дуб Юконь Темный","Жемчуг","Каспий Светлый","Каспий Темный","Кашмир Уз","Крем","Линия Коричневая","Лиственница Сибиу","Морской Мрамор","Ноче Комо","Одесса","Орех Лион","Орех Шоколад","Орех Шпон","Пикард","Рига Шпон","Серый Светлый Уз","Серый Темный Уз","Сосна Атлас","София","Уд","Флоренция","Черный Уз"],"hex":"57352fa68e7cdcd6dee0dbe1f2f4eae4e2e8656672c0a18cbf8b67c2b5b1a98c7f92604adad0d1d1b8aab6a8a5452d2acac6c0aeabaf515156b3aba8ccc7bb38312fe0dce4ddd5d0643b34e0dada7a4e3d482c2a5f3e35d5cdcd6d4231b7b6bd0d131fdad1d1cdbcb38e5f3bbbadac0a0a10","tone":"ddwwwwgdddddwdddggggwkwwdwdddwdgkwdddk"},{"key":"silver","title":"Сильвер","items":["Дуб Каньон Золотой","Кенигсберг Светлый","Орех Магнолия","Тадж Махал","Турин Темный"],"hex":"a58567c7bda8433428ada9ad4f4339","tone":"dddgd"},{"key":"premium","title":"Премиум","items":["Акация","Антик Светлый","Антик Темный","Бадега Серая","Балтийский Дуб","Бежевый","Белый (Филвуд)","Белый","Береза Темная","Благородный Тик","Бук 220","Венге Серебро","Венге Цаво","Виски Плотник","Вишня Оксфорд","Вишня Хамельтон","Вяз Сигма","Глазурь Светлая","Глазурь Темная","Дуб Белый","Дуб Бордо","Дуб Гарден","Дуб Графит","Дуб Дунин","Дуб Дюна","Дуб Карамельный","Дуб Ланселлот","Дуб Латтэ","Дуб Лефкас Темный","Дуб Мельница","Дуб Миллениум","Дуб Нельсон","Дуб Парис","Дуб Песчаный","Дуб Пьемонт Мокка","Дуб Рустикаль","Дуб Седан","Дуб Темный","Дуб Флоренция","Инокс Бежевый","Инокс Коричневый","Инокс Медь","Какао","Калахари","Клен Джерсей","Клен Крупный","Коралл","Легно Светлый","Легно Табак","Липа","Омега Светлая","Омега Темная","Орех Верона Светлый","Орех Верона Светлый","Орех Итальянский","Орех Калифорния","Орех Манифест","Помпей","Серый Светлый","Сибиу Темный","Скаггерак","Скандинавская Пихта","Слива Валис","Сонома Трюфель","Сосна Карелия","Сосна Осло","Сосна Светлая","Сосна Фано Белая","Сосна Фрост","Тавалато Темный","Трасто","Турин Коричневый","Турин Светлый","Черный","Шанхай Светлый","Шанхай Темный","Шафран Светлый","Шафран Темный","Шервуд Светлый","Шервуд Темный","Эвкалипт","Ясень Престиж","Ясень Эко"],"hex":"e0c9b3ae937a6e472a85787b90816feee3c5fafafaf7f7f585655b5c4835ca935b9d938f3d21178e714e955622cd9e7eb6a896d7d4d17b7a7cbdb5a5b69f7bc6b39f3c352e54463da6885e9b7c58b3895d9082777c5a3754483d9d8f81988c8066352e9887694c3528653e2dbb9973513c2c644d3d968770674e378e694cb4a2849f968bdbd1d0a18164a16e58ceab94654d46e6d5c4d0c2ad6d533b815b423b3131775c4bc2af956c564e655350d9dad38e623d124764b19e8071442e72645acdbfb23a302ecec3c5c5bcb0d4d6d282453351443f96775ad4bfa32c3239a8876952443e7c6451987554c5bbb14535358f8a6c42403cd7cdc9","tone":"dddddwwwdddddddddwdddddddddddddddddddddgggddwdcdddddddddddwdcdddddddwddddkddddddddw"},{"key":"color","title":"Цветной (монотонный)","items":["Альпийский Шифер","Артель","Голубой","Желтый Яичный","Индиго","Капучино","Красный","Лофт Светлый","Лофт Темный","Луанда","Мускат","Оранжевый","Паладина","Песок","Серебряный","Серый Темный","Синий","Сиреневый","Слива (Уни)","Сталь Закалённая","Твист","Трюфель (Уни)","Фантом","Фиолетовый","Чокко"],"hex":"36393e8cba618093aff8b9002c3f82a5947ca9392fceccc462615b3d3e40d8c6b7c1763d3333398d83807f82935a5a56015cb7d7cdd0917b844943403d39348c7e756d645b9982a858484b","tone":"kccccccggkcckgggccgkkggcg"},{"key":"platinum","title":"Платинум","items":["Агреппина","Алегре","Беларус","Бледная Синева","Бьанко","Графит Металик","Грифф","Древесина","Дуб Американский","Дуб Викинг","Дуб Гайя","Дуб Серый","Дуб Термо","Дуб Тернер","Инокс Серый","Камень","Карлсбад","Каролайн","Кашемир-Беж","Кашемир-Серый","Кашемир-Серый","Лаос Тик","Лембрук","Лес","Линия","Линн","Лорель","Лумумба","Малинска","Маркиз","Миднайт","Мята","Нео","Риббек","Ромео","Себастьян","Слоновая Кость","Тадао","Элегантный Дуб","Элегантный Орех","Эштон"],"hex":"c8c9c2d6d4d0b092675e758fe1e2dd423f424a564e333236b196696f5b45c4af886e64534e4348e4e1df97989361574e586465b8afb2ccc7bbc8c4c36c563e826f60505553404f45866342dec7a75a554f75695f745b3f1914111e262cbcd6c2806a51d1ccc4d4d6d9333734fbf4e4645545bea9895140315c3926","tone":"gwdcwkgddddddwgggggggdgkdddddkkcddwkwgddd"}];
+    const CAT_ID_PREFIX = { econom: 'ec', silver: 'si', premium: 'pr', color: 'co', platinum: 'pl', acryl: 'ac' };
+    const TONE_CODE = { w: 'white', d: 'wood', g: 'gray', k: 'dark', c: 'color' };
+    const colorCatalog = CATALOG.map(sec => ({
+      key: sec.key, categoryName: sec.title,
+      items: sec.items.map((name, i) => ({
+        id: CAT_ID_PREFIX[sec.key] + (i + 1), n: i + 1, key: sec.key, name,
+        hex: '#' + sec.hex.substr(i * 6, 6), tone: TONE_CODE[sec.tone[i]] || 'color',
+        img: CATALOG_BASE + sec.key + '/' + String(i + 1).padStart(2, '0') + '.webp' + CATALOG_VER
+      }))
+    }));
+    // Акрил: фото в каталоге нет — ориентировочная палитра (оттенок показываем цветным квадратом, точный цвет подбирается по образцам на замере)
+    const ACRYLIC_PALETTE = [
+      ['Белый глянец', '#f6f6f3', 'white'], ['Слоновая кость', '#eee5d0', 'white'], ['Светло-бежевый', '#dccbb0', 'white'],
+      ['Капучино', '#b49a82', 'wood'], ['Мокко', '#7a5c49', 'wood'], ['Светло-серый', '#cfd2d4', 'gray'], ['Серый', '#9aa0a6', 'gray'],
+      ['Графит', '#4a4f55', 'dark'], ['Чёрный глянец', '#15171a', 'dark'], ['Синий navy', '#1f3b57', 'color'],
+      ['Изумрудный', '#2f5d4e', 'color'], ['Оливковый', '#6b7254', 'color'], ['Бордо', '#6b1f2a', 'color'],
+      ['Терракота', '#b2563a', 'color'], ['Пудровый розовый', '#e2bfb6', 'color'], ['Голубой', '#9bbad0', 'color']
     ];
+    colorCatalog.push({
+      key: 'acryl', categoryName: 'Акрил',
+      items: ACRYLIC_PALETTE.map((c, i) => ({ id: 'ac' + (i + 1), n: i + 1, key: 'acryl', name: c[0], hex: c[1], tone: c[2], img: '' }))
+    });
+    // Старые коды цветов (до каталога) → ближайший декор того же ценового уровня, чтобы старые ссылки открывались
+    const LEGACY_COLOR = {"ec_1":"ec5","ec_13":"ec5","ec_2":"ec24","ec_3":"ec9","ec_4":"ec18","ec_5":"ec5","ec_6":"ec24","ec_7":"ec3","ec_8":"ec19","ec_9":"ec21","ec_10":"ec12","ec_11":"ec31","ec_12":"ec22","st_1":"si1","st_2":"si3","st_3":"si2","st_4":"si5","st_5":"si1","st_6":"si5","st_7":"si2","st_8":"si1","st_9":"si5","st_10":"si1","st_11":"si2","st_12":"si2","st_13":"si4","st_14":"si1","pr_1":"pr15","pr_2":"pr7","pr_3":"pr17","pr_4":"pr58","pr_5":"pr26","pr_6":"pr27","pr_7":"pr29","pr_8":"pr8","pr_9":"pr6","pr_10":"pr43","pr_11":"pr61","pr_12":"pr15","pr_13":"pr11","pr_14":"pr33","pr_15":"pr82","pr_16":"pr12","pl_1":"pl31","pl_2":"pl29","pl_3":"pl36","pl_4":"pl41","pl_5":"pl14","pl_6":"pl8","pl_7":"pl9","pl_8":"pl41","pl_9":"pl30","pl_10":"pl24","pl_11":"pl41","pl_12":"pl11","pl_13":"pl23","pl_14":"pl35"};
 
     /* Фильтр каталога по оттенку */
     const catalogTones = [
       { key: 'all', label: 'Все цвета' },
       { key: 'white', label: 'Белые и светлые' },
       { key: 'wood', label: 'Дерево' },
-      { key: 'gray', label: 'Серые и бетон' },
+      { key: 'gray', label: 'Серые и камень' },
       { key: 'dark', label: 'Тёмные и чёрные' },
       { key: 'color', label: 'Цветные' }
     ];
@@ -1828,10 +1913,12 @@
     let activeColorTarget = 'facade';
     let activePresetId = null;
     let appReady = false;
-    let selectedFacadeColor = { id: 'ec_1', name: 'Белый Матовый', hex: '#f8fafc', tier: 0, img: '' };
-    let selectedBodyColor = { id: 'ec_13', name: 'Белый Стандарт', hex: '#ffffff', tier: 0, img: '' };
+    let selectedFacadeColor = null;
+    let selectedBodyColor = null;
     let ledState = { level: 0, work: true, plinth: false, shelves: 0 };   // подсветка: класс (0 нет, 1 стандарт, 2 премиум), зоны, число подсвечиваемых полок
-    const FACADE_V1_MAP = [0, 1, 2, 4, 5, 7];                            // старые ссылки (до обновления прайса): номер фасада -> новый номер
+    const FACADE_V1_MAP = [0, 1, 2, 4, 5, 7];                            // v1 -> v2
+    const FACADE_V2_MAP = [0, 1, 4, 3, 5, 7, 10, 11];                    // v2 -> v3: ЛДСП Эк, ЛМДФ Эк, Egger→ЛДСП Премиум, плёнка→ЛМДФ Сильвер, ЛМДФ Прем, эмаль→ЛМДФ Цветной, акрил→Китай, шпон→Турция
+    const BODY_V2_MAP = [0, 4];                                          // v2 -> v3: ЛДСП Стандарт→Эконом, влагостойкий→ЛДСП Премиум
 
     /* ===================== ПОМОЩНИКИ ===================== */
     function vars() {
@@ -1851,14 +1938,18 @@
     function setSel(id, i) { const s = el(id); s.selectedIndex = Math.max(0, Math.min(s.options.length - 1, Number(i) | 0)); }
 
     function findColor(id) {
+      if (LEGACY_COLOR[id]) id = LEGACY_COLOR[id];
       for (let ci = 0; ci < colorCatalog.length; ci++) {
         const item = colorCatalog[ci].items.find(x => x.id === id);
         if (item) return { item, tier: ci };
       }
       return null;
     }
-    function colorObj(found) { return { id: found.item.id, name: found.item.name, hex: found.item.hex, img: found.item.img || '', tier: found.tier }; }
-    function colorLabel(c) { return `${c.name} (${t('cat' + (c.tier || 0))})`; }
+    function colorObj(found) { return { id: found.item.id, n: found.item.n, key: found.item.key, name: found.item.name, hex: found.item.hex, img: found.item.img || '', tier: found.tier }; }
+    function colorCode(c, ru) { return `${ru ? I18N.ru['cat' + (c.tier || 0)] : t('cat' + (c.tier || 0))} №${c.n}`; }
+    function colorLabel(c, ru) { return `${c.name} (${colorCode(c, ru)})`; }
+    selectedFacadeColor = colorObj(findColor('pr8'));   // ЛДСП Премиум, белый
+    selectedBodyColor = colorObj(findColor('ec6'));     // ЛДСП Эконом, белый
 
     function defaultModuleName(kind, tier, id) {
       if (kind && I18N.ru['mod_' + kind] !== undefined) return t('mod_' + kind);
@@ -2057,6 +2148,8 @@
       setSel('bodyMaterial', tr.body);
       setSel('countertopMaterial', tr.top);
       setSel('hardwareLevel', tr.hw);
+      fitAllColors();
+      updateColorUIBadges();
       updateCalculator();
     }
 
@@ -2313,20 +2406,26 @@
       const selected = activeColorTarget === 'facade' ? selectedFacadeColor : selectedBodyColor;
       el('catalogFilters').innerHTML = catalogTones.map(tn =>
         `<button type="button" class="filter-chip ${tn.key === activeCatalogTone ? 'active' : ''}" onclick="setCatalogTone('${tn.key}')">${esc(t('tone_' + tn.key))}</button>`).join('');
+      const si = el('colorSearch'); si.placeholder = t('colorSearch');
+      const q = si.value.trim().toLowerCase().replace(/ё/g, 'е');
+      const mt = curMat(activeColorTarget);
+      const note = el('colorTierNote');
+      if (note) note.textContent = mt.cat === 5 ? t('colorAcrylNote') : t('colorTierNote', { t: t('cat' + mt.cat) });
 
       let html = '';
       colorCatalog.forEach((cat, ci) => {
-        const items = cat.items.filter(it => activeCatalogTone === 'all' || it.tone === activeCatalogTone);
+        if (ci !== mt.cat) return;   // только ступень выбранного материала
+        const items = cat.items.filter(it => (activeCatalogTone === 'all' || it.tone === activeCatalogTone) &&
+          (!q || it.name.toLowerCase().replace(/ё/g, 'е').includes(q) || String(it.n) === q.replace('№', '')));
         if (!items.length) return;
         const mk = CONFIG.colorMarkup[ci] || 0;
         const badge = (activeColorTarget === 'facade' && mk > 0) ? ` <span class="catalog-badge">${esc(t('markup', { p: Math.round(mk * 100) }))}</span>` : '';
-        html += `<div class="catalog-category-title">📁 ${ci + 1}. ${esc(t('cat' + ci))} ${esc(t('catSuffix'))} <span style="color:var(--text-muted); font-weight:400; font-size:0.8rem;">(${items.length})</span>${badge}</div>`;
+        html += `<div class="catalog-category-title">${ci + 1}. ${esc(t('cat' + ci))} <span style="color:var(--text-muted); font-weight:400; font-size:0.8rem;">(${items.length})</span>${badge}</div>`;
         html += '<div class="catalog-grid">';
         items.forEach(item => {
-          const bg = item.img ? `background-image: url('${esc(item.img)}');` : `background-color: ${item.hex};`;
           html += `<div class="color-card ${item.id === selected.id ? 'selected' : ''}" onclick="selectColorById('${item.id}')">
-              <div class="color-swatch-box" style="${bg}"></div>
-              <div class="color-card-title">${esc(item.name)}</div>
+              <div class="color-swatch-box" style="background-color: ${item.hex};">${item.img ? `<img loading="lazy" decoding="async" src="${esc(item.img)}" alt="">` : ''}</div>
+              <div class="color-card-title">${item.img ? `<b>№${item.n}</b> ` : ''}${esc(item.name)}</div>
             </div>`;
         });
         html += '</div>';
@@ -2344,11 +2443,70 @@
       updateCalculator();
     }
 
+    // Фото выбранных цветов заранее превращаем в data-URL: эскиз в новом окне получается самодостаточным (печать, сохранение)
+    const SWATCH_DATA = {};
+    function cacheSwatch(c) {
+      if (!c || !c.img || SWATCH_DATA[c.id] || typeof fetch !== 'function') return;
+      SWATCH_DATA[c.id] = 'pending';
+      fetch(c.img).then(r => r.ok ? r.blob() : Promise.reject()).then(b => new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); }))
+        .then(d => { SWATCH_DATA[c.id] = d; }).catch(() => { delete SWATCH_DATA[c.id]; });
+    }
+    function swatchData(c) { const d = SWATCH_DATA[c.id]; return d && d !== 'pending' ? d : ''; }
     function updateColorUIBadges() {
+      cacheSwatch(selectedFacadeColor); cacheSwatch(selectedBodyColor);
+      updateMatNotes();
       el('facadeColorText').textContent = colorLabel(selectedFacadeColor);
       el('facadeColorBadge').style.backgroundColor = selectedFacadeColor.hex;
+      el('facadeColorBadge').style.backgroundImage = selectedFacadeColor.img ? `url('${selectedFacadeColor.img}')` : '';
       el('bodyColorText').textContent = colorLabel(selectedBodyColor);
       el('bodyColorBadge').style.backgroundColor = selectedBodyColor.hex;
+      el('bodyColorBadge').style.backgroundImage = selectedBodyColor.img ? `url('${selectedBodyColor.img}')` : '';
+    }
+
+    /* ===================== СВЯЗЬ «МАТЕРИАЛ ↔ ЦВЕТ» ===================== */
+    // Материал определяет ступень каталога (ЛДСП/ЛМДФ Эконом, Сильвер, Премиум, Цветной, Платинум; акрил — своя палитра),
+    // цвет выбирается только из этой ступени. Поэтому цена всегда соответствует тому, что стоит в спецификации.
+    function matList(target) { return target === 'facade' ? CONFIG.facades : CONFIG.bodies; }
+    function matSelId(target) { return target === 'facade' ? 'facadeMaterial' : 'bodyMaterial'; }
+    function curMat(target) { return matList(target)[selIdx(matSelId(target))]; }
+    function colorDist(a, b) {
+      const p = h => { h = String(h).replace('#', ''); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; };
+      const x = p(a), y = p(b); return 3 * (x[0] - y[0]) ** 2 + 4 * (x[1] - y[1]) ** 2 + 2 * (x[2] - y[2]) ** 2;
+    }
+    function fitColorToMaterial(target) {
+      const m = curMat(target), cur = target === 'facade' ? selectedFacadeColor : selectedBodyColor;
+      if (!m || (cur && cur.tier === m.cat)) return null;
+      const items = colorCatalog[m.cat].items;
+      let best = items[0];
+      items.forEach(it => { if (colorDist(it.hex, cur ? cur.hex : '#ffffff') < colorDist(best.hex, cur ? cur.hex : '#ffffff')) best = it; });
+      const c = colorObj({ item: best, tier: m.cat });
+      if (target === 'facade') selectedFacadeColor = c; else selectedBodyColor = c;
+      return c;
+    }
+    function fitAllColors() { return [fitColorToMaterial('facade'), fitColorToMaterial('body')]; }
+    function matChanged(target) {
+      const c = fitColorToMaterial(target);
+      updateColorUIBadges();
+      updateCalculator();
+      if (c && typeof msToast === 'function') msToast(t('colorFitted', { w: t(target === 'facade' ? 'wFacade' : 'wBody'), t: t('cat' + c.tier), name: c.name }));
+    }
+    // Цвет выбран из общего каталога (шапка): подстраиваем материал под его ступень, сохраняя ЛДСП/ЛМДФ
+    function setMaterialForColor(target, c) {
+      const list = matList(target), cur = curMat(target);
+      if (cur && cur.cat === c.tier) return false;
+      const kind = cur && cur.kind === 'mdf' ? 'mdf' : 'dsp';
+      let ni = list.findIndex(m => m.cat === c.tier && m.kind === kind);
+      if (ni < 0) ni = list.findIndex(m => m.cat === c.tier);
+      if (ni < 0) return false;
+      setSel(matSelId(target), ni);
+      return list[ni];
+    }
+    function updateMatNotes() {
+      ['facade', 'body'].forEach(target => {
+        const m = curMat(target), box = el(target + 'MatNote');
+        if (!box || !m) return;
+        box.textContent = m.cat === 5 ? t('matNoteAcr') : t('matNoteCat', { t: t('cat' + m.cat), n: colorCatalog[m.cat].items.length });
+      });
     }
 
     /* ===================== ВИЗУАЛИЗАЦИЯ КУХНИ (перспектива) ===================== */
@@ -2603,31 +2761,31 @@
     // [вид шкафа, ширина см, полки, ящики (нижние) или газлифты (верхние), стена m/l/r]
     // seg — сегмент (econ/mid/prem), hw — фурнитура (0 эконом, 1 стандарт, 2 премиум), lg — подсветка [класс, рабочая зона, цоколь, полок], isl — остров [вкл, длина, ширина]
     const PRESETS = [
-      { id: 'compact', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec_1', bc: 'ec_13', open: 'h', o: [1, 1, 0],
+      { id: 'compact', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec6', bc: 'ec6', open: 'h', o: [1, 1, 0],
         lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0]],
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1]] },
-      { id: 'practic', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec_7', bc: 'ec_13', open: 'h', o: [1, 1, 0],
+      { id: 'practic', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec32', bc: 'ec6', open: 'h', o: [1, 1, 0],
         lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0], ['door', 60, 1, 0]],
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
-      { id: 'duo', seg: 'econ', t: 'l-shape', f: 1, b: 0, c: 0, hw: 0, fc: 'ec_6', bc: 'ec_13', open: 'h', o: [1, 1, 0],
+      { id: 'duo', seg: 'econ', t: 'l-shape', f: 1, b: 0, c: 0, hw: 0, fc: 'ec21', bc: 'ec6', open: 'h', o: [1, 1, 0],
         lo: [['door', 60, 1, 0, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0], ['door', 60, 1, 0]],
         up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
-      { id: 'scandi', seg: 'mid', t: 'straight', f: 2, b: 0, c: 1, hw: 1, fc: 'pr_8', bc: 'ec_13', open: 'h', o: [1, 1, 0],
+      { id: 'scandi', seg: 'mid', t: 'straight', f: 4, b: 0, c: 1, hw: 1, fc: 'pr8', bc: 'ec6', open: 'h', o: [1, 1, 0],
         lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'comfort', seg: 'mid', t: 'l-shape', f: 3, b: 0, c: 1, hw: 1, fc: 'st_7', bc: 'ec_13', open: 'p', o: [1, 1, 1], lg: [1, 1, 0, 0],
+      { id: 'comfort', seg: 'mid', t: 'l-shape', f: 3, b: 0, c: 1, hw: 1, fc: 'si2', bc: 'ec6', open: 'p', o: [1, 1, 1], lg: [1, 1, 0, 0],
         lo: [['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
         up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'loft', seg: 'mid', t: 'l-shape', f: 3, b: 0, c: 1, hw: 1, fc: 'pr_15', bc: 'st_4', open: 'g', o: [1, 1, 1], lg: [1, 1, 0, 0],
+      { id: 'loft', seg: 'mid', t: 'l-shape', f: 5, b: 2, c: 1, hw: 1, fc: 'pr23', bc: 'si5', open: 'g', o: [1, 1, 1], lg: [1, 1, 0, 0],
         lo: [['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 60, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
         up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'classic', seg: 'prem', t: 'u-shape', f: 5, b: 1, c: 2, hw: 2, fc: 'pr_9', bc: 'ec_5', open: 'h', o: [1, 1, 1],
+      { id: 'classic', seg: 'prem', t: 'u-shape', f: 5, b: 4, c: 2, hw: 2, fc: 'pr6', bc: 'pr6', open: 'h', o: [1, 1, 1],
         lo: [['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 60, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']],
         up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']] },
-      { id: 'enamel', seg: 'prem', t: 'l-shape', f: 5, b: 1, c: 2, hw: 2, fc: 'pr_11', bc: 'ec_13', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2],
+      { id: 'enamel', seg: 'prem', t: 'l-shape', f: 7, b: 5, c: 2, hw: 2, fc: 'co5', bc: 'pr8', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2],
         lo: [['drawers', 60, 0, 3, 'l'], ['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
         up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
-      { id: 'prestige', seg: 'prem', t: 'l-shape', f: 6, b: 1, c: 3, hw: 2, fc: 'pl_9', bc: 'ec_13', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90],
+      { id: 'prestige', seg: 'prem', t: 'l-shape', f: 11, b: 9, c: 3, hw: 2, fc: 'ac9', bc: 'pl5', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90],
         lo: [['drawers', 60, 0, 3, 'l'], ['door', 60, 1, 0, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
         up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['door', 60, 1, 0]] }
     ];
@@ -2636,7 +2794,7 @@
       const conv = arr => arr.map(e => [e[0], '', e[1], e[2], e[3], p.open, e[4] || 'm']);
       const sumWall = (arr, w) => arr.filter(e => (e[4] || 'm') === w).reduce((a, e) => a + e[1], 0);
       const main = sumWall(p.lo, 'm'), left = sumWall(p.lo, 'l'), right = sumWall(p.lo, 'r');
-      return { v: 2, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: 1, uh: 72, ud: 35,
+      return { v: 3, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: 1, uh: 72, ud: 35,
         f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: p.fc, bc: p.bc, lo: conv(p.lo), up: conv(p.up), o: p.o, i: p.isl || [0, 140, 80] };
     }
 
@@ -2685,7 +2843,7 @@
     function serializeState() {
       const s = getCalcState();
       const enc = (arr, tier) => arr.map(x => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0]]);
-      return { v: 2, t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, uh: s.upperH, ud: s.upperD,
+      return { v: 3, t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW] };
@@ -2761,15 +2919,19 @@
       el('hasUpperTier').checked = st.u !== 0;
       el('upperHeight').value = clampN(st.uh, 30, 130, 72);
       el('upperDepth').value = clampN(st.ud, 20, 65, 35);
-      const fIdx = (st.v | 0) >= 2 ? st.f : (FACADE_V1_MAP[st.f | 0] !== undefined ? FACADE_V1_MAP[st.f | 0] : CONFIG.defaults.facade);
+      const ver = st.v | 0;
+      let fIdx = st.f, bIdx = st.b;
+      if (ver < 2) fIdx = FACADE_V1_MAP[st.f | 0] !== undefined ? FACADE_V1_MAP[st.f | 0] : 2;
+      if (ver < 3) { fIdx = FACADE_V2_MAP[fIdx | 0] !== undefined ? FACADE_V2_MAP[fIdx | 0] : CONFIG.defaults.facade; bIdx = BODY_V2_MAP[bIdx | 0] !== undefined ? BODY_V2_MAP[bIdx | 0] : CONFIG.defaults.body; }
       setSel('facadeMaterial', clampN(fIdx, 0, CONFIG.facades.length - 1, CONFIG.defaults.facade));
       setSel('hardwareLevel', clampN(st.hw, 0, CONFIG.hardware.length - 1, CONFIG.defaults.hw));
       ledState = ledFromArr(st.lg);
-      setSel('bodyMaterial', clampN(st.b, 0, CONFIG.bodies.length - 1, CONFIG.defaults.body));
+      setSel('bodyMaterial', clampN(bIdx, 0, CONFIG.bodies.length - 1, CONFIG.defaults.body));
       setSel('countertopMaterial', clampN(st.c, 0, CONFIG.countertops.length - 1, CONFIG.defaults.top));
       const fc = findColor(st.fc), bc = findColor(st.bc);
       if (fc) selectedFacadeColor = colorObj(fc);
       if (bc) selectedBodyColor = colorObj(bc);
+      fitAllColors();   // если цвет не из ступени материала (старая ссылка) — ближайший из нужной ступени
       const o = Array.isArray(st.o) ? st.o : [];
       el('optSinkCut').checked = !!o[0];
       el('optHobCut').checked = !!o[1];
@@ -2884,8 +3046,8 @@
         details: {
           'Тип кухни': typeNames[s.type] || s.type,
           'Габариты': dimsText(s, true) + `, потолок ${s.roomH} см`,
-          'Фасад': `${CONFIG.facades[s.facade].ru}, ${selectedFacadeColor.name} (${I18N.ru['cat' + (selectedFacadeColor.tier || 0)]})`,
-          'Корпус': `${CONFIG.bodies[s.body].ru}, ${selectedBodyColor.name}`,
+          'Фасад': `${CONFIG.facades[s.facade].ru}, ${colorLabel(selectedFacadeColor, true)}`,
+          'Корпус': `${CONFIG.bodies[s.body].ru}, ${colorLabel(selectedBodyColor, true)}`,
           'Столешница': CONFIG.countertops[s.top].ru,
           'Фурнитура': hwText(s, true).slice(0, 118),
           'Подсветка': ledText(s, true).slice(0, 118),
@@ -2947,7 +3109,7 @@
       const date = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
       const client = el('clientName').value.trim() || t('notSet');
       const shapeName = { 'straight': t('typeStraight'), 'l-shape': t('typeL'), 'u-shape': t('typeU') }[s.type] + (s.island ? ' + ' + t('typeIsland') : '');
-      const sw = (hex, title, sub) => `<div class="sw"><div class="sw-c" style="background:${hex}"></div><div><b>${esc(title)}</b><br><span>${esc(sub)}</span></div></div>`;
+      const sw = (hex, title, sub, img) => `<div class="sw"><div class="sw-c" style="background:${hex}; overflow:hidden">${img ? `<img src="${img}" alt="" style="display:block; width:100%; height:100%; object-fit:cover; transform:scale(1.4)">` : ''}</div><div><b>${esc(title)}</b><br><span>${esc(sub)}</span></div></div>`;
       const rows = (arr, tier) => arr.map(x => `<tr><td>${tier === 'lower' ? 'Н' : 'В'}-${x.id}</td><td>${esc(x.name)}</td><td>${esc(wallText(x.wall))}</td><td>${MM(x.width)}</td><td>${x.shelves | 0}</td><td>${tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0)}</td><td>${esc(openText(x.openType))}</td></tr>`).join('');
       const head = gas => `<tr><th>№</th><th>${esc(t('thName'))}</th><th>${esc(t('thWall'))}</th><th>${esc(t('thWidth'))}, мм</th><th>${esc(t('thShelves'))}</th><th>${esc(gas ? t('thGas') : t('thDrawers'))}</th><th>${esc(t('thOpen'))}</th></tr>`;
       const master = LANG === 'uz' ? CONFIG.masterNameUz : CONFIG.masterName;
@@ -2998,8 +3160,8 @@
 
   <h2>${esc(t('sketchMaterials'))}</h2>
   <div class="sws">
-    ${sw(selectedFacadeColor.hex, t('facades') + ': ' + selectedFacadeColor.name, mat(CONFIG.facades[s.facade]))}
-    ${sw(selectedBodyColor.hex, t('body') + ': ' + selectedBodyColor.name, mat(CONFIG.bodies[s.body]))}
+    ${sw(selectedFacadeColor.hex, t('facades') + ': ' + colorLabel(selectedFacadeColor), mat(CONFIG.facades[s.facade]), swatchData(selectedFacadeColor))}
+    ${sw(selectedBodyColor.hex, t('body') + ': ' + colorLabel(selectedBodyColor), mat(CONFIG.bodies[s.body]), swatchData(selectedBodyColor))}
     ${sw(CONFIG.countertops[s.top].color, t('countertop'), mat(CONFIG.countertops[s.top]))}
   </div>
 
@@ -3191,8 +3353,8 @@
       <tr><th style="width:32%;">Параметр</th><th>Значение</th></tr>
       <tr><td>Форма кухни</td><td>${typeNames[s.type]}</td></tr>
       <tr><td>Размеры</td><td>${esc(dimsText(s, true))}, потолок ${s.roomH} см</td></tr>
-      <tr><td>Фасады</td><td>${esc(CONFIG.facades[s.facade].ru)}, цвет «${esc(selectedFacadeColor.name)}»</td></tr>
-      <tr><td>Корпус</td><td>${esc(CONFIG.bodies[s.body].ru)}, цвет «${esc(selectedBodyColor.name)}»</td></tr>
+      <tr><td>Фасады</td><td>${esc(CONFIG.facades[s.facade].ru)}, цвет «${esc(selectedFacadeColor.name)}» (каталог: ${esc(colorCode(selectedFacadeColor, true))})</td></tr>
+      <tr><td>Корпус</td><td>${esc(CONFIG.bodies[s.body].ru)}, цвет «${esc(selectedBodyColor.name)}» (каталог: ${esc(colorCode(selectedBodyColor, true))})</td></tr>
       <tr><td>Столешница</td><td>${esc(CONFIG.countertops[s.top].ru)}</td></tr>
       <tr><td>Фурнитура</td><td>${esc(hwText(s, true))}</td></tr>
       <tr><td>Подсветка</td><td>${esc(ledText(s, true))}</td></tr>
@@ -3874,9 +4036,6 @@
     }
 
     /* ===================== КАТАЛОГ ДЕКОРОВ (фото по разделам) ===================== */
-    // Картинки лежат в папке static/catalog/<раздел>/NN.webp (NN — номер в разделе, с 01)
-    const CATALOG_BASE = '/static/catalog/';
-    const CATALOG = [{"key":"econom","title":"Эконом","items":["Азия","Антик Светлый","Астана","Белая Корона","Белый Уз","Белый","Вермонт Синий","Виктория","Дуб Ватан","Дуб Каньон Крофт","Дуб Каньон Светлый","Дуб Каньон Темный","Дуб Светлый","Дуб Сонома","Дуб Юконь Светлый","Дуб Юконь Темный","Жемчуг","Каспий Светлый","Каспий Темный","Кашмир Уз","Крем","Линия Коричневая","Лиственница Сибиу","Морской Мрамор","Ноче Комо","Одесса","Орех Лион","Орех Шоколад","Орех Шпон","Пикард","Рига Шпон","Серый Светлый Уз","Серый Темный Уз","Сосна Атлас","София","Уд","Флоренция","Черный Уз"]},{"key":"silver","title":"Сильвер","items":["Дуб Каньон Золотой","Кенигсберг Светлый","Орех Магнолия","Тадж Махал","Турин Темный"]},{"key":"premium","title":"Премиум","items":["Акация","Антик Светлый","Антик Темный","Бадега Серая","Балтийский Дуб","Бежевый","Белый (Филвуд)","Белый","Береза Темная","Благородный Тик","Бук 220","Венге Серебро","Венге Цаво","Виски Плотник","Вишня Оксфорд","Вишня Хамельтон","Вяз Сигма","Глазурь Светлая","Глазурь Темная","Дуб Белый","Дуб Бордо","Дуб Гарден","Дуб Графит","Дуб Дунин","Дуб Дюна","Дуб Карамельный","Дуб Ланселлот","Дуб Латтэ","Дуб Лефкас Темный","Дуб Мельница","Дуб Миллениум","Дуб Нельсон","Дуб Парис","Дуб Песчаный","Дуб Пьемонт Мокка","Дуб Рустикаль","Дуб Седан","Дуб Темный","Дуб Флоренция","Инокс Бежевый","Инокс Коричневый","Инокс Медь","Какао","Калахари","Клен Джерсей","Клен Крупный","Коралл","Легно Светлый","Легно Табак","Липа","Омега Светлая","Омега Темная","Орех Верона Светлый","Орех Верона Светлый","Орех Итальянский","Орех Калифорния","Орех Манифест","Помпей","Серый Светлый","Сибиу Темный","Скаггерак","Скандинавская Пихта","Слива Валис","Сонома Трюфель","Сосна Карелия","Сосна Осло","Сосна Светлая","Сосна Фано Белая","Сосна Фрост","Тавалато Темный","Трасто","Турин Коричневый","Турин Светлый","Черный","Шанхай Светлый","Шанхай Темный","Шафран Светлый","Шафран Темный","Шервуд Светлый","Шервуд Темный","Эвкалипт","Ясень Престиж","Ясень Эко"]},{"key":"color","title":"Цветной (монотонный)","items":["Альпийский Шифер","Артель","Голубой","Желтый Яичный","Индиго","Капучино","Красный","Лофт Светлый","Лофт Темный","Луанда","Мускат","Оранжевый","Паладина","Песок","Серебряный","Серый Темный","Синий","Сиреневый","Слива (Уни)","Сталь Закалённая","Твист","Трюфель (Уни)","Фантом","Фиолетовый","Чокко"]},{"key":"platinum","title":"Платинум","items":["Агреппина","Алегре","Беларус","Бледная Синева","Бьанко","Графит Металик","Грифф","Древесина","Дуб Американский","Дуб Викинг","Дуб Гайя","Дуб Серый","Дуб Термо","Дуб Тернер","Инокс Серый","Камень","Карлсбад","Каролайн","Кашемир-Беж","Кашемир-Серый","Кашемир-Серый","Лаос Тик","Лембрук","Лес","Линия","Линн","Лорель","Лумумба","Малинска","Маркиз","Миднайт","Мята","Нео","Риббек","Ромео","Себастьян","Слоновая Кость","Тадао","Элегантный Дуб","Элегантный Орех","Эштон"]}];
     const CAT_UZ_TITLE = { econom: 'Ekonom', silver: 'Silver', premium: 'Premium', color: 'Rangli (monoton)', platinum: 'Platinum' };
     Object.assign(I18N.ru, {
       catBtn: 'Каталог', catTitle: 'Каталог цветов ЛДСП / ЛМДФ', catAll: 'Все разделы',
@@ -3894,7 +4053,7 @@
     });
     let catSec = 'all', catQuery = '', catList = [], catIdx = -1;
     function catSecTitle(sec) { return LANG === 'uz' ? (CAT_UZ_TITLE[sec.key] || sec.title) : sec.title; }
-    function catImg(key, n) { return CATALOG_BASE + key + '/' + String(n).padStart(2, '0') + '.webp?v=2'; }
+    function catImg(key, n) { return CATALOG_BASE + key + '/' + String(n).padStart(2, '0') + '.webp' + CATALOG_VER; }
     function openDecor() {
       el('catalogModal').style.display = 'block';
       document.body.style.overflow = 'hidden';
@@ -3941,12 +4100,16 @@
     }
     function catCloseView() { const v = el('catView'); if (v) v.style.display = 'none'; catIdx = -1; }
     function catStep(d) { if (catIdx >= 0) catOpenView((catIdx + d + catList.length) % catList.length); }
-    function catPick() {
+    function catPick(target) {
       const it = catList[catIdx]; if (!it) return;
-      const line = t('catNoteLine').replace('{s}', it.sec).replace('{n}', it.n).replace('{name}', it.name);
-      const ta = el('clientNotes');
-      if (!ta.value.includes(line)) ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + line;
-      msToast(t('catPicked'));
+      const found = findColor(CAT_ID_PREFIX[it.key] + it.n); if (!found) return;
+      const col = colorObj(found), tg = target === 'body' ? 'body' : 'facade';
+      const changed = setMaterialForColor(tg, col);       // материал подстраивается под ступень цвета
+      if (tg === 'body') selectedBodyColor = col; else selectedFacadeColor = col;
+      updateColorUIBadges();
+      updateCalculator();
+      const w = t(tg === 'facade' ? 'wFacade' : 'wBody');
+      msToast(t(tg === 'body' ? 'catSetBody' : 'catSetFacade').replace('{name}', colorLabel(col)) + (changed ? '. ' + t('matSwitched', { w, m: mat(changed) }) : ''));
     }
     document.addEventListener('keydown', e => {
       const m = el('catalogModal'); if (!m || m.style.display !== 'block') return;
