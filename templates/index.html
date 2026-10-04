@@ -405,11 +405,11 @@
     .modal-mini-card svg { height: 170px; background: #f8f6f2; border-radius: 6px; }
 
     /* ГОТОВЫЕ ВАРИАНТЫ */
-    .presets-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .presets-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     .preset-card { background: var(--card-bg); border: 1.5px solid var(--border-dark); border-radius: 14px; overflow: hidden; cursor: pointer; transition: all 0.2s; text-align: left; color: var(--text-main); font-family: inherit; padding: 0; }
     .preset-card:hover { border-color: var(--accent-gold); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
     .preset-card.active { border-color: var(--accent-gold); box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.35); }
-    .preset-render { background: #f3eee7; height: 170px; }
+    .preset-render { background: #f3eee7; height: 170px; position: relative; }
     .preset-render .render-svg { height: 170px; }
     .preset-body { padding: 12px 14px 14px; }
     .preset-name { font-weight: 800; font-size: 1.05rem; }
@@ -460,6 +460,7 @@
     .how-num { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-gold); color: #0f172a; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
     .how-step h3 { font-size: 1rem; margin-bottom: 4px; }
     .how-step p { font-size: 0.85rem; color: var(--text-muted); }
+    .how-turnkey { margin-top: 10px; font-size: 0.85rem; color: var(--text-muted); }
     .how-warranty { margin-top: 16px; background: rgba(251, 191, 36, 0.1); border: 1px solid var(--border-gold); border-radius: 12px; padding: 14px 16px; font-weight: 700; color: #fde68a; }
     .footer { max-width: 1280px; margin: 40px auto 0; padding: 20px; border-top: 1px solid var(--border-dark); color: var(--text-muted); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 0.88rem; }
     .footer a { color: #38bdf8; text-decoration: none; }
@@ -474,6 +475,31 @@
     .modal-actions { max-width: 850px; margin: 15px auto; display: flex; gap: 10px; }
     .modal-actions .btn-submit { margin-top: 0; }
 
+
+
+    /* СЕГМЕНТЫ ГОТОВЫХ ВАРИАНТОВ, ФУРНИТУРА, ПОДСВЕТКА */
+    .seg-badge { position: absolute; top: 8px; left: 8px; z-index: 2; font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; letter-spacing: 0.3px; }
+    .seg-econ { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .seg-mid { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    .seg-prem { background: #1f2937; color: #fbbf24; border: 1px solid #fbbf24; }
+    .hw-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+    .hw-desc b { color: #fde68a; }
+    .hw-note { font-size: 0.78rem; color: var(--text-muted); margin: 2px 0 0; }
+    .led-card { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border-dark); }
+    .led-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .led-chip { background: rgba(30, 41, 59, 0.6); color: #cbd5e1; border: 1.5px solid var(--border-dark); border-radius: 10px; padding: 11px 6px; font-weight: 700; font-family: inherit; font-size: 0.9rem; cursor: pointer; }
+    .led-chip:hover { border-color: var(--accent-gold); }
+    .led-chip.active { background: rgba(253, 224, 71, 0.16); border-color: #facc15; color: #fde047; box-shadow: 0 0 14px rgba(250, 204, 21, 0.25); }
+    .led-desc { font-size: 0.78rem; color: var(--text-muted); min-height: 1.2em; margin: 8px 0 6px; }
+    .led-zones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+    .led-zone em { font-style: normal; color: #fca5a5; font-size: 0.78rem; }
+    .led-zone.disabled, .led-shelves.disabled { opacity: 0.45; }
+    .led-shelves { grid-column: span 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-dark); border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 0.9rem; }
+    .led-shelves .number-stepper { flex: 0 0 150px; width: 150px; max-width: 150px; }
+    .led-shelves .number-stepper input { min-width: 0; width: 100%; text-align: center; background: #1e293b; color: #f8fafc; border: 1px solid var(--border-dark); border-radius: 8px; font-weight: 700; }
+    .led-shelves > span { min-width: 0; }
+    .led-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; }
+    .led-cost { color: #fde047; }
 
     /* ЛИСТ ЗАМЕРА */
     .ms-head-right { display: flex; align-items: center; gap: 12px; }
@@ -529,6 +555,8 @@
       .how-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 900px) {
+      .led-zones { grid-template-columns: minmax(0, 1fr); }
+      .led-shelves { grid-column: auto; flex-wrap: wrap; }
       .hero { padding-top: 22px; }
       .hero-inner { grid-template-columns: minmax(0, 1fr); gap: 20px; }
       .hero h1 { font-size: 1.75rem; }
@@ -745,7 +773,13 @@
                 <label data-i18n="countertop">Столешница</label>
                 <select id="countertopMaterial" onchange="updateCalculator()"></select>
               </div>
+              <div class="field-group" style="grid-column: span 2;">
+                <label data-i18n="hardwareLabel">Фурнитура (петли, ящики, подъёмники)</label>
+                <select id="hardwareLevel" onchange="updateCalculator()"></select>
+                <div class="hw-desc" id="hwDesc"></div>
+              </div>
             </div>
+            <div class="hw-note" data-i18n="logisticsNote">В цену входят ввоз и доставка материалов, доставка готовой кухни по Ташкенту и монтаж.</div>
           </div>
 
           <!-- 3. ШКАФЫ -->
@@ -809,6 +843,10 @@
               <label class="option-chip"><input type="checkbox" id="optHobCut" onchange="updateCalculator()"><span data-i18n="optHob">Вырез под варочную панель</span></label>
               <label class="option-chip"><input type="checkbox" id="optBuiltInAppliances" onchange="updateCalculator()"><span data-i18n="optApp">Установка встраиваемой техники</span></label>
             </div>
+            <div class="led-card">
+              <div class="sub-title">💡 <span data-i18n="ledTitle">Подсветка</span></div>
+              <div id="ledBox"></div>
+            </div>
           </div>
 
           <!-- 5. КОНТАКТЫ -->
@@ -847,6 +885,7 @@
         <div class="how-step"><div class="how-num">5</div><h3 data-i18n="how5t">Доставка и монтаж</h3><p data-i18n="how5d">Привозим, собираем, устанавливаем</p></div>
       </div>
       <div class="how-warranty">🛡 <span data-i18n="howWarranty">Гарантия {m} месяцев по договору</span></div>
+      <p class="how-turnkey" data-i18n="howTurnkey">Под ключ — это замер, изготовление, доставка, монтаж и подсветка. Подключение техники, мойки, воды и электричества 220 В не входит в цену — подскажем проверенных мастеров.</p>
     </section>
   </main>
 
@@ -884,6 +923,8 @@
         <div><strong data-i18n="facades">Фасады</strong>: <span id="resFacadeInfo">-</span></div>
         <div><strong data-i18n="body">Корпус</strong>: <span id="resBodyInfo">-</span></div>
         <div><strong data-i18n="countertop">Столешница</strong>: <span id="resTopInfo">-</span></div>
+        <div><strong data-i18n="hardware">Фурнитура</strong>: <span id="resHwInfo">-</span></div>
+        <div><strong data-i18n="lighting">Подсветка</strong>: <span id="resLedInfo">-</span></div>
         <div><strong data-i18n="dimensions">Размеры</strong>: <span id="resDims">-</span></div>
         <div style="grid-column: span 2;"><strong data-i18n="extras">Дополнительно</strong>: <span id="resExtras">-</span></div>
         <div style="grid-column: span 2;"><strong data-i18n="notes">Адрес / комментарий</strong>: <span id="resClientNotes">-</span></div>
@@ -978,32 +1019,61 @@
       installmentMonths: 0,             // рассрочка: 0 = не показывать; например 6 = «или от X сум/мес»
       // Надбавка к стоимости фасадов за категорию цвета: Эконом, Стандарт, Премиум, Платинум
       colorMarkup: [0, 0.03, 0.07, 0.12],
-      // Цена за погонный метр (как в прежнем калькуляторе)
+      /* ЦЕНЫ: средний уровень рынка Ташкента (осень 2026), с учётом ввоза и доставки материалов.
+         Ориентир для кухни 3 м с верхними шкафами: Эконом ≈ 8–15 млн, Стандарт ≈ 15–30 млн, Премиум ≈ 30–50 млн сум.
+         Источники: обзор цен ustabor.uz (май 2026), прайсы kis.uz (фурнитура Blum), service-eco.uz (столешницы), glotr.uz (плиты). */
+      // Фасады: цена за погонный метр кухни (как в прежнем калькуляторе), по возрастанию цены
       facades: [
-        { price: 2500000, ru: 'ЛДСП Эконом',           uz: 'LDSP Ekonom' },
-        { price: 2900000, ru: 'ЛМДФ Эконом',           uz: 'LMDF Ekonom' },
-        { price: 3400000, ru: 'ЛДСП Премиум (Egger)',  uz: 'LDSP Premium (Egger)' },
-        { price: 3900000, ru: 'ЛМДФ Премиум',          uz: 'LMDF Premium' },
-        { price: 4800000, ru: 'МДФ Эмаль (Крашенный)', uz: 'MDF Emal (boʻyalgan)' },
-        { price: 6500000, ru: 'Массив / Шпон',         uz: 'Massiv / Shpon' }
+        { price: 2500000,  ru: 'ЛДСП Эконом',           uz: 'LDSP Ekonom' },
+        { price: 3000000,  ru: 'ЛМДФ Эконом',           uz: 'LMDF Ekonom' },
+        { price: 3800000,  ru: 'ЛДСП Премиум (Egger)',  uz: 'LDSP Premium (Egger)' },
+        { price: 5200000,  ru: 'МДФ Пленка (ПВХ)',      uz: 'MDF plyonka (PVX)' },
+        { price: 5800000,  ru: 'ЛМДФ Премиум',          uz: 'LMDF Premium' },
+        { price: 7200000,  ru: 'МДФ Эмаль (Крашенный)', uz: 'MDF Emal (boʻyalgan)' },
+        { price: 8600000,  ru: 'Акрил (глянец)',        uz: 'Akril (yaltiroq)' },
+        { price: 10000000, ru: 'Массив / Шпон',         uz: 'Massiv / Shpon' }
       ],
       bodies: [
         { price: 0,      ru: 'ЛДСП Стандарт',             uz: 'LDSP Standart' },
         { price: 300000, ru: 'ЛДСП Премиум Влагостойкий', uz: 'LDSP Premium (namga chidamli)' }
       ],
       countertops: [
-        { price: 200000,  ru: 'ЛДСП 28 мм',           uz: 'LDSP 28 mm',      color: '#c9a273', thick: 2.8 },
-        { price: 350000,  ru: 'ЛДСП 38 мм',           uz: 'LDSP 38 mm',      color: '#b98c5c', thick: 3.8 },
-        { price: 1500000, ru: 'Искусственный камень', uz: 'Sunʼiy tosh',     color: '#e6e3df', thick: 4 },
-        { price: 2800000, ru: 'Кварцевый агломерат',  uz: 'Kvars aglomerat', color: '#f5f4f1', thick: 3 }   // thick — толщина столешницы, см (для чертежа)
+        { price: 400000,  ru: 'ЛДСП 28 мм',           uz: 'LDSP 28 mm',      color: '#c9a273', thick: 2.8 },
+        { price: 550000,  ru: 'ЛДСП 38 мм',           uz: 'LDSP 38 mm',      color: '#b98c5c', thick: 3.8 },
+        { price: 2200000, ru: 'Искусственный камень', uz: 'Sunʼiy tosh',     color: '#e6e3df', thick: 4 },
+        { price: 3200000, ru: 'Кварцевый агломерат',  uz: 'Kvars aglomerat', color: '#f5f4f1', thick: 3 }   // thick — толщина столешницы, см (для чертежа)
       ],
+      // Фурнитура — три уровня, как на рынке Ташкента. Цены в сумах:
+      // hinge — одна петля (на дверь идёт 2 шт.), drawer — комплект на один ящик, lift — подъёмник верхнего шкафа,
+      // push — механизм «нажми-открой» на одну дверь или ящик
+      hardware: [
+        { key: 'econ', hinge: 12000, drawer: 90000,  lift: 70000,  push: 25000,
+          ru: 'Эконом',   uz: 'Ekonom',
+          brandsRu: 'DTC и аналоги', brandsUz: 'DTC va analoglar' },
+        { key: 'std',  hinge: 28000, drawer: 190000, lift: 140000, push: 45000,
+          ru: 'Стандарт', uz: 'Standart',
+          brandsRu: 'GTV, Boyard, Hettich (базовые линейки)', brandsUz: 'GTV, Boyard, Hettich (asosiy qatorlar)' },
+        { key: 'prem', hinge: 45000, drawer: 430000, lift: 420000, push: 95000,
+          ru: 'Премиум',  uz: 'Premium',
+          brandsRu: 'Blum, Hettich Sensys / InnoTech', brandsUz: 'Blum, Hettich Sensys / InnoTech' }
+      ],
+      // Подсветка: perM — 1 погонный метр ленты с профилем и монтажом, shelf — одна подсвечиваемая полка,
+      // kit — блок питания и выключатель (берётся один раз)
+      led: [
+        null,
+        { key: 'std',  perM: 180000, shelf: 110000, kit: 150000, ru: 'Стандарт', uz: 'Standart' },
+        { key: 'prem', perM: 320000, shelf: 200000, kit: 500000, ru: 'Премиум',  uz: 'Premium' }
+      ],
+      // Логистика: ввоз и доставка материалов в цех (pct от стоимости изделия) и доставка готовой кухни по Ташкенту (fixed, сум)
+      logistics: { pct: 0.04, fixed: 300000 },
+      baseWork: 300000,                 // работа, сборка, расходники — сум на погонный метр
       // Сравнение «Эконом / Стандарт / Премиум»: номера материалов из списков выше (с нуля)
       tiers: [
-        { key: 'econ', facade: 0, body: 0, top: 0 },
-        { key: 'std',  facade: 2, body: 0, top: 1 },
-        { key: 'prem', facade: 4, body: 1, top: 2 }
+        { key: 'econ', facade: 0, body: 0, top: 0, hw: 0 },
+        { key: 'std',  facade: 3, body: 0, top: 1, hw: 1 },
+        { key: 'prem', facade: 5, body: 1, top: 2, hw: 2 }
       ],
-      defaults: { facade: 2, body: 0, top: 0 }
+      defaults: { facade: 2, body: 0, top: 0, hw: 1 }
     };
 
     /* ===================== ПЕРЕВОДЫ RU / UZ ===================== */
@@ -1012,7 +1082,7 @@
         pageTitle: 'Кухни на заказ в Ташкенте — расчёт онлайн | АбдулАзиз',
         brandTitle: 'Кухни на заказ', city: 'Ташкент', masterLine: 'Ваш мастер: {name}',
         heroTitle: 'Соберите кухню онлайн и узнайте цену за 2 минуты',
-        heroLead: 'Выберите готовый вариант или настройте под свои размеры. Замер и консультация бесплатно.',
+        heroLead: 'Кухня под ключ: замер, изготовление, доставка и монтаж. Выберите готовый вариант или настройте под свои размеры. Замер и консультация бесплатно.',
         drawFront: 'Чертёж: вид спереди (размеры в мм)', drawTop: 'Чертёж: вид сверху (размеры в мм)',
         techCorner: 'угол', techPlusCorner: '+ угол 600', techCeiling: 'потолок {x}', techDepth: 'Глубина: нижние шкафы {l}, верхние {u} (пунктир)', techDepthShort: 'глубина {x}', techAisle: 'проход', techIsland: 'Остров',
         badgeMeasure: 'Бесплатный замер', badgeDays: 'Изготовление {days} раб. дней', badgeWarranty: 'Гарантия {m} мес.', badgeDelivery: 'Доставка и монтаж',
@@ -1029,7 +1099,7 @@
         mainWall: 'Длина основной стены, см', wallHint: 'Шкафы по 60 см подставятся сами — ширину любого можно поменять в шаге 3.', ceiling: 'Высота потолка, см', leftWall: 'Левая стена, см', rightWall: 'Правая стена, см',
         step2: 'Материалы и цвет', tiersTitle: 'Сравните варианты для ваших размеров',
         tier_econ: 'Эконом', tier_std: 'Стандарт', tier_prem: 'Премиум',
-        tierDesc_econ: 'ЛДСП, столешница 28 мм', tierDesc_std: 'ЛДСП Egger, столешница 38 мм', tierDesc_prem: 'МДФ эмаль, искусственный камень',
+        tierDesc_econ: 'ЛДСП, столешница 28 мм, фурнитура эконом', tierDesc_std: 'МДФ плёнка, столешница 38 мм, фурнитура GTV/Hettich', tierDesc_prem: 'МДФ эмаль, искусственный камень, фурнитура Blum',
         tierPick: 'Выбрать', tierPicked: '✓ Выбрано',
         facades: 'Фасады', facadeColor: 'Цвет фасадов', body: 'Корпус', bodyColor: 'Цвет корпуса', countertop: 'Столешница',
         step3: 'Шкафы', needUpper: 'Нужны верхние шкафы', detailMode: 'Настроить каждый шкаф отдельно (для мастеров)',
@@ -1050,6 +1120,7 @@
         how4t: 'Изготовление', how4d: '{days} рабочих дней на проверенном производстве в Ташкенте',
         how5t: 'Доставка и монтаж', how5d: 'Привозим, собираем, устанавливаем',
         howWarranty: 'Гарантия {m} месяцев по договору',
+        howTurnkey: 'Под ключ — это замер, изготовление, доставка, монтаж и подсветка. Подключение техники, мойки, воды и электричества 220 В не входит в цену — подскажем проверенных мастеров.',
         footer: '{name} · Кухни на заказ в Ташкенте',
         catalogFacade: 'Выбор цвета фасадов', catalogBody: 'Выбор цвета корпуса',
         catalogDesc: 'Цвета разделены по ценовым категориям. Нажмите на образец, чтобы выбрать.',
@@ -1079,13 +1150,33 @@
         p_compact: 'Компакт', p_compact_d: 'Прямая 1,8 м · ЛДСП · белая',
         p_scandi: 'Скандинавия', p_scandi_d: 'Прямая 2,4 м · Egger · светлая, столешница под дерево',
         p_loft: 'Лофт', p_loft_d: 'Угловая 2,4 × 1,8 м · графит и дерево · без ручек',
-        p_classic: 'Классика', p_classic_d: 'П-образная · МДФ эмаль · крем · искусственный камень'
+        p_classic: 'Классика', p_classic_d: 'П-образная · МДФ эмаль · крем · искусственный камень',
+        seg_econ: 'Недорого', seg_mid: 'Средний', seg_prem: 'Премиум',
+        p_practic: 'Практик', p_practic_d: 'Прямая 3 м · ЛДСП · светло-серая · фурнитура эконом',
+        p_duo: 'Дуэт', p_duo_d: 'Угловая 3 × 1,2 м · ЛМДФ · ваниль · фурнитура эконом',
+        p_comfort: 'Комфорт', p_comfort_d: 'Угловая 2,4 × 1,2 м · МДФ плёнка · ясень · без ручек · подсветка',
+        p_enamel: 'Эмаль Люкс', p_enamel_d: 'Угловая 3 × 1,8 м · МДФ эмаль navy · камень · Blum · подсветка',
+        p_prestige: 'Престиж с островом', p_prestige_d: 'Угловая 2,4 × 1,8 м + остров · акрил · кварц · Blum · подсветка',
+        hardware: 'Фурнитура', hardwareLabel: 'Фурнитура (петли, ящики, подъёмники)',
+        hwDesc_econ: 'Базовый класс: DTC и аналоги. Петли и направляющие проще, доводчики не везде.',
+        hwDesc_std: 'GTV, Boyard, Hettich (базовые линейки): петли с доводчиком, ящики с плавным закрыванием.',
+        hwDesc_prem: 'Blum, Hettich Sensys / InnoTech: петли Blumotion, ящики Tandembox / Legrabox, подъёмники Aventos. Официальная гарантия производителя.',
+        hwPriceNote: 'Цена фурнитуры уже включена в расчёт.',
+        ledTitle: 'Подсветка', ledLevelLabel: 'Класс подсветки', led_0: 'Без подсветки', led_1: 'Стандарт', led_2: 'Премиум',
+        ledDesc_1: 'LED-лента 12 В, алюминиевый профиль, блок питания и выключатель.',
+        ledDesc_2: 'LED-лента 24 В с высокой цветопередачей, рассеивающий профиль, диммер или сенсорный выключатель.',
+        ledWork: 'Рабочая зона под верхними шкафами: {m} п.м.', ledPlinth: 'Цоколь (подсветка пола): {m} п.м.',
+        ledShelves: 'Полки и шкафы с подсветкой внутри, шт.', ledNeedUpper: 'нужны верхние шкафы',
+        ledHint: 'Лента считается по погонным метрам: длина берётся из ваших шкафов сама. Подсвеченные полки считаются штуками.',
+        ledCostLine: 'Подсветка в цене: {x} сум',
+        lighting: 'Подсветка', ledNone: 'нет', ledPartWork: 'рабочая зона {m} п.м.', ledPartPlinth: 'цоколь {m} п.м.', ledPartShelves: 'полок: {n}',
+        logisticsNote: 'В цену входят ввоз и доставка материалов, доставка готовой кухни по Ташкенту и монтаж.'
       },
       uz: {
         pageTitle: 'Toshkentda buyurtma asosida oshxona mebeli — onlayn hisob | AbdulAziz',
         brandTitle: 'Buyurtma oshxonalar', city: 'Toshkent', masterLine: 'Ustangiz: {name}',
         heroTitle: 'Oshxonangizni onlayn yigʻing va narxini 2 daqiqada biling',
-        heroLead: 'Tayyor variantni tanlang yoki oʻz oʻlchamlaringizga moslang. Oʻlchov va maslahat bepul.',
+        heroLead: 'Oshxona kalit topshirilguncha: oʻlchov, tayyorlash, yetkazish va oʻrnatish. Tayyor variantni tanlang yoki oʻz oʻlchamlaringizga moslang. Oʻlchov va maslahat bepul.',
         drawFront: 'Chizma: old koʻrinish (oʻlchamlar mm)', drawTop: 'Chizma: yuqoridan koʻrinish (oʻlchamlar mm)',
         techCorner: 'burchak', techPlusCorner: '+ burchak 600', techCeiling: 'shift {x}', techDepth: 'Chuqurlik: pastki shkaflar {l}, yuqori {u} (punktir)', techDepthShort: 'chuqurlik {x}', techAisle: 'yoʻlak', techIsland: 'Orol',
         badgeMeasure: 'Bepul oʻlchov', badgeDays: 'Tayyorlash {days} ish kuni', badgeWarranty: 'Kafolat {m} oy', badgeDelivery: 'Yetkazish va oʻrnatish',
@@ -1102,7 +1193,7 @@
         mainWall: 'Asosiy devor uzunligi, sm', wallHint: '60 sm lik shkaflar avtomatik qoʻyiladi — istalganining kengligini 3-qadamda oʻzgartirish mumkin.', ceiling: 'Shift balandligi, sm', leftWall: 'Chap devor, sm', rightWall: 'Oʻng devor, sm',
         step2: 'Materiallar va rang', tiersTitle: 'Oʻlchamlaringiz uchun variantlarni solishtiring',
         tier_econ: 'Ekonom', tier_std: 'Standart', tier_prem: 'Premium',
-        tierDesc_econ: 'LDSP, 28 mm stoleshnitsa', tierDesc_std: 'LDSP Egger, 38 mm stoleshnitsa', tierDesc_prem: 'MDF emal, sunʼiy tosh',
+        tierDesc_econ: 'LDSP, 28 mm stoleshnitsa, ekonom furnitura', tierDesc_std: 'MDF plyonka, 38 mm stoleshnitsa, GTV/Hettich furnitura', tierDesc_prem: 'MDF emal, sunʼiy tosh, Blum furnitura',
         tierPick: 'Tanlash', tierPicked: '✓ Tanlangan',
         facades: 'Fasadlar', facadeColor: 'Fasad rangi', body: 'Korpus', bodyColor: 'Korpus rangi', countertop: 'Stoleshnitsa',
         step3: 'Shkaflar', needUpper: 'Yuqori shkaflar kerak', detailMode: 'Har bir shkafni alohida sozlash (ustalar uchun)',
@@ -1123,6 +1214,7 @@
         how4t: 'Tayyorlash', how4d: 'Toshkentdagi ishonchli ishlab chiqarishda {days} ish kuni',
         how5t: 'Yetkazish va oʻrnatish', how5d: 'Olib kelamiz, yigʻamiz, oʻrnatamiz',
         howWarranty: 'Shartnoma boʻyicha {m} oy kafolat',
+        howTurnkey: 'Kalit topshirish: oʻlchov, tayyorlash, yetkazish, oʻrnatish va yoritish. Texnika, kranlar, suv va 220 V elektr ulanishi narxga kirmaydi — ishonchli ustalarni tavsiya qilamiz.',
         footer: '{name} · Toshkentda buyurtma oshxonalar',
         catalogFacade: 'Fasad rangini tanlash', catalogBody: 'Korpus rangini tanlash',
         catalogDesc: 'Ranglar narx toifalariga boʻlingan. Tanlash uchun namunani bosing.',
@@ -1152,7 +1244,27 @@
         p_compact: 'Kompakt', p_compact_d: 'Toʻgʻri 1,8 m · LDSP · oq',
         p_scandi: 'Skandinaviya', p_scandi_d: 'Toʻgʻri 2,4 m · Egger · och rang, yogʻoch stoleshnitsa',
         p_loft: 'Loft', p_loft_d: 'Burchakli 2,4 × 1,8 m · grafit va yogʻoch · dastasiz',
-        p_classic: 'Klassika', p_classic_d: 'P-shaklida · MDF emal · krem · sunʼiy tosh'
+        p_classic: 'Klassika', p_classic_d: 'P-shaklida · MDF emal · krem · sunʼiy tosh',
+        seg_econ: 'Arzon', seg_mid: 'Oʻrta', seg_prem: 'Premium',
+        p_practic: 'Praktik', p_practic_d: 'Toʻgʻri 3 m · LDSP · och kulrang · ekonom furnitura',
+        p_duo: 'Duet', p_duo_d: 'Burchakli 3 × 1,2 m · LMDF · vanil · ekonom furnitura',
+        p_comfort: 'Komfort', p_comfort_d: 'Burchakli 2,4 × 1,2 m · MDF plyonka · zarang · dastasiz · yoritgich',
+        p_enamel: 'Emal Lyuks', p_enamel_d: 'Burchakli 3 × 1,8 m · MDF emal navy · tosh · Blum · yoritgich',
+        p_prestige: 'Orolli Prestij', p_prestige_d: 'Burchakli 2,4 × 1,8 m + orol · akril · kvars · Blum · yoritgich',
+        hardware: 'Furnitura', hardwareLabel: 'Furnitura (ilmoqlar, tortmalar, koʻtargichlar)',
+        hwDesc_econ: 'Asosiy sinf: DTC va analoglar. Ilmoq va yoʻnaltirgichlar oddiyroq, yumshoq yopgich hamma joyda emas.',
+        hwDesc_std: 'GTV, Boyard, Hettich (asosiy qatorlar): yumshoq yopiladigan ilmoqlar va tortmalar.',
+        hwDesc_prem: 'Blum, Hettich Sensys / InnoTech: Blumotion ilmoqlari, Tandembox / Legrabox tortmalari, Aventos koʻtargichlari. Ishlab chiqaruvchining rasmiy kafolati.',
+        hwPriceNote: 'Furnitura narxi hisobga allaqachon kiritilgan.',
+        ledTitle: 'Yoritgich', ledLevelLabel: 'Yoritgich sinfi', led_0: 'Yoritgichsiz', led_1: 'Standart', led_2: 'Premium',
+        ledDesc_1: 'LED lenta 12 V, alyuminiy profil, quvvat bloki va oʻchirgich.',
+        ledDesc_2: 'LED lenta 24 V, yuqori rang uzatish, tarqatuvchi profil, dimmer yoki sensorli oʻchirgich.',
+        ledWork: 'Yuqori shkaflar ostidagi ish zonasi: {m} p.m.', ledPlinth: 'Sokol (pol yoritgichi): {m} p.m.',
+        ledShelves: 'Ichi yoritiladigan javon va shkaflar, dona', ledNeedUpper: 'yuqori shkaflar kerak',
+        ledHint: 'Lenta pogonli metr boʻyicha hisoblanadi: uzunlik shkaflaringizdan oʻzi olinadi. Yoritiladigan javonlar dona hisobida.',
+        ledCostLine: 'Narxga kiritilgan yoritgich: {x} soʻm',
+        lighting: 'Yoritgich', ledNone: 'yoʻq', ledPartWork: 'ish zonasi {m} p.m.', ledPartPlinth: 'sokol {m} p.m.', ledPartShelves: 'javonlar: {n}',
+        logisticsNote: 'Narxga materiallarni olib kelish va yetkazish, tayyor oshxonani Toshkent boʻylab yetkazish va oʻrnatish kiritilgan.'
       }
     };
 
@@ -1656,6 +1768,8 @@
     let appReady = false;
     let selectedFacadeColor = { id: 'ec_1', name: 'Белый Матовый', hex: '#f8fafc', tier: 0, img: '' };
     let selectedBodyColor = { id: 'ec_13', name: 'Белый Стандарт', hex: '#ffffff', tier: 0, img: '' };
+    let ledState = { level: 0, work: true, plinth: false, shelves: 0 };   // подсветка: класс (0 нет, 1 стандарт, 2 премиум), зоны, число подсвечиваемых полок
+    const FACADE_V1_MAP = [0, 1, 2, 4, 5, 7];                            // старые ссылки (до обновления прайса): номер фасада -> новый номер
 
     /* ===================== ПОМОЩНИКИ ===================== */
     function vars() {
@@ -1732,7 +1846,7 @@
     }
 
     function populateSelects() {
-      [['facadeMaterial', CONFIG.facades, CONFIG.defaults.facade], ['bodyMaterial', CONFIG.bodies, CONFIG.defaults.body], ['countertopMaterial', CONFIG.countertops, CONFIG.defaults.top]].forEach(([id, list, def]) => {
+      [['facadeMaterial', CONFIG.facades, CONFIG.defaults.facade], ['bodyMaterial', CONFIG.bodies, CONFIG.defaults.body], ['countertopMaterial', CONFIG.countertops, CONFIG.defaults.top], ['hardwareLevel', CONFIG.hardware, CONFIG.defaults.hw]].forEach(([id, list, def]) => {
         const sel = el(id);
         const cur = sel.options.length ? sel.selectedIndex : def;
         sel.innerHTML = list.map((m, i) => `<option value="${i}">${esc(mat(m))}</option>`).join('');
@@ -1752,23 +1866,63 @@
         lower: lowerSections, upper: upperSections,
         island: chk('hasIsland'), islL: num('islandLength', 140), islW: num('islandWidth', 80),
         sink: chk('optSinkCut'), hob: chk('optHobCut'), app: chk('optBuiltInAppliances'),
+        hw: selIdx('hardwareLevel'), led: Object.assign({}, ledState),
         facadeHex: selectedFacadeColor.hex, bodyHex: selectedBodyColor.hex
       };
+    }
+
+    /* Количество дверей шкафа (по ним считаются петли): шкаф с ящиками или подъёмником дверей не имеет, шире 45 см — две двери */
+    function doorsOf(sec, tier) {
+      const inner = tier === 'lower' ? (sec.drawers | 0) > 0 : (sec.gasLifts | 0) > 0;
+      return inner ? 0 : ((parseFloat(sec.width) || 0) >= 45 ? 2 : 1);
+    }
+    function hardwareCost(s) {
+      const H = CONFIG.hardware[s.hw] || CONFIG.hardware[CONFIG.defaults.hw];
+      let sum = 0;
+      s.lower.forEach(x => {
+        const doors = doorsOf(x, 'lower');
+        sum += doors * 2 * H.hinge + (x.drawers | 0) * H.drawer;
+        if (x.openType === 'push') sum += H.push * Math.max(1, (x.drawers | 0) || doors);
+      });
+      if (s.hasUpper) s.upper.forEach(x => {
+        const doors = doorsOf(x, 'upper');
+        sum += doors * 2 * H.hinge + (x.gasLifts | 0) * H.lift;
+        if (x.openType === 'push') sum += H.push * Math.max(1, (x.gasLifts | 0) || doors);
+      });
+      if (s.island) {
+        const n = Math.max(1, Math.round(s.islL / 60));   // как на визуализации: модули острова по очереди — двери и три ящика
+        for (let k = 0; k < n; k++) sum += k % 2 ? 3 * H.drawer : 2 * H.hinge;
+      }
+      return sum;
+    }
+    /* Подсветка: метры ленты берутся из ширины шкафов */
+    function ledMeters(s) {
+      const sumW = arr => arr.reduce((a, x) => a + (parseFloat(x.width) || 0), 0) / 100;
+      return { work: s.hasUpper ? sumW(s.upper) : 0, plinth: sumW(s.lower) };
+    }
+    function ledCost(s) {
+      const L = s.led && CONFIG.led[s.led.level | 0];
+      if (!L) return 0;
+      const m = ledMeters(s);
+      const meters = (s.led.work ? m.work : 0) + (s.led.plinth ? m.plinth : 0);
+      const shelves = s.led.shelves | 0;
+      if (meters <= 0 && shelves <= 0) return 0;
+      return meters * L.perM + shelves * L.shelf + L.kit;
     }
 
     function computePrice(s) {
       const facadePriceM = CONFIG.facades[s.facade].price * (1 + (s.markup || 0));
       const bodyPriceM = CONFIG.bodies[s.body].price;
       const topPriceM = CONFIG.countertops[s.top].price;
+      const work = CONFIG.baseWork;
 
       let lowerMeters = s.mainW / 100;
       if (s.type === 'l-shape') lowerMeters += (s.leftW - 60) / 100;
       else if (s.type === 'u-shape') lowerMeters += (s.leftW - 60) / 100 + (s.rightW - 60) / 100;
 
-      let total = lowerMeters * ((facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + 400000);
+      let total = lowerMeters * ((facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + work);
       s.lower.forEach(x => {
-        total += ((x.shelves || 0) * 50000) + ((x.drawers || 0) * 110000);
-        if (x.openType === 'push') total += 40000;
+        total += (x.shelves || 0) * 50000;
         if (x.openType === 'gola') total += 95000;
       });
 
@@ -1778,22 +1932,24 @@
         else if (s.type === 'u-shape') upperMeters += (Math.max(0, s.leftW - 35) + Math.max(0, s.rightW - 35)) / 100;
         total += upperMeters * ((facadePriceM * 0.45) + (bodyPriceM * 0.4)) * (s.upperH / 72) * (s.upperD / 35);
         s.upper.forEach(x => {
-          total += ((x.shelves || 0) * 50000) + ((x.gasLifts || 0) * 120000);
-          if (x.openType === 'push') total += 40000;
+          total += (x.shelves || 0) * 50000;
           if (x.openType === 'gola') total += 95000;
         });
       }
 
-      if (s.island) total += (s.islL / 100) * (facadePriceM + topPriceM + 400000);
+      if (s.island) total += (s.islL / 100) * (facadePriceM + topPriceM + work);
+      total += hardwareCost(s);
       if (s.sink) total += 150000;
       if (s.hob) total += 150000;
       if (s.app) total += 400000;
+      total += ledCost(s);
+      total = total * (1 + CONFIG.logistics.pct) + CONFIG.logistics.fixed;   // ввоз и доставка материалов, доставка кухни
       return Math.round(total / 10000) * 10000; // круглая цена: до 10 000 сум
     }
 
     function renderStateFrom(s) {
       return { type: s.type, lower: s.lower, upper: s.upper, hasUpper: s.hasUpper, upperH: s.upperH, upperD: s.upperD, roomH: s.roomH,
-        facade: s.facadeHex, body: s.bodyHex, top: CONFIG.countertops[s.top].color, island: s.island, islL: s.islL, islW: s.islW };
+        facade: s.facadeHex, body: s.bodyHex, top: CONFIG.countertops[s.top].color, island: s.island, islL: s.islL, islW: s.islW, led: s.led };
     }
 
     function updateCalculator() {
@@ -1814,14 +1970,16 @@
       drawTopViewPlan('svgTop', s.hasUpper);
       renderKitchen(el('kitchenRender'), renderStateFrom(s));
       renderTiers(s);
+      updateHwDesc();
+      updateLedUI();
       updateShareLinks();
     }
 
     /* ===================== СРАВНЕНИЕ ЭКОНОМ / СТАНДАРТ / ПРЕМИУМ ===================== */
     function renderTiers(s) {
       el('tiersGrid').innerHTML = CONFIG.tiers.map((tr, i) => {
-        const price = computePrice(Object.assign({}, s, { facade: tr.facade, body: tr.body, top: tr.top }));
-        const active = s.facade === tr.facade && s.body === tr.body && s.top === tr.top;
+        const price = computePrice(Object.assign({}, s, { facade: tr.facade, body: tr.body, top: tr.top, hw: tr.hw }));
+        const active = s.facade === tr.facade && s.body === tr.body && s.top === tr.top && s.hw === tr.hw;
         return `<button type="button" class="tier-card ${active ? 'active' : ''}" onclick="applyTier(${i})">
           <div class="tier-name">${esc(t('tier_' + tr.key))}</div>
           <div class="tier-desc">${esc(t('tierDesc_' + tr.key))}</div>
@@ -1835,7 +1993,55 @@
       setSel('facadeMaterial', tr.facade);
       setSel('bodyMaterial', tr.body);
       setSel('countertopMaterial', tr.top);
+      setSel('hardwareLevel', tr.hw);
       updateCalculator();
+    }
+
+    /* ===================== ФУРНИТУРА И ПОДСВЕТКА (интерфейс) ===================== */
+    function updateHwDesc() {
+      const i = selIdx('hardwareLevel'), h = CONFIG.hardware[i];
+      if (!h) return;
+      el('hwDesc').innerHTML = `<b>${esc(LANG === 'uz' ? h.brandsUz : h.brandsRu)}.</b> ${esc(t('hwDesc_' + h.key))}`;
+    }
+    const fmtM = m => (Math.round(m * 10) / 10).toFixed(1).replace('.', ',');
+    function updateLedUI() {
+      const box = el('ledBox');
+      if (!box) return;
+      const s = getCalcState();
+      const m = ledMeters(s), on = ledState.level > 0;
+      const chips = [0, 1, 2].map(i => `<button type="button" class="led-chip ${ledState.level === i ? 'active' : ''}" onclick="setLedLevel(${i})">${esc(t('led_' + i))}</button>`).join('');
+      const zone = (key, label, disabled, note) => `<label class="option-chip led-zone ${on && !disabled ? '' : 'disabled'}"><input type="checkbox" ${ledState[key] && on && !disabled ? 'checked' : ''} ${on && !disabled ? '' : 'disabled'} onchange="toggleLedZone('${key}')"><span>${esc(label)}${note ? ` <em>(${esc(note)})</em>` : ''}</span></label>`;
+      const cost = ledCost(s);
+      box.innerHTML = `<div class="led-chips">${chips}</div>
+        <div class="led-desc">${on ? esc(t('ledDesc_' + ledState.level)) : ''}</div>
+        <div class="led-zones">
+          ${zone('work', t('ledWork', { m: fmtM(m.work) }), !s.hasUpper, s.hasUpper ? '' : t('ledNeedUpper'))}
+          ${zone('plinth', t('ledPlinth', { m: fmtM(m.plinth) }), false, '')}
+          <div class="led-shelves ${on ? '' : 'disabled'}"><span>${esc(t('ledShelves'))}</span>
+            <div class="number-stepper"><button type="button" class="btn-step" ${on ? '' : 'disabled'} onclick="stepLedShelves(-1)">−</button><input type="number" value="${ledState.shelves | 0}" readonly><button type="button" class="btn-step" ${on ? '' : 'disabled'} onclick="stepLedShelves(1)">+</button></div>
+          </div>
+        </div>
+        <div class="led-hint">${esc(t('ledHint'))}${cost ? ` <b class="led-cost">${esc(t('ledCostLine', { x: fmt(cost) }))}</b>` : ''}</div>`;
+    }
+    function setLedLevel(i) {
+      ledState.level = i;
+      if (i > 0 && !ledState.work && !ledState.plinth && !(ledState.shelves > 0)) ledState.work = true;
+      updateCalculator();
+    }
+    function toggleLedZone(key) { ledState[key] = !ledState[key]; updateCalculator(); }
+    function stepLedShelves(d) { ledState.shelves = Math.max(0, Math.min(20, (ledState.shelves | 0) + d)); updateCalculator(); }
+    function ledText(s, ru) {
+      const L = CONFIG.led[(s.led && s.led.level) | 0];
+      if (!L) return ru ? I18N.ru.ledNone : t('ledNone');
+      const m = ledMeters(s), tr = (k, v) => ru ? I18N.ru[k].replace(/\{(\w+)\}/g, (_, x) => v[x]) : t(k, v), parts = [];
+      if (s.led.work && s.hasUpper) parts.push(tr('ledPartWork', { m: fmtM(m.work) }));
+      if (s.led.plinth) parts.push(tr('ledPartPlinth', { m: fmtM(m.plinth) }));
+      if (s.led.shelves > 0) parts.push(tr('ledPartShelves', { n: s.led.shelves }));
+      return (ru ? L.ru : mat(L)) + (parts.length ? ': ' + parts.join(', ') : '');
+    }
+    function hwText(s, ru) {
+      const h = CONFIG.hardware[s.hw] || CONFIG.hardware[CONFIG.defaults.hw];
+      return ru ? `${h.ru} (${h.brandsRu})` : `${mat(h)} (${LANG === 'uz' ? h.brandsUz : h.brandsRu})`;
     }
 
     /* ===================== ШКАФЫ ===================== */
@@ -2203,6 +2409,25 @@
       // левая стена: первый в списке шкаф — дальний от угла
       const ordered = (arr, kind) => (kind === 'left' ? arr.slice().reverse() : arr);
 
+      // --- подсветка: свет под верхними шкафами на фартуке и на полу у цоколя
+      const led = st.led && st.led.level > 0 ? st.led : null;
+      const warm = led ? (led.level === 2 ? '#fff1cf' : '#ffd978') : '#ffd978';
+      if (led && led.work) {
+        [['main', upMain], ['left', upLeft], ['right', upRight]].forEach(([kind, arr]) => {
+          if (!arr.length) return;
+          const run = makeRun(kind, UD), tot = sumW(arr);
+          poly(quad(run, 0, tot, UB - 34, UB, 0.45), `url(#${uid}gl)`, { fit: false });
+          seg(pt(run, 0.5, UB - 0.6, UD - 1), pt(run, tot - 0.5, UB - 0.6, UD - 1), '#fffbe3', 3);
+        });
+      }
+      if (led && led.plinth) {
+        [['main', lowMain], ['left', lowLeft], ['right', lowRight]].forEach(([kind, arr]) => {
+          if (!arr.length) return;
+          const run = makeRun(kind, LD), tot = sumW(arr);
+          poly(flat(run, 0, tot, LD - 4, LD + 16, 0.1), `url(#${uid}gl)`, { fit: false });
+        });
+      }
+
       // --- верхние шкафы
       const hobInfo = { run: null };
       function upperRun(arr, kind) {
@@ -2297,7 +2522,7 @@
       svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
       svg.style.overflow = 'hidden';
       const ptsStr = p => p.map(([x, y]) => x.toFixed(2) + ',' + y.toFixed(2)).join(' ');
-      let out = `<defs><linearGradient id="${uid}sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/><stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.10"/></linearGradient></defs>`;
+      let out = `<defs><linearGradient id="${uid}sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/><stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.10"/></linearGradient><linearGradient id="${uid}gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${warm}" stop-opacity="0.95"/><stop offset="0.5" stop-color="${warm}" stop-opacity="0.45"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></linearGradient></defs>`;
       shapes.forEach(s => {
         if (s.line) {
           out += `<line x1="${s.p[0][0].toFixed(2)}" y1="${s.p[0][1].toFixed(2)}" x2="${s.p[1][0].toFixed(2)}" y2="${s.p[1][1].toFixed(2)}" stroke="${s.stroke}" stroke-width="${s.sw}" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
@@ -2313,29 +2538,50 @@
 
     /* ===================== ГОТОВЫЕ ВАРИАНТЫ ===================== */
     // [вид шкафа, ширина см, полки, ящики (нижние) или газлифты (верхние), стена m/l/r]
+    // seg — сегмент (econ/mid/prem), hw — фурнитура (0 эконом, 1 стандарт, 2 премиум), lg — подсветка [класс, рабочая зона, цоколь, полок], isl — остров [вкл, длина, ширина]
     const PRESETS = [
-      { id: 'compact', t: 'straight', f: 0, b: 0, c: 0, fc: 'ec_1', bc: 'ec_13', open: 'h', o: [1, 1, 0],
+      { id: 'compact', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec_1', bc: 'ec_13', open: 'h', o: [1, 1, 0],
         lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0]],
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1]] },
-      { id: 'scandi', t: 'straight', f: 2, b: 0, c: 1, fc: 'pr_8', bc: 'ec_13', open: 'h', o: [1, 1, 0],
+      { id: 'practic', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec_7', bc: 'ec_13', open: 'h', o: [1, 1, 0],
+        lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0], ['door', 60, 1, 0]],
+        up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
+      { id: 'duo', seg: 'econ', t: 'l-shape', f: 1, b: 0, c: 0, hw: 0, fc: 'ec_6', bc: 'ec_13', open: 'h', o: [1, 1, 0],
+        lo: [['door', 60, 1, 0, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0], ['door', 60, 1, 0]],
+        up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
+      { id: 'scandi', seg: 'mid', t: 'straight', f: 2, b: 0, c: 1, hw: 1, fc: 'pr_8', bc: 'ec_13', open: 'h', o: [1, 1, 0],
         lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'loft', t: 'l-shape', f: 3, b: 0, c: 1, fc: 'pr_15', bc: 'st_4', open: 'g', o: [1, 1, 1],
+      { id: 'comfort', seg: 'mid', t: 'l-shape', f: 3, b: 0, c: 1, hw: 1, fc: 'st_7', bc: 'ec_13', open: 'p', o: [1, 1, 1], lg: [1, 1, 0, 0],
+        lo: [['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
+        up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
+      { id: 'loft', seg: 'mid', t: 'l-shape', f: 3, b: 0, c: 1, hw: 1, fc: 'pr_15', bc: 'st_4', open: 'g', o: [1, 1, 1], lg: [1, 1, 0, 0],
         lo: [['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 60, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
         up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'classic', t: 'u-shape', f: 4, b: 1, c: 2, fc: 'pr_9', bc: 'ec_5', open: 'h', o: [1, 1, 1],
+      { id: 'classic', seg: 'prem', t: 'u-shape', f: 5, b: 1, c: 2, hw: 2, fc: 'pr_9', bc: 'ec_5', open: 'h', o: [1, 1, 1],
         lo: [['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 60, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']],
-        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']] }
+        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']] },
+      { id: 'enamel', seg: 'prem', t: 'l-shape', f: 5, b: 1, c: 2, hw: 2, fc: 'pr_11', bc: 'ec_13', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2],
+        lo: [['drawers', 60, 0, 3, 'l'], ['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
+        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
+      { id: 'prestige', seg: 'prem', t: 'l-shape', f: 6, b: 1, c: 3, hw: 2, fc: 'pl_9', bc: 'ec_13', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90],
+        lo: [['drawers', 60, 0, 3, 'l'], ['door', 60, 1, 0, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
+        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['door', 60, 1, 0]] }
     ];
 
     function presetState(p) {
       const conv = arr => arr.map(e => [e[0], '', e[1], e[2], e[3], p.open, e[4] || 'm']);
       const sumWall = (arr, w) => arr.filter(e => (e[4] || 'm') === w).reduce((a, e) => a + e[1], 0);
       const main = sumWall(p.lo, 'm'), left = sumWall(p.lo, 'l'), right = sumWall(p.lo, 'r');
-      return { v: 1, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: 1, uh: 72, ud: 35,
-        f: p.f, b: p.b, c: p.c, fc: p.fc, bc: p.bc, lo: conv(p.lo), up: conv(p.up), o: p.o, i: [0, 140, 80] };
+      return { v: 2, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: 1, uh: 72, ud: 35,
+        f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: p.fc, bc: p.bc, lo: conv(p.lo), up: conv(p.up), o: p.o, i: p.isl || [0, 140, 80] };
     }
 
+    function ledFromArr(a) {
+      a = Array.isArray(a) ? a : [];
+      const n = (v, lo, hi, d) => { v = Number(v); return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d; };
+      return { level: n(a[0], 0, 2, 0) | 0, work: a[1] === undefined ? true : !!a[1], plinth: !!a[2], shelves: n(a[3], 0, 20, 0) | 0 };
+    }
     function stateToCalc(st) {
       const om = { h: 'handles', p: 'push', g: 'gola' }, wm = { m: 'main', l: 'left', r: 'right' };
       const lo = st.lo.map(e => ({ kind: e[0], width: e[2], shelves: e[3], drawers: e[4], openType: om[e[5]] || 'handles', wall: wm[e[6]] || 'main' }));
@@ -2344,6 +2590,7 @@
       return { type: st.t, mainW: st.m, leftW: st.l, rightW: st.r, roomH: st.h, hasUpper: !!st.u, upperH: st.uh, upperD: st.ud,
         facade: st.f, body: st.b, top: st.c, markup: CONFIG.colorMarkup[fcol ? fcol.tier : 0] || 0, lower: lo, upper: up,
         island: !!st.i[0], islL: st.i[1], islW: st.i[2], sink: !!st.o[0], hob: !!st.o[1], app: !!st.o[2],
+        hw: st.hw === undefined ? CONFIG.defaults.hw : st.hw, led: ledFromArr(st.lg),
         facadeHex: fcol ? fcol.item.hex : '#f8fafc', bodyHex: bcol ? bcol.item.hex : '#ffffff' };
     }
 
@@ -2351,7 +2598,7 @@
       el('presetsGrid').innerHTML = PRESETS.map(p => {
         const price = computePrice(stateToCalc(presetState(p)));
         return `<button type="button" class="preset-card ${activePresetId === p.id ? 'active' : ''}" onclick="applyPreset('${p.id}')">
-          <div class="preset-render"><svg class="render-svg" id="pr_${p.id}"></svg></div>
+          <div class="preset-render"><span class="seg-badge seg-${p.seg}">${esc(t('seg_' + p.seg))}</span><svg class="render-svg" id="pr_${p.id}"></svg></div>
           <div class="preset-body">
             <div class="preset-name">${esc(t('p_' + p.id))}</div>
             <div class="preset-desc">${esc(t('p_' + p.id + '_d'))}</div>
@@ -2375,8 +2622,8 @@
     function serializeState() {
       const s = getCalcState();
       const enc = (arr, tier) => arr.map(x => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0]]);
-      return { v: 1, t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, uh: s.upperH, ud: s.upperD,
-        f: s.facade, b: s.body, c: s.top, fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
+      return { v: 2, t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, uh: s.upperH, ud: s.upperD,
+        f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW] };
     }
@@ -2451,7 +2698,10 @@
       el('hasUpperTier').checked = st.u !== 0;
       el('upperHeight').value = clampN(st.uh, 30, 130, 72);
       el('upperDepth').value = clampN(st.ud, 20, 65, 35);
-      setSel('facadeMaterial', clampN(st.f, 0, CONFIG.facades.length - 1, CONFIG.defaults.facade));
+      const fIdx = (st.v | 0) >= 2 ? st.f : (FACADE_V1_MAP[st.f | 0] !== undefined ? FACADE_V1_MAP[st.f | 0] : CONFIG.defaults.facade);
+      setSel('facadeMaterial', clampN(fIdx, 0, CONFIG.facades.length - 1, CONFIG.defaults.facade));
+      setSel('hardwareLevel', clampN(st.hw, 0, CONFIG.hardware.length - 1, CONFIG.defaults.hw));
+      ledState = ledFromArr(st.lg);
       setSel('bodyMaterial', clampN(st.b, 0, CONFIG.bodies.length - 1, CONFIG.defaults.body));
       setSel('countertopMaterial', clampN(st.c, 0, CONFIG.countertops.length - 1, CONFIG.defaults.top));
       const fc = findColor(st.fc), bc = findColor(st.bc);
@@ -2489,13 +2739,14 @@
       parts.push(s.hasUpper ? tr('dimUpper', { h: s.upperH, d: s.upperD }) : tr('noUpper', {}));
       return parts.join(', ');
     }
-    function extrasText(s, ru) {
+    function extrasText(s, ru, noLed) {
       const tr = (k, v) => ru ? (I18N.ru[k] || k).replace(/\{(\w+)\}/g, (_, x) => v[x]) : t(k, v);
       const ex = [];
       if (s.sink) ex.push(tr('exSink', {}));
       if (s.hob) ex.push(tr('exHob', {}));
       if (s.app) ex.push(tr('exApp', {}));
       if (s.island) ex.push(tr('exIsland', { l: s.islL, w: s.islW }));
+      if (!noLed && s.led && s.led.level > 0) ex.push((ru ? I18N.ru.lighting : t('lighting')).toLowerCase() + ': ' + ledText(s, ru));
       return ex.length ? ex.join(', ') : tr('none', {});
     }
     function wallText(w) { return w === 'left' ? t('wLeft') : (w === 'right' ? t('wRight') : t('wMain')); }
@@ -2510,6 +2761,8 @@
       el('resFacadeInfo').textContent = `${mat(CONFIG.facades[s.facade])} — ${colorLabel(selectedFacadeColor)}`;
       el('resBodyInfo').textContent = `${mat(CONFIG.bodies[s.body])} — ${colorLabel(selectedBodyColor)}`;
       el('resTopInfo').textContent = mat(CONFIG.countertops[s.top]);
+      el('resHwInfo').textContent = hwText(s);
+      el('resLedInfo').textContent = ledText(s);
       el('resDims').textContent = dimsText(s);
       el('resExtras').textContent = extrasText(s);
 
@@ -2571,7 +2824,9 @@
           'Фасад': `${CONFIG.facades[s.facade].ru}, ${selectedFacadeColor.name} (${I18N.ru['cat' + (selectedFacadeColor.tier || 0)]})`,
           'Корпус': `${CONFIG.bodies[s.body].ru}, ${selectedBodyColor.name}`,
           'Столешница': CONFIG.countertops[s.top].ru,
-          'Допы': extrasText(s, true),
+          'Фурнитура': hwText(s, true).slice(0, 118),
+          'Подсветка': ledText(s, true).slice(0, 118),
+          'Допы': extrasText(s, true, true),
           'Язык клиента': LANG === 'uz' ? 'узбекский' : 'русский'
         },
         lower: lowerSections.map(x => ({ id: x.id, name: x.name, width: x.width, shelves: x.shelves, drawers: x.drawers || 0, openType: x.openType })),
@@ -2699,6 +2954,8 @@
     <tr><td>${esc(t('facades'))}</td><td>${esc(mat(CONFIG.facades[s.facade]))} — ${esc(colorLabel(selectedFacadeColor))}</td></tr>
     <tr><td>${esc(t('body'))}</td><td>${esc(mat(CONFIG.bodies[s.body]))} — ${esc(colorLabel(selectedBodyColor))}</td></tr>
     <tr><td>${esc(t('countertop'))}</td><td>${esc(mat(CONFIG.countertops[s.top]))}</td></tr>
+    <tr><td>${esc(t('hardware'))}</td><td>${esc(hwText(s))}</td></tr>
+    <tr><td>${esc(t('lighting'))}</td><td>${esc(ledText(s))}</td></tr>
     <tr><td>${esc(t('extras'))}</td><td>${esc(extrasText(s))}</td></tr>
   </table>
   <b>${esc(t('lowerCabs'))}</b>
@@ -2808,6 +3065,7 @@
   <p>2.2. Заказчик вносит аванс в размере ${F(String(CONFIG.advancePercent), 40)}% — ${F(fmt(adv), 130)} сум в день подписания Договора.</p>
   <p>2.3. Оставшаяся сумма ${F(fmt(rest), 130)} сум оплачивается в день завершения монтажа после подписания Акта приёмки.</p>
   <p>2.4. В стоимость входят изготовление, доставка по г. Ташкенту и монтаж Изделия. Бытовая техника, мойка, смеситель и их подключение к коммуникациям в стоимость не входят, если это не указано в Спецификации.</p>
+  <p>2.5. Если Спецификацией предусмотрена подсветка, Исполнитель выполняет её монтаж до блока питания включительно. Подвод электропитания 220 В к месту установки блока питания (розетка или вывод кабеля) обеспечивает Заказчик.</p>
 
   <h2>3. Сроки</h2>
   <p>3.1. Срок изготовления — ${F(CONFIG.productionDays, 70)} рабочих дней с даты внесения аванса и утверждения окончательных размеров.</p>
@@ -2873,6 +3131,8 @@
       <tr><td>Фасады</td><td>${esc(CONFIG.facades[s.facade].ru)}, цвет «${esc(selectedFacadeColor.name)}»</td></tr>
       <tr><td>Корпус</td><td>${esc(CONFIG.bodies[s.body].ru)}, цвет «${esc(selectedBodyColor.name)}»</td></tr>
       <tr><td>Столешница</td><td>${esc(CONFIG.countertops[s.top].ru)}</td></tr>
+      <tr><td>Фурнитура</td><td>${esc(hwText(s, true))}</td></tr>
+      <tr><td>Подсветка</td><td>${esc(ledText(s, true))}</td></tr>
       <tr><td>Дополнительные работы</td><td>${esc(extrasText(s, true))}</td></tr>
     </table>
     <b>Нижние шкафы</b>
@@ -2947,7 +3207,7 @@
       msColKind: 'Что', msColWall: 'Стена', msColFrom: 'От угла', msColWidth: 'Ширина', msColSill: 'От пола до низа', msColHeight: 'Высота проёма', msColFloor: 'От пола', msColNote: 'Заметка',
       msUtilTip: 'Спросите, что можно перенести. Сфотографируйте каждую точку с рулеткой в кадре.',
       msUWaterC: 'Вода холодная', msUWaterH: 'Вода горячая', msUSewer: 'Канализация', msUGas: 'Газ (труба, кран)', msUGasMeter: 'Газовый счётчик',
-      msUVent: 'Вентиляция', msUSocket: 'Розетка', msUSwitch: 'Выключатель', msUOther: 'Другое',
+      msUVent: 'Вентиляция', msUSocket: 'Розетка', msUPsu: 'Розетка под блок питания подсветки', msUSwitch: 'Выключатель', msUOther: 'Другое',
       msObstPh: 'Короба, трубы, колонны, балки: размер и расстояние до угла',
       msFlagAngle: 'Угол не прямой (не 90°)', msFlagWall: 'Стена неровная (зазор больше 5 мм на 1 м)', msFlagFloor: 'Перепад пола больше 1 см',
       msFlagNotePh: 'Где именно и насколько',
@@ -2987,7 +3247,7 @@
       msColKind: 'Nima', msColWall: 'Devor', msColFrom: 'Burchakdan', msColWidth: 'Kengligi', msColSill: 'Poldan pastigacha', msColHeight: 'Oraliq balandligi', msColFloor: 'Poldan', msColNote: 'Izoh',
       msUtilTip: 'Nimani koʻchirish mumkinligini soʻrang. Har bir nuqtani metr bilan birga suratga oling.',
       msUWaterC: 'Sovuq suv', msUWaterH: 'Issiq suv', msUSewer: 'Kanalizatsiya', msUGas: 'Gaz (quvur, kran)', msUGasMeter: 'Gaz hisoblagichi',
-      msUVent: 'Shamollatish', msUSocket: 'Rozetka', msUSwitch: 'Oʻchirgich', msUOther: 'Boshqa',
+      msUVent: 'Shamollatish', msUSocket: 'Rozetka', msUPsu: 'Yoritish blogi uchun rozetka', msUSwitch: 'Oʻchirgich', msUOther: 'Boshqa',
       msObstPh: 'Qutilar, quvurlar, ustunlar, balkalar: oʻlchami va burchakkacha masofa',
       msFlagAngle: 'Burchak toʻgʻri emas (90° emas)', msFlagWall: 'Devor tekis emas (1 m da 5 mm dan katta tirqish)', msFlagFloor: 'Pol farqi 1 sm dan katta',
       msFlagNotePh: 'Aynan qayerda va qancha',
@@ -3009,8 +3269,8 @@
     const MS_KEY = 'kc_measure_v1';
     const MS_OPEN_KINDS = ['window', 'door', 'balcony'];
     const MS_OPEN_KEY = { window: 'msKWindow', door: 'msKDoor', balcony: 'msKBalcony' };
-    const MS_UTIL_KINDS = ['waterC', 'waterH', 'sewer', 'gas', 'gasMeter', 'vent', 'socket', 'switch', 'other'];
-    const MS_UTIL_KEY = { waterC: 'msUWaterC', waterH: 'msUWaterH', sewer: 'msUSewer', gas: 'msUGas', gasMeter: 'msUGasMeter', vent: 'msUVent', socket: 'msUSocket', switch: 'msUSwitch', other: 'msUOther' };
+    const MS_UTIL_KINDS = ['waterC', 'waterH', 'sewer', 'gas', 'gasMeter', 'vent', 'socket', 'psu', 'switch', 'other'];
+    const MS_UTIL_KEY = { waterC: 'msUWaterC', waterH: 'msUWaterH', sewer: 'msUSewer', gas: 'msUGas', gasMeter: 'msUGasMeter', vent: 'msUVent', socket: 'msUSocket', psu: 'msUPsu', switch: 'msUSwitch', other: 'msUOther' };
     const MS_UTIL_CODE = { waterC: ['ХВ', '#2563eb'], waterH: ['ГВ', '#dc2626'], sewer: ['КН', '#6b7280'], gas: ['ГАЗ', '#d97706'], gasMeter: ['СЧ', '#d97706'], vent: ['ВЕНТ', '#0d9488'], socket: ['Р', '#7c3aed'], switch: ['ВК', '#7c3aed'], other: ['?', '#475569'] };
     const MS_APPS = [['fridge', 'msAFridge', true], ['hob', 'msAHob', false], ['oven', 'msAOven', true], ['dish', 'msADish', true], ['hood', 'msAHood', true], ['micro', 'msAMicro', true], ['sink', 'msASink', false]];
     const MS_APP_RU = { fridge: 'Холодильник', hob: 'Варочная панель', oven: 'Духовой шкаф', dish: 'Посудомойка', hood: 'Вытяжка', micro: 'Микроволновка', sink: 'Мойка' };
@@ -3440,7 +3700,7 @@
       const openRows = opens.map((r, i) => `<tr><td>${i + 1}</td><td>${blank && !r.k ? '' : ruName(r.k)}</td><td class="w">${blank || !(r.from || r.wd) ? '' : v(r.w)}</td><td class="w">${blank ? '' : v(r.from)}</td><td class="w">${blank ? '' : v(r.wd)}</td><td class="w">${blank || r.k === 'door' ? '' : v(r.sill)}</td><td class="w">${blank ? '' : v(r.h)}</td></tr>`).join('');
 
       let utils;
-      if (blank) utils = ['waterC', 'waterH', 'sewer', 'gas', 'gasMeter', 'vent', 'socket', 'socket', 'socket', 'switch', 'switch', 'other'].map(msUtilRow);
+      if (blank) utils = ['waterC', 'waterH', 'sewer', 'gas', 'gasMeter', 'vent', 'socket', 'socket', 'socket', 'psu', 'switch', 'switch', 'other'].map(msUtilRow);
       else { utils = d.utils.slice(); while (utils.length < 4) utils.push(msUtilRow('other')); }
       const utilRows = utils.map((r, i) => `<tr><td>${v(utilRu[r.k])}</td><td class="w">${blank || !(r.from || r.fl) ? '' : v(r.w)}</td><td class="w">${blank ? '' : v(r.from)}</td><td class="w">${blank ? '' : v(r.fl)}</td><td class="w wide">${blank ? '' : v(r.note)}</td></tr>`).join('');
 
