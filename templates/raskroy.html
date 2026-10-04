@@ -226,9 +226,11 @@
           <input type="number" id="tplW" min="150" max="1200">
         </label>
         <label class="f">Высота, мм
+          <div class="chips" id="tplHeights"></div>
           <input type="number" id="tplH" min="200" max="2400">
         </label>
-        <label class="f">Глубина с дверьми, мм
+        <label class="f"><span id="tplDLabel">Глубина с дверьми, мм</span>
+          <div class="chips" id="tplDepths"></div>
           <input type="number" id="tplD" min="200" max="800">
         </label>
         <label class="f">Сколько шкафов
@@ -236,6 +238,12 @@
         </label>
         <label class="f">Дверей
           <select id="tplDoors"><option value="auto">Авто</option><option value="1">1</option><option value="2">2</option></select>
+        </label>
+        <label class="f" id="tplShelvesBox">Полок
+          <select id="tplShelves"><option value="auto">Авто</option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+        </label>
+        <label class="f" id="tplEndBox" title="Крайний шкаф: видно сбоку — добавится кромка на торцы дна, верха и спины">Крайний шкаф
+          <span style="display:flex;align-items:center;gap:8px;min-height:38px;color:var(--text-main);font-weight:600"><input type="checkbox" id="tplEnd"> видно сбоку</span>
         </label>
         <label class="f">Материал корпуса
           <select id="tplBodyMat"></select>
@@ -340,6 +348,9 @@
         short: 'Н',
         defaults: { W: 600, H: 720, D: 580 },
         widths: [400, 450, 500, 600, 800],
+        heights: [720],
+        depths: [580],
+        depthLabel: 'Глубина с дверьми, мм',
         autoDoors: function (W) { return W <= 450 ? 1 : 2; },
         build: function (c) {
           var t = c.t, depth = c.D - t - c.ft;      // спина сзади и дверь спереди
@@ -358,7 +369,38 @@
           ];
         }
       },
-      upper: { title: 'Навесной шкаф', soon: true }
+      upper: {
+        title: 'Навесной шкаф',
+        short: 'В',
+        defaults: { W: 600, H: 720, D: 300 },
+        widths: [400, 450, 500, 600, 800],
+        heights: [400, 600, 720, 750, 800, 900],
+        depths: [300, 400],
+        depthLabel: 'Глубина корпуса (без дверей), мм',
+        hasShelves: true,
+        hasEnd: true,
+        autoDoors: function (W) { return W <= 450 ? 1 : 2; },
+        autoShelves: function (H) { return H <= 450 ? 0 : H <= 800 ? 1 : 2; },
+        build: function (c) {
+          var t = c.t;
+          var inner = c.W - 2 * t;
+          var sideH = c.H - 2 * t;                 // боковины стоят на дне, верх лежит на них
+          var doorW = half((c.W - 2 * (c.doors + 1)) / c.doors);
+          var end = c.end ? 1 : 0;                 // крайний шкаф: кромка на видимые торцы
+          var parts = [
+            { name: 'Дно', L: c.W, W: c.D, qty: 1, mat: 'body', rot: true, eL: 1, eW: end },
+            { name: 'Верх', L: c.W, W: c.D, qty: 1, mat: 'body', rot: true, eL: 1, eW: end },
+            // спина стоит на дне и накладывается на задние торцы боковин
+            { name: 'Бок', L: sideH, W: c.D - t, qty: 2, mat: 'body', rot: false, eL: 1, eW: 0 },
+            { name: 'Спина', L: sideH, W: c.W, qty: 1, mat: 'body', rot: true, eL: end, eW: 0 }
+          ];
+          if (c.shelves > 0) {
+            parts.push({ name: 'Полка', L: inner - 2, W: c.D - t - 20, qty: c.shelves, mat: 'body', rot: true, eL: 1, eW: 0 });
+          }
+          parts.push({ name: 'Дверь', L: c.H - 2, W: doorW, qty: c.doors, mat: 'facade', rot: false, eL: 2, eW: 2 });
+          return parts;
+        }
+      }
     };
 
     var uid = (function () { var n = Date.now() % 100000; return function () { return 'i' + (n++).toString(36); }; })();
@@ -881,16 +923,18 @@
     }
 
     // ------------------------------------------------------------ templates
-    var tpl = { kind: 'lower', W: 600, H: 720, D: 580, qty: 1, doors: 'auto', bodyMat: '', facadeMat: '' };
+    var tpl = { kind: 'lower', W: 600, H: 720, D: 580, qty: 1, doors: 'auto', shelves: 'auto', end: false, bodyMat: '', facadeMat: '' };
     var NEW_FACADE = '__new_facade';
 
     function tplConfig() {
       var T = TEMPLATES[tpl.kind];
-      var W = num(tpl.W, 0);
+      var W = num(tpl.W, 0), H = num(tpl.H, 0);
       return {
-        W: W, H: num(tpl.H, 0), D: num(tpl.D, 0),
+        W: W, H: H, D: num(tpl.D, 0),
         t: num(state.tplT, 16), ft: num(state.tplFT, 16),
-        doors: tpl.doors === 'auto' ? T.autoDoors(W) : +tpl.doors
+        doors: tpl.doors === 'auto' ? T.autoDoors(W) : +tpl.doors,
+        shelves: !T.hasShelves ? 0 : tpl.shelves === 'auto' ? T.autoShelves(H) : +tpl.shelves,
+        end: !!(T.hasEnd && tpl.end)
       };
     }
 
@@ -911,16 +955,19 @@
         b.addEventListener('click', function () {
           if (TEMPLATES[b.dataset.k].soon) return;
           tpl.kind = b.dataset.k; var d = TEMPLATES[tpl.kind].defaults; tpl.W = d.W; tpl.H = d.H; tpl.D = d.D;
+          tpl.shelves = 'auto'; tpl.end = false;
           renderTemplates();
         });
       });
       var T = TEMPLATES[tpl.kind];
-      document.getElementById('tplWidths').innerHTML = T.widths.map(function (w) {
-        return '<button type="button" class="chip' + (num(tpl.W, 0) === w ? ' active' : '') + '" data-w="' + w + '">' + w + '</button>';
-      }).join('');
-      document.querySelectorAll('#tplWidths .chip').forEach(function (b) {
-        b.addEventListener('click', function (e) { e.preventDefault(); tpl.W = +b.dataset.w; document.getElementById('tplW').value = tpl.W; renderTemplates(); });
-      });
+      renderChips('tplWidths', T.widths, 'W', 'tplW');
+      renderChips('tplHeights', T.heights.length > 1 ? T.heights : [], 'H', 'tplH');
+      renderChips('tplDepths', T.depths.length > 1 ? T.depths : [], 'D', 'tplD');
+      document.getElementById('tplDLabel').textContent = T.depthLabel;
+      document.getElementById('tplShelvesBox').style.display = T.hasShelves ? '' : 'none';
+      document.getElementById('tplEndBox').style.display = T.hasEnd ? '' : 'none';
+      document.getElementById('tplShelves').value = tpl.shelves;
+      document.getElementById('tplEnd').checked = !!tpl.end;
       document.getElementById('tplW').value = tpl.W;
       document.getElementById('tplH').value = tpl.H;
       document.getElementById('tplD').value = tpl.D;
@@ -931,6 +978,26 @@
       refreshTplMats();
       renderTplPreview();
       renderCabList();
+    }
+
+    function renderChips(boxId, values, key, inputId) {
+      var box = document.getElementById(boxId);
+      box.innerHTML = values.map(function (v) {
+        return '<button type="button" class="chip' + (num(tpl[key], 0) === v ? ' active' : '') + '" data-v="' + v + '">' + v + '</button>';
+      }).join('');
+      box.querySelectorAll('.chip').forEach(function (b) {
+        b.addEventListener('click', function (e) {
+          e.preventDefault();
+          tpl[key] = +b.dataset.v;
+          document.getElementById(inputId).value = tpl[key];
+          syncChips(boxId, key);
+          renderTplPreview();
+        });
+      });
+    }
+
+    function syncChips(boxId, key) {
+      document.querySelectorAll('#' + boxId + ' .chip').forEach(function (c) { c.classList.toggle('active', +c.dataset.v === num(tpl[key], 0)); });
     }
 
     function refreshTplMats() {
@@ -975,7 +1042,7 @@
         state.materials.push(nf);
         tpl.facadeMat = nf.id;
       }
-      var g = { id: uid(), label: T.short + c.W + '×' + c.H + '×' + c.D + (q > 1 ? ' ×' + q : '') };
+      var g = { id: uid(), label: T.short + c.W + '×' + c.H + '×' + c.D + (c.end ? ' крайний' : '') + (q > 1 ? ' ×' + q : '') };
       state.groups.push(g);
       // если в таблице осталась одна пустая строка — заменяем её
       state.parts = state.parts.filter(function (p) { return p.L > 0 || p.W > 0 || p.name; });
@@ -1009,13 +1076,16 @@
     function bindTemplateInputs() {
       function on(id, key, ev) {
         document.getElementById(id).addEventListener(ev || 'input', function (e) {
-          tpl[key] = e.target.value;
-          if (key === 'W') document.querySelectorAll('#tplWidths .chip').forEach(function (c) { c.classList.toggle('active', +c.dataset.w === num(tpl.W, 0)); });
+          tpl[key] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+          if (key === 'W') syncChips('tplWidths', 'W');
+          if (key === 'H') syncChips('tplHeights', 'H');
+          if (key === 'D') syncChips('tplDepths', 'D');
           renderTplPreview();
         });
       }
       on('tplW', 'W'); on('tplH', 'H'); on('tplD', 'D'); on('tplQty', 'qty');
-      on('tplDoors', 'doors', 'change'); on('tplBodyMat', 'bodyMat', 'change'); on('tplFacadeMat', 'facadeMat', 'change');
+      on('tplDoors', 'doors', 'change'); on('tplShelves', 'shelves', 'change'); on('tplEnd', 'end', 'change');
+      on('tplBodyMat', 'bodyMat', 'change'); on('tplFacadeMat', 'facadeMat', 'change');
       document.getElementById('tplT').addEventListener('input', function (e) { state.tplT = num(e.target.value, 16); persistCurrent(); renderTplPreview(); });
       document.getElementById('tplFT').addEventListener('input', function (e) { state.tplFT = num(e.target.value, 16); persistCurrent(); renderTplPreview(); });
       document.getElementById('btnTplAdd').addEventListener('click', addFromTemplate);
