@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Раскрой листов — АбдулАзиз</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #f7f4ee;
+      --card-bg: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --accent-gold: #b07d12;
+      --border-gold: rgba(176, 125, 18, 0.32);
+      --border-dark: #e6e0d4;
+      --edge: #dc2626;
+      --danger: #b91c1c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: linear-gradient(135deg, #ffffff 0%, #faf8f4 50%, #f7f4ee 100%);
+      background-attachment: fixed;
+      font-family: 'Manrope', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: var(--text-main);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--border-gold);
+      padding: 14px 16px;
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    .header-container { max-width: 1280px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand h1 { font-size: 1.3rem; color: var(--accent-gold); font-weight: 800; }
+    .brand p { font-size: 0.85rem; color: var(--text-muted); }
+
+    .container { max-width: 1280px; margin: 20px auto; padding: 0 16px; display: flex; flex-direction: column; gap: 18px; }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-gold);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    }
+    .card h2 { font-size: 1.05rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .step { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-gold); color: #fff; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; }
+    .hint { font-size: 0.85rem; color: var(--text-muted); }
+
+    label.f { display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; color: var(--text-muted); font-weight: 600; }
+    input, select, textarea {
+      font: inherit; font-size: 0.95rem; color: var(--text-main);
+      border: 1px solid var(--border-dark); border-radius: 8px; padding: 7px 9px; background: #fff; min-width: 0;
+    }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--border-gold); border-color: var(--accent-gold); }
+    input[type=number] { width: 100%; }
+    input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent-gold); }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .grid-settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+
+    .btn {
+      font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      border: 1px solid var(--border-gold); background: #fff; color: var(--accent-gold);
+      border-radius: 9px; padding: 8px 14px; white-space: nowrap;
+    }
+    .btn:hover { background: #fdf8ec; }
+    .btn.primary { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; box-shadow: 0 6px 16px rgba(217, 119, 6, 0.3); }
+    .btn.primary:hover { filter: brightness(1.05); }
+    .btn.tg { background: #2563eb; color: #fff; border: none; }
+    .btn.small { padding: 4px 9px; font-size: 0.82rem; }
+    .btn.icon { padding: 4px 8px; color: var(--text-muted); border-color: var(--border-dark); }
+    .btn.icon:hover { color: var(--danger); border-color: var(--danger); background: #fff; }
+
+    .table-wrap { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
+    table.edit { width: 100%; border-collapse: collapse; min-width: 760px; }
+    table.edit th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--border-dark); white-space: nowrap; }
+    table.edit td { padding: 4px; border-bottom: 1px solid #f1ede4; vertical-align: middle; }
+    table.edit td.num { font-weight: 800; color: var(--accent-gold); width: 32px; text-align: center; }
+    table.edit input[type=text] { width: 100%; }
+    table.edit .w-dim { width: 86px; }
+    table.edit .w-qty { width: 64px; }
+    table.edit .w-edge { width: 62px; }
+    table.edit .c { text-align: center; }
+    table.edit tr.bad td { background: #fef2f2; }
+
+    .mat-list { display: flex; flex-direction: column; gap: 8px; }
+    .mat-row { display: grid; grid-template-columns: 1fr 190px 90px 90px auto; gap: 8px; align-items: center; }
+    .mat-row .custom-dim { display: contents; }
+
+    details.paste summary { cursor: pointer; font-weight: 700; color: var(--accent-gold); font-size: 0.9rem; margin-top: 12px; }
+    details.paste textarea { width: 100%; min-height: 110px; margin-top: 8px; font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat { border: 1px solid var(--border-dark); border-radius: 10px; padding: 10px 12px; background: #fffdf8; }
+    .stat .v { font-size: 1.45rem; font-weight: 800; color: var(--accent-gold); line-height: 1.2; }
+    .stat .l { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
+
+    .mat-block + .mat-block { margin-top: 26px; padding-top: 18px; border-top: 1px dashed var(--border-gold); }
+    .mat-block h3 { font-size: 1rem; font-weight: 800; margin-bottom: 10px; }
+    .sheet { margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
+    .sheet-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; }
+    .sheet-head span { color: var(--text-muted); font-weight: 600; }
+    .sheet svg { width: 100%; height: auto; display: block; border-radius: 6px; }
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
+    .legend i { display: inline-block; width: 18px; height: 4px; background: var(--edge); vertical-align: middle; margin-right: 5px; border-radius: 2px; }
+
+    .error { background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; margin-bottom: 12px; }
+    .empty { color: var(--text-muted); text-align: center; padding: 30px 10px; }
+
+    table.list { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    table.list th, table.list td { border: 1px solid var(--border-dark); padding: 5px 7px; text-align: left; }
+    table.list th { background: #faf6ec; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); }
+    table.list td.r { text-align: right; white-space: nowrap; }
+
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #111827; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 0.9rem; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 200; }
+    .toast.show { opacity: 1; }
+
+    .print-only { display: none; }
+
+    @media (max-width: 720px) {
+      .mat-row { grid-template-columns: 1fr 1fr; }
+      .mat-row > :first-child { grid-column: 1 / -1; }
+      .brand h1 { font-size: 1.1rem; }
+      .header { position: static; }
+      .summary { grid-template-columns: 1fr 1fr; }
+      .stat .v { font-size: 1.2rem; }
+    }
+
+    @media print {
+      @page { size: A4; margin: 10mm; }
+      body { background: #fff; padding: 0; }
+      .header, .no-print { display: none !important; }
+      .container { margin: 0; padding: 0; max-width: none; }
+      .card { border: none; box-shadow: none; padding: 0; }
+      .print-only { display: block; }
+      .mat-block { break-before: auto; }
+      .stat { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-container">
+      <div class="brand">
+        <h1>Раскрой листов</h1>
+        <p>Гильотинный раскрой ЛДСП / МДФ для распиловочного цеха</p>
+      </div>
+      <div class="actions">
+        <select id="projectSelect" title="Мои проекты"></select>
+        <button class="btn small" id="btnSaveAs">Сохранить как…</button>
+        <button class="btn small" id="btnNew">Новый</button>
+        <button class="btn small icon" id="btnDelProject" title="Удалить проект">✕</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="print-only">
+      <h2 id="printTitle" style="font-size:1.3rem;margin-bottom:4px"></h2>
+      <p class="hint" id="printMeta"></p>
+    </div>
+
+    <section class="card no-print">
+      <h2><span class="step">1</span> Настройки распила</h2>
+      <div class="grid-settings">
+        <label class="f">Название проекта
+          <input type="text" id="projName" placeholder="Например: Кухня Юнусабад">
+        </label>
+        <label class="f">Пропил (толщина пилы), мм
+          <input type="number" id="kerf" min="0" max="10" step="0.5">
+        </label>
+        <label class="f">Отступ по краям листа, мм
+          <input type="number" id="trim" min="0" max="50" step="1">
+        </label>
+      </div>
+      <p class="hint" style="margin-top:8px">Отступ срезает заводской край листа (обычно 10–15 мм с каждой стороны). Текстура листа считается идущей вдоль длинной стороны.</p>
+    </section>
+
+    <section class="card no-print">
+      <h2><span class="step">2</span> Материалы</h2>
+      <div class="mat-list" id="matList"></div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn small" id="btnAddMat">＋ Материал</button>
+        <span class="hint">Например: корпус ЛДСП белый 16 мм, фасад МДФ, задняя стенка ХДФ.</span>
+      </div>
+    </section>
+
+    <section class="card no-print">
+      <h2><span class="step">3</span> Детали
+        <span class="hint" style="font-weight:600">Д — длина (вдоль текстуры), Ш — ширина</span>
+      </h2>
+      <div class="table-wrap">
+        <table class="edit">
+          <thead>
+            <tr>
+              <th>№</th>
+              <th>Название</th>
+              <th>Д, мм</th>
+              <th>Ш, мм</th>
+              <th>Кол-во</th>
+              <th>Материал</th>
+              <th class="c" title="Можно поворачивать деталь на листе">Поворот</th>
+              <th class="c" title="Сколько длинных сторон в кромке">Кромка Д</th>
+              <th class="c" title="Сколько коротких сторон в кромке">Кромка Ш</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="partsBody"></tbody>
+        </table>
+      </div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn small" id="btnAddPart">＋ Деталь</button>
+        <button class="btn small" id="btnRotAll">Всем: можно поворачивать</button>
+        <button class="btn small" id="btnRotNone">Всем: только по рисунку</button>
+      </div>
+      <details class="paste">
+        <summary>Вставить список из Excel / заметок</summary>
+        <p class="hint" style="margin-top:6px">Одна деталь на строку: <b>название, длина, ширина, кол-во</b>. Разделитель — табуляция (из Excel), точка с запятой или пробел. Детали добавятся к выбранному материалу.</p>
+        <textarea id="pasteArea" placeholder="Бок 720 560 2&#10;Дно 568 560 1&#10;Полка	568	540	2"></textarea>
+        <div class="actions" style="margin-top:8px">
+          <select id="pasteMat"></select>
+          <button class="btn small" id="btnPaste">Добавить детали</button>
+        </div>
+      </details>
+    </section>
+
+    <div class="actions no-print">
+      <button class="btn primary" id="btnCalc">Рассчитать раскрой</button>
+      <span class="hint" id="autoNote">Пересчитывается автоматически при изменениях.</span>
+    </div>
+
+    <section class="card" id="resultCard">
+      <h2 class="no-print"><span class="step">4</span> Раскрой</h2>
+      <div id="result"><div class="empty">Добавьте детали — раскрой появится здесь.</div></div>
+      <div class="actions no-print" id="resultActions" style="margin-top:14px; display:none">
+        <button class="btn primary" id="btnPrint">🖨 Печать / PDF</button>
+        <button class="btn tg" id="btnTg">✈ Отправить в Telegram</button>
+        <button class="btn" id="btnCopyLink">🔗 Скопировать ссылку</button>
+        <button class="btn" id="btnCopyText">📋 Список текстом</button>
+      </div>
+      <p class="hint no-print" style="margin-top:8px">В PDF попадут карты листов и список деталей. В окне печати выберите «Сохранить как PDF».</p>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var SHEET_PRESETS = [
+      { L: 2750, W: 1830, label: '2750 × 1830' },
+      { L: 2800, W: 2070, label: '2800 × 2070' },
+      { L: 2440, W: 1220, label: '2440 × 1220' }
+    ];
+    var STORE_KEY = 'raskroy.projects.v1';
+    var CURRENT_KEY = 'raskroy.current.v1';
+    var PALETTE = ['#fde68a', '#bfdbfe', '#bbf7d0', '#fecaca', '#ddd6fe', '#fed7aa', '#a5f3fc', '#f5d0fe', '#d9f99d', '#e5e7eb'];
+
+    var uid = (function () { var n = Date.now() % 100000; return function () { return 'i' + (n++).toString(36); }; })();
+
+    function defaultState() {
+      var m = { id: uid(), name: 'ЛДСП белый 16 мм', L: 2750, W: 1830 };
+      return {
+        name: '',
+        kerf: 4,
+        trim: 10,
+        materials: [m],
+        parts: [
+          { id: uid(), name: 'Бок', L: 720, W: 560, qty: 2, mat: m.id, rot: false, eL: 1, eW: 0 },
+          { id: uid(), name: 'Дно', L: 568, W: 560, qty: 1, mat: m.id, rot: true, eL: 1, eW: 0 },
+          { id: uid(), name: 'Полка', L: 566, W: 540, qty: 2, mat: m.id, rot: true, eL: 1, eW: 0 }
+        ]
+      };
+    }
+
+    var state;
+
+    // ---------------------------------------------------------------- storage
+    function safeGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+    function safeSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+
+    function loadProjects() {
+      try { return JSON.parse(safeGet(STORE_KEY) || '{}') || {}; } catch (e) { return {}; }
+    }
+    function saveProjects(p) { safeSet(STORE_KEY, JSON.stringify(p)); }
+
+    function normalize(s) {
+      if (!s || !Array.isArray(s.materials) || !Array.isArray(s.parts)) return defaultState();
+      s.kerf = num(s.kerf, 4); s.trim = num(s.trim, 10); s.name = String(s.name || '');
+      if (!s.materials.length) s.materials.push({ id: uid(), name: 'Материал', L: 2750, W: 1830 });
+      s.materials.forEach(function (m) { m.id = m.id || uid(); m.L = num(m.L, 2750); m.W = num(m.W, 1830); m.name = String(m.name || 'Материал'); });
+      var ids = s.materials.map(function (m) { return m.id; });
+      s.parts.forEach(function (p) {
+        p.id = p.id || uid(); p.name = String(p.name || '');
+        p.L = num(p.L, 0); p.W = num(p.W, 0); p.qty = Math.max(1, Math.round(num(p.qty, 1)));
+        if (ids.indexOf(p.mat) < 0) p.mat = ids[0];
+        p.rot = !!p.rot; p.eL = clampInt(p.eL, 0, 2); p.eW = clampInt(p.eW, 0, 2);
+      });
+      return s;
+    }
+
+    function num(v, d) { var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : d; }
+    function clampInt(v, a, b) { var n = Math.round(num(v, 0)); return Math.min(b, Math.max(a, n)); }
+
+    function persistCurrent() { safeSet(CURRENT_KEY, JSON.stringify(state)); }
+
+    // ------------------------------------------------------------- share link
+    function encodeState(s) {
+      var compact = {
+        n: s.name, k: s.kerf, t: s.trim,
+        m: s.materials.map(function (m) { return [m.id, m.name, m.L, m.W]; }),
+        p: s.parts.map(function (p) { return [p.name, p.L, p.W, p.qty, p.mat, p.rot ? 1 : 0, p.eL, p.eW]; })
+      };
+      var json = JSON.stringify(compact);
+      var b64 = btoa(unescape(encodeURIComponent(json)));
+      return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+    function decodeState(str) {
+      var b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      var c = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      return normalize({
+        name: c.n, kerf: c.k, trim: c.t,
+        materials: (c.m || []).map(function (a) { return { id: a[0], name: a[1], L: a[2], W: a[3] }; }),
+        parts: (c.p || []).map(function (a) { return { id: uid(), name: a[0], L: a[1], W: a[2], qty: a[3], mat: a[4], rot: !!a[5], eL: a[6], eW: a[7] }; })
+      });
+    }
+    function shareUrl() { return location.origin + location.pathname + '#r=' + encodeState(state); }
+
+    // -------------------------------------------------------------- packing
+    // Guillotine packing: every placement splits the free rectangle with one
+    // straight edge-to-edge cut, which is what a panel saw can actually do.
+    function packMaterial(instances, mat, kerf, trim) {
+      var usableX = mat.L - 2 * trim;
+      var usableY = mat.W - 2 * trim;
+      var sorts = [
+        function (a, b) { return b.L * b.W - a.L * a.W; },
+        function (a, b) { return Math.max(b.L, b.W) - Math.max(a.L, a.W) || b.L * b.W - a.L * a.W; },
+        function (a, b) { return (b.L + b.W) - (a.L + a.W); },
+        function (a, b) { return b.L - a.L || b.W - a.W; },
+        function (a, b) { return b.W - a.W || b.L - a.L; },
+        function (a, b) { return Math.min(b.L, b.W) - Math.min(a.L, a.W) || b.L * b.W - a.L * a.W; }
+      ];
+      var fits = ['area', 'short', 'long'];
+      var splits = ['sas', 'las', 'maxarea', 'minarea', 'h', 'v'];
+
+      var best = null;
+      for (var si = 0; si < sorts.length; si++) {
+        var ordered = instances.slice().sort(sorts[si]);
+        for (var fi = 0; fi < fits.length; fi++) {
+          for (var pi = 0; pi < splits.length; pi++) {
+            var res = runPack(ordered, usableX, usableY, kerf, fits[fi], splits[pi]);
+            if (!best || better(res, best)) best = res;
+          }
+        }
+      }
+      best.sheets.forEach(function (sh) {
+        sh.placed.forEach(function (p) { p.x += trim; p.y += trim; });
+      });
+      return best;
+    }
+
+    function better(a, b) {
+      if (a.unplaced.length !== b.unplaced.length) return a.unplaced.length < b.unplaced.length;
+      if (a.sheets.length !== b.sheets.length) return a.sheets.length < b.sheets.length;
+      return a.fill > b.fill + 1e-9;
+    }
+
+    function runPack(items, X, Y, kerf, fitRule, splitRule) {
+      var sheets = [];
+      var unplaced = [];
+
+      function newSheet() { var s = { free: [{ x: 0, y: 0, w: X, h: Y }], placed: [], used: 0 }; sheets.push(s); return s; }
+
+      function orientations(it) {
+        var o = [{ w: it.L, h: it.W, rot: false }];
+        if (it.rot && it.L !== it.W) o.push({ w: it.W, h: it.L, rot: true });
+        return o;
+      }
+
+      function score(fr, o) {
+        var dw = fr.w - o.w, dh = fr.h - o.h;
+        if (fitRule === 'area') return [fr.w * fr.h - o.w * o.h, Math.min(dw, dh)];
+        if (fitRule === 'short') return [Math.min(dw, dh), Math.max(dw, dh)];
+        return [Math.max(dw, dh), Math.min(dw, dh)];
+      }
+
+      function findIn(sheet, it) {
+        var bestFit = null;
+        var os = orientations(it);
+        for (var i = 0; i < sheet.free.length; i++) {
+          var fr = sheet.free[i];
+          for (var j = 0; j < os.length; j++) {
+            var o = os[j];
+            if (o.w <= fr.w && o.h <= fr.h) {
+              var sc = score(fr, o);
+              if (!bestFit || sc[0] < bestFit.sc[0] || (sc[0] === bestFit.sc[0] && sc[1] < bestFit.sc[1])) {
+                bestFit = { idx: i, o: o, sc: sc };
+              }
+            }
+          }
+        }
+        return bestFit;
+      }
+
+      function place(sheet, fit, it) {
+        var fr = sheet.free[fit.idx];
+        var w = fit.o.w, h = fit.o.h;
+        sheet.free.splice(fit.idx, 1);
+        sheet.placed.push({ x: fr.x, y: fr.y, w: w, h: h, rot: fit.o.rot, item: it });
+        sheet.used += w * h;
+
+        var rw = fr.w - w - kerf;
+        var rh = fr.h - h - kerf;
+        var horizontal; // true: first cut runs across the full width under the part
+        if (splitRule === 'h') horizontal = true;
+        else if (splitRule === 'v') horizontal = false;
+        else if (splitRule === 'sas') horizontal = fr.w <= fr.h;
+        else if (splitRule === 'las') horizontal = fr.w > fr.h;
+        else {
+          var aH = Math.max(rw * h, fr.w * rh);
+          var aV = Math.max(rw * fr.h, w * rh);
+          horizontal = splitRule === 'maxarea' ? aH >= aV : aH < aV;
+        }
+        var right, bottom;
+        if (horizontal) {
+          right = { x: fr.x + w + kerf, y: fr.y, w: rw, h: h };
+          bottom = { x: fr.x, y: fr.y + h + kerf, w: fr.w, h: rh };
+        } else {
+          right = { x: fr.x + w + kerf, y: fr.y, w: rw, h: fr.h };
+          bottom = { x: fr.x, y: fr.y + h + kerf, w: w, h: rh };
+        }
+        if (right.w > 0 && right.h > 0) sheet.free.push(right);
+        if (bottom.w > 0 && bottom.h > 0) sheet.free.push(bottom);
+      }
+
+      for (var n = 0; n < items.length; n++) {
+        var it = items[n];
+        var bestSheet = null, bestFit = null;
+        for (var s = 0; s < sheets.length; s++) {
+          var f = findIn(sheets[s], it);
+          if (f && (!bestFit || f.sc[0] < bestFit.sc[0] || (f.sc[0] === bestFit.sc[0] && f.sc[1] < bestFit.sc[1]))) {
+            bestFit = f; bestSheet = sheets[s];
+          }
+        }
+        if (!bestFit) {
+          var fresh = { free: [{ x: 0, y: 0, w: X, h: Y }] };
+          var f2 = findIn(fresh, it);
+          if (!f2) { unplaced.push(it); continue; }
+          bestSheet = newSheet();
+          bestFit = findIn(bestSheet, it);
+        }
+        place(bestSheet, bestFit, it);
+      }
+
+      // Prefer layouts that pack earlier sheets fuller and leave waste on the last one.
+      var area = X * Y, fill = 0;
+      sheets.forEach(function (sh) { var u = sh.used / area; fill += u * u; });
+      return { sheets: sheets, unplaced: unplaced, fill: fill };
+    }
+
+    // ------------------------------------------------------------- calculate
+    function calculate() {
+      var kerf = Math.max(0, num(state.kerf, 4));
+      var trim = Math.max(0, num(state.trim, 0));
+      var out = { kerf: kerf, trim: trim, blocks: [], errors: [], edgeM: 0, partsCount: 0, sheets: 0 };
+
+      state.parts.forEach(function (p, i) { p._n = i + 1; });
+
+      state.materials.forEach(function (mat, mi) {
+        var parts = state.parts.filter(function (p) { return p.mat === mat.id && p.L > 0 && p.W > 0; });
+        if (!parts.length) return;
+        var inst = [];
+        parts.forEach(function (p) {
+          for (var q = 0; q < p.qty; q++) inst.push({ L: p.L, W: p.W, rot: p.rot, part: p });
+          out.partsCount += p.qty;
+          out.edgeM += (p.eL * p.L + p.eW * p.W) * p.qty / 1000;
+        });
+        var res = packMaterial(inst, mat, kerf, trim);
+        var partArea = 0;
+        res.sheets.forEach(function (sh) { partArea += sh.used; });
+        var sheetArea = mat.L * mat.W;
+        var bad = {};
+        res.unplaced.forEach(function (u) { bad[u.part.id] = u.part; });
+        Object.keys(bad).forEach(function (k) {
+          var p = bad[k];
+          out.errors.push('Деталь №' + p._n + ' «' + (p.name || 'без названия') + '» ' + p.L + '×' + p.W +
+            ' не помещается на лист ' + mat.L + '×' + mat.W + ' (с отступами ' + (mat.L - 2 * trim) + '×' + (mat.W - 2 * trim) + ')' +
+            (p.rot ? '' : '. Попробуйте разрешить поворот') + '.');
+        });
+        out.sheets += res.sheets.length;
+        out.blocks.push({ mat: mat, colorBase: mi, res: res, usage: res.sheets.length ? partArea / (sheetArea * res.sheets.length) : 0, partArea: partArea });
+      });
+      out.badIds = {};
+      out.errors.length && state.parts.forEach(function (p) {
+        out.blocks.forEach(function (b) { b.res.unplaced.forEach(function (u) { if (u.part === p) out.badIds[p.id] = true; }); });
+      });
+      return out;
+    }
+
+    // ---------------------------------------------------------------- render
+    function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function fmt(n, d) { return Number(n).toLocaleString('ru-RU', { maximumFractionDigits: d == null ? 0 : d, minimumFractionDigits: d || 0 }); }
+
+    function sheetSvg(sh, mat, trim) {
+      var L = mat.L, W = mat.W;
+      var pad = 60;
+      var parts = [];
+      parts.push('<svg viewBox="' + (-pad) + ' ' + (-pad) + ' ' + (L + pad * 2) + ' ' + (W + pad * 2) + '" xmlns="http://www.w3.org/2000/svg" font-family="Manrope, Segoe UI, sans-serif">');
+      parts.push('<rect x="0" y="0" width="' + L + '" height="' + W + '" fill="#f3efe6" stroke="#9ca3af" stroke-width="3"/>');
+      if (trim > 0) {
+        parts.push('<rect x="' + trim + '" y="' + trim + '" width="' + (L - 2 * trim) + '" height="' + (W - 2 * trim) + '" fill="#fbfaf7" stroke="#d1d5db" stroke-width="2" stroke-dasharray="14 10"/>');
+      }
+      // sheet dimensions
+      parts.push('<text x="' + (L / 2) + '" y="-18" text-anchor="middle" font-size="40" fill="#6b7280" font-weight="700">' + L + '</text>');
+      parts.push('<text x="-18" y="' + (W / 2) + '" text-anchor="middle" font-size="40" fill="#6b7280" font-weight="700" transform="rotate(-90 -18 ' + (W / 2) + ')">' + W + '</text>');
+      // grain direction
+      parts.push('<text x="' + (L - 10) + '" y="' + (W + 44) + '" text-anchor="end" font-size="32" fill="#9ca3af">текстура ⟷</text>');
+
+      sh.placed.forEach(function (p) {
+        var it = p.item, part = it.part;
+        var color = PALETTE[(part._n - 1) % PALETTE.length];
+        parts.push('<g>');
+        parts.push('<rect x="' + p.x + '" y="' + p.y + '" width="' + p.w + '" height="' + p.h + '" fill="' + color + '" stroke="#374151" stroke-width="2.5"/>');
+        // edge banding marks: long sides first, then short sides
+        var t = 9;
+        // The part's L runs along x unless rotated.
+        var lAlongX = !p.rot;
+        var lines = [];
+        function edgeSides(count, alongX) {
+          if (count >= 1) lines.push(alongX ? 'top' : 'left');
+          if (count >= 2) lines.push(alongX ? 'bottom' : 'right');
+        }
+        edgeSides(part.eL, lAlongX);
+        edgeSides(part.eW, !lAlongX);
+        lines.forEach(function (side) {
+          var x = p.x, y = p.y, w = p.w, h = p.h;
+          if (side === 'top') parts.push('<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + t + '" fill="#dc2626"/>');
+          if (side === 'bottom') parts.push('<rect x="' + x + '" y="' + (y + h - t) + '" width="' + w + '" height="' + t + '" fill="#dc2626"/>');
+          if (side === 'left') parts.push('<rect x="' + x + '" y="' + y + '" width="' + t + '" height="' + h + '" fill="#dc2626"/>');
+          if (side === 'right') parts.push('<rect x="' + (x + w - t) + '" y="' + y + '" width="' + t + '" height="' + h + '" fill="#dc2626"/>');
+        });
+        // labels
+        var cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+        var minSide = Math.min(p.w, p.h);
+        var vertical = p.h > p.w * 1.6 && p.w < 260;
+        var span = vertical ? p.h : p.w;
+        var fsNum = Math.max(18, Math.min(64, minSide * 0.32, span / 4));
+        var fsDim = Math.max(14, Math.min(38, minSide * 0.2, span / 8));
+        var label = it.L + '×' + it.W;
+        var tr = vertical ? ' transform="rotate(-90 ' + cx + ' ' + cy + ')"' : '';
+        parts.push('<g' + tr + '>');
+        if (minSide >= 60) {
+          parts.push('<text x="' + cx + '" y="' + (cy - fsDim * 0.25) + '" text-anchor="middle" font-size="' + fsNum + '" font-weight="800" fill="#111827">' + part._n + (p.rot ? ' ↻' : '') + '</text>');
+          parts.push('<text x="' + cx + '" y="' + (cy + fsDim * 1.05) + '" text-anchor="middle" font-size="' + fsDim + '" fill="#374151" font-weight="600">' + label + '</text>');
+        } else {
+          parts.push('<text x="' + cx + '" y="' + (cy + fsNum * 0.35) + '" text-anchor="middle" font-size="' + fsNum + '" font-weight="800" fill="#111827">' + part._n + '</text>');
+        }
+        parts.push('</g></g>');
+      });
+      parts.push('</svg>');
+      return parts.join('');
+    }
+
+    var lastResult = null;
+
+    function renderResult() {
+      var r = calculate();
+      lastResult = r;
+      var el = document.getElementById('result');
+      var actions = document.getElementById('resultActions');
+      var html = [];
+
+      if (r.errors.length) {
+        html.push('<div class="error">' + r.errors.map(esc).join('<br>') + '</div>');
+      }
+      if (!r.blocks.length || !r.sheets) {
+        el.innerHTML = html.join('') + '<div class="empty">Добавьте детали — раскрой появится здесь.</div>';
+        actions.style.display = 'none';
+        markBadRows(r.badIds);
+        return;
+      }
+
+      var totalArea = 0, totalSheetArea = 0;
+      r.blocks.forEach(function (b) { totalArea += b.partArea; totalSheetArea += b.mat.L * b.mat.W * b.res.sheets.length; });
+
+      html.push('<div class="summary">');
+      html.push(stat(r.sheets, plural(r.sheets, 'лист', 'листа', 'листов')));
+      html.push(stat(r.partsCount, plural(r.partsCount, 'деталь', 'детали', 'деталей')));
+      html.push(stat(fmt(totalSheetArea ? totalArea / totalSheetArea * 100 : 0, 0) + '%', 'использование листов'));
+      html.push(stat(fmt(r.edgeM, 1) + ' м', 'кромки (без запаса)'));
+      html.push('</div>');
+      html.push('<div class="legend"><span><i></i>кромка</span><span>↻ — деталь повёрнута</span><span>пунктир — отступ по краю ' + r.trim + ' мм</span><span>пропил ' + r.kerf + ' мм</span></div>');
+
+      r.blocks.forEach(function (b) {
+        var n = b.res.sheets.length;
+        html.push('<div class="mat-block">');
+        html.push('<h3>' + esc(b.mat.name) + ' — ' + b.mat.L + '×' + b.mat.W + ': ' + n + ' ' + plural(n, 'лист', 'листа', 'листов') + ', использование ' + fmt(b.usage * 100, 0) + '%</h3>');
+        b.res.sheets.forEach(function (sh, i) {
+          var u = sh.used / (b.mat.L * b.mat.W) * 100;
+          html.push('<div class="sheet"><div class="sheet-head">Лист ' + (i + 1) + ' из ' + n + ' <span>' + sh.placed.length + ' ' + plural(sh.placed.length, 'деталь', 'детали', 'деталей') + ' · заполнен на ' + fmt(u, 0) + '%</span></div>');
+          html.push(sheetSvg(sh, b.mat, r.trim));
+          html.push('</div>');
+        });
+        html.push('</div>');
+      });
+
+      // parts list for the saw shop
+      html.push('<div class="mat-block"><h3>Список деталей</h3><div class="table-wrap"><table class="list"><thead><tr><th>№</th><th>Название</th><th>Материал</th><th>Д×Ш, мм</th><th>Шт</th><th>Поворот</th><th>Кромка</th></tr></thead><tbody>');
+      state.parts.forEach(function (p) {
+        if (!(p.L > 0 && p.W > 0)) return;
+        var mat = matById(p.mat);
+        var edge = [];
+        if (p.eL) edge.push(p.eL + '×Д');
+        if (p.eW) edge.push(p.eW + '×Ш');
+        html.push('<tr><td>' + p._n + '</td><td>' + esc(p.name || '—') + '</td><td>' + esc(mat ? mat.name : '') + '</td><td class="r">' + p.L + '×' + p.W + '</td><td class="r">' + p.qty + '</td><td>' + (p.rot ? 'можно' : 'по рисунку') + '</td><td>' + (edge.join(', ') || '—') + '</td></tr>');
+      });
+      html.push('</tbody></table></div></div>');
+
+      el.innerHTML = html.join('');
+      actions.style.display = '';
+      markBadRows(r.badIds);
+
+      document.getElementById('printTitle').textContent = state.name || 'Раскрой листов';
+      document.getElementById('printMeta').textContent = new Date().toLocaleDateString('ru-RU') + ' · пропил ' + r.kerf + ' мм · отступ ' + r.trim + ' мм';
+    }
+
+    function stat(v, l) { return '<div class="stat"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'; }
+    function plural(n, a, b, c) { n = Math.abs(n) % 100; var n1 = n % 10; if (n > 10 && n < 20) return c; if (n1 > 1 && n1 < 5) return b; if (n1 === 1) return a; return c; }
+    function matById(id) { for (var i = 0; i < state.materials.length; i++) if (state.materials[i].id === id) return state.materials[i]; return null; }
+
+    function markBadRows(bad) {
+      var rows = document.querySelectorAll('#partsBody tr');
+      rows.forEach(function (tr) { tr.classList.toggle('bad', !!(bad && bad[tr.dataset.id])); });
+    }
+
+    // ------------------------------------------------------------ editors
+    function presetValue(m) {
+      for (var i = 0; i < SHEET_PRESETS.length; i++) if (SHEET_PRESETS[i].L === m.L && SHEET_PRESETS[i].W === m.W) return String(i);
+      return 'custom';
+    }
+
+    function renderMaterials() {
+      var box = document.getElementById('matList');
+      box.innerHTML = '';
+      state.materials.forEach(function (m) {
+        var row = document.createElement('div');
+        row.className = 'mat-row';
+        var opts = SHEET_PRESETS.map(function (p, i) { return '<option value="' + i + '">' + p.label + '</option>'; }).join('') + '<option value="custom">Свой размер</option>';
+        row.innerHTML =
+          '<input type="text" data-k="name" value="' + esc(m.name) + '" placeholder="Название материала">' +
+          '<select data-k="preset">' + opts + '</select>' +
+          '<input type="number" data-k="L" value="' + m.L + '" min="100" title="Длина листа, мм">' +
+          '<input type="number" data-k="W" value="' + m.W + '" min="100" title="Ширина листа, мм">' +
+          '<button class="btn icon" data-k="del" title="Удалить материал">✕</button>';
+        var sel = row.querySelector('[data-k=preset]');
+        sel.value = presetValue(m);
+        var inL = row.querySelector('[data-k=L]'), inW = row.querySelector('[data-k=W]');
+        row.querySelector('[data-k=name]').addEventListener('input', function (e) { m.name = e.target.value; changed(false); refreshMatSelects(); });
+        sel.addEventListener('change', function () {
+          if (sel.value !== 'custom') { var p = SHEET_PRESETS[+sel.value]; m.L = p.L; m.W = p.W; inL.value = p.L; inW.value = p.W; }
+          else inL.focus();
+          changed(true);
+        });
+        function dim() { m.L = num(inL.value, m.L); m.W = num(inW.value, m.W); if (m.W > m.L) { /* keep length as the long side */ } sel.value = presetValue(m); changed(true); }
+        inL.addEventListener('input', dim); inW.addEventListener('input', dim);
+        row.querySelector('[data-k=del]').addEventListener('click', function () {
+          if (state.materials.length === 1) { toast('Нужен хотя бы один материал'); return; }
+          var used = state.parts.some(function (p) { return p.mat === m.id; });
+          if (used && !confirm('Детали этого материала перейдут на первый оставшийся материал. Удалить?')) return;
+          state.materials = state.materials.filter(function (x) { return x !== m; });
+          state.parts.forEach(function (p) { if (p.mat === m.id) p.mat = state.materials[0].id; });
+          renderAll();
+        });
+        box.appendChild(row);
+      });
+      refreshMatSelects();
+    }
+
+    function matOptions(selected) {
+      return state.materials.map(function (m) { return '<option value="' + m.id + '"' + (m.id === selected ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('');
+    }
+
+    function refreshMatSelects() {
+      document.querySelectorAll('select[data-k=mat]').forEach(function (s) { var v = s.value; s.innerHTML = matOptions(v); });
+      var ps = document.getElementById('pasteMat'); var pv = ps.value; ps.innerHTML = matOptions(pv || state.materials[0].id);
+    }
+
+    function edgeSelect(v) {
+      return '<select data-k="{k}" class="w-edge">' + [0, 1, 2].map(function (n) { return '<option value="' + n + '"' + (n === v ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>';
+    }
+
+    function renderParts() {
+      var body = document.getElementById('partsBody');
+      body.innerHTML = '';
+      state.parts.forEach(function (p, i) {
+        var tr = document.createElement('tr');
+        tr.dataset.id = p.id;
+        tr.innerHTML =
+          '<td class="num">' + (i + 1) + '</td>' +
+          '<td><input type="text" data-k="name" value="' + esc(p.name) + '" placeholder="Бок, дно, полка…"></td>' +
+          '<td><input type="number" data-k="L" class="w-dim" value="' + (p.L || '') + '" min="1"></td>' +
+          '<td><input type="number" data-k="W" class="w-dim" value="' + (p.W || '') + '" min="1"></td>' +
+          '<td><input type="number" data-k="qty" class="w-qty" value="' + p.qty + '" min="1"></td>' +
+          '<td><select data-k="mat">' + matOptions(p.mat) + '</select></td>' +
+          '<td class="c"><input type="checkbox" data-k="rot"' + (p.rot ? ' checked' : '') + ' title="Можно поворачивать"></td>' +
+          '<td class="c">' + edgeSelect(p.eL).replace('{k}', 'eL') + '</td>' +
+          '<td class="c">' + edgeSelect(p.eW).replace('{k}', 'eW') + '</td>' +
+          '<td><button class="btn icon" data-k="del" title="Удалить">✕</button></td>';
+        tr.querySelectorAll('[data-k]').forEach(function (inp) {
+          var k = inp.dataset.k;
+          if (k === 'del') {
+            inp.addEventListener('click', function () { state.parts = state.parts.filter(function (x) { return x !== p; }); renderParts(); changed(true); });
+            return;
+          }
+          var ev = inp.tagName === 'SELECT' || inp.type === 'checkbox' ? 'change' : 'input';
+          inp.addEventListener(ev, function () {
+            if (k === 'name') p.name = inp.value;
+            else if (k === 'L' || k === 'W') p[k] = num(inp.value, 0);
+            else if (k === 'qty') p.qty = Math.max(1, Math.round(num(inp.value, 1)));
+            else if (k === 'mat') p.mat = inp.value;
+            else if (k === 'rot') p.rot = inp.checked;
+            else if (k === 'eL' || k === 'eW') p[k] = +inp.value;
+            changed(k !== 'name');
+          });
+          if (k === 'qty') {
+            inp.addEventListener('keydown', function (e) {
+              if (e.key === 'Enter' && i === state.parts.length - 1) { e.preventDefault(); addPart(); }
+            });
+          }
+        });
+        body.appendChild(tr);
+      });
+    }
+
+    function addPart() {
+      var last = state.parts[state.parts.length - 1];
+      state.parts.push({ id: uid(), name: '', L: 0, W: 0, qty: 1, mat: last ? last.mat : state.materials[0].id, rot: last ? last.rot : true, eL: 0, eW: 0 });
+      renderParts();
+      var rows = document.querySelectorAll('#partsBody tr');
+      var input = rows[rows.length - 1].querySelector('[data-k=name]');
+      input.focus();
+    }
+
+    function renderSettings() {
+      document.getElementById('projName').value = state.name;
+      document.getElementById('kerf').value = state.kerf;
+      document.getElementById('trim').value = state.trim;
+    }
+
+    function renderProjects() {
+      var sel = document.getElementById('projectSelect');
+      var projects = loadProjects();
+      var names = Object.keys(projects).sort();
+      sel.innerHTML = '<option value="">Мои проекты (' + names.length + ')</option>' + names.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join('');
+      if (state.name && projects[state.name]) sel.value = state.name;
+    }
+
+    function renderAll() { renderSettings(); renderMaterials(); renderParts(); renderProjects(); renderResult(); }
+
+    var timer = null;
+    function changed(recalc) {
+      persistCurrent();
+      if (state.name) { var pr = loadProjects(); if (pr[state.name]) { pr[state.name] = state; saveProjects(pr); } }
+      if (recalc) { clearTimeout(timer); timer = setTimeout(renderResult, 250); }
+    }
+
+    // --------------------------------------------------------------- paste
+    function parsePaste(text, matId) {
+      var added = 0, skipped = 0;
+      text.split(/\r?\n/).forEach(function (line) {
+        line = line.trim();
+        if (!line) return;
+        var cells = line.indexOf('\t') >= 0 ? line.split('\t') : line.indexOf(';') >= 0 ? line.split(';') : null;
+        var name, L, W, qty;
+        if (cells) {
+          cells = cells.map(function (c) { return c.trim(); });
+          var nums = [], words = [];
+          cells.forEach(function (c) { if (/^\d+([.,]\d+)?$/.test(c)) nums.push(num(c, 0)); else if (c) words.push(c); });
+          name = words.join(' '); L = nums[0]; W = nums[1]; qty = nums[2] || 1;
+        } else {
+          var m = line.match(/^(.*?)[\s,]*(\d+(?:[.,]\d+)?)\s*[x×х*\s,]\s*(\d+(?:[.,]\d+)?)(?:\s*[\s,]\s*(\d+))?\s*(?:шт\.?)?$/i);
+          if (m) { name = m[1].trim(); L = num(m[2], 0); W = num(m[3], 0); qty = m[4] ? parseInt(m[4], 10) : 1; }
+        }
+        if (L > 0 && W > 0) {
+          state.parts.push({ id: uid(), name: name || '', L: L, W: W, qty: Math.max(1, qty || 1), mat: matId, rot: true, eL: 0, eW: 0 });
+          added++;
+        } else skipped++;
+      });
+      return { added: added, skipped: skipped };
+    }
+
+    // --------------------------------------------------------------- misc
+    function toast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove('show'); }, 2200);
+    }
+
+    function copy(text, okMsg) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { toast(okMsg); }, function () { fallbackCopy(text, okMsg); });
+      } else fallbackCopy(text, okMsg);
+    }
+    function fallbackCopy(text, okMsg) {
+      var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast(okMsg); } catch (e) { prompt('Скопируйте:', text); }
+      document.body.removeChild(ta);
+    }
+
+    function textSummary() {
+      var r = lastResult || calculate();
+      var lines = [];
+      lines.push('Раскрой: ' + (state.name || 'без названия'));
+      lines.push('Пропил ' + r.kerf + ' мм, отступ ' + r.trim + ' мм');
+      r.blocks.forEach(function (b) { lines.push(b.mat.name + ' ' + b.mat.L + '×' + b.mat.W + ': ' + b.res.sheets.length + ' ' + plural(b.res.sheets.length, 'лист', 'листа', 'листов')); });
+      lines.push('Кромка: ' + fmt(r.edgeM, 1) + ' м');
+      lines.push('');
+      state.parts.forEach(function (p) {
+        if (!(p.L > 0 && p.W > 0)) return;
+        var mat = matById(p.mat);
+        var e = [];
+        if (p.eL) e.push(p.eL + '×Д'); if (p.eW) e.push(p.eW + '×Ш');
+        lines.push(p._n + '. ' + (p.name || '—') + ' ' + p.L + '×' + p.W + ' — ' + p.qty + ' шт' + (state.materials.length > 1 && mat ? ' [' + mat.name + ']' : '') + (p.rot ? '' : ', по рисунку') + (e.length ? ', кромка ' + e.join(' ') : ''));
+      });
+      return lines.join('\n');
+    }
+
+    // --------------------------------------------------------------- init
+    function init() {
+      var fromHash = null;
+      var m = location.hash.match(/#r=([A-Za-z0-9_-]+)/);
+      if (m) { try { fromHash = decodeState(m[1]); } catch (e) { fromHash = null; } }
+      if (fromHash) {
+        state = fromHash;
+        history.replaceState(null, '', location.pathname);
+        setTimeout(function () { toast('Открыт раскрой по ссылке'); }, 300);
+      } else {
+        try { state = normalize(JSON.parse(safeGet(CURRENT_KEY) || 'null')); } catch (e) { state = defaultState(); }
+      }
+      persistCurrent();
+
+      document.getElementById('projName').addEventListener('input', function (e) { state.name = e.target.value; persistCurrent(); });
+      document.getElementById('kerf').addEventListener('input', function (e) { state.kerf = Math.max(0, num(e.target.value, 4)); changed(true); });
+      document.getElementById('trim').addEventListener('input', function (e) { state.trim = Math.max(0, num(e.target.value, 0)); changed(true); });
+
+      document.getElementById('btnAddMat').addEventListener('click', function () {
+        state.materials.push({ id: uid(), name: 'Материал ' + (state.materials.length + 1), L: 2750, W: 1830 });
+        renderMaterials(); renderParts(); changed(true);
+      });
+      document.getElementById('btnAddPart').addEventListener('click', addPart);
+      document.getElementById('btnRotAll').addEventListener('click', function () { state.parts.forEach(function (p) { p.rot = true; }); renderParts(); changed(true); });
+      document.getElementById('btnRotNone').addEventListener('click', function () { state.parts.forEach(function (p) { p.rot = false; }); renderParts(); changed(true); });
+      document.getElementById('btnPaste').addEventListener('click', function () {
+        var ta = document.getElementById('pasteArea');
+        var res = parsePaste(ta.value, document.getElementById('pasteMat').value);
+        if (!res.added) { toast('Не нашёл деталей. Формат: название длина ширина кол-во'); return; }
+        ta.value = '';
+        renderParts(); changed(true);
+        toast('Добавлено деталей: ' + res.added + (res.skipped ? ', пропущено строк: ' + res.skipped : ''));
+      });
+
+      document.getElementById('btnCalc').addEventListener('click', function () { renderResult(); document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' }); });
+      document.getElementById('btnPrint').addEventListener('click', function () { window.print(); });
+      document.getElementById('btnCopyLink').addEventListener('click', function () { copy(shareUrl(), 'Ссылка скопирована'); });
+      document.getElementById('btnCopyText').addEventListener('click', function () { copy(textSummary(), 'Список скопирован'); });
+      document.getElementById('btnTg').addEventListener('click', function () {
+        var url = 'https://t.me/share/url?url=' + encodeURIComponent(shareUrl()) + '&text=' + encodeURIComponent('Раскрой: ' + (state.name || 'без названия'));
+        window.open(url, '_blank', 'noopener');
+      });
+
+      document.getElementById('projectSelect').addEventListener('change', function (e) {
+        var n = e.target.value; if (!n) return;
+        var pr = loadProjects();
+        if (pr[n]) { state = normalize(JSON.parse(JSON.stringify(pr[n]))); state.name = n; persistCurrent(); renderAll(); toast('Открыт проект «' + n + '»'); }
+      });
+      document.getElementById('btnSaveAs').addEventListener('click', function () {
+        var n = prompt('Название проекта:', state.name || '');
+        if (!n) return; n = n.trim(); if (!n) return;
+        var pr = loadProjects();
+        if (pr[n] && n !== state.name && !confirm('Проект «' + n + '» уже есть. Заменить?')) return;
+        state.name = n; pr[n] = JSON.parse(JSON.stringify(state)); saveProjects(pr); persistCurrent(); renderSettings(); renderProjects();
+        toast('Сохранено. Дальше изменения сохраняются сами');
+      });
+      document.getElementById('btnNew').addEventListener('click', function () {
+        if (!confirm('Начать новый раскрой? Текущий останется в «Моих проектах», если вы его сохраняли.')) return;
+        var keepMats = state.materials.map(function (m) { return { id: m.id, name: m.name, L: m.L, W: m.W }; });
+        state = { name: '', kerf: state.kerf, trim: state.trim, materials: keepMats, parts: [] };
+        state.parts.push({ id: uid(), name: '', L: 0, W: 0, qty: 1, mat: keepMats[0].id, rot: true, eL: 0, eW: 0 });
+        persistCurrent(); renderAll();
+      });
+      document.getElementById('btnDelProject').addEventListener('click', function () {
+        var sel = document.getElementById('projectSelect'); var n = sel.value || state.name;
+        var pr = loadProjects();
+        if (!n || !pr[n]) { toast('Выберите сохранённый проект'); return; }
+        if (!confirm('Удалить проект «' + n + '»?')) return;
+        delete pr[n]; saveProjects(pr); renderProjects(); toast('Проект удалён');
+      });
+
+      renderAll();
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>

@@ -4118,5 +4118,23 @@
       } else if (e.key === 'Escape') closeDecor();
     });
   </script>
+  <script>
+    // Скрытый вход в раскрой для мастера: 5 быстрых нажатий на логотип
+    (function () {
+      var brand = document.querySelector('.header .brand');
+      if (!brand) return;
+      var taps = [];
+      brand.addEventListener('click', function (e) {
+        var now = Date.now();
+        taps = taps.filter(function (t) { return now - t < 2500; });
+        taps.push(now);
+        if (taps.length >= 5) {
+          e.preventDefault();
+          taps = [];
+          window.location.href = '/raskroy';
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

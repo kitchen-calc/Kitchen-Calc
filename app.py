@@ -33,6 +33,13 @@ async def read_root(request: Request):
     return FileResponse(file_path)
 
 
+@app.get("/raskroy", response_class=HTMLResponse)
+async def raskroy(request: Request):
+    # Раскрой листов для мастера: страница скрыта, поисковики её не индексируют
+    file_path = os.path.join(os.path.dirname(__file__), "templates", "raskroy.html")
+    return FileResponse(file_path, headers={"X-Robots-Tag": "noindex, nofollow"})
+
+
 @app.get("/health")
 async def health():
     # Лёгкая страница для сервисов-пингов (UptimeRobot и т.п.)
