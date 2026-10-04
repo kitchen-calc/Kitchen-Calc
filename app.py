@@ -40,6 +40,23 @@ async def health():
 
 
 # ---------------------------------------------------------------------------
+# КАТАЛОГ ЦВЕТОВ: картинки из папки static/catalog/<раздел>/NN.webp
+# ---------------------------------------------------------------------------
+CATALOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "catalog")
+
+
+@app.get("/static/catalog/{section}/{filename}")
+async def catalog_image(section: str, filename: str):
+    # Пропускаем только безопасные имена: латиница в названии раздела и NN.webp
+    if not re.fullmatch(r"[a-z]{2,20}", section) or not re.fullmatch(r"\d{1,3}\.webp", filename):
+        return JSONResponse({"error": "not found"}, status_code=404)
+    path = os.path.join(CATALOG_DIR, section, filename)
+    if not os.path.isfile(path):
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return FileResponse(path, media_type="image/webp", headers={"Cache-Control": "public, max-age=604800"})
+
+
+# ---------------------------------------------------------------------------
 # ЗАЯВКИ В TELEGRAM
 # ---------------------------------------------------------------------------
 def _clip(value, limit):
