@@ -84,6 +84,13 @@ async def favicon_ico():
     return FileResponse(os.path.join(HOME_DIR, "favicon.ico"), media_type="image/x-icon", headers={"Cache-Control": "public, max-age=86400"})
 
 
+@app.get("/yandex_c4a2d69f3e5cf5ea.html", response_class=HTMLResponse)
+async def yandex_verification():
+    # Подтверждение прав на сайт в Яндекс.Вебмастере
+    return ('<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n'
+            '    </head>\n    <body>Verification: c4a2d69f3e5cf5ea</body>\n</html>')
+
+
 @app.get("/partners", response_class=HTMLResponse)
 async def partners():
     # Страница для дизайнеров и строителей (сотрудничество)
