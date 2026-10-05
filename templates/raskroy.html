@@ -409,7 +409,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/static/js/shkaf-data.js?v=3"></script>
+  <script src="/static/js/shkaf-data.js?v=4"></script>
   <script>
   (function () {
     'use strict';
@@ -1794,58 +1794,70 @@
         if (inter.length) cab('Наполнение гардеробной', inter);
         interiorNotes();
       } else {
-        var h = m.hall;
-        if (h.wardrobe.on) {
-          var w0 = h.wardrobe, Wp = w0.W * 10, Hp = w0.H * 10, Dp = w0.D * 10, bp = [];
+        var h = m.hall, frame = h.shape !== 'line', U = h.shape === 'U';
+        var Wn = h.niche.W * 10, haH = h.antresol.on ? h.antresol.H * 10 : 0, Hn = h.wardrobe.H * 10 - haH;
+        function wardrobeSet(label, Wp, Hp, Dp, dn2, kind, mirDoor) {
+          var bp = [];
           bp.push(P_('Дно', Wp, Dp, 1, 'body', true, 1, 0)); bp.push(P_('Верх', Wp, Dp, 1, 'body', true, 1, 0));
           bp.push(P_('Бок', Hp - 2 * t, Dp, 2, 'body', false, 1, 0));
           bp.push(P_('Полка', Wp - 2 * t - 2, Dp - 30, 3, 'body', true, 1, 0));
           splitLen(Wp, 2000).forEach(function (s) { bp.push(P_('Задняя стенка ХДФ', Hp, s, 1, 'hdf', true, 0, 0)); });
-          cab('Шкаф ' + Wp + '×' + Hp + '×' + Dp, bp);
-          var dn2 = w0.doors, dp = [];
-          if (w0.kind === 'swing') {
+          cab(label + ' ' + Wp + '×' + Hp + '×' + Dp, bp);
+          var dp = [];
+          if (kind === 'swing') {
             var dwid = (Wp - 2 * (dn2 + 1)) / dn2;
             for (var i = 0; i < dn2; i++) {
-              if (w0.mirrorDoor && i === dn2 - 1) notes.push('Зеркало на дверь ' + (Hp - 4) + '×' + Math.round(dwid) + ' мм — 1 шт.');
+              if (mirDoor && i === dn2 - 1) notes.push('Зеркало на дверь ' + (Hp - 4) + '×' + Math.round(dwid) + ' мм — 1 шт.');
               else dp.push(P_('Дверь', Hp - 4, dwid, 1, 'facade', false, 2, 2));
             }
-            notes.push('Петли: ' + dn2 * 2 * (Hp > 1200 ? 3 : 2) + ' шт.');
+            notes.push('Петли (' + label.toLowerCase() + '): ' + dn2 * 2 * (Hp > 1200 ? 3 : 2) + ' шт.');
           } else {
             var dws = Math.round((Wp + (dn2 - 1) * 30) / dn2);
             for (var j = 0; j < dn2; j++) {
-              if (w0.mirrorDoor && j === dn2 - 1) notes.push(glassNote('mirror', dws - 44, Hp - 40 - 128, 1));
+              if (mirDoor && j === dn2 - 1) notes.push(glassNote('mirror', dws - 44, Hp - 40 - 128, 1));
               else dp.push(P_('Вставка двери ЛДСП', Hp - 40 - 128, dws - 44, 1, 'facade', false, 2, 2));
             }
-            notes.push('Раздвижная система: ' + dn2 + ' двери, направляющие 2 × ' + w0.W + ' см');
+            notes.push('Раздвижная система (' + label.toLowerCase() + '): ' + dn2 + ' двери, направляющие 2 × ' + Math.round(Wp / 10) + ' см');
           }
-          if (dp.length) cab('Двери шкафа', dp);
-          if (h.antresol.on) {
-            var ha2 = h.antresol.H * 10, aw = Math.min(h.antresol.W * 10, Wp), dn3 = Math.max(2, Math.ceil(aw / 600)), ap2 = [];
-            ap2.push(P_('Дно антресоли', aw, 380, 1, 'body', true, 1, 0)); ap2.push(P_('Верх антресоли', aw, 380, 1, 'body', true, 1, 0));
-            ap2.push(P_('Бок антресоли', ha2 - 2 * t, 380, 2, 'body', false, 1, 0));
-            ap2.push(P_('Дверь антресоли', ha2 - 4, Math.round((aw - 2 * (dn3 + 1)) / dn3), dn3, 'facade', false, 2, 2));
-            cab('Антресоль ' + aw + '×' + ha2, ap2);
-          }
+          if (dp.length) cab('Двери: ' + label.toLowerCase(), dp);
+        }
+        if (h.wardrobe.on) {
+          var Hd = (U ? h.wardrobe.H * 10 - haH : h.wardrobe.H * 10), w0 = h.wardrobe;
+          wardrobeSet('Шкаф', w0.W * 10, Hd, w0.D * 10, w0.doors, w0.kind, w0.mirrorDoor);
+          if (U) wardrobeSet('Второй шкаф', h.wardrobe2.W * 10, Hd, w0.D * 10, h.wardrobe2.doors, w0.kind, false);
+        }
+        if (h.antresol.on) {
+          var ha2 = haH, aw = frame ? (U ? (h.wardrobe.W + h.niche.W + h.wardrobe2.W) * 10 : Wn) : Math.min(h.antresol.W * 10, h.wardrobe.W * 10), dn3 = Math.max(2, Math.ceil(aw / 600)), ap2 = [];
+          splitLen(aw, MAXSEG).forEach(function (s) { ap2.push(P_('Дно антресоли', s, 380, 1, 'body', true, 1, 0)); ap2.push(P_('Верх антресоли', s, 380, 1, 'body', true, 1, 0)); });
+          ap2.push(P_('Бок антресоли', ha2 - 2 * t, 380, 2, 'body', false, 1, 0));
+          ap2.push(P_('Дверь антресоли', ha2 - 4, Math.round((aw - 2 * (dn3 + 1)) / dn3), dn3, 'facade', false, 2, 2));
+          cab('Антресоль ' + aw + '×' + ha2, ap2);
         }
         if (h.shoe.on) {
-          var sw = h.shoe.W * 10, k = h.shoe.tiers, Hs = 200 * k + 100, Ds = 260, sp = [];
-          sp.push(P_('Бок', Hs - t, Ds, 2, 'body', false, 1, 0)); sp.push(P_('Дно', sw, Ds, 1, 'body', true, 1, 0));
-          sp.push(P_('Верх', sw, Ds, 1, 'body', true, 1, 0)); sp.push(P_('Полка', sw - 2 * t - 2, Ds - 20, k - 1, 'body', true, 1, 0));
-          splitLen(sw, 2000).forEach(function (s) { sp.push(P_('Задняя стенка ХДФ', Hs, s, 1, 'hdf', true, 0, 0)); });
-          sp.push(P_('Фасад откидной', 196, sw - 4, k, 'facade', false, 2, 2));
-          cab('Обувница ' + sw + '×' + Hs, sp);
-          notes.push('Откидные механизмы обувницы: ' + k + ' шт.');
+          var k = h.shoe.tiers;
+          if (frame) {
+            cab('Полки для обуви в нише ' + Wn, [P_('Полка обуви', Wn - 2, 280, k, 'body', true, 1, 0)]);
+          } else {
+            var sw = h.shoe.W * 10, Hs = 200 * k + 100, Ds = 260, sp = [];
+            sp.push(P_('Бок', Hs - t, Ds, 2, 'body', false, 1, 0)); sp.push(P_('Дно', sw, Ds, 1, 'body', true, 1, 0));
+            sp.push(P_('Верх', sw, Ds, 1, 'body', true, 1, 0)); sp.push(P_('Полка', sw - 2 * t - 2, Ds - 20, k - 1, 'body', true, 1, 0));
+            splitLen(sw, 2000).forEach(function (s) { sp.push(P_('Задняя стенка ХДФ', Hs, s, 1, 'hdf', true, 0, 0)); });
+            sp.push(P_('Фасад откидной', 196, sw - 4, k, 'facade', false, 2, 2));
+            cab('Обувница ' + sw + '×' + Hs, sp);
+            notes.push('Откидные механизмы обувницы: ' + k + ' шт.');
+          }
         }
         if (h.hanger.on) {
-          var hw2 = h.hanger.W * 10;
-          cab('Вешалка ' + hw2, [P_('Панель вешалки', 1180, hw2, 1, 'body', true, 1, 1), P_('Полка над вешалкой', hw2, 250, 1, 'body', true, 1, 0)]);
-          notes.push('Крючки: ' + Math.ceil(h.hanger.W / 12) + ' шт.');
+          var hw2 = frame ? Wn - 100 : h.hanger.W * 10;
+          cab('Вешалка ' + hw2, [P_('Панель вешалки', 1180, hw2, 1, 'body', true, 1, 1)].concat(frame ? [] : [P_('Полка над вешалкой', hw2, 250, 1, 'body', true, 1, 0)]));
+          notes.push('Крючки: ' + Math.ceil(hw2 / 120) + ' шт.');
         }
         if (h.bench.on) {
-          var bw = h.bench.W * 10;
+          var bw = frame ? Wn : h.bench.W * 10;
           cab('Скамья ' + bw, [P_('Крышка скамьи', bw, 380, 1, 'body', true, 1, 1), P_('Боковина скамьи', 420, 380, 2, 'body', false, 1, 0), P_('Полка скамьи', bw - 2 * t, 380, 1, 'body', true, 1, 0)]);
           if (h.bench.cushion) notes.push('Мягкая подушка скамьи ' + bw + ' мм');
         }
+        if (frame && h.niche.slats) notes.push('Рейки / панель на заднюю стенку ниши ' + Hn + '×' + Wn + ' мм');
       }
       if (m.type !== 'kupe' && m.mirror && m.mirror.on) notes.push('Зеркало на стену ' + m.mirror.H * 10 + '×' + m.mirror.W * 10 + ' мм (' + (MIRRORS[m.mirror.type] || '').toLowerCase() + ')');
       var ttl = { kupe: 'Шкаф-купе', wardrobe: 'Гардеробная', hall: 'Прихожая' }[m.type];

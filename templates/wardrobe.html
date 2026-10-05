@@ -149,7 +149,7 @@
 <div class="cmodal" id="cmodal"><div class="cbox"><button type="button" class="cclose" id="cclose" aria-label="Закрыть">✕</button><iframe id="cframe" title="Каталог цветов ЛДСП / ЛМДФ"></iframe></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="/static/js/shkaf-data.js?v=3"></script>
+<script src="/static/js/shkaf-data.js?v=4"></script>
 <script>
 /* =====================================================================
    ЦЕНЫ. Всё, что влияет на стоимость, — в этом блоке; меняйте цифры здесь.
@@ -251,47 +251,60 @@ function calc() {
     add('Каркас: стойки, верх и низ', 1, ((secs + walls.length) * H * D + 2 * Lm * D) * pm);
     interior(secs, secW, H, D);
   } else {
-    const h = M.hall;
-    if (h.wardrobe.on) {
-      const w = h.wardrobe, W = w.W / 100, H = w.H / 100, D = w.D / 100;
+    const h = M.hall, frame = h.shape !== 'line', U = h.shape === 'U';
+    const Wn = h.niche.W / 100, haM = h.antresol.on ? h.antresol.H / 100 : 0, Hn = (h.wardrobe.H - (h.antresol.on ? h.antresol.H : 0)) / 100;
+    const priceWardrobe = (w, suffix) => {
+      const W = w.W / 100, H = w.H / 100, D = w.D / 100;
       front += W * H;
-      add('Шкаф: корпус', 1, (2 * H * D + 2 * W * D + 3 * W * D) * pm + W * H * P.hdfM2);
-      add('Шкаф: полки и штанга', 1, 3 * 8000 + W * t.rod + 24000);
+      add('Шкаф' + suffix + ': корпус', 1, (2 * H * D + 2 * W * D + 3 * W * D) * pm + W * H * P.hdfM2);
+      add('Шкаф' + suffix + ': полки и штанга', 1, 3 * 8000 + W * t.rod + 24000);
       if (w.kind === 'swing') {
-        const dn = w.doors, dh = H;
-        const a = W * dh;
+        const dn = w.doors, dh = H, a = W * dh;
         let c = a * pm + 2 * (W + dh) * P.edgeDoorM;
         if (w.mirrorDoor) c = a * .7 * pm + a * .3 * glassM2('mirror');
-        add('Распашные двери (' + dn + ' шт.) и петли', dn, c + dn * (dh > 1.2 ? 3 : 2) * t.hinge * 2);
+        add('Распашные двери' + suffix + ' (' + dn + ' шт.) и петли', dn, c + dn * (dh > 1.2 ? 3 : 2) * t.hinge * 2);
       } else {
         const dn = w.doors, dw = (W + (dn - 1) * .03) / dn, dh = H - .06;
         const c = w.mirrorDoor ? (dw * dh * glassM2('mirror') + dw * dh * pm * (dn - 1)) : dw * dh * pm * dn;
-        add('Двери-купе (' + dn + ' шт.): наполнение', dn, c);
-        add('Система раздвижных дверей', dn, dn * t.doorKit + 2 * W * t.rail + dn * t.soft);
+        add('Двери-купе' + suffix + ' (' + dn + ' шт.): наполнение', dn, c);
+        add('Система раздвижных дверей' + suffix, dn, dn * t.doorKit + 2 * W * t.rail + dn * t.soft);
+      }
+    };
+    if (h.wardrobe.on) {
+      const Hd = U ? h.wardrobe.H - (h.antresol.on ? h.antresol.H : 0) : h.wardrobe.H;
+      priceWardrobe(Object.assign({}, h.wardrobe, { H: Hd }), '');
+      if (U) priceWardrobe(Object.assign({}, h.wardrobe, { W: h.wardrobe2.W, doors: h.wardrobe2.doors, mirrorDoor: false, H: Hd }), ' (второй)');
+    }
+    if (frame) front += Wn * (h.wardrobe.H / 100);
+    if (h.shoe.on) {
+      const k = h.shoe.tiers;
+      if (frame) {
+        front += Wn * .2 * k;
+        add('Открытые полки для обуви (' + k + ' шт.)', k, k * (Wn * .3 * pm + 8000));
+      } else {
+        const W = h.shoe.W / 100, Hs = .2 * k + .1, Ds = .26;
+        front += W * Hs;
+        add('Обувница: корпус и фасады', 1, (2 * Hs * Ds + (k + 1) * W * Ds + W * Hs * .6) * pm + W * k * .2 * pm);
+        add('Обувница: откидные механизмы', k, k * t.flap * 2);
       }
     }
-    if (h.shoe.on) {
-      const w = h.shoe, W = w.W / 100, k = w.tiers, Hs = .2 * k + .1, Ds = .26;
-      front += W * Hs;
-      add('Обувница: корпус и фасады', 1, (2 * Hs * Ds + (k + 1) * W * Ds + W * Hs * .6) * pm + W * k * .2 * pm);
-      add('Обувница: откидные механизмы', k, k * t.flap * 2);
-    }
     if (h.hanger.on) {
-      const w = h.hanger, W = w.W / 100;
+      const W = frame ? Wn - .1 : h.hanger.W / 100;
       front += W * .6;
       add('Вешалка: панель и полка', 1, (W * .35 + W * .25) * pm);
       add('Крючки', Math.ceil(W / .12), Math.ceil(W / .12) * t.hook);
     }
     if (h.bench.on) {
-      const w = h.bench, W = w.W / 100;
+      const W = frame ? Wn : h.bench.W / 100;
       front += W * .5;
       add('Скамья', 1, (W * .38 + 2 * .42 * .38 + W * .42) * pm);
-      if (w.cushion) add('Мягкая подушка скамьи', 1, t.cushion);
+      if (h.bench.cushion) add('Мягкая подушка скамьи', 1, t.cushion);
     }
     if (h.antresol.on) {
-      const w = h.antresol, W = w.W / 100, ha = w.H / 100, dn = Math.max(2, Math.ceil(W / .6));
+      const W = frame ? (U ? (h.wardrobe.W + h.niche.W + h.wardrobe2.W) / 100 : Wn) : h.antresol.W / 100, ha = haM, dn = Math.max(2, Math.ceil(W / .6));
       add('Антресоль', 1, (W * .38 + 2 * ha * .38 + W * ha) * pm + dn * 2 * t.hinge);
     }
+    if (frame && h.niche.slats) add('Рейки на задней стенке ниши', 1, Wn * Math.max(.5, Hn) * 250000);
   }
   // зеркало на стену (гардеробная, прихожая)
   if ((M.type === 'wardrobe' || M.type === 'hall') && M.mirror.on) {
@@ -318,6 +331,7 @@ const DEFS = `
 <linearGradient id="gFloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a77a"/><stop offset="1" stop-color="#b48f60"/></linearGradient>
 <linearGradient id="gLed" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe29a" stop-opacity=".95"/><stop offset="1" stop-color="#ffe29a" stop-opacity="0"/></linearGradient>
 <linearGradient id="gLedR" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#ffe29a" stop-opacity=".95"/><stop offset="1" stop-color="#ffe29a" stop-opacity="0"/></linearGradient>
+<linearGradient id="gLedD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe29a" stop-opacity=".8"/><stop offset="1" stop-color="#ffe29a" stop-opacity="0"/></linearGradient>
 <radialGradient id="gLamp" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".75"/><stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/></radialGradient>`;
 const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255; const f = v => Math.max(0, Math.min(255, Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k)))); return '#' + [f(r), f(g), f(b)].map(v => v.toString(16).padStart(2, '0')).join(''); };
 const lum = hex => { const n = parseInt(hex.slice(1), 16); return (0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255; };
@@ -525,18 +539,12 @@ function drawWardrobe(m, mini) {
   return svgWrap(FW, FH, g);
 }
 
-/* --- прихожая: одна, Г- или П-образная (развёртка по стенам) --- */
-const HALL_WALLS = { line: ['A'], L: ['A', 'B'], U: ['A', 'B', 'C'] };
-const WALL_NAME = { A: 'А', B: 'Б', C: 'В' };
-function hallWallItems(m, wk) {
-  const h = m.hall, it = [], on = (c, key) => c.on && ((c.wall || 'A') === wk);
-  const walls = HALL_WALLS[h.shape] || ['A'], ok = w => (walls.indexOf(w || 'A') >= 0 ? w || 'A' : 'A');
-  const at = c => ok(c.wall) === wk;
-  if (h.wardrobe.on && at(h.wardrobe)) it.push({ k: 'w', w: h.wardrobe.W });
-  const hasH = h.hanger.on && at(h.hanger), hasB = h.bench.on && at(h.bench);
-  if (hasH || hasB) it.push({ k: 'h', w: Math.max(hasH ? h.hanger.W : 0, hasB ? h.bench.W : 0), hang: hasH, bench: hasB });
-  const hasS = h.shoe.on && at(h.shoe), hasM = m.mirror.on && at(m.mirror);
-  if (hasS || hasM) it.push({ k: 's', w: Math.max(hasS ? h.shoe.W : 0, hasM ? m.mirror.W + 16 : 0), shoe: hasS, mir: hasM });
+/* --- прихожая: вдоль стены / Г-образная / П-образная (шкаф вокруг ниши со скамьёй) --- */
+function hallLineItems(m) {
+  const h = m.hall, it = [];
+  if (h.wardrobe.on) it.push({ k: 'w', w: h.wardrobe.W });
+  if (h.hanger.on || h.bench.on) it.push({ k: 'h', w: Math.max(h.hanger.on ? h.hanger.W : 0, h.bench.on ? h.bench.W : 0), hang: h.hanger.on, bench: h.bench.on });
+  if (h.shoe.on || m.mirror.on) it.push({ k: 's', w: Math.max(h.shoe.on ? h.shoe.W : 0, m.mirror.on ? m.mirror.W + 16 : 0), shoe: h.shoe.on, mir: m.mirror.on });
   return it;
 }
 function drawHallWall(m, mode, items, x0, WALL) {
@@ -615,28 +623,92 @@ function drawHallWall(m, mode, items, x0, WALL) {
   });
   return g;
 }
-function drawHall(m, mode, mini) {
-  const h = m.hall, dec = m.decor || {}, walls = HALL_WALLS[h.shape] || ['A'], GAP = 6, WG = 34;
-  const per = walls.map(wk => { const items = hallWallItems(m, wk); return { wk, items, w: items.reduce((a, b) => a + b.w, 0) + GAP * Math.max(0, items.length - 1) }; }).filter(p => p.items.length);
-  if (!per.length) per.push({ wk: 'A', items: [], w: 120 });
-  const total = per.reduce((a, b) => a + b.w, 0) + WG * (per.length - 1);
+
+function drawHallLine(m, mode, mini) {
+  const h = m.hall, dec = m.decor || {}, GAP = 6;
+  const items = hallLineItems(m);
+  const total = items.reduce((a, b) => a + b.w, 0) + GAP * Math.max(0, items.length - 1);
   const Hmax = Math.max((h.wardrobe.on ? h.wardrobe.H : 0) + (h.antresol.on && h.wardrobe.on ? h.antresol.H : 0), 215);
   const PAD = mini ? 40 : 66, FW = total + 2 * PAD, WALL = Hmax + 40, FH = WALL + 34;
   let g = sceneBg(FW, WALL);
   if (dec.rug) g += rug(PAD + total / 2, WALL + 7, total + 60, '#dcd1bf');
   if (dec.plant) g += plant(PAD - 26, WALL + 7, 1.35);
-  let x = PAD;
-  per.forEach((p, i) => {
-    g += drawHallWall(m, mode, p.items, x, WALL);
-    if (per.length > 1) {
-      g += `<text x="${f2(x + p.w / 2)}" y="14" text-anchor="middle" font-size="10" fill="#7a6a4e" font-family="Manrope,sans-serif" font-weight="700">Стена ${WALL_NAME[p.wk]} · ${Math.round(p.w)} см</text>`;
-      if (i < per.length - 1) g += LN(x + p.w + WG / 2, 20, x + p.w + WG / 2, WALL, '#b9ab90', .8, 'stroke-dasharray="3 3"');
-    }
-    x += p.w + WG;
-  });
-  if (dec.lamp) { const lx = PAD + per[0].w / 2; g += `<ellipse cx="${f2(lx)}" cy="${f2(WALL - 175)}" rx="40" ry="40" fill="url(#gLamp)" opacity=".5"/>` + LN(lx, 22, lx, WALL - 205, '#2b2f33', 1) + `<path d="M ${f2(lx - 10)} ${f2(WALL - 205)} L ${f2(lx - 6)} ${f2(WALL - 218)} L ${f2(lx + 6)} ${f2(WALL - 218)} L ${f2(lx + 10)} ${f2(WALL - 205)} Z" fill="#f4e4bf" stroke="#c9b27c" stroke-width=".6"/>`; }
+  g += drawHallWall(m, mode, items, PAD, WALL);
+  if (dec.lamp) { const lx = PAD + total / 2; g += `<ellipse cx="${f2(lx)}" cy="${f2(WALL - 175)}" rx="40" ry="40" fill="url(#gLamp)" opacity=".5"/>` + LN(lx, 0, lx, WALL - 205, '#2b2f33', 1) + `<path d="M ${f2(lx - 10)} ${f2(WALL - 205)} L ${f2(lx - 6)} ${f2(WALL - 218)} L ${f2(lx + 6)} ${f2(WALL - 218)} L ${f2(lx + 10)} ${f2(WALL - 205)} Z" fill="#f4e4bf" stroke="#c9b27c" stroke-width=".6"/>`; }
   return svgWrap(FW, FH, g);
 }
+function drawHallFrame(m, mode, mini) {
+  const h = m.hall, dec = m.decor || {}, col = m.customColor ? m.customColor.hex : PALETTE[m.color][1];
+  const U = h.shape === 'U', right = (h.side || 'right') === 'right';
+  const H = h.wardrobe.H, ha = h.antresol.on ? h.antresol.H : 0, Hn = H - ha, Hw = U ? H - ha : H;
+  const Wn = h.niche.W, W1 = h.wardrobe.W, W2 = U ? h.wardrobe2.W : 0, total = W1 + Wn + W2;
+  const PAD = mini ? 40 : 66, FW = total + 2 * PAD, WALL = H + 40, FH = WALL + 34;
+  let g = sceneBg(FW, WALL);
+  if (dec.rug) g += rug(PAD + total / 2, WALL + 7, total + 60, '#dcd1bf');
+  if (dec.plant) g += plant(PAD - 26, WALL + 7, 1.35);
+  let x1 = null, xN, x2 = null;
+  if (U) { x1 = PAD; xN = PAD + W1; x2 = xN + Wn; }
+  else if (right) { xN = PAD; x1 = PAD + Wn; }
+  else { x1 = PAD; xN = PAD + W1; }
+  const nTop = WALL - Hn, nx = xN + 2, nw = Wn - 4;
+  // ниша: задняя стенка (рейки или стена)
+  g += R(xN, nTop, Wn, Hn, h.niche.slats ? '#c9a273' : '#ece3d3');
+  if (h.niche.slats) for (let sx = xN + 4; sx < xN + Wn - 1; sx += 7) g += LN(sx, nTop, sx, WALL, '#a98250', .9);
+  g += R(xN, nTop, Wn, 14, 'rgba(0,0,0,.12)');
+  // шкафы по бокам
+  const mk = (W, doors, mir) => ({ hall: { wardrobe: Object.assign({}, h.wardrobe, { W, H: Hw, doors, mirrorDoor: mir }), antresol: { on: false } }, customColor: m.customColor, color: m.color, decor: m.decor, mirror: m.mirror });
+  if (x1 != null) g += drawHallWall(mk(W1, h.wardrobe.doors, h.wardrobe.mirrorDoor), mode, [{ k: 'w', w: W1 }], x1, WALL);
+  if (U) g += drawHallWall(mk(W2, h.wardrobe2.doors, false), mode, [{ k: 'w', w: W2 }], x2, WALL);
+  // содержимое ниши
+  const cushion = ['#b07d12', '#7f9b6a', '#47556b'][m.tier] || '#b07d12';
+  const shoeCol = ['#2f3b4f', '#8b4a3a', '#d8cfc0', '#2b2b2b', '#b07d12'];
+  let seatY = null;
+  if (h.bench.on) {
+    seatY = WALL - 45;
+    g += R(nx, seatY, nw, 6, shade(col, -.3)) + R(nx + 1, seatY - 9, nw - 2, 9, cushion, 'rx="3"') + R(nx + 1, seatY - 9, nw - 2, 3.5, shade(cushion, .25), 'rx="3"');
+    g += bag(nx + nw * .55, seatY - 9, 22, 22, '#475569');
+    if (h.shoe.on) {
+      for (let k = 0; k < Math.min(h.shoe.tiers, 2); k++) {
+        const by = WALL - 2 - k * 20;
+        g += R(nx, by - 20 + 1.6, nw, 1.6, shade(col, -.15));
+        for (let sx = nx + 4, j = 0; sx + 27 < nx + nw - 2; sx += 28, j++) g += shoePair(sx, by - 20 + 1.6, shoeCol[(k + j) % 5]);
+      }
+    } else g += shoePair(nx + 8, WALL - 1, '#2f3b4f') + (nw > 70 ? shoePair(nx + 38, WALL - 1, '#b07d12') : '');
+  } else if (h.shoe.on) {
+    const k = h.shoe.tiers;
+    for (let i = 0; i < k; i++) {
+      const by = WALL - i * 22 - 2;
+      g += R(nx, by - 1.6, nw, 1.8, shade(col, -.15));
+      for (let sx = nx + 4, j = 0; sx + 27 < nx + nw - 2; sx += 28, j++) g += shoePair(sx, by - 1.8, shoeCol[(i + j) % 5]);
+    }
+    g += bag(nx + 6, WALL - k * 22 - 1.8, 22, 18, '#8b4a3a') + bag(nx + 34, WALL - k * 22 - 1.8, 20, 15, '#2f3b4f');
+  }
+  let hookY = null;
+  if (h.hanger.on) {
+    hookY = nTop + 28;
+    g += R(nx + 4, hookY - 6, nw - 8, 4, shade(col, -.3), 'rx="1"');
+    for (let hx = nx + 12, i = 0; hx < nx + nw - 6; hx += 14, i++) {
+      g += `<circle cx="${f2(hx)}" cy="${f2(hookY)}" r="1.9" fill="#8a8f95"/>`;
+      if (i % 2 === 0) g += `<path d="M ${f2(hx - 5)} ${f2(hookY + 2)} L ${f2(hx + 5)} ${f2(hookY + 2)} L ${f2(hx + 8)} ${f2(hookY + 62 + (i % 3) * 9)} L ${f2(hx - 8)} ${f2(hookY + 62 + (i % 3) * 9)} Z" fill="${GARM[(i * 3 + 1) % GARM.length]}" stroke="rgba(0,0,0,.2)" stroke-width=".4"/>`;
+    }
+  }
+  if (m.mirror.on) {
+    const topLimit = hookY != null ? hookY + 72 : nTop + 26, lowLimit = h.bench.on ? WALL - 62 : (h.shoe.on ? WALL - h.shoe.tiers * 22 - 8 : WALL - 26);
+    const mw = Math.min(m.mirror.W, nw - 14), mh = Math.max(30, Math.min(m.mirror.H, lowLimit - topLimit)), mx = nx + (nw - mw) / 2, my = lowLimit - mh;
+    if (m.mirror.type === 'led') g += R(mx - 6, my - 6, mw + 12, mh + 12, 'url(#gLamp)', 'opacity=".9"');
+    g += R(mx - 2.2, my - 2.2, mw + 4.4, mh + 4.4, '#2b2f33') + R(mx, my, mw, mh, 'url(#gMirror)') + `<polygon points="${f2(mx + mw * .1)},${f2(my + mh)} ${f2(mx + mw * .4)},${f2(my)} ${f2(mx + mw * .55)},${f2(my)} ${f2(mx + mw * .25)},${f2(my + mh)}" fill="url(#gShine)"/>`;
+    if (m.mirror.type === 'led') g += R(mx - 1, my - 1, mw + 2, 1.6, '#ffe29a') + R(mx - 1, my + mh - .6, mw + 2, 1.6, '#ffe29a');
+  }
+  // антресоль над нишей (Г) или на всю ширину (П)
+  if (ha > 0) {
+    const bx = U ? x1 : xN, bw = U ? total : Wn, dn = Math.max(2, Math.ceil(bw / 60));
+    for (let i = 0; i < dn; i++) g += R(bx + i * bw / dn, WALL - H, bw / dn - .6, ha, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(bx + i * bw / dn, WALL - H, bw / dn - .6, ha, 'url(#gGloss)', 'opacity=".5"') + R(bx + i * bw / dn + bw / dn / 2 - 5, WALL - H + ha - 6, 10, 1.4, shade(col, -.35), 'rx=".7"');
+  }
+  if (m.led) g += R(xN + 2, nTop - 1, Wn - 4, 2, '#ffe29a') + R(xN, nTop, Wn, 46, 'url(#gLedD)', 'opacity=".85"');
+  if (dec.lamp) { const lx = xN + Wn / 2; g += LN(lx, 0, lx, nTop + 6, '#2b2f33', 1) + `<path d="M ${f2(lx - 8)} ${f2(nTop + 22)} L ${f2(lx - 5)} ${f2(nTop + 6)} L ${f2(lx + 5)} ${f2(nTop + 6)} L ${f2(lx + 8)} ${f2(nTop + 22)} Z" fill="#f4e4bf" stroke="#c9b27c" stroke-width=".6"/>`; }
+  return svgWrap(FW, FH, g);
+}
+function drawHall(m, mode, mini) { return m.hall.shape === 'line' ? drawHallLine(m, mode, mini) : drawHallFrame(m, mode, mini); }
 
 function drawAny(m, mode, mini) {
   if (m.type === 'kupe') return drawKupe(m, mode, mini);
@@ -669,7 +741,7 @@ function decorCard(n) {
 function mirrorCard(n) {
   const m = M.mirror;
   return `<div class="card"><h2><span class="n">${n}</span>Зеркало на стену</h2><div class="chips">${chip(m.on, 'data-toggle="mirror.on"', m.on ? 'Нужно' : 'Не нужно')}</div>
-    <div class="${m.on ? '' : 'hide'}" style="margin-top:12px">${M.type === 'hall' ? wallSel('mirror') : ''}<div class="row3" style="margin-top:12px">${field('Тип', `<select data-k="mirror.type">${Object.keys(MIRRORS).map(k => `<option value="${k}" ${m.type === k ? 'selected' : ''}>${MIRRORS[k]}</option>`).join('')}</select>`)}${field('Ширина, см', stepper('mirror.W', 30, 200, 5))}${field('Высота, см', stepper('mirror.H', 40, 260, 10))}</div></div></div>`;
+    <div class="${m.on ? '' : 'hide'}" style="margin-top:12px"><div class="row3" style="margin-top:12px">${field('Тип', `<select data-k="mirror.type">${Object.keys(MIRRORS).map(k => `<option value="${k}" ${m.type === k ? 'selected' : ''}>${MIRRORS[k]}</option>`).join('')}</select>`)}${field('Ширина, см', stepper('mirror.W', 30, 200, 5))}${field('Высота, см', stepper('mirror.H', 40, 260, 10))}</div></div></div>`;
 }
 function formKupe() {
   const dw = Math.round((M.W + (M.doors - 1) * 3) / M.doors);
@@ -688,26 +760,21 @@ function formWardrobe() {
     <div class="row" style="margin-top:12px">${field('Высота, см', stepper('H', 190, 290, 5))}${field('Глубина, см', stepper('D', 30, 70, 5))}</div>
     <label class="f" style="margin-top:12px">Цвет корпуса</label>${swatches()}</div>` + interiorCard(3) + mirrorCard(4) + decorCard(5);
 }
-const wallSel = path => (M.hall.shape === 'line' ? '' : `<div class="row" style="margin-top:12px">${field('На какой стене', `<select data-k="${path}.wall">${HALL_WALLS[M.hall.shape].map(w => `<option value="${w}" ${(get(M, path + '.wall') || 'A') === w ? 'selected' : ''}>Стена ${WALL_NAME[w]}</option>`).join('')}</select>`)}<div></div></div>`);
-function hallDefaults(shape) {
-  const h = M.hall, set2 = (o, w) => { o.wall = w; };
-  if (shape === 'line') { [h.wardrobe, h.shoe, h.hanger, h.bench, M.mirror].forEach(o => set2(o, 'A')); }
-  else if (shape === 'L') { set2(h.wardrobe, 'A'); [h.shoe, h.hanger, h.bench, M.mirror].forEach(o => set2(o, 'B')); }
-  else { set2(h.wardrobe, 'A'); set2(h.hanger, 'B'); set2(h.bench, 'B'); set2(h.shoe, 'C'); set2(M.mirror, 'C'); }
-}
 function formHall() {
-  const h = M.hall, wd = h.wardrobe;
-  const block = (title, key, inner) => `<div class="card"><h2>${title}</h2><div class="chips">${chip(get(M, key + '.on'), `data-toggle="${key}.on"`, get(M, key + '.on') ? 'Входит' : 'Нет')}</div><div class="${get(M, key + '.on') ? '' : 'hide'}" style="margin-top:12px">${inner}${key === 'hall.antresol' ? '' : wallSel(key)}</div></div>`;
-  return tiersCard() + `<div class="card"><h2><span class="n">2</span>Планировка прихожей</h2><div class="chips">${chip(h.shape === 'line', 'data-hshape="line"', 'По одной стене')}${chip(h.shape === 'L', 'data-hshape="L"', 'Г-образная')}${chip(h.shape === 'U', 'data-hshape="U"', 'П-образная')}</div>
-    <div class="hint">${h.shape === 'line' ? 'Всё размещается вдоль одной стены.' : 'Для каждого элемента выберите, на какой стене он стоит (стены А, Б' + (h.shape === 'U' ? ', В' : '') + ').'}</div></div>` +
-    `<div class="card"><h2><span class="n">3</span>Цвет</h2>${swatches()}</div>` +
-    block('Шкаф для одежды', 'hall.wardrobe', `<div class="row3">${field('Ширина, см', stepper('hall.wardrobe.W', 50, 400, 10))}${field('Высота, см', stepper('hall.wardrobe.H', 150, 290, 5))}${field('Глубина, см', stepper('hall.wardrobe.D', 30, 70, 5))}</div>
+  const h = M.hall, wd = h.wardrobe, frame = h.shape !== 'line', U = h.shape === 'U';
+  const block = (title, key, inner) => `<div class="card"><h2>${title}</h2><div class="chips">${chip(get(M, key + '.on'), `data-toggle="${key}.on"`, get(M, key + '.on') ? 'Входит' : 'Нет')}</div><div class="${get(M, key + '.on') ? '' : 'hide'}" style="margin-top:12px">${inner}</div></div>`;
+  const hints = { line: 'Шкаф, вешалка со скамьёй и обувница стоят рядом вдоль одной стены.', L: 'Шкаф с одной стороны, рядом ниша (скамья, обувь, зеркало), а над нишей антресоль, как на фото в разделе «Прихожие».', U: 'Шкафы по бокам, посередине ниша (обувь, скамья, зеркало), сверху антресоль на всю ширину, как на втором фото.' };
+  const shapeCard = `<div class="card"><h2><span class="n">2</span>Форма прихожей</h2><div class="chips">${chip(!frame, 'data-hshape="line"', 'Вдоль стены')}${chip(h.shape === 'L', 'data-hshape="L"', 'Г-образная')}${chip(U, 'data-hshape="U"', 'П-образная')}</div><div class="hint">${hints[h.shape]}</div>
+    ${frame ? `<div class="row3" style="margin-top:12px">${field('Ширина ниши, см', stepper('hall.niche.W', 60, 250, 10))}${U ? field('Ширина второго шкафа, см', stepper('hall.wardrobe2.W', 40, 300, 10)) : field('Шкаф стоит', `<select data-k="hall.side"><option value="right" ${h.side === 'right' ? 'selected' : ''}>справа от ниши</option><option value="left" ${h.side === 'left' ? 'selected' : ''}>слева от ниши</option></select>`)}${U ? field('Дверей во втором шкафу', stepper('hall.wardrobe2.doors', 1, 5, 1)) : '<div></div>'}</div>
+    <div class="chips" style="margin-top:12px">${chip(h.niche.slats, 'data-toggle="hall.niche.slats"', 'Деревянные рейки на стенке ниши')}</div>` : ''}</div>`;
+  return tiersCard() + shapeCard + `<div class="card"><h2><span class="n">3</span>Цвет</h2>${swatches()}</div>` +
+    block(frame && U ? 'Шкаф слева (и справа — такой же по высоте)' : 'Шкаф для одежды', 'hall.wardrobe', `<div class="row3">${field(frame && U ? 'Ширина левого шкафа, см' : 'Ширина, см', stepper('hall.wardrobe.W', 50, 400, 10))}${field(frame ? 'Общая высота, см' : 'Высота, см', stepper('hall.wardrobe.H', 150, 290, 5))}${field('Глубина, см', stepper('hall.wardrobe.D', 30, 70, 5))}</div>
       <div class="row" style="margin-top:12px">${field('Двери', `<select data-k="hall.wardrobe.kind"><option value="swing" ${wd.kind === 'swing' ? 'selected' : ''}>Распашные</option><option value="sliding" ${wd.kind === 'sliding' ? 'selected' : ''}>Купе (раздвижные)</option></select>`)}${field('Количество дверей', stepper('hall.wardrobe.doors', 1, 5, 1))}</div>
       <div class="chips" style="margin-top:12px">${chip(wd.mirrorDoor, 'data-toggle="hall.wardrobe.mirrorDoor"', 'Зеркало на двери')}</div>`) +
-    block('Обувница', 'hall.shoe', `<div class="row">${field('Ширина, см', stepper('hall.shoe.W', 40, 200, 10))}${field('Ярусов (откидных)', stepper('hall.shoe.tiers', 1, 6, 1))}</div>`) +
-    block('Открытая вешалка', 'hall.hanger', `<div class="row">${field('Ширина, см', stepper('hall.hanger.W', 40, 200, 10))}<div></div></div>`) +
-    block('Скамья', 'hall.bench', `<div class="row">${field('Ширина, см', stepper('hall.bench.W', 40, 200, 10))}${field('Подушка', `<div class="chips">${chip(h.bench.cushion, 'data-toggle="hall.bench.cushion"', h.bench.cushion ? 'Мягкая' : 'Нет')}</div>`)}</div>`) +
-    block('Антресоль над шкафом', 'hall.antresol', `<div class="row">${field('Ширина, см', stepper('hall.antresol.W', 60, 400, 10))}${field('Высота, см', stepper('hall.antresol.H', 25, 80, 5))}</div>`) +
+    block(frame ? 'Открытые полки для обуви в нише' : 'Обувница', 'hall.shoe', frame ? `<div class="row">${field('Количество полок', stepper('hall.shoe.tiers', 1, 6, 1))}<div></div></div>` : `<div class="row">${field('Ширина, см', stepper('hall.shoe.W', 40, 200, 10))}${field('Ярусов (откидных)', stepper('hall.shoe.tiers', 1, 6, 1))}</div>`) +
+    block(frame ? 'Крючки для одежды в нише' : 'Открытая вешалка', 'hall.hanger', frame ? '<div class="hint">Панель с крючками на задней стенке ниши.</div>' : `<div class="row">${field('Ширина, см', stepper('hall.hanger.W', 40, 200, 10))}<div></div></div>`) +
+    block(frame ? 'Сиденье (скамья) в нише' : 'Скамья', 'hall.bench', `<div class="row">${frame ? '<div></div>' : field('Ширина, см', stepper('hall.bench.W', 40, 200, 10))}${field('Подушка', `<div class="chips">${chip(h.bench.cushion, 'data-toggle="hall.bench.cushion"', h.bench.cushion ? 'Мягкая' : 'Нет')}</div>`)}</div>`) +
+    block(frame ? (U ? 'Антресоль на всю ширину' : 'Антресоль над нишей') : 'Антресоль над шкафом', 'hall.antresol', `<div class="row">${frame ? '<div></div>' : field('Ширина, см', stepper('hall.antresol.W', 60, 400, 10))}${field('Высота, см', stepper('hall.antresol.H', 25, 80, 5))}</div>`) +
     mirrorCard(8) + decorCard(9);
 }
 function renderForm() {
@@ -732,7 +799,8 @@ function spec() {
     rows.push(['Планировка', { line: 'Линейная', L: 'Г-образная', U: 'П-образная' }[M.shape]], ['Стены', [M.A, M.B, M.C].slice(0, M.shape === 'line' ? 1 : (M.shape === 'L' ? 2 : 3)).join(' + ') + ' см'], ['Высота × глубина', `${M.H}×${M.D} см`]);
   } else {
     const h = M.hall;
-    rows.push(['Планировка', { line: 'По одной стене', L: 'Г-образная', U: 'П-образная' }[h.shape || 'line']]);
+    rows.push(['Форма', { line: 'Вдоль стены', L: 'Г-образная (шкаф сбоку, ниша, антресоль над нишей)', U: 'П-образная (шкафы по бокам, ниша, антресоль сверху)' }[h.shape || 'line']]);
+    if (h.shape !== 'line') rows.push(['Ниша', h.niche.W + ' см' + (h.niche.slats ? ', рейки' : '') + (h.shape === 'L' ? ', шкаф ' + (h.side === 'left' ? 'слева' : 'справа') : '') + (h.shape === 'U' ? ', второй шкаф ' + h.wardrobe2.W + ' см' : '')]);
     if (h.wardrobe.on) rows.push(['Шкаф', `${h.wardrobe.W}×${h.wardrobe.H}×${h.wardrobe.D} см, ${h.wardrobe.kind === 'sliding' ? 'купе' : 'распашной'}, дверей: ${h.wardrobe.doors}${h.wardrobe.mirrorDoor ? ', зеркало' : ''}`]);
     if (h.shoe.on) rows.push(['Обувница', `${h.shoe.W} см, ярусов ${h.shoe.tiers}`]);
     if (h.hanger.on) rows.push(['Вешалка', h.hanger.W + ' см']);
@@ -790,8 +858,11 @@ function norm() {
   ['A', 'B', 'C'].forEach(k => { M[k] = clamp(M[k], 80, 800); });
   ['shelves', 'rods', 'drawers', 'pant', 'shoes'].forEach(k => { M[k] = clamp(M[k], 0, 30); });
   const w = M.hall.wardrobe; w.doors = clamp(w.doors, 1, 5);
-  const okW = HALL_WALLS[M.hall.shape] || ['A'];
-  [M.hall.wardrobe, M.hall.shoe, M.hall.hanger, M.hall.bench, M.mirror].forEach(o => { if (okW.indexOf(o.wall || 'A') < 0) o.wall = 'A'; });
+  const hh = M.hall; hh.niche.W = clamp(hh.niche.W, 60, 250); hh.wardrobe2.W = clamp(hh.wardrobe2.W, 40, 300); hh.wardrobe2.doors = clamp(hh.wardrobe2.doors, 1, 5);
+  if (hh.shape !== 'line') {   // в нише всё стоит по ширине ниши, антресоль перекрывает нишу (Г) или всю ширину (П)
+    hh.bench.W = hh.niche.W; hh.shoe.W = hh.niche.W; hh.hanger.W = Math.max(40, hh.niche.W - 10);
+    hh.antresol.W = hh.shape === 'U' ? hh.wardrobe.W + hh.niche.W + hh.wardrobe2.W : hh.niche.W;
+  }
 }
 document.addEventListener('click', e => {
   const clr = e.target.closest('[data-colorclear]'); if (clr) { e.preventDefault(); M.customColor = null; renderForm(); refresh(); presetCards(); return; }
@@ -804,7 +875,7 @@ document.addEventListener('click', e => {
   else if (t.dataset.toggle) { const p = t.dataset.toggle; set(M, p, !get(M, p)); activePreset = -1; renderForm(); refresh(); }
   else if (t.dataset.decor) { M.decor[t.dataset.decor] = !M.decor[t.dataset.decor]; renderForm(); refresh(); }
   else if (t.dataset.shape) { M.shape = t.dataset.shape; renderForm(); refresh(); }
-  else if (t.dataset.hshape) { M.hall.shape = t.dataset.hshape; hallDefaults(M.hall.shape); activePreset = -1; renderForm(); refresh(); }
+  else if (t.dataset.hshape) { M.hall.shape = t.dataset.hshape; if (M.hall.shape !== 'line') { M.hall.antresol.on = true; if (M.hall.antresol.H < 30) M.hall.antresol.H = 50; if (M.hall.wardrobe.H < 220) M.hall.wardrobe.H = 250; } activePreset = -1; norm(); renderForm(); refresh(); presetCards(); }
   else if (t.dataset.catalog) { openCatalog(); }
   else if (t.dataset.view) { viewMode = t.dataset.view; refresh(); }
   else if (t.dataset.preset !== undefined) { const i = +t.dataset.preset; M = merge(DEF(), Object.assign({ type: M.type }, deep(PRESETS[M.type][i].m))); activePreset = i; norm(); renderForm(); refresh(); presetCards(); }
