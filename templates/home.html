@@ -66,7 +66,22 @@
     .nav a { font-size: .92rem; font-weight: 600; color: #e9e1d4; position: relative; white-space: nowrap; }
     .nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 1px; background: var(--gold); transform: scaleX(0); transition: transform .25s; }
     .nav a:hover::after { transform: scaleX(1); }
+    .has-sub { position: relative; padding: 28px 0; }
+    .has-sub > a::before { content: '▾'; font-size: .7rem; margin-left: 6px; float: right; color: var(--gold); }
+    .sub { display: none; position: absolute; top: 100%; left: -16px; min-width: 240px; background: rgba(17,16,14,.97); border: 1px solid var(--line); padding: 8px 0; box-shadow: 0 20px 40px rgba(0,0,0,.5); z-index: 60; }
+    .has-sub:hover .sub, .has-sub:focus-within .sub { display: block; }
+    .nav .sub a { display: block; padding: 11px 20px; font-size: .9rem; white-space: nowrap; }
+    .nav .sub a::after { display: none; }
+    .nav .sub a:hover { background: var(--bg-2); color: var(--gold-2); }
+    .pill { border: 1px solid var(--gold); color: var(--gold-2); padding: 8px 14px; font: 700 .74rem var(--sans); letter-spacing: .1em; text-transform: uppercase; border-radius: 999px; white-space: nowrap; }
+    .pill:hover { background: var(--gold); color: #1b1408; }
+    .partner-band { background: var(--bg-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .partner-band .wrap { max-width: 860px; }
+    .partner-band h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.1rem, 4vw, 3.2rem); line-height: 1.08; margin: 16px 0 18px; color: #f4ecdf; }
+    .partner-band p { color: #cfc5b6; max-width: 640px; margin: 0 auto 28px; }
+    .partner-band .hero-cta { justify-content: center; }
     .hdr-right { display: flex; align-items: center; gap: 14px; }
+    @media (max-width: 1620px) { .logo-sub { display: none; } .nav { gap: 18px; } .hdr-right { flex-wrap: nowrap; gap: 10px; } }
     .lang { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
     .lang button { background: none; border: 0; color: var(--muted); font: 600 .78rem var(--sans); padding: 6px 11px; cursor: pointer; }
     .lang button.on { background: var(--gold); color: #1b1408; }
@@ -274,6 +289,10 @@
       .burger { display: inline-flex; align-items: center; justify-content: center; }
       .hdr.open .nav { display: flex; position: absolute; top: 84px; left: 0; right: 0; flex-direction: column; align-items: flex-start; gap: 0; background: rgba(17,16,14,.97); border-bottom: 1px solid var(--line); padding: 8px 24px 18px; }
       .hdr.open .nav a { padding: 12px 0; width: 100%; border-bottom: 1px solid var(--line); }
+      .hdr.open .has-sub { padding: 0; width: 100%; }
+      .hdr.open .has-sub > a::before { display: none; }
+      .hdr.open .sub { display: block; position: static; border: 0; box-shadow: none; background: transparent; padding: 0 0 0 14px; }
+      .hdr.open .nav .sub a { padding: 10px 0; }
     }
     @media (max-width: 900px) {
       .hero .wrap { padding-top: 130px; }
@@ -297,7 +316,7 @@
       .hdr.open .nav { top: 70px; padding: 8px 16px 18px; }
       .logo-mark { font-size: 1.85rem; }
       .logo-sub { display: none; }
-      .hdr-right .btn { display: none; }
+      .hdr-right .btn, .hdr-right .pill { display: none; }
       .hero .wrap { padding-top: 108px; padding-bottom: 80px; }
       .hero-tag { left: 10px; bottom: -22px; }
       .scroll-hint { display: none; }
@@ -336,7 +355,16 @@
         <span class="logo-sub"><b data-t="city">Ташкент</b><span data-t="tagline">кухни и мебель на заказ</span></span>
       </div>
       <nav class="nav" id="nav">
-        <a href="#kitchens" data-t="navKitchens">Кухни</a>
+        <div class="has-sub">
+          <a href="#kitchens" data-t="navKitchens">Кухни</a>
+          <div class="sub">
+            <a href="/kuhni-na-zakaz-tashkent" data-t="subKitchens">Кухни на заказ</a>
+            <a href="/shkafy-kupe-na-zakaz-tashkent" data-t="subShkafy">Шкафы-купе</a>
+            <a href="/garderobnye-na-zakaz-tashkent" data-t="subGarderob">Гардеробные</a>
+            <a href="/prihozhie-na-zakaz-tashkent" data-t="subPrihozhie">Прихожие</a>
+            <a href="/mebel-dlya-spalni-na-zakaz-tashkent" data-t="subSpalni">Спальни</a>
+          </div>
+        </div>
         <a href="#furniture" data-t="navFurniture">Мебель</a>
         <a href="#contract" data-t="navContract">Договор</a>
         <a href="#materials" data-t="navMaterials">Материалы</a>
@@ -345,6 +373,7 @@
         <a href="/calc" data-t="navCalc">Калькулятор</a>
       </nav>
       <div class="hdr-right">
+        <a class="pill" href="/partners" data-t="navPartners">Партнёрам</a>
         <div class="lang"><button type="button" data-lang="ru">RU</button><button type="button" data-lang="uz">UZ</button></div>
         <a class="btn btn-gold btn-sm" href="/calc" data-t="ctaCalcShort">Рассчитать</a>
         <button class="burger" id="burger" aria-label="Меню">☰</button>
@@ -516,6 +545,18 @@
       </div>
     </section>
 
+    <section class="block partner-band" id="partners">
+      <div class="wrap rv">
+        <div class="eyebrow center" data-t="ptEyebrow">Партнёрам</div>
+        <h2 data-t="ptTitle">Дизайнерам и строителям</h2>
+        <p data-t="ptLead">Если вы ведёте ремонт или проект интерьера, мы возьмём кухню и корпусную мебель на себя: замер, проект, изготовление, доставку и монтаж. Условия сотрудничества обсуждаем индивидуально.</p>
+        <div class="hero-cta">
+          <a class="btn btn-gold" href="/partners" data-t="ptCta">Условия для партнёров</a>
+          <a class="btn btn-line js-tg" href="https://t.me/Kitchencalc" target="_blank" rel="noopener">Telegram</a>
+        </div>
+      </div>
+    </section>
+
     <section class="visit" id="contacts">
       <div class="visit-bg" aria-hidden="true"></div>
       <div class="wrap rv">
@@ -606,7 +647,9 @@
     var T = {
       ru: {
         city: 'Ташкент', tagline: 'кухни и мебель на заказ',
-        navHome: 'Главная', navKitchens: 'Кухни', navFurniture: 'Мебель', navFaq: 'Вопросы и ответы', navMaterials: 'Материалы', navProcess: 'Как мы работаем', navContacts: 'Контакты', navCalc: 'Калькулятор',
+        navHome: 'Главная', navPartners: 'Партнёрам', subKitchens: 'Кухни на заказ', subShkafy: 'Шкафы-купе', subGarderob: 'Гардеробные', subPrihozhie: 'Прихожие', subSpalni: 'Спальни',
+        ptEyebrow: 'Партнёрам', ptTitle: 'Дизайнерам и строителям', ptLead: 'Если вы ведёте ремонт или проект интерьера, мы возьмём кухню и корпусную мебель на себя: замер, проект, изготовление, доставку и монтаж. Условия сотрудничества обсуждаем индивидуально.', ptCta: 'Условия для партнёров',
+        navKitchens: 'Кухни', navFurniture: 'Мебель', navFaq: 'Вопросы и ответы', navMaterials: 'Материалы', navProcess: 'Как мы работаем', navContacts: 'Контакты', navCalc: 'Калькулятор',
         ctaCalcShort: 'Рассчитать', heroEyebrow: 'На заказ · Ташкент', heroTitle: 'Кухни и корпусная мебель <em>под ключ</em>',
         heroLead: 'Делаем кухни и корпусную мебель под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену кухни можно узнать онлайн за 2 минуты.',
         ctaCalc: 'Рассчитать стоимость', ctaWorks: 'Смотреть кухни',
@@ -659,7 +702,9 @@
       },
       uz: {
         city: 'Toshkent', tagline: 'buyurtma asosida oshxona va mebel',
-        navHome: 'Bosh sahifa', navKitchens: 'Oshxonalar', navFurniture: 'Mebel', navFaq: 'Savol-javob', navMaterials: 'Materiallar', navProcess: 'Qanday ishlaymiz', navContacts: 'Aloqa', navCalc: 'Kalkulyator',
+        navHome: 'Bosh sahifa', navPartners: 'Hamkorlarga', subKitchens: 'Buyurtma oshxonalar', subShkafy: 'Shkaf-kupe', subGarderob: 'Garderob xonalari', subPrihozhie: 'Prixojaylar', subSpalni: 'Yotoqxonalar',
+        ptEyebrow: 'Hamkorlarga', ptTitle: 'Dizaynerlar va quruvchilarga', ptLead: 'Agar siz taʼmir yoki interyer loyihasini olib borsangiz, oshxona va korpusli mebelni biz oʻz zimmamizga olamiz: oʻlchov, loyiha, ishlab chiqarish, yetkazib berish va oʻrnatish. Hamkorlik shartlari alohida muhokama qilinadi.', ptCta: 'Hamkorlik shartlari',
+        navKitchens: 'Oshxonalar', navFurniture: 'Mebel', navFaq: 'Savol-javob', navMaterials: 'Materiallar', navProcess: 'Qanday ishlaymiz', navContacts: 'Aloqa', navCalc: 'Kalkulyator',
         ctaCalcShort: 'Hisoblash', heroEyebrow: 'Buyurtma asosida · Toshkent', heroTitle: 'Oshxona va korpusli mebel <em>kalit topshirish</em> asosida',
         heroLead: 'Oshxona va korpusli mebelni oʻlchamlaringiz boʻyicha tayyorlaymiz: bepul oʻlchov, oʻz ishlab chiqarishimiz, yetkazish va oʻrnatish. Oshxona narxini 2 daqiqada onlayn bilib oling.',
         ctaCalc: 'Narxni hisoblash', ctaWorks: 'Oshxonalarni koʻrish',

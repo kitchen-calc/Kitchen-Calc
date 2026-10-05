@@ -112,8 +112,8 @@ for _slug in LANDINGS:
 
 @app.get("/partners", response_class=HTMLResponse)
 async def partners():
-    # Страница для дизайнеров и строителей (сотрудничество)
-    return FileResponse(os.path.join(os.path.dirname(__file__), "templates", "partners.html"))
+    # Страница для дизайнеров и строителей (сотрудничество), оформлена как и остальные посадочные
+    return HTMLResponse(render_landing("partners"))
 
 
 @app.get("/calc", response_class=HTMLResponse)
