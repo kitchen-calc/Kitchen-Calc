@@ -42,7 +42,8 @@ async def sitemap():
                 f'<xhtml:link rel="alternate" hreflang="x-default" href="{SITE_URL}/"/>')
     urls = (f"<url><loc>{SITE_URL}/</loc>{alt('/')}<priority>1.0</priority></url>"
             f"<url><loc>{SITE_URL}/uz</loc>{alt('/uz')}<priority>0.9</priority></url>"
-            f"<url><loc>{SITE_URL}/calc</loc><priority>0.8</priority></url>")
+            f"<url><loc>{SITE_URL}/calc</loc><priority>0.8</priority></url>"
+            f"<url><loc>{SITE_URL}/partners</loc><priority>0.6</priority></url>")
     xml = ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
            'xmlns:xhtml="http://www.w3.org/1999/xhtml">' + urls + "</urlset>")
     return HTMLResponse(xml, media_type="application/xml")
@@ -81,6 +82,12 @@ async def read_root_uz_slash():
 async def favicon_ico():
     # Браузеры и поисковики запрашивают иконку по этому адресу, даже если она не указана в странице
     return FileResponse(os.path.join(HOME_DIR, "favicon.ico"), media_type="image/x-icon", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/partners", response_class=HTMLResponse)
+async def partners():
+    # Страница для дизайнеров и строителей (сотрудничество)
+    return FileResponse(os.path.join(os.path.dirname(__file__), "templates", "partners.html"))
 
 
 @app.get("/calc", response_class=HTMLResponse)
