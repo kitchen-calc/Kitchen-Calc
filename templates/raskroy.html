@@ -409,7 +409,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/static/js/shkaf-data.js?v=2"></script>
+  <script src="/static/js/shkaf-data.js?v=3"></script>
   <script>
   (function () {
     'use strict';
@@ -1717,9 +1717,19 @@
     }
 
     // ---- шкаф-купе, гардеробная, прихожая (модель калькулятора /shkaf) ----
-    function drawerSet(secWi, n, label) {
+    // Blum: [серия в DRAWER_SYSTEMS, высота царги, высота фасада, мм]. Дно и спина — по таблице серии (plus считаем как antaro).
+    var BLUM_MAP = { tbx_m: ['tbx', 'M', 200], tbx_b: ['tbx', 'C', 260], tbx_d: ['tbx', 'D', 330], tbx_ds: ['tbx', 'D', 330], tbx_in: ['tbx', 'D', 330], lbx_m: ['lbx', 'M', 200], lbx_c: ['lbx', 'C', 260], lbx_fc: ['lbx', 'C', 260], lbx_f: ['lbx', 'F', 330] };
+    function drawerSet(secWi, n, sysKey) {
       var t = PRESET_BODY_T, parts = [];
       if (!n) return parts;
+      var bm = BLUM_MAP[sysKey];
+      if (bm) {
+        var sys = DRAWER_SYSTEMS[bm[0]], slide = 450;
+        parts.push(P_('Фасад ящика', bm[2], secWi - 4, n, 'facade', false, 2, 2));
+        parts.push(P_('Ящик · дно', secWi - sys.bottomW, slide - sys.bottomL, n, 'body', true, 0, 0));
+        parts.push(P_('Ящик · задняя стенка ' + bm[1], secWi - sys.backW, sys.heights[bm[1]], n, 'body', true, 1, 0));
+        return parts;
+      }
       var boxOuter = secWi - 26;
       parts.push(P_('Фасад ящика', 170, secWi - 4, n, 'facade', false, 2, 2));
       parts.push(P_('Ящик · бок', 450, 100, 2 * n, 'body', true, 1, 0));
@@ -1759,7 +1769,7 @@
         });
         if (doors.length) cab('Двери купе ' + dw + '×' + dh, doors);
         notes.push('Раздвижная система: ' + n + ' двери, направляющие 2 × ' + Math.round(W / 10) + ' см (профиль, ролики — по вашей системе; размеры вставок указаны с припуском на профиль)');
-        if (m.drawers) cab('Ящики купе ×' + m.drawers, drawerSet(secWi, m.drawers));
+        if (m.drawers) { cab('Ящики купе ×' + m.drawers, drawerSet(secWi, m.drawers, m.drawerSys)); if (BLUM_MAP[m.drawerSys]) notes.push('Ящики Blum: размеры дна и задней стенки взяты по таблице серии, проверьте по каталогу Blum'); }
         if (ha) {
           var dn = Math.max(2, Math.ceil(W / 600)), aD = Math.min(D, 380), ap = [];
           splitLen(W, MAXSEG).forEach(function (s) { ap.push(P_('Дно антресоли', s, aD, 1, 'body', true, 1, 0)); ap.push(P_('Верх антресоли', s, aD, 1, 'body', true, 1, 0)); });
@@ -1780,7 +1790,7 @@
         var secW = Math.round(totalLen / secs) - t;
         var inter = [];
         if (m.shelves) inter.push(P_('Полка', secW, Dw - 20, m.shelves, 'body', true, 1, 0));
-        inter = inter.concat(drawerSet(secW, m.drawers));
+        inter = inter.concat(drawerSet(secW, m.drawers, m.drawerSys)); if (m.drawers && BLUM_MAP[m.drawerSys]) notes.push('Ящики Blum: размеры дна и задней стенки взяты по таблице серии, проверьте по каталогу Blum');
         if (inter.length) cab('Наполнение гардеробной', inter);
         interiorNotes();
       } else {

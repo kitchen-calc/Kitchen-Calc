@@ -13,7 +13,7 @@ function merge(t, s) { Object.keys(s).forEach(k => { if (s[k] && typeof s[k] ===
 const DEF = () => ({
   type: 'kupe', tier: 1, color: 0, laco: 0, customColor: null,
   W: 240, H: 240, D: 60, doors: 3, fills: ['dsp', 'mirror', 'dsp'], antresol: 0,
-  shelves: 6, rods: 2, drawers: 3, pant: 0, shoes: 2, led: false,
+  shelves: 6, rods: 2, drawers: 3, drawerSys: 'tier', pant: 0, shoes: 2, led: false,
   shape: 'line', A: 300, B: 200, C: 200,
   mirror: { on: false, type: 'plain', W: 60, H: 180, wall: 'A' },
   hall: {

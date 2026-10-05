@@ -149,7 +149,7 @@
 <div class="cmodal" id="cmodal"><div class="cbox"><button type="button" class="cclose" id="cclose" aria-label="Закрыть">✕</button><iframe id="cframe" title="Каталог цветов ЛДСП / ЛМДФ"></iframe></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="/static/js/shkaf-data.js?v=2"></script>
+<script src="/static/js/shkaf-data.js?v=3"></script>
 <script>
 /* =====================================================================
    ЦЕНЫ. Всё, что влияет на стоимость, — в этом блоке; меняйте цифры здесь.
@@ -179,6 +179,22 @@ const P = {
   sandExtra: 140000,
   ledMirrorFrame: 350000, ledMirrorKit: 150000   // подсветка зеркала: сум за метр периметра + блок
 };
+/* Система ящиков: «По классу» — как у выбранного класса; остальное — Blum с ценами kis.uz на 05.10.2026 (комплект на один ящик). */
+const DRAWER_SYS = {
+  tier: { ru: 'По классу комплектации' },
+  tandem_fix: { ru: 'Blum TANDEM на фиксаторах (скрытые направляющие)', price: 151620 },
+  tandem_lock: { ru: 'Blum TANDEM на замках (скрытые направляющие)', price: 182210 },
+  movento: { ru: 'Blum MOVENTO (скрытые направляющие)', price: 315000 },
+  tbx_m: { ru: 'Blum TANDEMBOX plus · стандартный (M)', price: 503800 },
+  tbx_b: { ru: 'Blum TANDEMBOX plus · с одинарным релингом (B)', price: 575625 },
+  tbx_d: { ru: 'Blum TANDEMBOX plus · с двойным релингом (D)', price: 662075 },
+  tbx_ds: { ru: 'Blum TANDEMBOX plus · с двусторонней боковиной (D)', price: 776455 },
+  tbx_in: { ru: 'Blum TANDEMBOX plus · внутренний с двойным релингом (D)', price: 973960 },
+  lbx_m: { ru: 'Blum LEGRABOX pure · стандартный (M)', price: 683100 },
+  lbx_c: { ru: 'Blum LEGRABOX pure · с высоким фасадом (C)', price: 849470 },
+  lbx_fc: { ru: 'Blum LEGRABOX free · с высоким фасадом (C)', price: 868090 },
+  lbx_f: { ru: 'Blum LEGRABOX pure · с высоким фасадом (F)', price: 1170135 }
+};
 let M = DEF();
 let viewMode = 'out';          // out / in
 let activePreset = -1;
@@ -199,7 +215,8 @@ function calc() {
   const interior = (secs, secW, H, D) => {   // наполнение: общая часть для купе и гардеробной
     add('Полки (' + M.shelves + ' шт.)', M.shelves, M.shelves * (secW * (D - .03) * pm + 8000));
     add('Штанги (' + M.rods + ' шт.)', M.rods, M.rods * (secW * t.rod + 24000));
-    add('Ящики (' + M.drawers + ' шт.)', M.drawers, M.drawers * (t.drawer + .45 * pm));
+    const dHw = M.drawerSys && M.drawerSys !== 'tier' && DRAWER_SYS[M.drawerSys] ? DRAWER_SYS[M.drawerSys].price : t.drawer;
+    add('Ящики (' + M.drawers + ' шт.)', M.drawers, M.drawers * (dHw + .45 * pm));
     add('Пантограф (' + M.pant + ' шт.)', M.pant, M.pant * t.pant);
     add('Обувные полки (' + M.shoes + ' шт.)', M.shoes, M.shoes * t.shoe);
     if (M.led) add('Подсветка внутри', 1, secs * H * t.led + t.ledKit);
@@ -642,7 +659,8 @@ function interiorCard(n) {
   return `<div class="card"><h2><span class="n">${n}</span>Наполнение</h2><div class="row3">
     ${field('Полки', stepper('shelves', 0, 30, 1))}${field('Штанги', stepper('rods', 0, 12, 1))}${field('Ящики', stepper('drawers', 0, 12, 1))}
     ${field('Пантограф', stepper('pant', 0, 4, 1), 'выдвижная штанга')}${field('Обувные полки', stepper('shoes', 0, 10, 1))}${field('Подсветка', `<div class="chips">${chip(M.led, 'data-toggle="led"', M.led ? 'Включена' : 'Нет')}</div>`)}
-  </div></div>`;
+  </div>
+  <div style="margin-top:12px" class="${M.drawers > 0 ? '' : 'hide'}">${field('Система ящиков', `<select data-k="drawerSys">${Object.keys(DRAWER_SYS).map(k => `<option value="${k}" ${(M.drawerSys || 'tier') === k ? 'selected' : ''}>${DRAWER_SYS[k].ru}</option>`).join('')}</select>`, 'Blum: цены kis.uz; влияют на итоговую стоимость')}</div></div>`;
 }
 function decorCard(n) {
   const d = M.decor, names = { plant: 'Растение', lamp: 'Торшер', pouf: 'Пуф / сумка', rug: 'Коврик', pics: 'Картины' };
@@ -721,6 +739,7 @@ function spec() {
     if (h.bench.on) rows.push(['Скамья', h.bench.W + ' см' + (h.bench.cushion ? ', с подушкой' : '')]);
     if (h.antresol.on) rows.push(['Антресоль', `${h.antresol.W}×${h.antresol.H} см`]);
   }
+  if (M.type !== 'hall' && M.drawers > 0) rows.push(['Система ящиков', (DRAWER_SYS[M.drawerSys || 'tier'] || DRAWER_SYS.tier).ru]);
   if (M.type !== 'hall') rows.push(['Наполнение', `полок ${M.shelves}, штанг ${M.rods}, ящиков ${M.drawers}, пантографов ${M.pant}, обувных полок ${M.shoes}${M.led ? ', подсветка' : ''}`]);
   if (M.type !== 'kupe' && M.mirror.on) rows.push(['Зеркало', `${M.mirror.W}×${M.mirror.H} см, ${MIRRORS[M.mirror.type].toLowerCase()}`]);
   return rows;
