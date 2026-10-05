@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кухни на заказ в Ташкенте | АбдулАзиз</title>
+  <meta name="description" content="Кухни на заказ в Ташкенте под ваши размеры: бесплатный замер, изготовление 3–30 рабочих дней, доставка и монтаж, гарантия 12 месяцев. Рассчитайте стоимость онлайн.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Marck+Script&display=swap" rel="stylesheet">
+  <script>
+    // Старые ссылки на расчёт (сайт/#k=...) ведут в калькулятор
+    if (location.hash.indexOf('#k=') === 0) location.replace('/calc' + location.search + location.hash);
+  </script>
+  <style>
+    :root {
+      --bg: #11100e;
+      --bg-2: #191714;
+      --bg-3: #221f1b;
+      --line: rgba(236, 226, 210, 0.10);
+      --text: #ece4d8;
+      --muted: #a79d8f;
+      --gold: #c8a46b;
+      --gold-2: #e2c48f;
+      --serif: 'Cormorant Garamond', Georgia, serif;
+      --sans: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+      --script: 'Marck Script', cursive;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+
+    /* ---------- шапка ---------- */
+    .hdr { position: fixed; inset: 0 0 auto 0; z-index: 50; transition: background .3s, border-color .3s; border-bottom: 1px solid transparent; }
+    .hdr.solid { background: rgba(17, 16, 14, 0.92); backdrop-filter: blur(10px); border-color: var(--line); }
+    .hdr .wrap { display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 84px; }
+    .logo { display: flex; align-items: center; gap: 14px; cursor: pointer; user-select: none; }
+    .logo-mark { font-family: var(--script); font-size: 2.3rem; line-height: 1; color: #f6efe3; letter-spacing: .5px; }
+    .logo-sub { font-family: var(--serif); font-style: italic; font-size: .95rem; line-height: 1.15; color: var(--muted); max-width: 150px; border-left: 1px solid var(--line); padding-left: 14px; }
+    .logo-sub b { display: block; font-style: normal; font-family: var(--sans); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+    .nav { display: flex; align-items: center; gap: 30px; }
+    .nav a { font-size: .92rem; font-weight: 600; color: #e9e1d4; position: relative; }
+    .nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 1px; background: var(--gold); transform: scaleX(0); transition: transform .25s; }
+    .nav a:hover::after { transform: scaleX(1); }
+    .hdr-right { display: flex; align-items: center; gap: 14px; }
+    .lang { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+    .lang button { background: none; border: 0; color: var(--muted); font: 600 .78rem var(--sans); padding: 6px 11px; cursor: pointer; }
+    .lang button.on { background: var(--gold); color: #1b1408; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font: 700 .82rem var(--sans); letter-spacing: .12em; text-transform: uppercase; padding: 15px 26px; border-radius: 2px; cursor: pointer; transition: all .25s; border: 1px solid var(--gold); white-space: nowrap; }
+    .btn-gold { background: var(--gold); color: #1b1408; }
+    .btn-gold:hover { background: var(--gold-2); border-color: var(--gold-2); }
+    .btn-line { background: transparent; color: var(--text); border-color: rgba(236, 226, 210, .45); }
+    .btn-line:hover { border-color: var(--gold); color: var(--gold-2); }
+    .btn-sm { padding: 10px 16px; font-size: .74rem; }
+    .burger { display: none; background: none; border: 1px solid var(--line); color: var(--text); width: 42px; height: 42px; border-radius: 2px; font-size: 1.2rem; cursor: pointer; }
+
+    /* ---------- первый экран ---------- */
+    .hero { position: relative; min-height: 100vh; min-height: 100svh; display: flex; align-items: center; overflow: hidden; }
+    .hero-bg { position: absolute; inset: -40px; background: url('/static/catalog/platinum/31.webp?v=2') center/cover; filter: blur(14px) brightness(.32) saturate(.8); transform: scale(1.1); }
+    .hero::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 70% 40%, rgba(200, 164, 107, .14), transparent 55%), linear-gradient(180deg, rgba(17,16,14,.35) 0%, rgba(17,16,14,.2) 60%, var(--bg) 100%); }
+    .hero .wrap { position: relative; z-index: 2; display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; padding-top: 120px; padding-bottom: 90px; }
+    .eyebrow { font: 700 .76rem var(--sans); letter-spacing: .22em; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 14px; }
+    .eyebrow::before { content: ''; width: 40px; height: 1px; background: var(--gold); }
+    .hero h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.6rem, 5.4vw, 4.6rem); line-height: 1.04; margin: 22px 0 22px; color: #f7f0e4; }
+    .hero h1 em { font-style: italic; color: var(--gold-2); font-weight: 500; }
+    .hero p.lead { font-size: 1.08rem; color: #cfc5b6; max-width: 520px; }
+    .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 34px; }
+    .hero-types { margin-top: 46px; font-family: var(--serif); font-size: 1.15rem; color: var(--muted); }
+    .hero-types span { color: #e6dccd; }
+    .hero-types i { font-style: normal; color: var(--gold); margin: 0 12px; }
+    .hero-frame { position: relative; aspect-ratio: 4 / 4.2; background: linear-gradient(160deg, #efe7da, #d9cdbb); border-radius: 2px; padding: 26px; box-shadow: 0 40px 90px rgba(0,0,0,.55); }
+    .hero-frame::before { content: ''; position: absolute; inset: 14px; border: 1px solid rgba(120, 92, 50, .25); pointer-events: none; }
+    .hero-frame img { width: 100%; height: 100%; object-fit: contain; }
+    .hero-tag { position: absolute; left: -26px; bottom: 34px; background: var(--bg-2); border: 1px solid var(--line); padding: 16px 20px; min-width: 210px; box-shadow: 0 20px 40px rgba(0,0,0,.4); }
+    .hero-tag small { display: block; font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+    .hero-tag b { font-family: var(--serif); font-size: 1.45rem; font-weight: 600; color: var(--gold-2); }
+    .scroll-hint { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 2; font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .scroll-hint::after { content: ''; width: 1px; height: 34px; background: linear-gradient(var(--gold), transparent); }
+
+    /* ---------- цифры ---------- */
+    .facts { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg-2); }
+    .facts .wrap { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .fact { padding: 30px 24px; border-left: 1px solid var(--line); }
+    .fact:first-child { border-left: 0; }
+    .fact b { display: block; font-family: var(--serif); font-size: 2.1rem; font-weight: 600; color: var(--gold-2); line-height: 1.1; }
+    .fact span { font-size: .86rem; color: var(--muted); }
+
+    /* ---------- секции ---------- */
+    section.block { padding: 110px 0; }
+    .sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; margin-bottom: 50px; flex-wrap: wrap; }
+    .sec-head h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.1rem, 4vw, 3.2rem); line-height: 1.08; margin-top: 16px; color: #f4ecdf; }
+    .sec-head p { color: var(--muted); max-width: 440px; }
+
+    /* ---------- кухни ---------- */
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tab { background: none; border: 1px solid var(--line); color: var(--muted); font: 600 .8rem var(--sans); letter-spacing: .08em; text-transform: uppercase; padding: 10px 16px; cursor: pointer; border-radius: 2px; }
+    .tab.on { border-color: var(--gold); color: var(--gold-2); }
+    .grid-k { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+    .card { position: relative; background: var(--bg-2); border: 1px solid var(--line); display: flex; flex-direction: column; transition: transform .35s, border-color .35s; }
+    .card:hover { transform: translateY(-6px); border-color: rgba(200, 164, 107, .45); }
+    .card-img { position: relative; aspect-ratio: 4 / 3.3; background: linear-gradient(160deg, #efe7da, #d6c9b6); padding: 18px; overflow: hidden; }
+    .card-img img { width: 100%; height: 100%; object-fit: contain; transition: transform .6s; }
+    .card:hover .card-img img { transform: scale(1.04); }
+    .badge { position: absolute; top: 14px; left: 14px; font: 700 .66rem var(--sans); letter-spacing: .16em; text-transform: uppercase; padding: 6px 10px; background: rgba(17,16,14,.86); color: var(--gold-2); }
+    .card-body { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .card-body h3 { font-family: var(--serif); font-size: 1.65rem; font-weight: 600; color: #f4ecdf; line-height: 1.1; }
+    .card-body p { font-size: .88rem; color: var(--muted); flex: 1; }
+    .card-link { margin-top: 10px; font: 700 .74rem var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); display: inline-flex; align-items: center; gap: 10px; }
+    .card-link::after { content: '→'; transition: transform .25s; }
+    .card:hover .card-link::after { transform: translateX(5px); }
+
+    /* ---------- калькулятор ---------- */
+    .calc-band { background: var(--bg-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .calc-band .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
+    .calc-band h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.1rem, 4vw, 3.3rem); line-height: 1.08; margin: 16px 0 20px; color: #f4ecdf; }
+    .calc-band p { color: #cfc5b6; }
+    .ticks { list-style: none; margin: 26px 0 34px; display: grid; gap: 12px; }
+    .ticks li { display: flex; gap: 14px; color: #e3dacb; }
+    .ticks li::before { content: ''; flex: 0 0 18px; height: 1px; background: var(--gold); margin-top: 13px; }
+    .calc-visual { position: relative; }
+    .calc-visual .hero-frame { aspect-ratio: 4 / 3.4; }
+    .calc-price { position: absolute; right: -18px; top: 26px; background: var(--bg); border: 1px solid rgba(200,164,107,.4); padding: 18px 22px; text-align: right; box-shadow: 0 20px 40px rgba(0,0,0,.45); }
+    .calc-price small { display: block; font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+    .calc-price b { font-family: var(--serif); font-size: 1.7rem; color: var(--gold-2); font-weight: 600; }
+
+    /* ---------- материалы ---------- */
+    .grid-m { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; }
+    .mat { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--bg-3); }
+    .mat img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.35); transition: transform .8s; }
+    .mat:hover img { transform: scale(1.5); }
+    .mat figcaption { position: absolute; inset: auto 0 0 0; padding: 40px 16px 14px; background: linear-gradient(transparent, rgba(10, 9, 8, .85)); }
+    .mat figcaption b { display: block; font-family: var(--serif); font-size: 1.25rem; font-weight: 600; color: #f6efe3; }
+    .mat figcaption span { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-2); }
+    .mat-foot { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-top: 34px; flex-wrap: wrap; }
+    .mat-foot p { color: var(--muted); max-width: 640px; }
+
+    /* ---------- этапы ---------- */
+    .steps { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); }
+    .step { padding: 34px 22px 10px 0; position: relative; }
+    .step::before { content: ''; position: absolute; top: -4px; left: 0; width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); }
+    .step b { display: block; font-family: var(--serif); font-size: 3rem; line-height: 1; color: rgba(200,164,107,.35); font-weight: 600; }
+    .step h3 { font-family: var(--serif); font-size: 1.45rem; font-weight: 600; margin: 14px 0 8px; color: #f4ecdf; }
+    .step p { font-size: .88rem; color: var(--muted); }
+
+    /* ---------- замер ---------- */
+    .visit { position: relative; padding: 130px 0; text-align: center; overflow: hidden; }
+    .visit-bg { position: absolute; inset: -40px; background: url('/static/catalog/premium/23.webp?v=2') center/cover; filter: blur(10px) brightness(.28); transform: scale(1.1); }
+    .visit .wrap { position: relative; z-index: 2; max-width: 780px; }
+    .visit h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.2rem, 4.5vw, 3.6rem); line-height: 1.08; margin: 18px 0 18px; color: #f7f0e4; }
+    .visit p { color: #d3c9ba; font-size: 1.05rem; }
+    .visit .hero-cta { justify-content: center; }
+    .eyebrow.center { justify-content: center; }
+    .eyebrow.center::after { content: ''; width: 40px; height: 1px; background: var(--gold); }
+
+    /* ---------- подвал ---------- */
+    footer { border-top: 1px solid var(--line); background: #0c0b0a; padding: 60px 0 34px; }
+    .foot { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 40px; }
+    .foot h4 { font: 700 .74rem var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    .foot p, .foot a { color: var(--muted); font-size: .92rem; }
+    .foot a:hover { color: var(--gold-2); }
+    .foot ul { list-style: none; display: grid; gap: 10px; }
+    .social { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--line); justify-content: space-between; font-size: .8rem; color: #6f675c; }
+    .social a { font: 700 .74rem var(--sans); letter-spacing: .16em; text-transform: uppercase; color: #cfc5b6; }
+
+    /* ---------- появление при прокрутке ---------- */
+    .rv { opacity: 0; transform: translateY(26px); transition: opacity .8s ease, transform .8s ease; }
+    .rv.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+
+    /* ---------- адаптив ---------- */
+    @media (max-width: 1180px) {
+      .nav { display: none; }
+      .burger { display: inline-flex; align-items: center; justify-content: center; }
+      .hdr.open .nav { display: flex; position: absolute; top: 84px; left: 0; right: 0; flex-direction: column; align-items: flex-start; gap: 0; background: rgba(17,16,14,.97); border-bottom: 1px solid var(--line); padding: 8px 24px 18px; }
+      .hdr.open .nav a { padding: 12px 0; width: 100%; border-bottom: 1px solid var(--line); }
+    }
+    @media (max-width: 900px) {
+      .hero .wrap { grid-template-columns: 1fr; gap: 44px; padding-top: 130px; }
+      .hero-frame { max-width: 520px; }
+      .grid-k { grid-template-columns: repeat(2, 1fr); }
+      .calc-band .wrap { grid-template-columns: 1fr; gap: 50px; }
+      .steps { grid-template-columns: repeat(2, 1fr); gap: 0 30px; }
+      .grid-m { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 680px) {
+      .wrap { padding: 0 16px; }
+      .hdr .wrap { height: 70px; }
+      .hdr.open .nav { top: 70px; padding: 8px 16px 18px; }
+      .logo-mark { font-size: 1.85rem; }
+      .logo-sub { display: none; }
+      .hdr-right .btn { display: none; }
+      .hero .wrap { padding-top: 108px; padding-bottom: 80px; }
+      .hero-tag { left: 10px; bottom: -22px; }
+      .hero-types i { margin: 0 6px; }
+      .facts .wrap { grid-template-columns: 1fr 1fr; padding: 0; }
+      .fact { padding: 22px 16px; border-top: 1px solid var(--line); }
+      .fact:nth-child(odd) { border-left: 0; }
+      section.block { padding: 76px 0; }
+      .grid-k { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .calc-price { right: 8px; }
+      .foot { grid-template-columns: 1fr; }
+      .btn { padding: 14px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="hdr" id="hdr">
+    <div class="wrap">
+      <div class="logo" id="logo" title="АбдулАзиз">
+        <span class="logo-mark">AbdulAziz</span>
+        <span class="logo-sub"><b data-t="city">Ташкент</b><span data-t="tagline">кухни и мебель на заказ</span></span>
+      </div>
+      <nav class="nav" id="nav">
+        <a href="#top" data-t="navHome">Главная</a>
+        <a href="#kitchens" data-t="navKitchens">Кухни</a>
+        <a href="#materials" data-t="navMaterials">Материалы</a>
+        <a href="#process" data-t="navProcess">Как мы работаем</a>
+        <a href="#contacts" data-t="navContacts">Контакты</a>
+        <a href="/calc" data-t="navCalc">Калькулятор</a>
+      </nav>
+      <div class="hdr-right">
+        <div class="lang"><button type="button" data-lang="ru">RU</button><button type="button" data-lang="uz">UZ</button></div>
+        <a class="btn btn-gold btn-sm" href="/calc" data-t="ctaCalcShort">Рассчитать</a>
+        <button class="burger" id="burger" aria-label="Меню">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="wrap">
+        <div>
+          <div class="eyebrow" data-t="heroEyebrow">Кухни на заказ · Ташкент</div>
+          <h1 data-t-html="heroTitle">Кухня, в которой <em>хочется жить</em></h1>
+          <p class="lead" data-t="heroLead">Делаем кухни под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену можно узнать онлайн за 2 минуты.</p>
+          <div class="hero-cta">
+            <a class="btn btn-gold" href="/calc" data-t="ctaCalc">Рассчитать стоимость</a>
+            <a class="btn btn-line" href="#kitchens" data-t="ctaWorks">Смотреть кухни</a>
+          </div>
+          <div class="hero-types"><span data-t="typeStraight">Прямые</span><i>|</i><span data-t="typeCorner">Угловые</span><i>|</i><span data-t="typeU">П-образные</span><i>|</i><span data-t="typeIsland">С островом</span></div>
+        </div>
+        <div style="position:relative">
+          <div class="hero-frame"><img src="/static/home/loft.svg" alt="Кухня «Лофт»" width="515" height="555"></div>
+          <div class="hero-tag"><small data-t="heroTagSmall">Кухня под ключ</small><b data-t="heroTag">замер · производство · монтаж</b></div>
+        </div>
+      </div>
+      <div class="scroll-hint" data-t="scroll">Листайте</div>
+    </section>
+
+    <div class="facts">
+      <div class="wrap">
+        <div class="fact rv"><b>3–30</b><span data-t="fact1">рабочих дней на изготовление</span></div>
+        <div class="fact rv"><b data-t="fact2b">12 мес.</b><span data-t="fact2">гарантия по договору</span></div>
+        <div class="fact rv"><b data-t="fact3b">0 сум</b><span data-t="fact3">замер и консультация</span></div>
+        <div class="fact rv"><b>190+</b><span data-t="fact4">декоров ЛДСП, ЛМДФ и акрила</span></div>
+      </div>
+    </div>
+
+    <section class="block" id="kitchens">
+      <div class="wrap">
+        <div class="sec-head rv">
+          <div>
+            <div class="eyebrow" data-t="kEyebrow">Готовые решения</div>
+            <h2 data-t="kTitle">Кухни, которые мы делаем</h2>
+          </div>
+          <div class="tabs" id="tabs">
+            <button class="tab on" data-seg="all" data-t="segAll">Все</button>
+            <button class="tab" data-seg="econ" data-t="segEcon">Эконом</button>
+            <button class="tab" data-seg="mid" data-t="segMid">Стандарт</button>
+            <button class="tab" data-seg="prem" data-t="segPrem">Премиум</button>
+          </div>
+        </div>
+        <div class="grid-k" id="gridK"></div>
+        <p class="rv" style="color:var(--muted);font-size:.85rem;margin-top:26px" data-t="kNote">Изображения — визуализации из нашего калькулятора. Любой вариант откроется в калькуляторе: поменяйте размеры, цвет и материалы — цена пересчитается сразу.</p>
+      </div>
+    </section>
+
+    <section class="block calc-band" id="calc">
+      <div class="wrap">
+        <div class="rv">
+          <div class="eyebrow" data-t="cEyebrow">Онлайн-калькулятор</div>
+          <h2 data-t="cTitle">Узнайте цену своей кухни за 2 минуты</h2>
+          <p data-t="cLead">Соберите кухню прямо на сайте — так же, как это делает мастер на замере.</p>
+          <ul class="ticks">
+            <li data-t="c1">Прямая, угловая, П-образная или с островом — под ваши размеры</li>
+            <li data-t="c2">ЛДСП, ЛМДФ и акрил: 190+ декоров с фото образцов</li>
+            <li data-t="c3">Фурнитура от эконом до Blum, подсветка, столешница</li>
+            <li data-t="c4">Готовый расчёт можно отправить мастеру в Telegram</li>
+          </ul>
+          <a class="btn btn-gold" href="/calc" data-t="ctaCalcOpen">Открыть калькулятор</a>
+        </div>
+        <div class="calc-visual rv" style="transition-delay:.15s">
+          <div class="hero-frame"><img src="/static/home/classic.svg" alt="Кухня «Классика»" width="572" height="555" loading="lazy"></div>
+          <div class="calc-price"><small data-t="calcFrom">Расчёт онлайн</small><b data-t="calcFast">≈ 2 минуты</b></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="materials">
+      <div class="wrap">
+        <div class="sec-head rv">
+          <div>
+            <div class="eyebrow" data-t="mEyebrow">Материалы</div>
+            <h2 data-t="mTitle">Фактуры, которые можно потрогать</h2>
+          </div>
+          <p data-t="mLead">Реальные декоры поставщика: дерево, камень, однотонные цвета. Живые образцы привезём на замер.</p>
+        </div>
+        <div class="grid-m" id="gridM"></div>
+        <div class="mat-foot rv">
+          <p data-t="mFoot">Три класса ЛДСП и ЛМДФ — Эконом, Премиум и Платинум, а также акрил Китай и Турция. Цена зависит от класса материала, а не от цвета.</p>
+          <a class="btn btn-line" href="/calc?catalog=1" data-t="ctaCatalog">Весь каталог</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="process" style="padding-top:20px">
+      <div class="wrap">
+        <div class="sec-head rv">
+          <div>
+            <div class="eyebrow" data-t="pEyebrow">Как мы работаем</div>
+            <h2 data-t="pTitle">От замера до монтажа</h2>
+          </div>
+          <p data-t="pLead">Цену, сроки и гарантию фиксируем в договоре до начала работ.</p>
+        </div>
+        <div class="steps">
+          <div class="step rv"><b>01</b><h3 data-t="s1t">Расчёт онлайн</h3><p data-t="s1">Собираете кухню в калькуляторе и отправляете заявку.</p></div>
+          <div class="step rv"><b>02</b><h3 data-t="s2t">Бесплатный замер</h3><p data-t="s2">Мастер приезжает, уточняет размеры, показывает образцы.</p></div>
+          <div class="step rv"><b>03</b><h3 data-t="s3t">Договор</h3><p data-t="s3">Фиксируем цену, сроки и гарантию.</p></div>
+          <div class="step rv"><b>04</b><h3 data-t="s4t">Изготовление</h3><p data-t="s4">3–30 рабочих дней на проверенном производстве в Ташкенте.</p></div>
+          <div class="step rv"><b>05</b><h3 data-t="s5t">Доставка и монтаж</h3><p data-t="s5">Привозим, собираем и устанавливаем.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="visit" id="contacts">
+      <div class="visit-bg" aria-hidden="true"></div>
+      <div class="wrap rv">
+        <div class="eyebrow center" data-t="vEyebrow">Бесплатный замер</div>
+        <h2 data-t="vTitle">Приедем, измерим и покажем образцы</h2>
+        <p data-t="vLead">Позвоните или напишите в Telegram — договоримся об удобном времени. Замер и консультация бесплатно.</p>
+        <div class="hero-cta">
+          <a class="btn btn-gold js-phone" href="tel:+998920934510">+998 92 093-45-10</a>
+          <a class="btn btn-line js-tg" href="https://t.me/Kitchencalc" target="_blank" rel="noopener">Telegram</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot">
+        <div>
+          <div class="logo-mark" style="margin-bottom:12px">AbdulAziz</div>
+          <p data-t="fAbout">Кухни и мебель на заказ в Ташкенте. Замер, производство, доставка и монтаж. Гарантия 12 месяцев по договору.</p>
+        </div>
+        <div>
+          <h4 data-t="fNav">Разделы</h4>
+          <ul>
+            <li><a href="#kitchens" data-t="navKitchens">Кухни</a></li>
+            <li><a href="#materials" data-t="navMaterials">Материалы</a></li>
+            <li><a href="#process" data-t="navProcess">Как мы работаем</a></li>
+            <li><a href="/calc" data-t="navCalc">Калькулятор</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-t="fContacts">Контакты</h4>
+          <ul>
+            <li><a class="js-phone" href="tel:+998920934510">+998 92 093-45-10</a></li>
+            <li><a class="js-tg" href="https://t.me/Kitchencalc" target="_blank" rel="noopener">Telegram: @Kitchencalc</a></li>
+            <li><p data-t="city">Ташкент</p></li>
+          </ul>
+        </div>
+      </div>
+      <div class="social">
+        <span>© <span id="year"></span> AbdulAziz · <span data-t="tagline">кухни и мебель на заказ</span></span>
+        <span><a class="js-tg" href="https://t.me/Kitchencalc" target="_blank" rel="noopener">Telegram</a> &nbsp;·&nbsp; <a class="js-phone" href="tel:+998920934510" data-t="call">Позвонить</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // Готовые варианты: картинки — визуализации из калькулятора (static/home/<id>.svg)
+    var KITCHENS = [
+      { id: 'loft', seg: 'mid', ru: ['Лофт', 'Угловая 2,4 × 1,8 м · ЛМДФ Премиум · дуб графит · без ручек'], uz: ['Loft', 'Burchakli 2,4 × 1,8 m · LMDF Premium · grafit eman · dastasiz'] },
+      { id: 'classic', seg: 'prem', ru: ['Классика', 'П-образная · ЛМДФ Премиум · беж · искусственный камень'], uz: ['Klassika', 'P-shaklida · LMDF Premium · bej · sunʼiy tosh'] },
+      { id: 'prestige', seg: 'prem', ru: ['Престиж с островом', 'Угловая 2,4 × 1,8 м + остров · акрил Турция · кварц · Blum · подсветка'], uz: ['Orolli Prestij', 'Burchakli 2,4 × 1,8 m + orol · akril (Turkiya) · kvars · Blum · yoritgich'] },
+      { id: 'scandi', seg: 'mid', ru: ['Скандинавия', 'Прямая 2,4 м · ЛДСП Премиум · белая, столешница под дерево'], uz: ['Skandinaviya', 'Toʻgʻri 2,4 m · LDSP Premium · oq, yogʻoch stoleshnitsa'] },
+      { id: 'enamel', seg: 'prem', ru: ['Индиго Люкс', 'Угловая 3 × 1,8 м · ЛМДФ Платинум · индиго · камень · Blum · подсветка'], uz: ['Indigo Lyuks', 'Burchakli 3 × 1,8 m · LMDF Platinum · indigo · tosh · Blum · yoritgich'] },
+      { id: 'comfort', seg: 'mid', ru: ['Комфорт', 'Угловая 2,4 × 1,2 м · ЛМДФ Премиум · светлое дерево · без ручек · подсветка'], uz: ['Komfort', 'Burchakli 2,4 × 1,2 m · LMDF Premium · och yogʻoch · dastasiz · yoritgich'] },
+      { id: 'duo', seg: 'econ', ru: ['Дуэт', 'Угловая 3 × 1,2 м · ЛМДФ Эконом · крем · фурнитура эконом'], uz: ['Duet', 'Burchakli 3 × 1,2 m · LMDF Ekonom · krem · ekonom furnitura'] },
+      { id: 'practic', seg: 'econ', ru: ['Практик', 'Прямая 3 м · ЛДСП Эконом · светло-серая · фурнитура эконом'], uz: ['Praktik', 'Toʻgʻri 3 m · LDSP Ekonom · och kulrang · ekonom furnitura'] },
+      { id: 'compact', seg: 'econ', ru: ['Компакт', 'Прямая 1,8 м · ЛДСП Эконом · белая'], uz: ['Kompakt', 'Toʻgʻri 1,8 m · LDSP Ekonom · oq'] }
+    ];
+
+    // Декоры из каталога поставщика (static/catalog/<раздел>/<NN>.webp)
+    var DECORS = [
+      { img: 'premium/23', ru: ['Дуб Графит', 'Премиум'], uz: ['Grafit eman', 'Premium'] },
+      { img: 'platinum/19', ru: ['Кашемир-Беж', 'Платинум'], uz: ['Kashemir-bej', 'Platinum'] },
+      { img: 'platinum/11', ru: ['Дуб Гайя', 'Платинум'], uz: ['Gayya eman', 'Platinum'] },
+      { img: 'color/05', ru: ['Индиго', 'Платинум · однотон'], uz: ['Indigo', 'Platinum · bir rangli'] },
+      { img: 'premium/12', ru: ['Венге Серебро', 'Премиум'], uz: ['Venge kumush', 'Premium'] },
+      { img: 'platinum/16', ru: ['Камень', 'Платинум'], uz: ['Tosh', 'Platinum'] },
+      { img: 'econom/24', ru: ['Морской Мрамор', 'Эконом'], uz: ['Dengiz marmari', 'Ekonom'] },
+      { img: 'premium/33', ru: ['Дуб Парис', 'Премиум'], uz: ['Paris eman', 'Premium'] }
+    ];
+
+    var T = {
+      ru: {
+        city: 'Ташкент', tagline: 'кухни и мебель на заказ',
+        navHome: 'Главная', navKitchens: 'Кухни', navMaterials: 'Материалы', navProcess: 'Как мы работаем', navContacts: 'Контакты', navCalc: 'Калькулятор',
+        ctaCalcShort: 'Рассчитать', heroEyebrow: 'Кухни на заказ · Ташкент', heroTitle: 'Кухня, в которой <em>хочется жить</em>',
+        heroLead: 'Делаем кухни под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену можно узнать онлайн за 2 минуты.',
+        ctaCalc: 'Рассчитать стоимость', ctaWorks: 'Смотреть кухни',
+        typeStraight: 'Прямые', typeCorner: 'Угловые', typeU: 'П-образные', typeIsland: 'С островом',
+        heroTagSmall: 'Кухня под ключ', heroTag: 'замер · производство · монтаж', scroll: 'Листайте',
+        fact1: 'рабочих дней на изготовление', fact2b: '12 мес.', fact2: 'гарантия по договору', fact3b: '0 сум', fact3: 'замер и консультация', fact4: 'декоров ЛДСП, ЛМДФ и акрила',
+        kEyebrow: 'Готовые решения', kTitle: 'Кухни, которые мы делаем', segAll: 'Все', segEcon: 'Эконом', segMid: 'Стандарт', segPrem: 'Премиум',
+        kNote: 'Изображения — визуализации из нашего калькулятора. Любой вариант откроется в калькуляторе: поменяйте размеры, цвет и материалы — цена пересчитается сразу.',
+        kOpen: 'Рассчитать эту кухню',
+        cEyebrow: 'Онлайн-калькулятор', cTitle: 'Узнайте цену своей кухни за 2 минуты', cLead: 'Соберите кухню прямо на сайте — так же, как это делает мастер на замере.',
+        c1: 'Прямая, угловая, П-образная или с островом — под ваши размеры', c2: 'ЛДСП, ЛМДФ и акрил: 190+ декоров с фото образцов',
+        c3: 'Фурнитура от эконом до Blum, подсветка, столешница', c4: 'Готовый расчёт можно отправить мастеру в Telegram',
+        ctaCalcOpen: 'Открыть калькулятор', calcFrom: 'Расчёт онлайн', calcFast: '≈ 2 минуты',
+        mEyebrow: 'Материалы', mTitle: 'Фактуры, которые можно потрогать', mLead: 'Реальные декоры поставщика: дерево, камень, однотонные цвета. Живые образцы привезём на замер.',
+        mFoot: 'Три класса ЛДСП и ЛМДФ — Эконом, Премиум и Платинум, а также акрил Китай и Турция. Цена зависит от класса материала, а не от цвета.', ctaCatalog: 'Весь каталог',
+        pEyebrow: 'Как мы работаем', pTitle: 'От замера до монтажа', pLead: 'Цену, сроки и гарантию фиксируем в договоре до начала работ.',
+        s1t: 'Расчёт онлайн', s1: 'Собираете кухню в калькуляторе и отправляете заявку.', s2t: 'Бесплатный замер', s2: 'Мастер приезжает, уточняет размеры, показывает образцы.',
+        s3t: 'Договор', s3: 'Фиксируем цену, сроки и гарантию.', s4t: 'Изготовление', s4: '3–30 рабочих дней на проверенном производстве в Ташкенте.',
+        s5t: 'Доставка и монтаж', s5: 'Привозим, собираем и устанавливаем.',
+        vEyebrow: 'Бесплатный замер', vTitle: 'Приедем, измерим и покажем образцы', vLead: 'Позвоните или напишите в Telegram — договоримся об удобном времени. Замер и консультация бесплатно.',
+        fAbout: 'Кухни и мебель на заказ в Ташкенте. Замер, производство, доставка и монтаж. Гарантия 12 месяцев по договору.', fNav: 'Разделы', fContacts: 'Контакты', call: 'Позвонить',
+        pageTitle: 'Кухни на заказ в Ташкенте | АбдулАзиз'
+      },
+      uz: {
+        city: 'Toshkent', tagline: 'buyurtma asosida oshxona va mebel',
+        navHome: 'Bosh sahifa', navKitchens: 'Oshxonalar', navMaterials: 'Materiallar', navProcess: 'Qanday ishlaymiz', navContacts: 'Aloqa', navCalc: 'Kalkulyator',
+        ctaCalcShort: 'Hisoblash', heroEyebrow: 'Buyurtma oshxonalar · Toshkent', heroTitle: 'Yashagingiz keladigan <em>oshxona</em>',
+        heroLead: 'Oshxonani oʻlchamlaringiz boʻyicha tayyorlaymiz: bepul oʻlchov, oʻz ishlab chiqarishimiz, yetkazish va oʻrnatish. Narxni 2 daqiqada onlayn bilib oling.',
+        ctaCalc: 'Narxni hisoblash', ctaWorks: 'Oshxonalarni koʻrish',
+        typeStraight: 'Toʻgʻri', typeCorner: 'Burchakli', typeU: 'P-shaklida', typeIsland: 'Orolli',
+        heroTagSmall: 'Kalit topshirish', heroTag: 'oʻlchov · ishlab chiqarish · oʻrnatish', scroll: 'Pastga',
+        fact1: 'ish kunida tayyor', fact2b: '12 oy', fact2: 'shartnoma boʻyicha kafolat', fact3b: '0 soʻm', fact3: 'oʻlchov va maslahat', fact4: 'LDSP, LMDF va akril dekorlari',
+        kEyebrow: 'Tayyor yechimlar', kTitle: 'Biz tayyorlaydigan oshxonalar', segAll: 'Hammasi', segEcon: 'Ekonom', segMid: 'Standart', segPrem: 'Premium',
+        kNote: 'Rasmlar — kalkulyatorimizdagi vizualizatsiyalar. Har bir variant kalkulyatorda ochiladi: oʻlcham, rang va materialni oʻzgartiring — narx darhol qayta hisoblanadi.',
+        kOpen: 'Shu oshxonani hisoblash',
+        cEyebrow: 'Onlayn kalkulyator', cTitle: 'Oshxonangiz narxini 2 daqiqada biling', cLead: 'Oshxonani saytda yigʻing — usta oʻlchovda qilganidek.',
+        c1: 'Toʻgʻri, burchakli, P-shaklida yoki orolli — oʻlchamlaringiz boʻyicha', c2: 'LDSP, LMDF va akril: 190+ dekor, namunalar surati bilan',
+        c3: 'Ekonomdan Blumgacha furnitura, yoritgich, stoleshnitsa', c4: 'Tayyor hisobni ustaga Telegramda yuborish mumkin',
+        ctaCalcOpen: 'Kalkulyatorni ochish', calcFrom: 'Onlayn hisob', calcFast: '≈ 2 daqiqa',
+        mEyebrow: 'Materiallar', mTitle: 'Qoʻl bilan his qilsa boʻladigan fakturalar', mLead: 'Yetkazib beruvchining haqiqiy dekorlari: yogʻoch, tosh, bir rangli. Jonli namunalarni oʻlchovga olib boramiz.',
+        mFoot: 'LDSP va LMDF uch sinfi — Ekonom, Premium va Platinum, shuningdek Xitoy va Turkiya akrili. Narx rangga emas, material sinfiga bogʻliq.', ctaCatalog: 'Butun katalog',
+        pEyebrow: 'Qanday ishlaymiz', pTitle: 'Oʻlchovdan oʻrnatishgacha', pLead: 'Narx, muddat va kafolat ish boshlanishidan oldin shartnomada belgilanadi.',
+        s1t: 'Onlayn hisob', s1: 'Kalkulyatorda oshxonani yigʻib, ariza yuborasiz.', s2t: 'Bepul oʻlchov', s2: 'Usta kelib, oʻlchamlarni aniqlaydi va namunalarni koʻrsatadi.',
+        s3t: 'Shartnoma', s3: 'Narx, muddat va kafolatni belgilaymiz.', s4t: 'Tayyorlash', s4: 'Toshkentdagi ishonchli ishlab chiqarishda 3–30 ish kuni.',
+        s5t: 'Yetkazish va oʻrnatish', s5: 'Olib kelamiz, yigʻamiz va oʻrnatamiz.',
+        vEyebrow: 'Bepul oʻlchov', vTitle: 'Kelamiz, oʻlchaymiz va namunalarni koʻrsatamiz', vLead: 'Qoʻngʻiroq qiling yoki Telegramga yozing — qulay vaqtni kelishamiz. Oʻlchov va maslahat bepul.',
+        fAbout: 'Toshkentda buyurtma asosida oshxona va mebel. Oʻlchov, ishlab chiqarish, yetkazish va oʻrnatish. Shartnoma boʻyicha 12 oy kafolat.', fNav: 'Boʻlimlar', fContacts: 'Aloqa', call: 'Qoʻngʻiroq',
+        pageTitle: 'Toshkentda buyurtma oshxonalar | AbdulAziz'
+      }
+    };
+    var SEG = { econ: 'segEcon', mid: 'segMid', prem: 'segPrem' };
+
+    var LANG = 'ru', seg = 'all';
+    function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function t(k) { return (T[LANG] && T[LANG][k] !== undefined) ? T[LANG][k] : T.ru[k]; }
+    function calcUrl(extra) { return '/calc?' + (extra ? extra + '&' : '') + 'lang=' + LANG; }
+
+    function renderKitchens() {
+      var list = KITCHENS.filter(function (k) { return seg === 'all' || k.seg === seg; });
+      document.getElementById('gridK').innerHTML = list.map(function (k) {
+        var tx = k[LANG] || k.ru;
+        return '<a class="card rv in" href="' + calcUrl('preset=' + k.id) + '">' +
+          '<div class="card-img"><span class="badge">' + esc(t(SEG[k.seg])) + '</span><img src="/static/home/' + k.id + '.svg" alt="' + esc(tx[0]) + '" loading="lazy"></div>' +
+          '<div class="card-body"><h3>' + esc(tx[0]) + '</h3><p>' + esc(tx[1]) + '</p><span class="card-link">' + esc(t('kOpen')) + '</span></div></a>';
+      }).join('');
+    }
+
+    function renderDecors() {
+      document.getElementById('gridM').innerHTML = DECORS.map(function (d) {
+        var tx = d[LANG] || d.ru;
+        return '<figure class="mat rv"><img src="/static/catalog/' + d.img + '.webp?v=2" alt="' + esc(tx[0]) + '" loading="lazy"><figcaption><b>' + esc(tx[0]) + '</b><span>' + esc(tx[1]) + '</span></figcaption></figure>';
+      }).join('');
+    }
+
+    function applyLang(lang) {
+      LANG = lang === 'uz' ? 'uz' : 'ru';
+      try { localStorage.setItem('kc_lang', LANG); } catch (e) {}
+      document.documentElement.lang = LANG;
+      document.title = t('pageTitle');
+      document.querySelectorAll('[data-t]').forEach(function (n) { n.textContent = t(n.getAttribute('data-t')); });
+      document.querySelectorAll('[data-t-html]').forEach(function (n) { n.innerHTML = t(n.getAttribute('data-t-html')); });
+      document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-lang') === LANG); });
+      // ссылки в калькулятор — на выбранном языке
+      document.querySelectorAll('a[href^="/calc"]').forEach(function (a) {
+        var u = new URL(a.getAttribute('href'), location.origin);
+        u.searchParams.set('lang', LANG);
+        a.setAttribute('href', u.pathname + u.search);
+      });
+      renderKitchens();
+      renderDecors();
+      observe();
+    }
+
+    // Появление блоков при прокрутке
+    var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12 }) : null;
+    function observe() {
+      document.querySelectorAll('.rv:not(.in)').forEach(function (n) { if (io) io.observe(n); else n.classList.add('in'); });
+    }
+
+    // Шапка: прозрачная над первым экраном, плотная при прокрутке
+    var hdr = document.getElementById('hdr');
+    function onScroll() { hdr.classList.toggle('solid', window.scrollY > 40 || hdr.classList.contains('open')); }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.getElementById('burger').addEventListener('click', function () { hdr.classList.toggle('open'); onScroll(); });
+    document.getElementById('nav').addEventListener('click', function (e) { if (e.target.tagName === 'A') { hdr.classList.remove('open'); onScroll(); } });
+
+    document.getElementById('tabs').addEventListener('click', function (e) {
+      var b = e.target.closest('.tab'); if (!b) return;
+      seg = b.getAttribute('data-seg');
+      document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x === b); });
+      renderKitchens();
+    });
+    document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { applyLang(b.getAttribute('data-lang')); }); });
+
+    // Логотип: наверх; 5 быстрых нажатий — скрытый вход в раскрой для мастера
+    var taps = [];
+    document.getElementById('logo').addEventListener('click', function () {
+      var now = Date.now();
+      taps = taps.filter(function (x) { return now - x < 2500; });
+      taps.push(now);
+      if (taps.length >= 5) { taps = []; location.href = '/raskroy'; return; }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    var lang = 'ru';
+    try {
+      var q = new URLSearchParams(location.search).get('lang');
+      var saved = null;
+      try { saved = localStorage.getItem('kc_lang'); } catch (e) {}
+      lang = q || saved || ((navigator.language || '').toLowerCase().indexOf('uz') === 0 ? 'uz' : 'ru');
+    } catch (e) {}
+    applyLang(lang);
+    onScroll();
+  })();
+  </script>
+</body>
+</html>

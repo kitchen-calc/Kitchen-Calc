@@ -29,8 +29,29 @@ MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
+    # Главная — витрина; калькулятор переехал на /calc
+    file_path = os.path.join(os.path.dirname(__file__), "templates", "home.html")
+    return FileResponse(file_path)
+
+
+@app.get("/calc", response_class=HTMLResponse)
+async def calculator(request: Request):
     file_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
     return FileResponse(file_path)
+
+
+HOME_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "home")
+HOME_TYPES = {"svg": "image/svg+xml", "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
+
+
+@app.get("/static/home/{filename}")
+async def home_asset(filename: str):
+    # Картинки главной: только простые имена файлов (latin, цифры, - _) с картиночным расширением
+    m = re.fullmatch(r"[a-z0-9_-]{1,40}\.(svg|jpg|jpeg|png|webp)", filename)
+    path = os.path.join(HOME_DIR, filename)
+    if not m or not os.path.isfile(path):
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return FileResponse(path, media_type=HOME_TYPES[m.group(1)], headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/raskroy", response_class=HTMLResponse)

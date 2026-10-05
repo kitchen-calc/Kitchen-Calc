@@ -711,6 +711,7 @@
         </span>
       </a>
       <div class="header-actions">
+        <a class="header-catalog" href="/" style="text-decoration:none">← <span data-i18n="navHome">Главная</span></a>
         <button type="button" class="header-catalog" onclick="openDecor()">🎨 <span data-i18n="catBtn">Каталог</span></button>
         <div class="lang-switch">
           <button type="button" class="lang-btn active" data-lang="ru" onclick="setLang('ru')">RU</button>
@@ -3432,6 +3433,10 @@
       renderKitchen(el('heroRender'), renderStateFrom(stateToCalc(presetState(hero))));
       if (typeof msInit === 'function') msInit();
       appReady = true;
+      // ссылка с главной: /calc?preset=loft — сразу открыть готовый вариант
+      const pq = new URLSearchParams(location.search).get('preset');
+      if (pq && !location.hash.startsWith('#k=') && PRESETS.some(p => p.id === pq)) applyPreset(pq);
+      if (new URLSearchParams(location.search).get('catalog')) openDecor();
       if (location.hash.startsWith('#k=')) updateShareLinks();
       else el('shareTg').href = 'https://t.me/share/url?url=' + encodeURIComponent(shareUrl()) + '&text=' + encodeURIComponent(t('shareText'));
     };
@@ -4068,14 +4073,14 @@
     /* ===================== КАТАЛОГ ДЕКОРОВ (фото по разделам) ===================== */
     const CAT_UZ_TITLE = { econom: 'Ekonom', silver: 'Silver', premium: 'Premium', color: 'Rangli (monoton)', platinum: 'Platinum' };
     Object.assign(I18N.ru, {
-      catBtn: 'Каталог', catTitle: 'Каталог цветов ЛДСП / ЛМДФ', catAll: 'Все разделы',
+      navHome: 'Главная', catBtn: 'Каталог', catTitle: 'Каталог цветов ЛДСП / ЛМДФ', catAll: 'Все разделы',
       catSearch: 'Поиск по названию…', catCount: '{n} цветов', catNone: 'Ничего не найдено',
       catIntro: 'Фото образцов от поставщика материалов. На экране цвет может немного отличаться — живые образцы покажем на замере.',
       catPick: 'Указать в заявке', catPicked: 'Цвет добавлен в комментарий к заявке', catNoteLine: 'Цвет из каталога: {s} №{n} «{name}»',
       catPrev: 'Назад', catNext: 'Вперёд'
     });
     Object.assign(I18N.uz, {
-      catBtn: 'Katalog', catTitle: 'LDSP / LMDF ranglar katalogi', catAll: 'Barcha boʻlimlar',
+      navHome: 'Bosh sahifa', catBtn: 'Katalog', catTitle: 'LDSP / LMDF ranglar katalogi', catAll: 'Barcha boʻlimlar',
       catSearch: 'Nomi boʻyicha qidirish…', catCount: '{n} ta rang', catNone: 'Hech narsa topilmadi',
       catIntro: 'Material yetkazib beruvchining namunalar surati. Ekranda rang biroz farq qilishi mumkin — jonli namunalarni oʻlchovda koʻrsatamiz.',
       catPick: 'Arizada koʻrsatish', catPicked: 'Rang ariza izohiga qoʻshildi', catNoteLine: 'Katalogdan rang: {s} №{n} «{name}»',
