@@ -148,6 +148,12 @@
     .cab button:hover { color: var(--danger); background: #fff; }
     table.edit td.grp-start { border-top: 2px solid var(--border-gold); }
 
+    .sheet-rows { display: grid; gap: 8px; }
+    .sheet-row { display: grid; grid-template-columns: 1.3fr 150px 84px 16px 84px 1.2fr; gap: 8px; align-items: center; }
+    .sheet-row .sr-kind { font-size: 0.74rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; letter-spacing: .06em; }
+    .pg h4 { font-size: 0.85rem; margin: 10px 0 6px; }
+    #presetNote ul { margin: 6px 0 0 18px; font-size: 0.85rem; }
+    @media (max-width: 760px) { .sheet-row { grid-template-columns: 1fr 1fr; } .sheet-row > :first-child { grid-column: 1 / -1; } .sheet-row > span { display: none; } }
     .price-group + .price-group { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border-dark); }
     .price-group h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 8px; }
     .cut-opt { border: 1px solid var(--border-dark); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
@@ -221,8 +227,9 @@
       <h2><span class="step">2</span> Цены <span class="hint" style="font-weight:600">впишите свои — итог посчитается сам</span></h2>
 
       <div class="price-group">
-        <h3>Лист, сум за лист</h3>
-        <div class="grid-settings" id="sheetPriceGrid"></div>
+        <h3>Листы: размер и цена за лист, сум</h3>
+        <div class="sheet-rows" id="sheetPriceGrid"></div>
+        <p class="hint" style="margin-top:6px">Для корпуса и для фасада — свой размер листа и своя цена. Названия и количество материалов меняются в блоке «Материалы».</p>
       </div>
 
       <div class="price-group">
@@ -258,6 +265,21 @@
         <button class="btn small" id="btnAddMat">＋ Материал</button>
         <span class="hint">Например: корпус ЛДСП белый 16 мм, фасад МДФ, задняя стенка ХДФ.</span>
       </div>
+    </section>
+
+    <section class="card no-print">
+      <h2><span class="step">★</span> Готовые варианты
+        <span class="hint" style="font-weight:600">нажмите — детали и раскрой создадутся сами</span>
+      </h2>
+      <div id="presetGroups"></div>
+      <label class="hint" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="presetReplace" checked> заменить текущие детали (иначе добавить к ним)</label>
+      <details class="paste">
+        <summary>Раскроить по ссылке из калькулятора</summary>
+        <p class="hint" style="margin-top:6px">Соберите кухню в калькуляторе (/calc) или шкаф, гардеробную, прихожую (/shkaf), скопируйте ссылку на расчёт и вставьте сюда — получите раскрой именно вашего расчёта.</p>
+        <input type="text" id="importLink" placeholder="https://kitchen-calc.uz/calc#k=…  или  https://kitchen-calc.uz/shkaf#s=…">
+        <div class="actions" style="margin-top:8px"><button class="btn small" id="btnImport">Раскроить по ссылке</button></div>
+      </details>
+      <div class="tpl-preview" id="presetNote"></div>
     </section>
 
     <section class="card no-print">
@@ -387,6 +409,7 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="/static/js/shkaf-data.js?v=2"></script>
   <script>
   (function () {
     'use strict';
@@ -565,7 +588,7 @@
     var uid = (function () { var n = Date.now() % 100000; return function () { return 'i' + (n++).toString(36); }; })();
 
     function defaultState() {
-      var m = { id: uid(), name: 'ЛДСП белый 16 мм', L: 2750, W: 1830, et: '0.4' };
+      var m = { id: uid(), name: 'Корпус ЛДСП 16 мм', L: 2750, W: 1830, et: '0.4' };
       var f = { id: uid(), name: 'Фасад 16 мм', L: 2750, W: 1830, et: '2' };
       return {
         name: '',
@@ -574,6 +597,8 @@
         edgeAllow: 5,
         edgePrices: { '0.4': 0, '2': 0, '4': 0 },
         sheetPrices: {},
+        matPrices: {},
+        notes: [],
         cutPrices: { eco: 0, prem: 0, urgent: 0 },
         cutTier: 'eco',
         tplT: 16,
@@ -606,6 +631,7 @@
       var sp = s.sheetPrices || {};
       s.sheetPrices = {};
       Object.keys(sp).forEach(function (k) { if (/^\d+(\.\d+)?x\d+(\.\d+)?$/.test(k)) s.sheetPrices[k] = Math.max(0, num(sp[k], 0)); });
+      s.notes = Array.isArray(s.notes) ? s.notes.map(String).slice(0, 60) : [];
       var cp = s.cutPrices || {};
       s.cutPrices = {};
       CUT_TIERS.forEach(function (c) { s.cutPrices[c.k] = Math.max(0, num(cp[c.k], 0)); });
@@ -615,6 +641,14 @@
       s.materials.forEach(function (m) {
         m.id = m.id || uid(); m.L = num(m.L, 2750); m.W = num(m.W, 1830); m.name = String(m.name || 'Материал');
         m.et = EDGE_T.indexOf(String(m.et)) >= 0 ? String(m.et) : (/фасад|мдф/i.test(m.name) ? '2' : '0.4');
+      });
+      // цена листа теперь у каждого материала (корпус и фасад — отдельно); старые цены по размеру переносим
+      var mp = s.matPrices || {};
+      s.matPrices = {};
+      s.materials.forEach(function (m) {
+        var v = mp[m.id];
+        if (v == null) v = s.sheetPrices[sizeKey(m)];
+        s.matPrices[m.id] = Math.max(0, num(v, 0));
       });
       var matEt = {};
       s.materials.forEach(function (m) { matEt[m.id] = m.et; });
@@ -644,7 +678,7 @@
       var compact = {
         n: s.name, k: s.kerf, t: s.trim, ea: s.edgeAllow,
         ep: EDGE_T.map(function (t) { return s.edgePrices[t]; }),
-        sp: s.sheetPrices,
+        sp: s.sheetPrices, mp: s.matPrices,
         cp: CUT_TIERS.map(function (c) { return s.cutPrices[c.k]; }),
         ct: s.cutTier,
         m: s.materials.map(function (m) { return [m.id, m.name, m.L, m.W, m.et]; }),
@@ -662,7 +696,7 @@
       return normalize({
         name: c.n, kerf: c.k, trim: c.t, edgeAllow: c.ea,
         edgePrices: (function () { var o = {}; EDGE_T.forEach(function (t, i) { o[t] = (c.ep || [])[i]; }); return o; })(),
-        sheetPrices: c.sp,
+        sheetPrices: c.sp, matPrices: c.mp,
         cutPrices: (function () { var o = {}; CUT_TIERS.forEach(function (t, i) { o[t.k] = (c.cp || [])[i]; }); return o; })(),
         cutTier: c.ct,
         materials: (c.m || []).map(function (a) { return { id: a[0], name: a[1], L: a[2], W: a[3], et: a[4] }; }),
@@ -983,6 +1017,9 @@
         html.push('</div>');
       });
 
+      if (state.notes && state.notes.length) {
+        html.push('<div class="mat-block"><h3>Не из листа ЛДСП (стекло, зеркала, фурнитура)</h3><ul class="hint" style="margin:4px 0 0 18px;font-size:0.9rem">' + state.notes.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>');
+      }
       // parts list for the saw shop
       html.push('<div class="mat-block"><h3>Список деталей</h3><div class="table-wrap"><table class="list"><thead><tr><th>№</th><th>Название</th><th>Материал</th><th>Д×Ш, мм</th><th>Шт</th><th>Поворот</th><th>Кромка</th></tr></thead><tbody>');
       state.parts.forEach(function (p) {
@@ -1005,23 +1042,34 @@
     }
 
     // ------------------------------------------------------------- prices
-    function sheetSizes() {
-      var keys = SHEET_PRESETS.map(function (p) { return sizeKey(p); });
-      state.materials.forEach(function (m) { var k = sizeKey(m); if (keys.indexOf(k) < 0) keys.push(k); });
-      return keys;
-    }
-
     function renderSheetPrices() {
       var grid = document.getElementById('sheetPriceGrid');
-      var focusedKey = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.size : null;
-      grid.innerHTML = sheetSizes().map(function (k) {
-        var v = state.sheetPrices[k];
-        return '<label class="f">' + k.replace('x', ' × ') + '<input type="number" min="0" step="1000" data-size="' + k + '" value="' + (v ? v : '') + '" placeholder="впишите цену"></label>';
+      var af = document.activeElement, fid = af && af.dataset ? af.dataset.mp : null;
+      grid.innerHTML = state.materials.map(function (m) {
+        var opts = SHEET_PRESETS.map(function (p, i) { return '<option value="' + i + '"' + (presetValue(m) === String(i) ? ' selected' : '') + '>' + p.label + '</option>'; }).join('') + '<option value="custom"' + (presetValue(m) === 'custom' ? ' selected' : '') + '>Свой размер</option>';
+        var v = state.matPrices[m.id];
+        return '<div class="sheet-row" data-id="' + m.id + '">' +
+          '<input type="text" data-sp="name" value="' + esc(m.name) + '" placeholder="Название материала" title="Например: Корпус или Фасад">' +
+          '<select data-sp="preset" title="Размер листа, мм">' + opts + '</select>' +
+          '<input type="number" data-sp="L" value="' + m.L + '" min="100" title="Длина листа, мм">' +
+          '<span>×</span>' +
+          '<input type="number" data-sp="W" value="' + m.W + '" min="100" title="Ширина листа, мм">' +
+          '<input type="number" min="0" step="1000" data-mp="' + m.id + '" value="' + (v ? v : '') + '" placeholder="цена за лист, сум"></div>';
       }).join('');
-      grid.querySelectorAll('input[data-size]').forEach(function (inp) {
-        inp.addEventListener('input', function () { state.sheetPrices[inp.dataset.size] = Math.max(0, num(inp.value, 0)); changed(true); });
-        if (inp.dataset.size === focusedKey) inp.focus();
+      grid.querySelectorAll('.sheet-row').forEach(function (row) {
+        var m = matById(row.dataset.id); if (!m) return;
+        var inL = row.querySelector('[data-sp=L]'), inW = row.querySelector('[data-sp=W]'), sel = row.querySelector('[data-sp=preset]');
+        row.querySelector('[data-mp]').addEventListener('input', function (e) { state.matPrices[m.id] = Math.max(0, num(e.target.value, 0)); changed(true); });
+        row.querySelector('[data-sp=name]').addEventListener('input', function (e) { m.name = e.target.value; refreshMatSelects(); changed(false); });
+        row.querySelector('[data-sp=name]').addEventListener('change', function () { renderMaterials(); });
+        sel.addEventListener('change', function () {
+          if (sel.value !== 'custom') { var p = SHEET_PRESETS[+sel.value]; m.L = p.L; m.W = p.W; inL.value = p.L; inW.value = p.W; renderMaterials(); changed(true); }
+          else inL.focus();
+        });
+        function dim() { m.L = num(inL.value, m.L); m.W = num(inW.value, m.W); sel.value = presetValue(m); renderMaterials(); changed(true); }
+        inL.addEventListener('input', dim); inW.addEventListener('input', dim);
       });
+      if (fid) { var f = grid.querySelector('[data-mp="' + fid + '"]'); if (f) f.focus(); }
     }
 
     function renderCutPrices() {
@@ -1054,15 +1102,10 @@
     // Итог: листы по размерам + распил за лист + кромка. Строка без цены не входит в сумму и помечается.
     function costStats(r) {
       var rows = [], total = 0, missing = false;
-      var bySize = {};
       r.blocks.forEach(function (b) {
-        var k = sizeKey(b.mat);
-        bySize[k] = (bySize[k] || 0) + b.res.sheets.length;
-      });
-      Object.keys(bySize).forEach(function (k) {
-        var price = num(state.sheetPrices[k], 0), n = bySize[k];
+        var price = num(state.matPrices[b.mat.id], 0), n = b.res.sheets.length;
         var sum = price > 0 ? price * n : null;
-        rows.push({ name: 'Лист ' + k.replace('x', '×'), qty: n + ' шт', price: price, sum: sum });
+        rows.push({ name: 'Лист · ' + b.mat.name + ' ' + b.mat.L + '×' + b.mat.W, qty: n + ' шт', price: price, sum: sum });
         if (sum == null) missing = true; else total += sum;
       });
       var tier = CUT_TIERS.filter(function (c) { return c.k === state.cutTier; })[0];
@@ -1578,6 +1621,7 @@
         cost.rows.forEach(function (row) { if (row.sum != null) lines.push(row.name + ': ' + row.qty + ' — ' + fmt(row.sum, 0) + ' сум'); });
         lines.push('Итого: ' + fmt(cost.total, 0) + ' сум' + (cost.missing ? ' (не все цены вписаны)' : ''));
       }
+      if (state.notes && state.notes.length) { lines.push(''); lines.push('Не из листа:'); state.notes.forEach(function (x) { lines.push('— ' + x); }); }
       lines.push('');
       state.parts.forEach(function (p) {
         if (!(p.L > 0 && p.W > 0)) return;
@@ -1588,6 +1632,301 @@
         lines.push(p._n + '. ' + (p.name || '—') + ' ' + p.L + '×' + p.W + ' — ' + p.qty + ' шт' + (state.materials.length > 1 && mat ? ' [' + mat.name + ']' : '') + (p.rot ? '' : ', по рисунку') + (e.length ? ', кромка ' + e.join(' ') : ''));
       });
       return lines.join('\n');
+    }
+
+    // ===================================================================
+    // ГОТОВЫЕ ВАРИАНТЫ: кухни, шкафы-купе, гардеробные, прихожие.
+    // Детали собираются по тем же правилам, что и шаблоны выше:
+    //   боковины стоят на дне, спина накладывается на торцы боковин и дна,
+    //   верх лежит на боковинах (у верхних шкафов — между верхом и дном).
+    // Размеры вставок стёкол и зеркал и фурнитура выводятся отдельным списком (они не режутся из листа).
+    // ===================================================================
+    var TOWER_BANDS = {   // ярусы пеналов, см от пола: [тип, от, до]; 999 — до верха пенала
+      storage: [['door', 10, 125], ['door', 125, 999]],
+      oven: [['drawer', 10, 45], ['door', 45, 85], ['oven', 85, 145], ['door', 145, 999]],
+      ovenMicro: [['drawer', 10, 45], ['drawer', 45, 80], ['oven', 80, 140], ['micro', 140, 178], ['door', 178, 999]],
+      micro: [['drawer', 10, 45], ['door', 45, 86], ['micro', 86, 124], ['door', 124, 999]]
+    };
+    var MAXSEG = 2700;      // длина детали, которая влезает на лист вдоль 2750
+    function splitLen(total, maxSeg) { var n = Math.ceil(total / maxSeg), out = [], rest = total; for (var i = 0; i < n; i++) { var s = i === n - 1 ? rest : Math.round(total / n); out.push(s); rest -= s; } return out; }
+    function P_(name, L, W, qty, mat, rot, eL, eW) { return { name: name, L: Math.round(L), W: Math.round(W), qty: qty, mat: mat, rot: rot, eL: eL || 0, eW: eW || 0 }; }
+    var PRESET_BODY_T = 16;
+
+    function buildCab(kind, W, o) {
+      var T = TEMPLATES[kind];
+      var c = { W: W, H: o.H, D: o.D, t: PRESET_BODY_T, ft: PRESET_BODY_T, doors: T.autoDoors ? T.autoDoors(W) : 0, n: o.n || 3, ratio: o.ratio || '1:1:1', slide: o.slide || 500, sys: o.sys || 'gtv', bh: [],
+        shelves: T.hasShelves ? (o.shelves != null ? o.shelves : T.autoShelves(o.H)) : 0, end: false };
+      if (T.hasDrawers && c.sys !== 'gtv') { var sys = DRAWER_SYSTEMS[c.sys]; c.bh = drawerFronts(c.H, c.n, c.ratio).map(function (fh) { return sys.auto(fh); }); }
+      return T.build(c);
+    }
+    function tallTower(W, cfg, TT, D) {      // пенал до потолка; TT — высота, мм
+      var t = PRESET_BODY_T, depth = D - t - t, parts = [];
+      var bands = (TOWER_BANDS[cfg] || TOWER_BANDS.storage).map(function (b) { return [b[0], b[1] * 10, Math.min(b[2] * 10, TT)]; }).filter(function (b) { return b[2] - b[1] > 30; });
+      parts.push(P_('Бок', TT - 2 * t, depth, 2, 'body', false, 1, 0));
+      parts.push(P_('Дно', W, depth, 1, 'body', true, 1, 0));
+      parts.push(P_('Верх', W, depth, 1, 'body', true, 1, 0));
+      parts.push(P_('Спина', TT, W, 1, 'body', true, 0, 0));
+      var shelves = 0;
+      bands.forEach(function (b) { if (b[0] === 'oven' || b[0] === 'micro') shelves += 2; });
+      shelves = Math.max(1, shelves);
+      parts.push(P_('Полка', W - 2 * t - 2, depth - 20, shelves, 'body', true, 1, 0));
+      var doors = W <= 450 ? 1 : 2;
+      bands.forEach(function (b) {
+        var h = b[2] - b[1] - 3;
+        if (b[0] === 'door') parts.push(P_('Дверь', h, (W - 2 * (doors + 1)) / doors, doors, 'facade', false, 2, 2));
+        else if (b[0] === 'drawer') parts.push(P_('Фасад ящика', h, W - 4, 1, 'facade', false, 2, 2));
+      });
+      return parts;
+    }
+    function kitchenParts(st) {
+      var hw = st.hw == null ? 1 : st.hw, sys = hw >= 2 ? 'tbx' : 'gtv', TT = Math.max(2000, Math.min(num(st.h, 240) * 10, 2700));
+      var uH = num(st.uh, 72) * 10, uD = num(st.ud, 35) * 10;
+      var cabs = [], notes = [];
+      function cab(label, parts) { cabs.push({ label: label, parts: parts }); }
+      (st.lo || []).forEach(function (e, i) {
+        var kind = e[0], W = Math.round(num(e[2], 60) * 10), dr = e[4] | 0, tag = 'Н' + (i + 1) + ' ';
+        if (kind === 'drawers') { var n = Math.min(4, Math.max(2, dr || 3)); cab(tag + 'ящики ' + W, buildCab('drawers', W, { H: 720, D: 580, n: n, ratio: RATIO_PRESETS[n][0], sys: sys, slide: 500 })); }
+        else if (kind === 'door' || kind === 'sink' || kind === 'hob') cab(tag + (kind === 'sink' ? 'мойка ' : kind === 'hob' ? 'варочная ' : 'шкаф ') + W, buildCab('lower', W, { H: 720, D: 580 }));
+        else if (kind === 'oven') {
+          var p = lowerBody({ W: W, H: 720, D: 580, t: PRESET_BODY_T, ft: PRESET_BODY_T }); p.push(P_('Полка под духовку', W - 2 * PRESET_BODY_T - 2, 580 - 2 * PRESET_BODY_T - 20, 1, 'body', true, 1, 0)); p.push(P_('Фасад ящика', 200, W - 4, 1, 'facade', false, 2, 2)); cab(tag + 'духовка ' + W, p);
+        } else if (kind === 'dishwasher') cab(tag + 'посудомойка ' + W, [P_('Фасад посудомойки', 715, W - 4, 1, 'facade', false, 2, 2)]);
+        else if (kind === 'washer') notes.push('Н' + (i + 1) + ': стиральная машина ' + W + ' мм — без фасада');
+        else if (kind === 'fridge') {
+          if (e[7] === 'built') { var fh = 1780, lo = Math.round(fh * 0.34) - 2; cab(tag + 'холодильник встр. ' + W, [P_('Фасад холодильника (низ)', lo, W - 4, 1, 'facade', false, 2, 2), P_('Фасад холодильника (верх)', fh - lo - 2 - 2, W - 4, 1, 'facade', false, 2, 2)]); }
+          else notes.push('Н' + (i + 1) + ': холодильник ' + W + ' мм отдельно стоящий — ниша без фасада');
+          var above = TT - 1950; if (above > 250) cab(tag + 'над холодильником ' + W, buildCab('upper', W, { H: above, D: 560, shelves: 0 }));
+        } else if (kind === 'tower') cab(tag + 'пенал ' + W + ' (' + (e[7] || 'storage') + ')', tallTower(W, e[7] || 'storage', TT, 580));
+      });
+      var tiers = st.ut === 2 ? 2 : 1;
+      (st.up || []).forEach(function (e, i) {
+        var kind = e[0], W = Math.round(num(e[2], 60) * 10);
+        for (var tr = 0; tr < tiers; tr++) {
+          var tag = 'В' + (i + 1) + (tiers > 1 ? (tr ? ' ярус 2' : ' ярус 1') : '') + ' ';
+          var shelves = (kind === 'dryer' || kind === 'hood') ? 0 : (tr ? 1 : (e[3] | 0));
+          var parts = buildCab('upper', W, { H: uH, D: uD, shelves: shelves });
+          if (kind === 'glass' && !tr) { parts = parts.filter(function (p) { return p.name !== 'Дверь'; }); var dn = W <= 450 ? 1 : 2; notes.push('В' + (i + 1) + ': стеклянные дверцы ' + dn + ' шт. ' + (uH - 2) + '×' + Math.round((W - 2 * (dn + 1)) / dn) + ' мм (рамка/стекло)'); }
+          if (kind === 'open' && !tr) parts = parts.filter(function (p) { return p.name !== 'Дверь'; });
+          cab(tag + (kind === 'hood' ? 'вытяжка ' : kind === 'dryer' ? 'сушка ' : kind === 'glass' ? 'витрина ' : kind === 'open' ? 'открытый ' : 'шкаф ') + W, parts);
+        }
+      });
+      if (st.i && st.i[0]) {
+        var L = Math.round(num(st.i[1], 140) * 10), n2 = Math.max(1, Math.round(L / 600)), wI = Math.round(L / n2);
+        for (var k = 0; k < n2; k++) cab('Остров ' + (k + 1) + ' ' + wI, k % 2 ? buildCab('drawers', wI, { H: 720, D: 580, n: 3, ratio: '1:1:1', sys: sys, slide: 500 }) : buildCab('lower', wI, { H: 720, D: 580 }));
+      }
+      return { cabs: cabs, notes: notes, title: 'Кухня' };
+    }
+
+    // ---- шкаф-купе, гардеробная, прихожая (модель калькулятора /shkaf) ----
+    function drawerSet(secWi, n, label) {
+      var t = PRESET_BODY_T, parts = [];
+      if (!n) return parts;
+      var boxOuter = secWi - 26;
+      parts.push(P_('Фасад ящика', 170, secWi - 4, n, 'facade', false, 2, 2));
+      parts.push(P_('Ящик · бок', 450, 100, 2 * n, 'body', true, 1, 0));
+      parts.push(P_('Ящик · перед/зад', boxOuter - 2 * t, 100, 2 * n, 'body', true, 1, 0));
+      parts.push(P_('Ящик · дно', boxOuter, 450, n, 'body', true, 0, 0));
+      return parts;
+    }
+    function glassNote(kind, w, h, qty, colorLabel) {
+      var nm = { mirror: 'Зеркало 4 мм', film: 'Зеркало 4 мм с плёнкой', laco: 'Лакобель' + (colorLabel ? ' (' + colorLabel + ')' : ''), sand: 'Зеркало 4 мм с пескоструйным рисунком' }[kind] || kind;
+      return nm + ' ' + Math.round(h) + '×' + Math.round(w) + ' мм — ' + qty + ' шт.';
+    }
+    function shkafParts(m) {
+      var t = PRESET_BODY_T, cabs = [], notes = [];
+      function cab(label, parts) { cabs.push({ label: label, parts: parts }); }
+      var tierName = ['Эконом', 'Стандарт', 'Премиум'][m.tier] || '';
+      function interiorNotes() {
+        var a = [];
+        if (m.rods) a.push('штанги ' + m.rods + ' шт.'); if (m.pant) a.push('пантограф ' + m.pant + ' шт.'); if (m.shoes) a.push('обувные полки ' + m.shoes + ' шт.'); if (m.led) a.push('подсветка');
+        if (a.length) notes.push('Фурнитура: ' + a.join(', '));
+      }
+      if (m.type === 'kupe') {
+        var W = m.W * 10, ha = (m.antresol || 0) * 10, Hb = m.H * 10 - ha, D = m.D * 10, n = m.doors;
+        var secWi = Math.round((W - 2 * t - (n - 1) * t) / n);
+        var body = [];
+        splitLen(W, MAXSEG).forEach(function (s) { body.push(P_('Дно', s, D, 1, 'body', true, 1, 0)); body.push(P_('Верх', s, D, 1, 'body', true, 1, 0)); });
+        body.push(P_('Бок', Hb - 2 * t, D, 2, 'body', false, 1, 0));
+        if (n > 1) body.push(P_('Перегородка', Hb - 2 * t, D - 20, n - 1, 'body', false, 1, 0));
+        if (m.shelves) body.push(P_('Полка', secWi, D - 30, m.shelves, 'body', true, 1, 0));
+        splitLen(W, 2000).forEach(function (s) { body.push(P_('Задняя стенка ХДФ', Hb, s, 1, 'hdf', true, 0, 0)); });
+        cab('Корпус купе ' + W + '×' + m.H * 10 + '×' + D, body);
+        var dw = Math.round((W + (n - 1) * 30) / n), dh = Hb - 40, doors = [];
+        m.fills.slice(0, n).forEach(function (f, i) {
+          var fw = dw - 44, fh = dh - 128;
+          if (f === 'dsp') doors.push(P_('Вставка двери ЛДСП', fh, fw, 1, 'facade', false, 2, 2));
+          else if (f === 'combo') { doors.push(P_('Вставка двери ЛДСП (1/2)', fh, Math.round((fw - 4) / 2), 1, 'facade', false, 2, 2)); notes.push(glassNote('mirror', (fw - 4) / 2, fh, 1)); }
+          else notes.push(glassNote(f, fw, fh, 1, m.customColor ? '' : (typeof LACO !== 'undefined' ? LACO[m.laco || 0][0] : '')));
+        });
+        if (doors.length) cab('Двери купе ' + dw + '×' + dh, doors);
+        notes.push('Раздвижная система: ' + n + ' двери, направляющие 2 × ' + Math.round(W / 10) + ' см (профиль, ролики — по вашей системе; размеры вставок указаны с припуском на профиль)');
+        if (m.drawers) cab('Ящики купе ×' + m.drawers, drawerSet(secWi, m.drawers));
+        if (ha) {
+          var dn = Math.max(2, Math.ceil(W / 600)), aD = Math.min(D, 380), ap = [];
+          splitLen(W, MAXSEG).forEach(function (s) { ap.push(P_('Дно антресоли', s, aD, 1, 'body', true, 1, 0)); ap.push(P_('Верх антресоли', s, aD, 1, 'body', true, 1, 0)); });
+          ap.push(P_('Бок антресоли', ha - 2 * t, aD, 2, 'body', false, 1, 0));
+          ap.push(P_('Дверь антресоли', ha - 4, Math.round((W - 2 * (dn + 1)) / dn), dn, 'facade', false, 2, 2));
+          cab('Антресоль ' + W + '×' + ha, ap);
+        }
+        interiorNotes();
+      } else if (m.type === 'wardrobe') {
+        var walls = m.shape === 'line' ? [m.A] : (m.shape === 'L' ? [m.A, m.B] : [m.A, m.B, m.C]), H = m.H * 10, Dw = m.D * 10;
+        var totalLen = 0, secs = 0;
+        walls.forEach(function (w, wi) {
+          var wl = w * 10, ns = Math.max(1, Math.ceil(wl / 800)); totalLen += wl; secs += ns;
+          var parts = [P_('Стойка', H, Dw, ns + 1, 'body', false, 1, 0)];
+          splitLen(wl, MAXSEG).forEach(function (s) { parts.push(P_('Верх каркаса', s, Dw, 1, 'body', true, 1, 0)); parts.push(P_('Цоколь', s, 100, 1, 'body', true, 1, 0)); });
+          cab('Стена ' + 'АБВ'[wi] + ' ' + wl + ' мм', parts);
+        });
+        var secW = Math.round(totalLen / secs) - t;
+        var inter = [];
+        if (m.shelves) inter.push(P_('Полка', secW, Dw - 20, m.shelves, 'body', true, 1, 0));
+        inter = inter.concat(drawerSet(secW, m.drawers));
+        if (inter.length) cab('Наполнение гардеробной', inter);
+        interiorNotes();
+      } else {
+        var h = m.hall;
+        if (h.wardrobe.on) {
+          var w0 = h.wardrobe, Wp = w0.W * 10, Hp = w0.H * 10, Dp = w0.D * 10, bp = [];
+          bp.push(P_('Дно', Wp, Dp, 1, 'body', true, 1, 0)); bp.push(P_('Верх', Wp, Dp, 1, 'body', true, 1, 0));
+          bp.push(P_('Бок', Hp - 2 * t, Dp, 2, 'body', false, 1, 0));
+          bp.push(P_('Полка', Wp - 2 * t - 2, Dp - 30, 3, 'body', true, 1, 0));
+          splitLen(Wp, 2000).forEach(function (s) { bp.push(P_('Задняя стенка ХДФ', Hp, s, 1, 'hdf', true, 0, 0)); });
+          cab('Шкаф ' + Wp + '×' + Hp + '×' + Dp, bp);
+          var dn2 = w0.doors, dp = [];
+          if (w0.kind === 'swing') {
+            var dwid = (Wp - 2 * (dn2 + 1)) / dn2;
+            for (var i = 0; i < dn2; i++) {
+              if (w0.mirrorDoor && i === dn2 - 1) notes.push('Зеркало на дверь ' + (Hp - 4) + '×' + Math.round(dwid) + ' мм — 1 шт.');
+              else dp.push(P_('Дверь', Hp - 4, dwid, 1, 'facade', false, 2, 2));
+            }
+            notes.push('Петли: ' + dn2 * 2 * (Hp > 1200 ? 3 : 2) + ' шт.');
+          } else {
+            var dws = Math.round((Wp + (dn2 - 1) * 30) / dn2);
+            for (var j = 0; j < dn2; j++) {
+              if (w0.mirrorDoor && j === dn2 - 1) notes.push(glassNote('mirror', dws - 44, Hp - 40 - 128, 1));
+              else dp.push(P_('Вставка двери ЛДСП', Hp - 40 - 128, dws - 44, 1, 'facade', false, 2, 2));
+            }
+            notes.push('Раздвижная система: ' + dn2 + ' двери, направляющие 2 × ' + w0.W + ' см');
+          }
+          if (dp.length) cab('Двери шкафа', dp);
+          if (h.antresol.on) {
+            var ha2 = h.antresol.H * 10, aw = Math.min(h.antresol.W * 10, Wp), dn3 = Math.max(2, Math.ceil(aw / 600)), ap2 = [];
+            ap2.push(P_('Дно антресоли', aw, 380, 1, 'body', true, 1, 0)); ap2.push(P_('Верх антресоли', aw, 380, 1, 'body', true, 1, 0));
+            ap2.push(P_('Бок антресоли', ha2 - 2 * t, 380, 2, 'body', false, 1, 0));
+            ap2.push(P_('Дверь антресоли', ha2 - 4, Math.round((aw - 2 * (dn3 + 1)) / dn3), dn3, 'facade', false, 2, 2));
+            cab('Антресоль ' + aw + '×' + ha2, ap2);
+          }
+        }
+        if (h.shoe.on) {
+          var sw = h.shoe.W * 10, k = h.shoe.tiers, Hs = 200 * k + 100, Ds = 260, sp = [];
+          sp.push(P_('Бок', Hs - t, Ds, 2, 'body', false, 1, 0)); sp.push(P_('Дно', sw, Ds, 1, 'body', true, 1, 0));
+          sp.push(P_('Верх', sw, Ds, 1, 'body', true, 1, 0)); sp.push(P_('Полка', sw - 2 * t - 2, Ds - 20, k - 1, 'body', true, 1, 0));
+          splitLen(sw, 2000).forEach(function (s) { sp.push(P_('Задняя стенка ХДФ', Hs, s, 1, 'hdf', true, 0, 0)); });
+          sp.push(P_('Фасад откидной', 196, sw - 4, k, 'facade', false, 2, 2));
+          cab('Обувница ' + sw + '×' + Hs, sp);
+          notes.push('Откидные механизмы обувницы: ' + k + ' шт.');
+        }
+        if (h.hanger.on) {
+          var hw2 = h.hanger.W * 10;
+          cab('Вешалка ' + hw2, [P_('Панель вешалки', 1180, hw2, 1, 'body', true, 1, 1), P_('Полка над вешалкой', hw2, 250, 1, 'body', true, 1, 0)]);
+          notes.push('Крючки: ' + Math.ceil(h.hanger.W / 12) + ' шт.');
+        }
+        if (h.bench.on) {
+          var bw = h.bench.W * 10;
+          cab('Скамья ' + bw, [P_('Крышка скамьи', bw, 380, 1, 'body', true, 1, 1), P_('Боковина скамьи', 420, 380, 2, 'body', false, 1, 0), P_('Полка скамьи', bw - 2 * t, 380, 1, 'body', true, 1, 0)]);
+          if (h.bench.cushion) notes.push('Мягкая подушка скамьи ' + bw + ' мм');
+        }
+      }
+      if (m.type !== 'kupe' && m.mirror && m.mirror.on) notes.push('Зеркало на стену ' + m.mirror.H * 10 + '×' + m.mirror.W * 10 + ' мм (' + (MIRRORS[m.mirror.type] || '').toLowerCase() + ')');
+      var ttl = { kupe: 'Шкаф-купе', wardrobe: 'Гардеробная', hall: 'Прихожая' }[m.type];
+      return { cabs: cabs, notes: notes, title: ttl };
+    }
+
+    // ---- готовые кухни (в формате расчёта из калькулятора) ----
+    var KITCHEN_PRESETS = [
+      { name: 'Эконом · Компакт', st: { t: 'straight', h: 240, uh: 72, ud: 35, hw: 0, ut: 1, i: [0],
+        lo: [['sink', '', 60, 1, 0], ['drawers', '', 60, 0, 3], ['hob', '', 60, 1, 0], ['fridge', '', 60, 0, 0, 'h', 'm', 'free']],
+        up: [['dryer', '', 60, 1, 1], ['door', '', 60, 1, 0], ['hood', '', 60, 0, 1]] } },
+      { name: 'Стандарт · Комфорт', st: { t: 'l-shape', h: 240, uh: 72, ud: 35, hw: 1, ut: 1, i: [0],
+        lo: [['tower', '', 60, 0, 0, 'p', 'l', 'ovenMicro'], ['drawers', '', 60, 0, 3], ['sink', '', 60, 1, 0], ['dishwasher', '', 60, 0, 0], ['drawers', '', 60, 0, 3], ['hob', '', 60, 1, 0], ['fridge', '', 60, 0, 0, 'p', 'm', 'free']],
+        up: [['door', '', 60, 1, 0], ['dryer', '', 60, 1, 1], ['door', '', 60, 1, 0], ['hood', '', 60, 0, 1], ['door', '', 60, 1, 0]] } },
+      { name: 'Премиум · Престиж с островом', st: { t: 'l-shape', h: 240, uh: 72, ud: 35, hw: 2, ut: 1, i: [1, 140, 90],
+        lo: [['fridge', '', 60, 0, 0, 'g', 'l', 'built'], ['tower', '', 60, 0, 0, 'g', 'l', 'ovenMicro'], ['drawers', '', 60, 0, 3], ['sink', '', 60, 1, 0], ['dishwasher', '', 60, 0, 0], ['hob', '', 60, 1, 0], ['drawers', '', 60, 0, 3]],
+        up: [['door', '', 60, 1, 0], ['door', '', 60, 1, 0], ['dryer', '', 60, 1, 1], ['hood', '', 60, 0, 1], ['glass', '', 60, 0, 0]] } }
+    ];
+
+    function applyPresetSpec(spec, replace) {
+      var body = state.materials[0];
+      var facade = state.materials.filter(function (m) { return m !== body && /фасад|мдф|акрил|дверь/i.test(m.name); })[0];
+      if (!facade) { facade = { id: uid(), name: 'Фасад 16 мм', L: body.L, W: body.W, et: '2' }; state.materials.push(facade); }
+      var hasHdf = spec.cabs.some(function (c) { return c.parts.some(function (p) { return p.mat === 'hdf'; }); });
+      var hdf = state.materials.filter(function (m) { return /хдф|hdf|двп/i.test(m.name); })[0];
+      if (hasHdf && !hdf) { hdf = { id: uid(), name: 'ХДФ 3 мм', L: 2800, W: 2070, et: '0.4' }; state.materials.push(hdf); }
+      if (replace) { state.parts = []; state.groups = []; }
+      else state.parts = state.parts.filter(function (p) { return p.L > 0 || p.W > 0 || p.name; });
+      var count = 0;
+      spec.cabs.forEach(function (c) {
+        var g = { id: uid(), label: c.label };
+        state.groups.push(g);
+        c.parts.forEach(function (p) {
+          var mat = p.mat === 'facade' ? facade : (p.mat === 'hdf' ? hdf : body);
+          if (!(p.L > 0 && p.W > 0)) return;
+          state.parts.push({ id: uid(), name: p.name, L: p.L, W: p.W, qty: p.qty, mat: mat.id, rot: p.rot, eL: p.eL, eW: p.eW, grp: g.id, et: mat.et });
+          count += p.qty;
+        });
+      });
+      state.notes = spec.notes.slice();
+      renderMaterials(); renderSheetPrices(); renderParts(); renderTemplates(); renderPresetNote(); changed(true);
+      return count;
+    }
+    function renderPresetNote() {
+      var box = document.getElementById('presetNote');
+      if (!box) return;
+      var n = state.notes || [];
+      box.innerHTML = n.length ? '<b>Не из листа ЛДСП (стекло, зеркала, фурнитура):</b><ul>' + n.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '';
+    }
+    function renderPresetButtons() {
+      var box = document.getElementById('presetGroups');
+      if (!box) return;
+      var groups = [
+        { title: 'Кухни', items: KITCHEN_PRESETS.map(function (k, i) { return { label: k.name, run: function () { return kitchenParts(k.st); } }; }) },
+        { title: 'Шкафы-купе', items: PRESETS.kupe.map(function (p) { return { label: p.seg + ' · ' + p.name, run: function () { return shkafParts(merge(DEF(), deep(p.m))); } }; }) },
+        { title: 'Гардеробные', items: PRESETS.wardrobe.map(function (p) { return { label: p.seg + ' · ' + p.name, run: function () { return shkafParts(merge(DEF(), Object.assign({ type: 'wardrobe' }, deep(p.m)))); } }; }) },
+        { title: 'Прихожие', items: PRESETS.hall.map(function (p) { return { label: p.seg + ' · ' + p.name, run: function () { return shkafParts(merge(DEF(), Object.assign({ type: 'hall' }, deep(p.m)))); } }; }) }
+      ];
+      box.innerHTML = groups.map(function (g, gi) {
+        return '<div class="pg"><h4>' + g.title + '</h4><div class="chips">' + g.items.map(function (it, ii) { return '<button type="button" class="chip" data-g="' + gi + '" data-i="' + ii + '">' + esc(it.label) + '</button>'; }).join('') + '</div></div>';
+      }).join('');
+      box.querySelectorAll('button[data-g]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var it = groups[+b.dataset.g].items[+b.dataset.i];
+          var spec; try { spec = it.run(); } catch (e) { toast('Не удалось собрать детали: ' + e.message); return; }
+          var replace = document.getElementById('presetReplace').checked;
+          var q = applyPresetSpec(spec, replace);
+          state.name = state.name || it.label;
+          renderSettings();
+          toast(it.label + ': ' + q + ' деталей. Раскрой посчитан ниже');
+          document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+    }
+    function b64decodeAny(s) {
+      s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '=';
+      return JSON.parse(decodeURIComponent(escape(atob(s))));
+    }
+    function importFromLink() {
+      var txt = (document.getElementById('importLink').value || '').trim();
+      var mk = txt.match(/#k=([A-Za-z0-9_-]+)/), ms = txt.match(/#s=([A-Za-z0-9+/=]+)/);
+      var replace = document.getElementById('presetReplace').checked, spec, label;
+      try {
+        if (mk) { spec = kitchenParts(b64decodeAny(mk[1])); label = 'Кухня по ссылке'; }
+        else if (ms) { spec = shkafParts(merge(DEF(), JSON.parse(decodeURIComponent(escape(atob(ms[1])))))); label = spec.title + ' по ссылке'; }
+        else { toast('Вставьте ссылку на расчёт из калькулятора кухни (/calc#k=…) или шкафов (/shkaf#s=…)'); return; }
+      } catch (e) { toast('Не удалось разобрать ссылку: ' + e.message); return; }
+      var q = applyPresetSpec(spec, replace);
+      if (!state.name) { state.name = label; renderSettings(); }
+      toast(label + ': ' + q + ' деталей');
+      document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
     }
 
     // --------------------------------------------------------------- init
@@ -1614,7 +1953,7 @@
 
       document.getElementById('btnAddMat').addEventListener('click', function () {
         state.materials.push({ id: uid(), name: 'Материал ' + (state.materials.length + 1), L: 2750, W: 1830, et: '0.4' });
-        renderMaterials(); renderParts(); changed(true);
+        renderMaterials(); renderSheetPrices(); renderParts(); changed(true);
       });
       document.getElementById('btnAddPart').addEventListener('click', addPart);
       bindTemplateInputs();
@@ -1657,7 +1996,7 @@
         state = {
           name: '', kerf: state.kerf, trim: state.trim, tplT: state.tplT, tplFT: state.tplFT,
           edgeAllow: state.edgeAllow, edgePrices: JSON.parse(JSON.stringify(state.edgePrices)),
-          sheetPrices: JSON.parse(JSON.stringify(state.sheetPrices)), cutPrices: JSON.parse(JSON.stringify(state.cutPrices)), cutTier: state.cutTier,
+          sheetPrices: JSON.parse(JSON.stringify(state.sheetPrices)), matPrices: JSON.parse(JSON.stringify(state.matPrices)), notes: [], cutPrices: JSON.parse(JSON.stringify(state.cutPrices)), cutTier: state.cutTier,
           materials: keepMats, groups: [], parts: []
         };
         state.parts.push({ id: uid(), name: '', L: 0, W: 0, qty: 1, mat: keepMats[0].id, rot: true, eL: 0, eW: 0, et: keepMats[0].et });
@@ -1671,7 +2010,10 @@
         delete pr[n]; saveProjects(pr); renderProjects(); toast('Проект удалён');
       });
 
+      renderPresetButtons();
+      document.getElementById('btnImport').addEventListener('click', importFromLink);
       renderAll();
+      renderPresetNote();
     }
 
     init();
