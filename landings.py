@@ -245,8 +245,9 @@ img { display:block; max-width:100%; }
 .nav > a::after, .nav .has-sub > a::after { content:''; position:absolute; left:0; right:0; bottom:-6px; height:1px; background:var(--gold); transform:scaleX(0); transition:transform .25s; }
 .nav > a:hover::after, .nav .has-sub:hover > a::after, .nav a.on::after { transform:scaleX(1); }
 @media (max-width:1620px) { .logo-sub { display:none; } .nav { gap:18px; } .hdr-right { flex-wrap:nowrap; gap:10px; } }
-.has-sub { position:relative; padding:28px 0; }
-.has-sub > a::before { content:'▾'; font-size:.7rem; margin-left:6px; order:2; float:right; color:var(--gold); }
+.has-sub { position:relative; display:flex; align-items:center; height:84px; }
+.has-sub > a { display:inline-flex; align-items:center; gap:6px; }
+.has-sub > a i { font-style:normal; font-size:.7rem; color:var(--gold); }
 .sub { display:none; position:absolute; top:100%; left:-16px; min-width:230px; background:rgba(17,16,14,.97); border:1px solid var(--line); padding:8px 0; box-shadow:0 20px 40px rgba(0,0,0,.5); z-index:60; }
 .has-sub:hover .sub, .has-sub:focus-within .sub { display:block; }
 .sub a { display:block; padding:11px 20px; font-size:.9rem; font-weight:600; color:#e9e1d4; white-space:nowrap; }
@@ -356,8 +357,8 @@ footer { border-top:1px solid var(--line); background:#0c0b0a; padding:56px 0 34
   .burger { display:inline-flex; align-items:center; justify-content:center; }
   .hdr.open .nav { display:flex; position:absolute; top:84px; left:0; right:0; flex-direction:column; align-items:flex-start; gap:0; background:rgba(17,16,14,.97); border-bottom:1px solid var(--line); padding:8px 24px 18px; max-height:calc(100vh - 84px); overflow:auto; }
   .hdr.open .nav > a, .hdr.open .has-sub > a { padding:12px 0; width:100%; border-bottom:1px solid var(--line); display:block; }
-  .hdr.open .has-sub { padding:0; width:100%; }
-  .hdr.open .has-sub > a::before { display:none; }
+  .hdr.open .has-sub { height:auto; display:block; width:100%; }
+  .hdr.open .has-sub > a i { display:none; }
   .hdr.open .sub { display:block; position:static; border:0; box-shadow:none; background:transparent; padding:0 0 0 14px; }
   .hdr.open .sub a { padding:10px 0; border-bottom:1px solid var(--line); }
 }
@@ -427,9 +428,9 @@ def _nav(active):
     cls = lambda s: ' class="on"' if s == active else ""
     return (
         '<nav class="nav" id="nav">'
-        f'<div class="has-sub"><a href="/kuhni-na-zakaz-tashkent"{cls("kuhni-na-zakaz-tashkent")}>Кухни</a><div class="sub">{sub}</div></div>'
+        f'<div class="has-sub"><a href="/kuhni-na-zakaz-tashkent"{cls("kuhni-na-zakaz-tashkent")}>Кухни<i>▾</i></a><div class="sub">{sub}<a href="/shkaf" style="border-top:1px solid var(--line);color:var(--gold-2)">Калькулятор шкафов</a></div></div>'
         '<a href="/#furniture">Мебель</a><a href="/#contract">Договор</a><a href="/#materials">Материалы</a>'
-        '<a href="/#process">Как мы работаем</a><a href="/#contacts">Контакты</a><a href="/calc">Калькулятор</a><a href="/shkaf">Шкафы онлайн</a>'
+        '<a href="/#process">Как мы работаем</a><a href="/#contacts">Контакты</a><a href="/calc">Калькулятор</a>'
         "</nav>"
     )
 

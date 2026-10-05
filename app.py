@@ -7,7 +7,7 @@ import uuid
 import base64
 import asyncio
 import urllib.request
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from seo import SITE_URL, render_home
@@ -179,6 +179,17 @@ async def health():
 # КАТАЛОГ ЦВЕТОВ: картинки из папки static/catalog/<раздел>/NN.webp
 # ---------------------------------------------------------------------------
 CATALOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "catalog")
+
+
+@app.get("/static/js/{filename}")
+async def static_js(filename: str):
+    # Общие скрипты (данные калькулятора шкафов и раскроя)
+    if not re.fullmatch(r"[a-z0-9_-]{1,40}\.js", filename):
+        raise HTTPException(status_code=404)
+    path = os.path.join(os.path.dirname(__file__), "static", "js", filename)
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404)
+    return FileResponse(path, media_type="application/javascript", headers={"Cache-Control": "public, max-age=300"})
 
 
 @app.get("/static/catalog/{section}/{filename}")

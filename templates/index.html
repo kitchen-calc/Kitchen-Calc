@@ -4797,7 +4797,7 @@ ${body}
       document.body.style.overflow = 'hidden';
       renderDecor();
     }
-    function closeDecor() { catCloseView(); el('catalogModal').style.display = 'none'; document.body.style.overflow = ''; }
+    function closeDecor() { catCloseView(); el('catalogModal').style.display = 'none'; document.body.style.overflow = ''; if (new URLSearchParams(location.search).get('embed') === '1') { try { parent.postMessage({ kc: 'close' }, location.origin); } catch (e) {} } }
     function setCatSec(k) { catSec = k; renderDecor(); el('catGrid').scrollTop = 0; }
     function setCatQuery(v) { catQuery = v; renderDecorGrid(); }
     function renderDecor() {
@@ -4838,10 +4838,13 @@ ${body}
     }
     function catCloseView() { const v = el('catView'); if (v) v.style.display = 'none'; catIdx = -1; }
     function catStep(d) { if (catIdx >= 0) catOpenView((catIdx + d + catList.length) % catList.length); }
+    const EMBED = new URLSearchParams(location.search).get('embed') === '1';   // каталог внутри калькулятора шкафов
+    if (EMBED) document.addEventListener('DOMContentLoaded', () => { document.body.classList.add('embed'); const b = document.querySelector('.cat-pick-body'); if (b) b.style.display = 'none'; const f = document.querySelector('.cat-pick [data-i18n=catToFacade]'); if (f) f.textContent = 'Выбрать этот цвет'; });
     function catPick(target) {
       const it = catList[catIdx]; if (!it) return;
       const found = findColor(CAT_ID_PREFIX[it.key] + it.n); if (!found) return;
       const col = colorObj(found), tg = target === 'body' ? 'body' : 'facade';
+      if (EMBED) { try { parent.postMessage({ kc: 'color', hex: col.hex, name: col.name, label: colorLabel(col, true), id: col.id }, location.origin); } catch (e) {} return; }
       const changed = setMaterialForColor(tg, col);       // материал подстраивается под ступень цвета
       if (tg === 'body') selectedBodyColor = col; else selectedFacadeColor = col;
       updateColorUIBadges();

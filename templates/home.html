@@ -66,8 +66,9 @@
     .nav a { font-size: .92rem; font-weight: 600; color: #e9e1d4; position: relative; white-space: nowrap; }
     .nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 1px; background: var(--gold); transform: scaleX(0); transition: transform .25s; }
     .nav a:hover::after { transform: scaleX(1); }
-    .has-sub { position: relative; padding: 28px 0; }
-    .has-sub > a::before { content: '▾'; font-size: .7rem; margin-left: 6px; float: right; color: var(--gold); }
+    .has-sub { position: relative; display: flex; align-items: center; height: 84px; }
+    .has-sub > a { display: inline-flex; align-items: center; gap: 6px; }
+    .has-sub > a i { font-style: normal; font-size: .7rem; color: var(--gold); }
     .sub { display: none; position: absolute; top: 100%; left: -16px; min-width: 240px; background: rgba(17,16,14,.97); border: 1px solid var(--line); padding: 8px 0; box-shadow: 0 20px 40px rgba(0,0,0,.5); z-index: 60; }
     .has-sub:hover .sub, .has-sub:focus-within .sub { display: block; }
     .nav .sub a { display: block; padding: 11px 20px; font-size: .9rem; white-space: nowrap; }
@@ -289,8 +290,8 @@
       .burger { display: inline-flex; align-items: center; justify-content: center; }
       .hdr.open .nav { display: flex; position: absolute; top: 84px; left: 0; right: 0; flex-direction: column; align-items: flex-start; gap: 0; background: rgba(17,16,14,.97); border-bottom: 1px solid var(--line); padding: 8px 24px 18px; }
       .hdr.open .nav a { padding: 12px 0; width: 100%; border-bottom: 1px solid var(--line); }
-      .hdr.open .has-sub { padding: 0; width: 100%; }
-      .hdr.open .has-sub > a::before { display: none; }
+      .hdr.open .has-sub { height: auto; display: block; width: 100%; }
+      .hdr.open .has-sub > a i { display: none; }
       .hdr.open .sub { display: block; position: static; border: 0; box-shadow: none; background: transparent; padding: 0 0 0 14px; }
       .hdr.open .nav .sub a { padding: 10px 0; }
     }
@@ -356,7 +357,7 @@
       </div>
       <nav class="nav" id="nav">
         <div class="has-sub">
-          <a href="#kitchens" data-t="navKitchens">Кухни</a>
+          <a href="#kitchens"><span data-t="navKitchens">Кухни</span><i>▾</i></a>
           <div class="sub">
             <a href="/kuhni-na-zakaz-tashkent" data-t="subKitchens">Кухни на заказ</a>
             <a href="/shkafy-kupe-na-zakaz-tashkent" data-t="subShkafy">Шкафы-купе</a>

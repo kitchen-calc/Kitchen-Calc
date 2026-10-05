@@ -99,6 +99,11 @@
     .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(30px); background:#111827; color:#fff; padding:12px 18px; border-radius:10px; font-size:.9rem; opacity:0; pointer-events:none; transition:.3s; z-index:60; max-width:92vw; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%); }
     .hide { display:none !important; }
+    .cmodal { position:fixed; inset:0; background:rgba(15,15,15,.78); z-index:90; display:none; align-items:center; justify-content:center; padding:14px; }
+    .cmodal.open { display:flex; }
+    .cbox { position:relative; width:min(1180px,100%); height:min(860px,100%); background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+    .cbox iframe { width:100%; height:100%; border:0; }
+    .cclose { position:absolute; top:10px; right:12px; z-index:3; width:38px; height:38px; border-radius:50%; border:1px solid #ddd; background:#fff; font-size:1.1rem; cursor:pointer; }
     @media (max-width:900px) { .grid { grid-template-columns:1fr; } .sticky { position:static; } .presets { grid-template-columns:1fr; } }
     @media (max-width:520px) { .tiers { grid-template-columns:1fr; } .row, .row3 { grid-template-columns:1fr 1fr; } }
   </style>
@@ -106,7 +111,7 @@
 <body>
 <div class="top"><div class="in">
   <a class="brand" id="brand" title="Kitchen Calc">Kitchen Calc</a>
-  <div class="links"><a class="lk" href="/">← Главная</a><a class="lk" href="/calc">Калькулятор кухни</a><a class="lk gold" href="tel:+998920934510">+998 92 093-45-10</a></div>
+  <div class="links"><a class="lk" href="/">← Главная</a><button type="button" class="lk" id="catBtn" style="cursor:pointer">🎨 Каталог цветов</button><a class="lk" href="/calc">Калькулятор кухни</a><a class="lk gold" href="tel:+998920934510">+998 92 093-45-10</a></div>
 </div></div>
 
 <div class="wrap">
@@ -141,8 +146,10 @@
     </div>
   </div>
 </div>
+<div class="cmodal" id="cmodal"><div class="cbox"><button type="button" class="cclose" id="cclose" aria-label="Закрыть">✕</button><iframe id="cframe" title="Каталог цветов ЛДСП / ЛМДФ"></iframe></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="/static/js/shkaf-data.js?v=2"></script>
 <script>
 /* =====================================================================
    ЦЕНЫ. Всё, что влияет на стоимость, — в этом блоке; меняйте цифры здесь.
@@ -172,42 +179,6 @@ const P = {
   sandExtra: 140000,
   ledMirrorFrame: 350000, ledMirrorKit: 150000   // подсветка зеркала: сум за метр периметра + блок
 };
-const FILLS = { dsp: 'ЛДСП', mirror: 'Зеркало', film: 'Зеркало с плёнкой', laco: 'Лакобель (цветное стекло)', combo: 'ЛДСП + зеркало', sand: 'Зеркало с рисунком' };
-const MIRRORS = { plain: 'Обычное', film: 'С плёнкой безопасности', led: 'С подсветкой', sand: 'С пескоструйным рисунком' };
-const PALETTE = [
-  ['Белый', '#f2f1ee'], ['Светлый дуб', '#d8bd91'], ['Бежевый', '#cdbba0'], ['Серый', '#a9adb0'],
-  ['Орех', '#7a5638'], ['Графит', '#3a3d41'], ['Чёрный', '#1c1d1f'], ['Капучино', '#a88b73']
-];
-const LACO = [['Графит', '#2a2d31'], ['Серо-зелёный', '#6f7d73'], ['Шампань', '#d6c3a1'], ['Белый', '#f0efe9'], ['Синий', '#33476a'], ['Бордо', '#6b2a35']];
-
-/* ======================== СОСТОЯНИЕ И ГОТОВЫЕ ВАРИАНТЫ ======================== */
-const DEF = () => ({
-  type: 'kupe', tier: 1, color: 0, laco: 0,
-  W: 240, H: 240, D: 60, doors: 3, fills: ['dsp', 'mirror', 'dsp'], antresol: 0,
-  shelves: 6, rods: 2, drawers: 3, pant: 0, shoes: 2, led: false,
-  shape: 'line', A: 300, B: 200, C: 200,
-  mirror: { on: false, type: 'plain', W: 60, H: 180 },
-  hall: { wardrobe: { on: true, W: 140, H: 230, D: 40, kind: 'swing', doors: 3, mirrorDoor: false }, shoe: { on: true, W: 80, tiers: 3 }, hanger: { on: true, W: 80 }, bench: { on: true, W: 80, cushion: true }, antresol: { on: false, W: 140, H: 40 } },
-  decor: { plant: true, lamp: true, pouf: true, rug: true, pics: true }
-});
-const PRESETS = {
-  kupe: [
-    { name: 'Практичный', seg: 'Эконом', note: 'Двухдверный, зеркало и ЛДСП', m: { tier: 0, color: 1, W: 180, H: 240, D: 60, doors: 2, fills: ['dsp', 'mirror'], shelves: 4, rods: 1, drawers: 2, shoes: 1, pant: 0, led: false, decor: { plant: true, lamp: false, pouf: false, rug: true, pics: true } } },
-    { name: 'Светлый с зеркалами', seg: 'Стандарт', note: 'Три двери, подсветка и обувь', m: { tier: 1, color: 0, W: 270, H: 250, D: 60, doors: 3, fills: ['combo', 'mirror', 'combo'], shelves: 7, rods: 2, drawers: 3, shoes: 3, pant: 1, led: true, decor: { plant: true, lamp: true, pouf: true, rug: true, pics: true } } },
-    { name: 'Лакобель и антресоль', seg: 'Премиум', note: 'Четыре двери, антресоль, Blum и подсветка', m: { tier: 2, color: 5, laco: 0, W: 340, H: 270, D: 62, doors: 4, fills: ['laco', 'sand', 'laco', 'sand'], antresol: 40, shelves: 9, rods: 3, drawers: 5, shoes: 4, pant: 2, led: true, decor: { plant: true, lamp: true, pouf: true, rug: true, pics: true } } }
-  ],
-  wardrobe: [
-    { name: 'Линейная', seg: 'Эконом', note: 'Вдоль одной стены, штанги и полки', m: { type: 'wardrobe', tier: 0, color: 0, shape: 'line', A: 240, H: 240, D: 45, shelves: 8, rods: 3, drawers: 2, shoes: 2, pant: 0, led: false, mirror: { on: false, type: 'plain', W: 60, H: 180 }, decor: { plant: true, lamp: false, pouf: false, rug: true, pics: false } } },
-    { name: 'Г-образная с зеркалом', seg: 'Стандарт', note: 'Две стены, обувница и подсветка', m: { type: 'wardrobe', tier: 1, color: 4, shape: 'L', A: 320, B: 200, H: 250, D: 50, shelves: 12, rods: 5, drawers: 4, shoes: 4, pant: 1, led: true, mirror: { on: true, type: 'plain', W: 70, H: 190 }, decor: { plant: true, lamp: true, pouf: true, rug: true, pics: false } } },
-    { name: 'П-образная люкс', seg: 'Премиум', note: 'Три стены, пантограф, Blum, зеркало с подсветкой', m: { type: 'wardrobe', tier: 2, color: 5, shape: 'U', A: 340, B: 260, C: 260, H: 260, D: 55, shelves: 18, rods: 8, drawers: 8, shoes: 6, pant: 2, led: true, mirror: { on: true, type: 'led', W: 80, H: 200 }, decor: { plant: true, lamp: true, pouf: true, rug: true, pics: false } } }
-  ],
-  hall: [
-    { name: 'Компактная', seg: 'Эконом', note: 'Шкаф, обувница и вешалка', m: { type: 'hall', tier: 0, color: 1, hall: { wardrobe: { on: true, W: 100, H: 220, D: 38, kind: 'swing', doors: 2, mirrorDoor: true }, shoe: { on: true, W: 60, tiers: 2 }, hanger: { on: true, W: 60 }, bench: { on: false, W: 60, cushion: false }, antresol: { on: false, W: 100, H: 40 } }, mirror: { on: false, type: 'plain', W: 50, H: 120 }, decor: { plant: true, lamp: false, pouf: false, rug: true, pics: true } } },
-    { name: 'Семейная', seg: 'Стандарт', note: 'Шкаф, скамья с подушкой, зеркало в рост', m: { type: 'hall', tier: 1, color: 2, hall: { wardrobe: { on: true, W: 160, H: 240, D: 40, kind: 'swing', doors: 3, mirrorDoor: false }, shoe: { on: true, W: 80, tiers: 3 }, hanger: { on: true, W: 80 }, bench: { on: true, W: 80, cushion: true }, antresol: { on: true, W: 160, H: 40 } }, mirror: { on: true, type: 'plain', W: 60, H: 170 }, decor: { plant: true, lamp: true, pouf: true, rug: true, pics: true } } },
-    { name: 'Купе с зеркалами', seg: 'Премиум', note: 'Раздвижной шкаф, зеркало с подсветкой', m: { type: 'hall', tier: 2, color: 5, hall: { wardrobe: { on: true, W: 200, H: 250, D: 45, kind: 'sliding', doors: 2, mirrorDoor: true }, shoe: { on: true, W: 100, tiers: 4 }, hanger: { on: true, W: 80 }, bench: { on: true, W: 100, cushion: true }, antresol: { on: false, W: 200, H: 40 } }, mirror: { on: true, type: 'led', W: 70, H: 180 }, decor: { plant: true, lamp: true, pouf: true, rug: true, pics: true } } }
-  ]
-};
-
 let M = DEF();
 let viewMode = 'out';          // out / in
 let activePreset = -1;
@@ -215,8 +186,6 @@ const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/[  ]/g, ' ');
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, Number(v) || 0));
-const deep = o => JSON.parse(JSON.stringify(o));
-function merge(t, s) { Object.keys(s).forEach(k => { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object') merge(t[k], s[k]); else t[k] = deep(s[k]); }); return t; }
 const T = () => P.tiers[M.tier];
 
 /* ======================== РАСЧЁТ ЦЕНЫ ======================== */
@@ -427,7 +396,7 @@ function drawSection(x0, x1, H, sec, seed, led) {
 
 /* --- фасады дверей --- */
 function doorFace(x, y, w, h, fill, m, idx) {
-  const col = PALETTE[m.color][1], lac = LACO[m.laco || 0][1], id = 'd' + (++UID);
+  const col = m.customColor ? m.customColor.hex : PALETTE[m.color][1], lac = LACO[m.laco || 0][1], id = 'd' + (++UID);
   let s = '';
   const mirror = () => R(x, y, w, h, 'url(#gMirror)') +
     `<polygon points="${f2(x + w * .08)},${f2(y + h)} ${f2(x + w * .30)},${f2(y)} ${f2(x + w * .42)},${f2(y)} ${f2(x + w * .2)},${f2(y + h)}" fill="url(#gShine)"/>` +
@@ -457,7 +426,7 @@ function sceneBg(FW, wallH) {
 function drawKupe(m, mode, mini) {
   const W = m.W, Htot = m.H, ha = m.antresol || 0, H = Htot - ha, n = m.doors;
   const PAD = mini ? 46 : 74, FW = W + 2 * PAD, WALL = Htot + 38, FH = WALL + 34;
-  const ox = PAD, oy = WALL, dec = m.decor || {}, col = PALETTE[m.color][1];
+  const ox = PAD, oy = WALL, dec = m.decor || {}, col = m.customColor ? m.customColor.hex : PALETTE[m.color][1];
   let g = sceneBg(FW, WALL);
   if (dec.rug) g += rug(ox + W / 2, oy + 6, W + 70, '#dcd1bf');
   if (dec.pics) g += picture(8, oy - 205, 26, 36, 0) + picture(10, oy - 160, 18, 22, 2) + picture(ox + W + 24, oy - 215, 30, 40, 1);
@@ -507,7 +476,7 @@ function drawWardrobe(m, mini) {
   const walls = m.shape === 'line' ? [m.A] : (m.shape === 'L' ? [m.A, m.B] : [m.A, m.B, m.C]);
   const H = m.H, GAP = 26, PAD = mini ? 40 : 60, extra = (m.mirror.on ? m.mirror.W + 24 : 0) + 20;
   const total = walls.reduce((a, b) => a + b, 0) + GAP * (walls.length - 1);
-  const FW = total + 2 * PAD + extra, WALL = H + 40, FH = WALL + 34, col = PALETTE[m.color][1];
+  const FW = total + 2 * PAD + extra, WALL = H + 40, FH = WALL + 34, col = m.customColor ? m.customColor.hex : PALETTE[m.color][1];
   const dec = m.decor || {};
   let g = sceneBg(FW, WALL);
   const secs = walls.map(w => Math.max(1, Math.ceil(w / 80))), S = secs.reduce((a, b) => a + b, 0);
@@ -539,37 +508,40 @@ function drawWardrobe(m, mini) {
   return svgWrap(FW, FH, g);
 }
 
-/* --- прихожая --- */
-function drawHall(m, mode, mini) {
-  const h = m.hall, col = PALETTE[m.color][1], dec = m.decor || {};
-  const items = [];
-  if (h.wardrobe.on) items.push({ k: 'w', w: h.wardrobe.W });
-  if (h.hanger.on || h.bench.on) items.push({ k: 'h', w: Math.max(h.hanger.on ? h.hanger.W : 0, h.bench.on ? h.bench.W : 0) });
-  if (h.shoe.on || m.mirror.on) items.push({ k: 's', w: Math.max(h.shoe.on ? h.shoe.W : 0, m.mirror.on ? m.mirror.W + 16 : 0) });
-  const GAP = 6, total = items.reduce((a, b) => a + b.w, 0) + GAP * Math.max(0, items.length - 1);
-  const Hmax = Math.max((h.wardrobe.on ? h.wardrobe.H : 0) + (h.antresol.on && h.wardrobe.on ? h.antresol.H : 0), 215);
-  const PAD = mini ? 40 : 66, FW = total + 2 * PAD, WALL = Hmax + 40, FH = WALL + 34;
-  let g = sceneBg(FW, WALL);
-  if (dec.rug) g += rug(PAD + total / 2, WALL + 7, total + 60, '#dcd1bf');
-  if (dec.plant) g += plant(PAD - 26, WALL + 7, 1.35);
-  let x = PAD, ox = {};
+/* --- прихожая: одна, Г- или П-образная (развёртка по стенам) --- */
+const HALL_WALLS = { line: ['A'], L: ['A', 'B'], U: ['A', 'B', 'C'] };
+const WALL_NAME = { A: 'А', B: 'Б', C: 'В' };
+function hallWallItems(m, wk) {
+  const h = m.hall, it = [], on = (c, key) => c.on && ((c.wall || 'A') === wk);
+  const walls = HALL_WALLS[h.shape] || ['A'], ok = w => (walls.indexOf(w || 'A') >= 0 ? w || 'A' : 'A');
+  const at = c => ok(c.wall) === wk;
+  if (h.wardrobe.on && at(h.wardrobe)) it.push({ k: 'w', w: h.wardrobe.W });
+  const hasH = h.hanger.on && at(h.hanger), hasB = h.bench.on && at(h.bench);
+  if (hasH || hasB) it.push({ k: 'h', w: Math.max(hasH ? h.hanger.W : 0, hasB ? h.bench.W : 0), hang: hasH, bench: hasB });
+  const hasS = h.shoe.on && at(h.shoe), hasM = m.mirror.on && at(m.mirror);
+  if (hasS || hasM) it.push({ k: 's', w: Math.max(hasS ? h.shoe.W : 0, hasM ? m.mirror.W + 16 : 0), shoe: hasS, mir: hasM });
+  return it;
+}
+function drawHallWall(m, mode, items, x0, WALL) {
+  const h = m.hall, col = m.customColor ? m.customColor.hex : PALETTE[m.color][1], dec = m.decor || {}, GAP = 6;
+  let g = '', x = x0, ox = {};
   items.forEach(it => {
     ox[it.k] = x;
     if (it.k === 'w') {
-      const w = h.wardrobe, W = w.W, H = w.H - (h.antresol.on ? 0 : 0), top = WALL - H;
+      const w = h.wardrobe, W = w.W, H = w.H, top = WALL - H;
       g += R(x - 1, top - 2, W + 2, H + 2, '#a89f8f') + R(x + 1.6, top + 1.6, W - 3.2, H - 3.2, shade(col, .1));
       if (mode === 'in') {
         const ns = w.kind === 'sliding' ? w.doors : Math.max(1, Math.round(W / 50));
         for (let i = 0; i < ns; i++) {
-          const x0 = x + i * W / ns, x1 = x + (i + 1) * W / ns;
-          g += `<g transform="translate(0 ${WALL})">${drawSection(x0, x1, H, { rods: i === 0 ? 1 : (i === 1 ? 2 : 0), shelves: i === 0 ? 1 : 3, drawers: i === ns - 1 && ns > 1 ? 2 : 0, shoes: 0, pant: 0 }, i * 3 + 2, false)}</g>`;
-          if (i) g += R(x0 - .8, top + 1.6, 1.6, H - 3.2, shade(col, -.18));
+          const a0 = x + i * W / ns, a1 = x + (i + 1) * W / ns;
+          g += `<g transform="translate(0 ${WALL})">${drawSection(a0, a1, H, { rods: i === 0 ? 1 : (i === 1 ? 2 : 0), shelves: i === 0 ? 1 : 3, drawers: i === ns - 1 && ns > 1 ? 2 : 0, shoes: 0, pant: 0 }, i * 3 + 2, false)}</g>`;
+          if (i) g += R(a0 - .8, top + 1.6, 1.6, H - 3.2, shade(col, -.18));
         }
       } else {
         const dn = w.doors, dw = w.kind === 'sliding' ? (W + (dn - 1) * 3) / dn : W / dn;
         for (let i = 0; i < dn; i++) {
           const fx = w.kind === 'sliding' ? x + i * (dw - 3) : x + i * dw;
-          const mir = w.mirrorDoor && ((w.kind === 'sliding' && i === dn - 1) || (w.kind === 'swing' && i === dn - 1));
+          const mir = w.mirrorDoor && i === dn - 1;
           if (w.kind === 'sliding') g += doorFace(fx, top + 1, dw, H - 2, mir ? 'mirror' : 'dsp', m, i) + curtainShadow(fx + dw, top + 1, H - 2);
           else {
             g += mir ? (R(fx + .5, top + 1.5, dw - 1, H - 3, 'url(#gMirror)') + `<polygon points="${f2(fx + dw * .15)},${f2(top + H)} ${f2(fx + dw * .45)},${f2(top)} ${f2(fx + dw * .6)},${f2(top)} ${f2(fx + dw * .3)},${f2(top + H)}" fill="url(#gShine)"/>`) :
@@ -579,18 +551,22 @@ function drawHall(m, mode, mini) {
         }
         if (w.kind === 'sliding') g += R(x - 1, top - 1, W + 2, 3.5, '#9aa0a5');
       }
+      if (h.antresol.on) {
+        const a = h.antresol, aw = Math.min(a.W, W), dn2 = Math.max(2, Math.ceil(aw / 60)), atop = top - a.H;
+        for (let i = 0; i < dn2; i++) g += R(x + i * aw / dn2, atop, aw / dn2 - .6, a.H, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(x + i * aw / dn2, atop, aw / dn2 - .6, a.H, 'url(#gGloss)', 'opacity=".5"');
+      }
     } else if (it.k === 'h') {
       const W = it.w;
-      if (h.hanger.on) {
+      if (it.hang) {
         const hw = h.hanger.W, hx = x + (W - hw) / 2, top = WALL - 205;
         g += R(hx, top, hw, 118, col) + R(hx, top, hw, 118, 'url(#gGloss)', 'opacity=".4"') + R(hx - 2, top - 4, hw + 4, 5, shade(col, -.2)) + R(hx - 2, top - 1, hw + 4, 2, shade(col, -.35));
         for (let hx2 = hx + 8, i = 0; hx2 < hx + hw - 4; hx2 += 12, i++) {
           g += LN(hx2, top + 10, hx2, top + 16, '#6b6f73', 1.4) + `<circle cx="${f2(hx2)}" cy="${f2(top + 16)}" r="1.8" fill="#8a8f95"/>`;
           if (i % 2 === 0) g += `<path d="M ${f2(hx2 - 5)} ${f2(top + 17)} L ${f2(hx2 + 5)} ${f2(top + 17)} L ${f2(hx2 + 8)} ${f2(top + 80 + (i % 3) * 8)} L ${f2(hx2 - 8)} ${f2(top + 80 + (i % 3) * 8)} Z" fill="${GARM[(i * 3 + 1) % GARM.length]}" stroke="rgba(0,0,0,.2)" stroke-width=".4"/>`;
         }
-        if (dec.pics && !h.bench.on) g += picture(hx + hw + 6, top + 4, 18, 26, 3);
+        if (dec.pics && !it.bench) g += picture(hx + hw + 6, top + 4, 18, 26, 3);
       }
-      if (h.bench.on) {
+      if (it.bench) {
         const bw = h.bench.W, bx = x + (W - bw) / 2, by = WALL - 44;
         g += R(bx, by, bw, 8, shade(col, -.05)) + R(bx + 3, by + 8, 5, 36, shade(col, -.25)) + R(bx + bw - 8, by + 8, 5, 36, shade(col, -.25)) + R(bx + 8, by + 30, bw - 16, 3, shade(col, -.15));
         if (h.bench.cushion) g += R(bx + 1, by - 6, bw - 2, 7, '#b07d12', 'rx="3"') + R(bx + 1, by - 6, bw - 2, 3, '#d0a047', 'rx="3"');
@@ -598,9 +574,9 @@ function drawHall(m, mode, mini) {
         g += shoePair(bx + 8, WALL - 1, '#2f3b4f') + shoePair(bx + 36, WALL - 1, '#b07d12');
       }
     } else {
-      const W = it.w;
-      if (h.shoe.on) {
-        const sw = h.shoe.W, k = h.shoe.tiers, Hs = 20 * k + 10, sx = x + (W - sw) / 2;
+      const W = it.w, Hs = it.shoe ? 20 * h.shoe.tiers + 10 : 0;
+      if (it.shoe) {
+        const sw = h.shoe.W, k = h.shoe.tiers, sx = x + (W - sw) / 2;
         g += R(sx, WALL - Hs, sw, Hs, col) + R(sx, WALL - Hs, sw, Hs, 'url(#gGloss)', 'opacity=".4"') + R(sx - 1, WALL - Hs - 3, sw + 2, 4, shade(col, -.2));
         for (let i = 0; i < k; i++) {
           const fy = WALL - Hs + 3 + i * 20;
@@ -611,8 +587,8 @@ function drawHall(m, mode, mini) {
         if (dec.plant) g += plant(sx + sw * .75, WALL - Hs - 3, .7);
         g += R(sx + 5, WALL - Hs - 5, 16, 2.4, '#7c6a4a', 'rx="1"');
       }
-      if (m.mirror.on) {
-        const mw = Math.min(m.mirror.W, W - 8), mh = Math.min(m.mirror.H, h.shoe.on ? 210 - (20 * h.shoe.tiers + 10) - 6 : 175), mx = x + (W - mw) / 2, my = h.shoe.on ? WALL - (20 * h.shoe.tiers + 10) - mh - 8 : WALL - mh - 40;
+      if (it.mir) {
+        const mw = Math.min(m.mirror.W, W - 8), mh = Math.min(m.mirror.H, it.shoe ? 210 - Hs - 6 : 175), mx = x + (W - mw) / 2, my = it.shoe ? WALL - Hs - mh - 8 : WALL - mh - 40;
         if (m.mirror.type === 'led') g += R(mx - 6, my - 6, mw + 12, mh + 12, 'url(#gLamp)', 'opacity=".9"');
         g += R(mx - 2.2, my - 2.2, mw + 4.4, mh + 4.4, '#2b2f33') + R(mx, my, mw, mh, 'url(#gMirror)') + `<polygon points="${f2(mx + mw * .1)},${f2(my + mh)} ${f2(mx + mw * .4)},${f2(my)} ${f2(mx + mw * .55)},${f2(my)} ${f2(mx + mw * .25)},${f2(my + mh)}" fill="url(#gShine)"/>`;
         if (m.mirror.type === 'led') g += R(mx - 1, my - 1, mw + 2, 1.6, '#ffe29a') + R(mx - 1, my + mh - .6, mw + 2, 1.6, '#ffe29a');
@@ -620,11 +596,28 @@ function drawHall(m, mode, mini) {
     }
     x += it.w + GAP;
   });
-  if (h.antresol.on && h.wardrobe.on) {
-    const a = h.antresol, ax = ox.w, aw = Math.min(a.W, h.wardrobe.W), dn = Math.max(2, Math.ceil(aw / 60)), top = WALL - h.wardrobe.H - a.H;
-    for (let i = 0; i < dn; i++) g += R(ax + i * aw / dn, top, aw / dn - .6, a.H, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(ax + i * aw / dn, top, aw / dn - .6, a.H, 'url(#gGloss)', 'opacity=".5"');
-  }
-  if (dec.lamp) { const lx = PAD + total / 2; g += `<ellipse cx="${f2(lx)}" cy="${f2(WALL - 175)}" rx="40" ry="40" fill="url(#gLamp)" opacity=".5"/>` + LN(lx, 0, lx, WALL - 205, '#2b2f33', 1) + `<path d="M ${f2(lx - 10)} ${f2(WALL - 205)} L ${f2(lx - 6)} ${f2(WALL - 218)} L ${f2(lx + 6)} ${f2(WALL - 218)} L ${f2(lx + 10)} ${f2(WALL - 205)} Z" fill="#f4e4bf" stroke="#c9b27c" stroke-width=".6"/>`; }
+  return g;
+}
+function drawHall(m, mode, mini) {
+  const h = m.hall, dec = m.decor || {}, walls = HALL_WALLS[h.shape] || ['A'], GAP = 6, WG = 34;
+  const per = walls.map(wk => { const items = hallWallItems(m, wk); return { wk, items, w: items.reduce((a, b) => a + b.w, 0) + GAP * Math.max(0, items.length - 1) }; }).filter(p => p.items.length);
+  if (!per.length) per.push({ wk: 'A', items: [], w: 120 });
+  const total = per.reduce((a, b) => a + b.w, 0) + WG * (per.length - 1);
+  const Hmax = Math.max((h.wardrobe.on ? h.wardrobe.H : 0) + (h.antresol.on && h.wardrobe.on ? h.antresol.H : 0), 215);
+  const PAD = mini ? 40 : 66, FW = total + 2 * PAD, WALL = Hmax + 40, FH = WALL + 34;
+  let g = sceneBg(FW, WALL);
+  if (dec.rug) g += rug(PAD + total / 2, WALL + 7, total + 60, '#dcd1bf');
+  if (dec.plant) g += plant(PAD - 26, WALL + 7, 1.35);
+  let x = PAD;
+  per.forEach((p, i) => {
+    g += drawHallWall(m, mode, p.items, x, WALL);
+    if (per.length > 1) {
+      g += `<text x="${f2(x + p.w / 2)}" y="14" text-anchor="middle" font-size="10" fill="#7a6a4e" font-family="Manrope,sans-serif" font-weight="700">Стена ${WALL_NAME[p.wk]} · ${Math.round(p.w)} см</text>`;
+      if (i < per.length - 1) g += LN(x + p.w + WG / 2, 20, x + p.w + WG / 2, WALL, '#b9ab90', .8, 'stroke-dasharray="3 3"');
+    }
+    x += p.w + WG;
+  });
+  if (dec.lamp) { const lx = PAD + per[0].w / 2; g += `<ellipse cx="${f2(lx)}" cy="${f2(WALL - 175)}" rx="40" ry="40" fill="url(#gLamp)" opacity=".5"/>` + LN(lx, 22, lx, WALL - 205, '#2b2f33', 1) + `<path d="M ${f2(lx - 10)} ${f2(WALL - 205)} L ${f2(lx - 6)} ${f2(WALL - 218)} L ${f2(lx + 6)} ${f2(WALL - 218)} L ${f2(lx + 10)} ${f2(WALL - 205)} Z" fill="#f4e4bf" stroke="#c9b27c" stroke-width=".6"/>`; }
   return svgWrap(FW, FH, g);
 }
 
@@ -640,7 +633,8 @@ function set(o, p, v) { const ks = p.split('.'); const last = ks.pop(); const t 
 const stepper = (path, min, max, stp, unit) => `<div class="step"><button type="button" data-step="${path}|${-stp}|${min}|${max}">−</button><input type="number" data-k="${path}" min="${min}" max="${max}" value="${get(M, path)}"><button type="button" data-step="${path}|${stp}|${min}|${max}">+</button></div>`;
 const field = (label, inner, hint) => `<div><label class="f">${label}</label>${inner}${hint ? `<div class="hint">${hint}</div>` : ''}</div>`;
 const chip = (on, attr, text) => `<button type="button" class="chip ${on ? 'on' : ''}" ${attr}>${text}</button>`;
-const swatches = () => `<div class="sw">${PALETTE.map((c, i) => `<button type="button" title="${c[0]}" data-color="${i}" class="${M.color === i ? 'on' : ''}" style="background:${c[1]}"></button>`).join('')}</div>`;
+const swatches = () => `<div class="sw">${PALETTE.map((c, i) => `<button type="button" title="${c[0]}" data-color="${i}" class="${!M.customColor && M.color === i ? 'on' : ''}" style="background:${c[1]}"></button>`).join('')}${M.customColor ? `<button type="button" class="on" title="${esc(M.customColor.label)}" style="background:${M.customColor.hex}"></button>` : ''}</div>
+  <div style="margin-top:8px"><button type="button" class="chip" data-catalog="1">🎨 Выбрать цвет из каталога</button>${M.customColor ? ` <span class="hint">Выбран: ${esc(M.customColor.label)} · <a href="#" data-colorclear="1" style="color:#b07d12">сбросить</a></span>` : ''}</div>`;
 function tiersCard() {
   return `<div class="card"><h2><span class="n">1</span>Класс комплектации</h2><div class="tiers">${P.tiers.map((t, i) => `<button type="button" class="tier ${M.tier === i ? 'on' : ''}" data-tier="${i}"><b>${t.ru}</b><span>${t.desc}</span></button>`).join('')}</div></div>`;
 }
@@ -657,7 +651,7 @@ function decorCard(n) {
 function mirrorCard(n) {
   const m = M.mirror;
   return `<div class="card"><h2><span class="n">${n}</span>Зеркало на стену</h2><div class="chips">${chip(m.on, 'data-toggle="mirror.on"', m.on ? 'Нужно' : 'Не нужно')}</div>
-    <div class="${m.on ? '' : 'hide'}" style="margin-top:12px"><div class="row3">${field('Тип', `<select data-k="mirror.type">${Object.keys(MIRRORS).map(k => `<option value="${k}" ${m.type === k ? 'selected' : ''}>${MIRRORS[k]}</option>`).join('')}</select>`)}${field('Ширина, см', stepper('mirror.W', 30, 200, 5))}${field('Высота, см', stepper('mirror.H', 40, 260, 10))}</div></div></div>`;
+    <div class="${m.on ? '' : 'hide'}" style="margin-top:12px">${M.type === 'hall' ? wallSel('mirror') : ''}<div class="row3" style="margin-top:12px">${field('Тип', `<select data-k="mirror.type">${Object.keys(MIRRORS).map(k => `<option value="${k}" ${m.type === k ? 'selected' : ''}>${MIRRORS[k]}</option>`).join('')}</select>`)}${field('Ширина, см', stepper('mirror.W', 30, 200, 5))}${field('Высота, см', stepper('mirror.H', 40, 260, 10))}</div></div></div>`;
 }
 function formKupe() {
   const dw = Math.round((M.W + (M.doors - 1) * 3) / M.doors);
@@ -676,10 +670,19 @@ function formWardrobe() {
     <div class="row" style="margin-top:12px">${field('Высота, см', stepper('H', 190, 290, 5))}${field('Глубина, см', stepper('D', 30, 70, 5))}</div>
     <label class="f" style="margin-top:12px">Цвет корпуса</label>${swatches()}</div>` + interiorCard(3) + mirrorCard(4) + decorCard(5);
 }
+const wallSel = path => (M.hall.shape === 'line' ? '' : `<div class="row" style="margin-top:12px">${field('На какой стене', `<select data-k="${path}.wall">${HALL_WALLS[M.hall.shape].map(w => `<option value="${w}" ${(get(M, path + '.wall') || 'A') === w ? 'selected' : ''}>Стена ${WALL_NAME[w]}</option>`).join('')}</select>`)}<div></div></div>`);
+function hallDefaults(shape) {
+  const h = M.hall, set2 = (o, w) => { o.wall = w; };
+  if (shape === 'line') { [h.wardrobe, h.shoe, h.hanger, h.bench, M.mirror].forEach(o => set2(o, 'A')); }
+  else if (shape === 'L') { set2(h.wardrobe, 'A'); [h.shoe, h.hanger, h.bench, M.mirror].forEach(o => set2(o, 'B')); }
+  else { set2(h.wardrobe, 'A'); set2(h.hanger, 'B'); set2(h.bench, 'B'); set2(h.shoe, 'C'); set2(M.mirror, 'C'); }
+}
 function formHall() {
   const h = M.hall, wd = h.wardrobe;
-  const block = (title, key, inner) => `<div class="card"><h2>${title}</h2><div class="chips">${chip(get(M, key + '.on'), `data-toggle="${key}.on"`, get(M, key + '.on') ? 'Входит' : 'Нет')}</div><div class="${get(M, key + '.on') ? '' : 'hide'}" style="margin-top:12px">${inner}</div></div>`;
-  return tiersCard() + `<div class="card"><h2><span class="n">2</span>Цвет</h2>${swatches()}</div>` +
+  const block = (title, key, inner) => `<div class="card"><h2>${title}</h2><div class="chips">${chip(get(M, key + '.on'), `data-toggle="${key}.on"`, get(M, key + '.on') ? 'Входит' : 'Нет')}</div><div class="${get(M, key + '.on') ? '' : 'hide'}" style="margin-top:12px">${inner}${key === 'hall.antresol' ? '' : wallSel(key)}</div></div>`;
+  return tiersCard() + `<div class="card"><h2><span class="n">2</span>Планировка прихожей</h2><div class="chips">${chip(h.shape === 'line', 'data-hshape="line"', 'По одной стене')}${chip(h.shape === 'L', 'data-hshape="L"', 'Г-образная')}${chip(h.shape === 'U', 'data-hshape="U"', 'П-образная')}</div>
+    <div class="hint">${h.shape === 'line' ? 'Всё размещается вдоль одной стены.' : 'Для каждого элемента выберите, на какой стене он стоит (стены А, Б' + (h.shape === 'U' ? ', В' : '') + ').'}</div></div>` +
+    `<div class="card"><h2><span class="n">3</span>Цвет</h2>${swatches()}</div>` +
     block('Шкаф для одежды', 'hall.wardrobe', `<div class="row3">${field('Ширина, см', stepper('hall.wardrobe.W', 50, 400, 10))}${field('Высота, см', stepper('hall.wardrobe.H', 150, 290, 5))}${field('Глубина, см', stepper('hall.wardrobe.D', 30, 70, 5))}</div>
       <div class="row" style="margin-top:12px">${field('Двери', `<select data-k="hall.wardrobe.kind"><option value="swing" ${wd.kind === 'swing' ? 'selected' : ''}>Распашные</option><option value="sliding" ${wd.kind === 'sliding' ? 'selected' : ''}>Купе (раздвижные)</option></select>`)}${field('Количество дверей', stepper('hall.wardrobe.doors', 1, 5, 1))}</div>
       <div class="chips" style="margin-top:12px">${chip(wd.mirrorDoor, 'data-toggle="hall.wardrobe.mirrorDoor"', 'Зеркало на двери')}</div>`) +
@@ -703,7 +706,7 @@ function presetCards() {
 function calcFor(mm) { const keep = M; M = mm; const r = calc(); M = keep; return r; }
 
 function spec() {
-  const t = T(), rows = [['Класс', t.ru], ['Цвет корпуса', PALETTE[M.color][0]]];
+  const t = T(), rows = [['Класс', t.ru], ['Цвет корпуса', M.customColor ? M.customColor.label : PALETTE[M.color][0]]];
   if (M.type === 'kupe') {
     rows.push(['Размеры (Ш×В×Г)', `${M.W}×${M.H}×${M.D} см`], ['Двери', `${M.doors} шт.: ` + M.fills.slice(0, M.doors).map(f => FILLS[f]).join(', ')]);
     if (M.antresol) rows.push(['Антресоль', M.antresol + ' см']);
@@ -711,6 +714,7 @@ function spec() {
     rows.push(['Планировка', { line: 'Линейная', L: 'Г-образная', U: 'П-образная' }[M.shape]], ['Стены', [M.A, M.B, M.C].slice(0, M.shape === 'line' ? 1 : (M.shape === 'L' ? 2 : 3)).join(' + ') + ' см'], ['Высота × глубина', `${M.H}×${M.D} см`]);
   } else {
     const h = M.hall;
+    rows.push(['Планировка', { line: 'По одной стене', L: 'Г-образная', U: 'П-образная' }[h.shape || 'line']]);
     if (h.wardrobe.on) rows.push(['Шкаф', `${h.wardrobe.W}×${h.wardrobe.H}×${h.wardrobe.D} см, ${h.wardrobe.kind === 'sliding' ? 'купе' : 'распашной'}, дверей: ${h.wardrobe.doors}${h.wardrobe.mirrorDoor ? ', зеркало' : ''}`]);
     if (h.shoe.on) rows.push(['Обувница', `${h.shoe.W} см, ярусов ${h.shoe.tiers}`]);
     if (h.hanger.on) rows.push(['Вешалка', h.hanger.W + ' см']);
@@ -767,17 +771,22 @@ function norm() {
   ['A', 'B', 'C'].forEach(k => { M[k] = clamp(M[k], 80, 800); });
   ['shelves', 'rods', 'drawers', 'pant', 'shoes'].forEach(k => { M[k] = clamp(M[k], 0, 30); });
   const w = M.hall.wardrobe; w.doors = clamp(w.doors, 1, 5);
+  const okW = HALL_WALLS[M.hall.shape] || ['A'];
+  [M.hall.wardrobe, M.hall.shoe, M.hall.hanger, M.hall.bench, M.mirror].forEach(o => { if (okW.indexOf(o.wall || 'A') < 0) o.wall = 'A'; });
 }
 document.addEventListener('click', e => {
+  const clr = e.target.closest('[data-colorclear]'); if (clr) { e.preventDefault(); M.customColor = null; renderForm(); refresh(); presetCards(); return; }
   const t = e.target.closest('button'); if (!t) return;
   if (t.dataset.step) {
     const [p, d, mn, mx] = t.dataset.step.split('|'); set(M, p, clamp(Number(get(M, p)) + Number(d), Number(mn), Number(mx))); activePreset = -1; norm(); renderForm(); refresh(); presetCards();
   } else if (t.dataset.tier !== undefined) { M.tier = +t.dataset.tier; renderForm(); refresh(); presetCards(); }
-  else if (t.dataset.color !== undefined) { M.color = +t.dataset.color; renderForm(); refresh(); presetCards(); }
+  else if (t.dataset.color !== undefined) { M.color = +t.dataset.color; M.customColor = null; renderForm(); refresh(); presetCards(); }
   else if (t.dataset.laco !== undefined) { M.laco = +t.dataset.laco; renderForm(); refresh(); }
   else if (t.dataset.toggle) { const p = t.dataset.toggle; set(M, p, !get(M, p)); activePreset = -1; renderForm(); refresh(); }
   else if (t.dataset.decor) { M.decor[t.dataset.decor] = !M.decor[t.dataset.decor]; renderForm(); refresh(); }
   else if (t.dataset.shape) { M.shape = t.dataset.shape; renderForm(); refresh(); }
+  else if (t.dataset.hshape) { M.hall.shape = t.dataset.hshape; hallDefaults(M.hall.shape); activePreset = -1; renderForm(); refresh(); }
+  else if (t.dataset.catalog) { openCatalog(); }
   else if (t.dataset.view) { viewMode = t.dataset.view; refresh(); }
   else if (t.dataset.preset !== undefined) { const i = +t.dataset.preset; M = merge(DEF(), Object.assign({ type: M.type }, deep(PRESETS[M.type][i].m))); activePreset = i; norm(); renderForm(); refresh(); presetCards(); }
 });
@@ -791,6 +800,16 @@ $('tabs').addEventListener('click', e => {
   const b = e.target.closest('.tab'); if (!b) return;
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
   M = merge(DEF(), Object.assign({ type: b.dataset.type }, deep(PRESETS[b.dataset.type][0].m))); activePreset = 0; viewMode = 'out'; norm(); renderForm(); refresh(); presetCards();
+});
+function openCatalog() { const fr = $('cframe'); if (!fr.src) fr.src = '/calc?catalog=1&embed=1'; $('cmodal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeCatalog() { $('cmodal').classList.remove('open'); document.body.style.overflow = ''; }
+$('catBtn').addEventListener('click', openCatalog);
+$('cclose').addEventListener('click', closeCatalog);
+$('cmodal').addEventListener('click', e => { if (e.target === $('cmodal')) closeCatalog(); });
+window.addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data) return;
+  if (e.data.kc === 'color' && /^#[0-9a-fA-F]{6}$/.test(e.data.hex || '')) { M.customColor = { hex: e.data.hex, name: String(e.data.name || '').slice(0, 60), label: String(e.data.label || e.data.name || '').slice(0, 80) }; activePreset = -1; closeCatalog(); renderForm(); refresh(); presetCards(); toast('Цвет: ' + M.customColor.label); }
+  else if (e.data.kc === 'close') closeCatalog();
 });
 let taps = 0, tapT;
 $('brand').addEventListener('click', () => { taps++; clearTimeout(tapT); tapT = setTimeout(() => { taps = 0; }, 2500); if (taps >= 5) { taps = 0; masterOn = !masterOn; renderMaster(LAST); } });
@@ -819,7 +838,7 @@ $('send').addEventListener('click', async () => {
   const q = new URLSearchParams(location.search), h = location.hash.match(/^#s=([A-Za-z0-9+/=]+)/);
   let loaded = false;
   if (h) { try { M = merge(DEF(), JSON.parse(decodeURIComponent(escape(atob(h[1]))))); loaded = true; } catch (e) {} }
-  if (!loaded) { const type = ['kupe', 'wardrobe', 'hall'].includes(q.get('type')) ? q.get('type') : 'kupe'; const pi = Math.min(2, Math.max(0, +q.get('preset') || (q.get('preset') === '0' ? 0 : 1))); M = merge(DEF(), Object.assign({ type }, deep(PRESETS[type][pi].m))); activePreset = pi; }
+  if (!loaded) { const type = ['kupe', 'wardrobe', 'hall'].includes(q.get('type')) ? q.get('type') : 'kupe'; const pi = Math.min(PRESETS[type].length - 1, Math.max(0, +q.get('preset') || (q.get('preset') === '0' ? 0 : 1))); M = merge(DEF(), Object.assign({ type }, deep(PRESETS[type][pi].m))); activePreset = pi; }
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.type === M.type));
   norm(); renderForm(); refresh(); presetCards();
 })();
