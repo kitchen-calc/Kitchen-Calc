@@ -8,11 +8,35 @@ import base64
 import asyncio
 import urllib.request
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+
+# Основной адрес сайта. Старый адрес на onrender.com перекидывает сюда (кроме /health — его пингует GitHub Actions).
+SITE_URL = "https://kitchen-calc.uz"
+
+
+@app.middleware("http")
+async def redirect_old_host(request: Request, call_next):
+    host = request.headers.get("host", "").split(":")[0].lower()
+    if host.endswith(".onrender.com") and request.method == "GET" and request.url.path != "/health":
+        query = ("?" + request.url.query) if request.url.query else ""
+        return RedirectResponse(SITE_URL + request.url.path + query, status_code=301)
+    return await call_next(request)
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+async def robots():
+    return "User-agent: *\nDisallow: /raskroy\nSitemap: " + SITE_URL + "/sitemap.xml\n"
+
+
+@app.get("/sitemap.xml")
+async def sitemap():
+    urls = "".join(f"<url><loc>{SITE_URL}{p}</loc></url>" for p in ("/", "/calc"))
+    xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + urls + "</urlset>"
+    return HTMLResponse(xml, media_type="application/xml")
 
 # --- Настройки Telegram (задаются в Render -> Environment, в код НЕ вписывать) ---
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
