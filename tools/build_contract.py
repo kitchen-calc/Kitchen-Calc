@@ -373,7 +373,7 @@ def build_docx(path):
     run.font.size = Pt(9)
 
     doc.core_properties.title = "Договор на изготовление, доставку и установку мебели (шаблон)"
-    doc.core_properties.author = "AbdulAziz"
+    doc.core_properties.author = "Kitchen Calc"
     doc.save(path)
 
 
@@ -447,7 +447,7 @@ def build_pdf(path):
         canvas.restoreState()
 
     pdf = SimpleDocTemplate(path, pagesize=A4, leftMargin=2 * cm, rightMargin=2 * cm, topMargin=1.8 * cm, bottomMargin=1.8 * cm,
-                            title="Договор на изготовление, доставку и установку мебели (шаблон)", author="AbdulAziz")
+                            title="Договор на изготовление, доставку и установку мебели (шаблон)", author="Kitchen Calc")
     pdf.build(story, onFirstPage=footer, onLaterPages=footer)
 
 
