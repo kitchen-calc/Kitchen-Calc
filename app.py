@@ -230,7 +230,7 @@ def build_lead_text(data):
         if isinstance(items, list) and items:
             lines.append("")
             lines.append(f"<b>{title}</b>")
-            for sec in items[:16]
+            for sec in items[:16]:
                 line = _section_line(sec, tier)
                 if line:
                     lines.append(line)
