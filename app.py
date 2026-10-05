@@ -379,7 +379,7 @@ async def show_summary(
         sections = []
 
     clean_price = totalPrice.replace(" ", "")
-    advance_val = int(clean_price) * 0.75 if clean_price.isdigit() else 0
+    advance_val = int(clean_price) * 0.70 if clean_price.isdigit() else 0
     final_val = int(clean_price) - int(advance_val) if clean_price.isdigit() else 0
 
     context = {
