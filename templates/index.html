@@ -3516,39 +3516,12 @@
       { id: 'compact', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec6', bc: 'ec6', open: 'h', o: [1, 1, 0],
         lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1]] },
-      { id: 'practic', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec32', bc: 'ec6', open: 'h', o: [1, 1, 0],
-        lo: [['washer', 60, 0, 0], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
-        up: [['door', 60, 1, 0], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'duo', seg: 'econ', t: 'l-shape', f: 1, b: 0, c: 0, hw: 0, fc: 'ec21', bc: 'ec6', open: 'h', o: [1, 1, 0],
-        lo: [['fridge', 60, 0, 0, 'l', 'free'], ['door', 60, 1, 0, 'l'], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
-        up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'scandi', seg: 'mid', t: 'straight', f: 2, b: 0, c: 1, hw: 1, fc: 'pr8', bc: 'ec6', open: 'h', o: [1, 1, 1], dc: [2, 0, 1, 0],
-        lo: [['fridge', 60, 0, 0, 'm', 'built'], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['tower', 60, 0, 0, 'm', 'micro']],
-        up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
       { id: 'comfort', seg: 'mid', t: 'l-shape', f: 3, b: 0, c: 1, hw: 1, fc: 'si2', bc: 'ec6', open: 'p', o: [1, 1, 1], lg: [1, 1, 0, 0],
         lo: [['tower', 60, 0, 0, 'l', 'ovenMicro'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
         up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'loft', seg: 'mid', t: 'l-shape', f: 3, b: 2, c: 1, hw: 1, fc: 'pr23', bc: 'si5', open: 'g', o: [1, 1, 1], lg: [1, 1, 0, 0], dc: [3, 0, 1, 1],
-        lo: [['fridge', 60, 0, 0, 'l', 'built'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['tower', 60, 0, 0, 'm', 'oven']],
-        up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['glass', 60, 0, 0]] },
-      { id: 'classic', seg: 'prem', t: 'u-shape', f: 3, b: 2, c: 2, hw: 2, fc: 'pr6', bc: 'pr6', open: 'h', o: [1, 1, 1], dc: [3, 0, 0, 1],
-        lo: [['fridge', 60, 0, 0, 'l', 'built'], ['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['washer', 60, 0, 0, 'r'], ['tower', 60, 0, 0, 'r', 'ovenMicro']],
-        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['glass', 60, 0, 0, 'r']] },
-      { id: 'enamel', seg: 'prem', t: 'l-shape', f: 5, b: 3, c: 2, hw: 2, fc: 'co5', bc: 'pr8', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2], dc: [2, 0, 1, 0],
-        lo: [['tower', 60, 0, 0, 'l', 'oven'], ['drawers', 60, 0, 3, 'l'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'built']],
-        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1]] },
       { id: 'prestige', seg: 'prem', t: 'l-shape', f: 7, b: 5, c: 3, hw: 2, fc: 'ac9', bc: 'pl5', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90], dc: [3, 3, 1, 1],
         lo: [['fridge', 60, 0, 0, 'l', 'built'], ['tower', 60, 0, 0, 'l', 'ovenMicro'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
-        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['glass', 60, 0, 0]] },
-      { id: 'tier1', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec21', bc: 'ec6', open: 'h', o: [1, 1, 0], ut: 2, uh: 40,
-        lo: [['washer', 60, 0, 0], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
-        up: [['door', 60, 1, 0], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'tier2', seg: 'mid', t: 'l-shape', f: 2, b: 0, c: 1, hw: 1, fc: 'pr8', bc: 'ec6', open: 'p', o: [1, 1, 1], lg: [1, 1, 0, 0], ut: 2, uh: 40, dc: [2, 0, 1, 0],
-        lo: [['tower', 60, 0, 0, 'l', 'ovenMicro'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
-        up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'tier3', seg: 'prem', t: 'straight', f: 5, b: 3, c: 2, hw: 2, fc: 'co5', bc: 'pr8', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2], ut: 2, uh: 40, dc: [3, 0, 1, 1],
-        lo: [['fridge', 60, 0, 0, 'm', 'built'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['tower', 60, 0, 0, 'm', 'ovenMicro']],
-        up: [['door', 60, 1, 0], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] }
+        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['glass', 60, 0, 0]] }
     ];
 
     function presetState(p) {
@@ -4158,7 +4131,7 @@ ${body}
         updateCalculator();
       }
       renderPresetCards();
-      const hero = PRESETS.find(p => p.id === 'loft');
+      const hero = PRESETS.find(p => p.id === 'comfort');
       renderKitchen(el('heroRender'), renderStateFrom(stateToCalc(presetState(hero))));
       if (typeof msInit === 'function') msInit();
       appReady = true;
