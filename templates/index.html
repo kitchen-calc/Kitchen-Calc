@@ -1203,19 +1203,32 @@
         { price: 2200000, ru: 'Искусственный камень', uz: 'Sunʼiy tosh',     color: '#e6e3df', thick: 4 },
         { price: 3200000, ru: 'Кварцевый агломерат',  uz: 'Kvars aglomerat', color: '#f5f4f1', thick: 3 }   // thick — толщина столешницы, см (для чертежа)
       ],
-      // Фурнитура — три уровня, как на рынке Ташкента. Цены в сумах:
-      // hinge — одна петля (на дверь идёт 2 шт.), drawer — комплект на один ящик, lift — подъёмник верхнего шкафа,
-      // push — механизм «нажми-открой» на одну дверь или ящик
+      // Фурнитура. Цены в сумах:
+      // hinge — одна петля (на дверь идёт 2 шт.), lift — подъёмник верхнего шкафа,
+      // drawer — первый (верхний, низкий) ящик в шкафу, drawerTall — каждый следующий (высокий) ящик,
+      // push — «нажми-открой» на одну дверь, pushDrawer — доплата за TIP-ON на один ящик.
+      // Blum — цены kis.uz на 05.10.2026: направляющие 500 мм, BLUMOTION, цвет орион серый / белый;
+      // петля CLIP top BLUMOTION 110° накладная; подъёмник AVENTOS HK top; TIP-ON для дверей короткий + держатель + пластина.
+      // Номера 0–2 не менять местами: они записаны в ссылках клиентов.
       hardware: [
-        { key: 'econ', hinge: 12000, drawer: 90000,  lift: 70000,  push: 25000,
+        { key: 'econ', hinge: 12000, drawer: 90000,  drawerTall: 90000,  lift: 70000,  push: 25000, pushDrawer: 25000,
           ru: 'Эконом',   uz: 'Ekonom',
           brandsRu: 'DTC и аналоги', brandsUz: 'DTC va analoglar' },
-        { key: 'std',  hinge: 28000, drawer: 190000, lift: 140000, push: 45000,
+        { key: 'std',  hinge: 28000, drawer: 190000, drawerTall: 190000, lift: 140000, push: 45000, pushDrawer: 45000,
           ru: 'Стандарт', uz: 'Standart',
           brandsRu: 'GTV, Boyard, Hettich (базовые линейки)', brandsUz: 'GTV, Boyard, Hettich (asosiy qatorlar)' },
-        { key: 'prem', hinge: 45000, drawer: 430000, lift: 420000, push: 95000,
-          ru: 'Премиум',  uz: 'Premium',
-          brandsRu: 'Blum, Hettich Sensys / InnoTech', brandsUz: 'Blum, Hettich Sensys / InnoTech' }
+        // TANDEMBOX antaro: M 537 055, C (одинарный релинг) 654 100, TIP-ON +319 200
+        { key: 'tbx',  hinge: 41900, drawer: 537055, drawerTall: 654100, lift: 633080, push: 52140, pushDrawer: 319200,
+          ru: 'Премиум — Blum TANDEMBOX', uz: 'Premium — Blum TANDEMBOX',
+          brandsRu: 'Blum: TANDEMBOX antaro, CLIP top BLUMOTION, AVENTOS', brandsUz: 'Blum: TANDEMBOX antaro, CLIP top BLUMOTION, AVENTOS' },
+        // MERIVOBOX: M 625 500, E с релингом 775 660, TIP-ON +282 500
+        { key: 'merivo', hinge: 41900, drawer: 625500, drawerTall: 775660, lift: 633080, push: 52140, pushDrawer: 282500,
+          ru: 'Премиум — Blum MERIVOBOX', uz: 'Premium — Blum MERIVOBOX',
+          brandsRu: 'Blum: MERIVOBOX, CLIP top BLUMOTION, AVENTOS', brandsUz: 'Blum: MERIVOBOX, CLIP top BLUMOTION, AVENTOS' },
+        // LEGRABOX pure: M 712 350, C 894 690, TIP-ON +296 590
+        { key: 'legra', hinge: 41900, drawer: 712350, drawerTall: 894690, lift: 633080, push: 52140, pushDrawer: 296590,
+          ru: 'Премиум — Blum LEGRABOX', uz: 'Premium — Blum LEGRABOX',
+          brandsRu: 'Blum: LEGRABOX pure, CLIP top BLUMOTION, AVENTOS', brandsUz: 'Blum: LEGRABOX pure, CLIP top BLUMOTION, AVENTOS' }
       ],
       // Подсветка: perM — 1 погонный метр ленты с профилем и монтажом, shelf — одна подсвечиваемая полка,
       // kit — блок питания и выключатель (берётся один раз)
@@ -1354,9 +1367,11 @@
         p_enamel: 'Индиго Люкс', p_enamel_d: 'Угловая 3 × 1,8 м · ЛМДФ Платинум · индиго · камень · Blum · подсветка',
         p_prestige: 'Престиж с островом', p_prestige_d: 'Угловая 2,4 × 1,8 м + остров · акрил Турция · кварц · Blum · подсветка',
         hardware: 'Фурнитура', hardwareLabel: 'Фурнитура (петли, ящики, подъёмники)',
-        hwDesc_econ: 'Базовый класс: DTC и аналоги. Петли и направляющие проще, доводчики не везде.',
-        hwDesc_std: 'GTV, Boyard, Hettich (базовые линейки): петли с доводчиком, ящики с плавным закрыванием.',
-        hwDesc_prem: 'Blum, Hettich Sensys / InnoTech: петли Blumotion, ящики Tandembox / Legrabox, подъёмники Aventos. Официальная гарантия производителя.',
+        hwDesc_econ: 'Базовый класс: петли и направляющие проще, доводчики не везде.',
+        hwDesc_std: 'Петли с доводчиком, ящики на шариковых направляющих с плавным закрыванием.',
+        hwDesc_tbx: 'Металлические ящики полного выдвижения с доводчиком, петли с доводчиком, подъёмники. Официальная гарантия Blum.',
+        hwDesc_merivo: 'Новая серия ящиков Blum с тонкой боковиной, петли с доводчиком, подъёмники. Официальная гарантия Blum.',
+        hwDesc_legra: 'Самая премиальная серия ящиков Blum: тонкие прямые боковины, плавный ход. Петли с доводчиком, подъёмники. Официальная гарантия Blum.',
         hwPriceNote: 'Цена фурнитуры уже включена в расчёт.',
         ledTitle: 'Подсветка', ledLevelLabel: 'Класс подсветки', led_0: 'Без подсветки', led_1: 'Стандарт', led_2: 'Премиум',
         ledDesc_1: 'LED-лента 12 В, алюминиевый профиль, блок питания и выключатель.',
@@ -1454,9 +1469,11 @@
         p_enamel: 'Indigo Lyuks', p_enamel_d: 'Burchakli 3 × 1,8 m · LMDF Platinum · indigo · tosh · Blum · yoritgich',
         p_prestige: 'Orolli Prestij', p_prestige_d: 'Burchakli 2,4 × 1,8 m + orol · akril (Turkiya) · kvars · Blum · yoritgich',
         hardware: 'Furnitura', hardwareLabel: 'Furnitura (ilmoqlar, tortmalar, koʻtargichlar)',
-        hwDesc_econ: 'Asosiy sinf: DTC va analoglar. Ilmoq va yoʻnaltirgichlar oddiyroq, yumshoq yopgich hamma joyda emas.',
-        hwDesc_std: 'GTV, Boyard, Hettich (asosiy qatorlar): yumshoq yopiladigan ilmoqlar va tortmalar.',
-        hwDesc_prem: 'Blum, Hettich Sensys / InnoTech: Blumotion ilmoqlari, Tandembox / Legrabox tortmalari, Aventos koʻtargichlari. Ishlab chiqaruvchining rasmiy kafolati.',
+        hwDesc_econ: 'Asosiy sinf: ilmoq va yoʻnaltirgichlar oddiyroq, yumshoq yopgich hamma joyda emas.',
+        hwDesc_std: 'Yumshoq yopiladigan ilmoqlar, sharikli yoʻnaltirgichdagi tortmalar.',
+        hwDesc_tbx: 'Toʻliq chiqadigan metall tortmalar, yumshoq yopiladigan ilmoqlar, koʻtargichlar. Blum rasmiy kafolati.',
+        hwDesc_merivo: 'Blumning yupqa yon devorli yangi tortma seriyasi, yumshoq yopiladigan ilmoqlar, koʻtargichlar. Blum rasmiy kafolati.',
+        hwDesc_legra: 'Blumning eng premium tortma seriyasi: yupqa toʻgʻri yon devorlar, ravon yurish. Yumshoq ilmoqlar, koʻtargichlar. Blum rasmiy kafolati.',
         hwPriceNote: 'Furnitura narxi hisobga allaqachon kiritilgan.',
         ledTitle: 'Yoritgich', ledLevelLabel: 'Yoritgich sinfi', led_0: 'Yoritgichsiz', led_1: 'Standart', led_2: 'Premium',
         ledDesc_1: 'LED lenta 12 V, alyuminiy profil, quvvat bloki va oʻchirgich.',
@@ -2039,10 +2056,12 @@
     function hardwareCost(s) {
       const H = CONFIG.hardware[s.hw] || CONFIG.hardware[CONFIG.defaults.hw];
       let sum = 0;
+      // ящики шкафа: первый — низкий (M), остальные — высокие
+      const drawers = n => n > 0 ? H.drawer + (n - 1) * (H.drawerTall || H.drawer) : 0;
       s.lower.forEach(x => {
-        const doors = doorsOf(x, 'lower');
-        sum += doors * 2 * H.hinge + (x.drawers | 0) * H.drawer;
-        if (x.openType === 'push') sum += H.push * Math.max(1, (x.drawers | 0) || doors);
+        const doors = doorsOf(x, 'lower'), nd = x.drawers | 0;
+        sum += doors * 2 * H.hinge + drawers(nd);
+        if (x.openType === 'push') sum += nd > 0 ? nd * (H.pushDrawer || H.push) : H.push * Math.max(1, doors);
       });
       if (s.hasUpper) s.upper.forEach(x => {
         const doors = doorsOf(x, 'upper');
@@ -2051,7 +2070,7 @@
       });
       if (s.island) {
         const n = Math.max(1, Math.round(s.islL / 60));   // как на визуализации: модули острова по очереди — двери и три ящика
-        for (let k = 0; k < n; k++) sum += k % 2 ? 3 * H.drawer : 2 * H.hinge;
+        for (let k = 0; k < n; k++) sum += k % 2 ? drawers(3) : 2 * H.hinge;
       }
       return sum;
     }
