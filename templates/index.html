@@ -192,6 +192,48 @@
       justify-content: center;
     }
 
+
+    /* ---- планировщик шкафов ---- */
+    .pl-hint { font-size: .85rem; color: var(--text-muted); margin-bottom: 12px; }
+    .pl-wall { margin: 14px 0 6px; }
+    .pl-wall-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-size: .9rem; }
+    .pl-wall-head b { color: var(--accent-gold); }
+    .pl-sum { color: var(--text-muted); font-size: .78rem; flex: 1 1 100%; order: 3; }
+    .pl-edit .number-stepper input { min-width: 44px; }
+    .pl-add { background: #fff; border: 1.5px solid var(--accent-gold); color: var(--accent-gold); border-radius: 8px; padding: 6px 12px; font-weight: 700; cursor: pointer; font-size: .85rem; }
+    .pl-menu { background: #fff; border: 1px solid var(--border-dark); border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+    .pl-menu-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .pl-menu-row > span { font-size: .75rem; color: var(--text-muted); width: 100%; }
+    .pl-chip { background: #f7f4ee; border: 1px solid var(--border-dark); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--text-main); }
+    .pl-chip:hover { border-color: var(--accent-gold); }
+    .pl-board { position: relative; background: repeating-linear-gradient(90deg, #f1ece2 0 1px, transparent 1px 20px), #faf8f4; border: 1.5px dashed var(--border-dark); border-radius: 8px; touch-action: pan-y; max-width: 100%; }
+    .pl-board.drop { border-color: var(--accent-gold); background-color: #fff7e0; }
+    .pl-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: .8rem; }
+    .pl-card { position: absolute; background: #fff; border: 1.5px solid #cfc7b6; border-radius: 4px; overflow: hidden; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+    .pl-card svg { width: 100%; height: 100%; display: block; pointer-events: none; }
+    .pl-card.sel { border-color: var(--accent-gold); box-shadow: 0 0 0 2px rgba(176,125,18,.45); z-index: 3; }
+    .pl-card.tall { border-color: #94a3b8; }
+    .pl-card.dragging { opacity: .85; z-index: 10; cursor: grabbing; box-shadow: 0 6px 16px rgba(0,0,0,.3); }
+    .pl-card:focus-visible { outline: 2px solid var(--accent-gold); }
+    .pl-id { position: absolute; left: 2px; top: 1px; font-size: 9px; font-weight: 800; background: rgba(255,255,255,.85); border-radius: 3px; padding: 0 3px; color: #334155; }
+    .pl-w { position: absolute; right: 2px; bottom: 1px; font-size: 9px; font-weight: 700; background: rgba(255,255,255,.85); border-radius: 3px; padding: 0 3px; color: #334155; }
+    .pl-edit { margin-top: 14px; background: #fff; border: 1.5px solid var(--border-gold); border-radius: 12px; padding: 14px; }
+    .pl-edit-hint { margin-top: 12px; font-size: .85rem; color: var(--text-muted); text-align: center; padding: 10px; border: 1px dashed var(--border-dark); border-radius: 10px; }
+    .pl-edit-head { font-weight: 700; margin-bottom: 10px; }
+    .pl-edit-head b { color: var(--accent-gold); }
+    .pl-wchips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+    .pl-wchip { border: 1px solid var(--border-dark); background: #f7f4ee; border-radius: 6px; padding: 4px 9px; font-size: .8rem; cursor: pointer; }
+    .pl-wchip.on { background: var(--accent-gold); color: #fff; border-color: var(--accent-gold); }
+    .pl-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .pl-act { background: #f7f4ee; border: 1px solid var(--border-dark); border-radius: 8px; padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: .85rem; }
+    .pl-act.danger { color: #b91c1c; border-color: #fca5a5; }
+    .decor-card { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border-dark); }
+    .decor-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0; font-size: .9rem; }
+    .decor-row .number-stepper { width: 130px; flex-shrink: 0; }
+    .decor-row.disabled { opacity: .5; }
+    .decor-row em { color: var(--text-muted); font-style: normal; font-size: .78rem; }
+    @media (max-width: 600px) { .pl-act { flex: 1 1 45%; } }
+
     .btn-submit {
       width: 100%; background: linear-gradient(135deg, #d97706, #b45309); color: #ffffff; border: none; padding: 16px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; margin-top: 10px;
     }
@@ -912,53 +954,29 @@
           <!-- 3. ШКАФЫ -->
           <div class="card">
             <div class="section-title"><span class="step-badge">3</span><span data-i18n="step3">Шкафы</span></div>
+            <div class="pl-hint" data-i18n="plHint">Расставьте кухню сами: нажмите «Добавить» и выберите шкаф или технику, перетащите карточку на другое место или на другую стену. Нажмите на карточку — появятся размеры и настройки.</div>
             <div class="toggle-box" style="margin-top:0;">
               <label class="checkbox-label">
                 <input type="checkbox" id="hasUpperTier" checked onchange="toggleUpperTierControls()">
                 <span data-i18n="needUpper">Нужны верхние шкафы</span>
               </label>
             </div>
-            <div class="toggle-box">
-              <label class="checkbox-label">
-                <input type="checkbox" id="detailMode" onchange="toggleDetailMode()">
-                <span data-i18n="detailMode">Настроить каждый шкаф отдельно (для мастеров)</span>
-              </label>
+            <div class="inputs-grid" style="margin-top:12px;">
+              <div class="field-group">
+                <label data-i18n="upperHeight">Высота верхних шкафов, см</label>
+                <input type="number" id="upperHeight" value="72" min="30" max="130" oninput="renderPlanner(); updateCalculator()">
+              </div>
+              <div class="field-group">
+                <label data-i18n="upperDepth">Глубина верхних шкафов, см</label>
+                <input type="number" id="upperDepth" value="35" min="20" max="65" oninput="updateCalculator()">
+              </div>
             </div>
-
-            <div id="sectionsDetail" style="display:none; margin-top:15px;">
-              <div class="inputs-grid" style="margin-bottom:15px;">
-                <div class="field-group" style="grid-column: span 2;">
-                  <label data-i18n="lowerCount">Нижние шкафы: количество</label>
-                  <div class="number-stepper">
-                    <button type="button" class="btn-step" onclick="changeSectionsCount('lower', -1)">−</button>
-                    <input type="number" id="countLowerInput" value="4" min="1" max="16" readonly>
-                    <button type="button" class="btn-step" onclick="changeSectionsCount('lower', 1)">+</button>
-                  </div>
-                </div>
-              </div>
-              <div id="lowerSectionsContainer"></div>
-
-              <div id="upperTierControls">
-                <div class="inputs-grid" style="margin-bottom:15px;">
-                  <div class="field-group">
-                    <label data-i18n="upperHeight">Высота верхних шкафов, см</label>
-                    <input type="number" id="upperHeight" value="72" min="30" max="130" oninput="updateCalculator()">
-                  </div>
-                  <div class="field-group">
-                    <label data-i18n="upperDepth">Глубина верхних шкафов, см</label>
-                    <input type="number" id="upperDepth" value="35" min="20" max="65" oninput="updateCalculator()">
-                  </div>
-                  <div class="field-group" style="grid-column: span 2;">
-                    <label data-i18n="upperCount">Верхние шкафы: количество</label>
-                    <div class="number-stepper">
-                      <button type="button" class="btn-step" onclick="changeSectionsCount('upper', -1)">−</button>
-                      <input type="number" id="countUpperInput" value="4" min="1" max="16" readonly>
-                      <button type="button" class="btn-step" onclick="changeSectionsCount('upper', 1)">+</button>
-                    </div>
-                  </div>
-                </div>
-                <div id="upperSectionsContainer"></div>
-              </div>
+            <div id="plannerWalls"></div>
+            <div id="plannerEdit"></div>
+            <div class="decor-card">
+              <div class="sub-title">🪴 <span data-i18n="decorTitle">Интерьер на чертеже</span></div>
+              <div class="led-hint" data-i18n="decorHint">Подвесные светильники, барные стулья и растения показываются на визуализации и чертежах. Они не входят в цену — это пожелание для мастера.</div>
+              <div id="decorBox"></div>
             </div>
           </div>
 
@@ -1254,6 +1272,7 @@
       // Логистика: ввоз и доставка материалов в цех (pct от стоимости изделия) и доставка готовой кухни по Ташкенту (fixed, сум)
       logistics: { pct: 0.04, fixed: 300000 },
       baseWork: 300000,                 // работа, сборка, расходники — сум на погонный метр
+      applianceWork: { oven: 120000, micro: 100000, dishwasher: 150000, washer: 150000, fridge: 60000, fridgeBuilt: 200000, glass: 40000 },   // подключение и врезка техники (сама техника в цену не входит)
       // Сравнение «Эконом / Стандарт / Премиум»: номера материалов из списков выше (с нуля)
       tiers: [
         { key: 'econ', facade: 0, body: 0, top: 0, hw: 0 },
@@ -1370,16 +1389,30 @@
         popupBlocked: 'Браузер заблокировал окно договора. Разрешите всплывающие окна для этого сайта.',
         mod_sink: 'Модуль под мойку', mod_drawers: 'Тумба с ящиками', mod_hob: 'Под варочную панель', mod_door: 'Шкаф распашной',
         mod_dryer: 'Шкаф сушка', mod_hood: 'Шкаф над вытяжкой', mod_side: 'Шкаф боковой', mod_lower: 'Нижний модуль {i}', mod_upper: 'Верхний модуль {i}',
-        p_compact: 'Компакт', p_compact_d: 'Прямая 1,8 м · ЛДСП Эконом · белая',
-        p_scandi: 'Скандинавия', p_scandi_d: 'Прямая 2,4 м · ЛДСП Премиум · белая, столешница под дерево',
-        p_loft: 'Лофт', p_loft_d: 'Угловая 2,4 × 1,8 м · ЛМДФ Премиум · дуб графит · без ручек',
-        p_classic: 'Классика', p_classic_d: 'П-образная · ЛМДФ Премиум · беж · искусственный камень',
+        mod_oven: 'Духовой шкаф', mod_dishwasher: 'Посудомоечная машина', mod_washer: 'Стиральная машина', mod_fridge: 'Холодильник', mod_tower: 'Пенал до потолка',
+        mod_glass: 'Шкаф со стеклом', mod_open: 'Открытые полки',
+        kind_door: 'Шкаф', kind_drawers: 'Ящики', kind_sink: 'Под мойку', kind_hob: 'Под варочную', kind_oven: 'Духовка', kind_dishwasher: 'Посудомойка', kind_washer: 'Стиралка',
+        kind_fridge: 'Холодильник', kind_tower: 'Пенал до потолка', kind_dryer: 'Сушка', kind_hood: 'Над вытяжкой', kind_side: 'Боковой', kind_glass: 'Со стеклом', kind_open: 'Открытые полки',
+        tw_storage: 'Пенал для хранения', tw_oven: 'Пенал с духовкой', tw_ovenMicro: 'Пенал: духовка + микроволновка', tw_micro: 'Пенал с микроволновкой',
+        fr_free: 'Отдельностоящий (в нише)', fr_built: 'Встроенный (под фасад)',
+        plHint: 'Расставьте кухню сами: нажмите «Добавить» и выберите шкаф или технику, перетащите карточку на другое место или на другую стену. Нажмите на карточку — появятся размеры и настройки.',
+        plAdd: 'Добавить', plMax: 'Достигнут максимум модулей', plLast: 'Нужен хотя бы один нижний модуль', plSum: 'низ {l} см · верх {u} см', plUpperWider: 'верх шире низа', plEmpty: 'Пусто — добавьте шкаф',
+        plLowerGroup: 'Нижние', plApplGroup: 'Встроенная техника', plTallGroup: 'До потолка', plUpperGroup: 'Верхние', plPick: 'Нажмите на карточку шкафа, чтобы изменить размеры, тип и расположение',
+        plType: 'Тип', plTower: 'Начинка пенала', plFridge: 'Холодильник', plNote: 'Модель техники / пожелание мастеру', plNotePh: 'например: духовка Bosch 60 см', plLeft: 'Левее', plRight: 'Правее', plDup: 'Копия', plDel: 'Убрать',
+        decorTitle: 'Интерьер на чертеже', decorHint: 'Подвесные светильники, барные стулья и растения показываются на визуализации и чертежах. В цену не входят — это пожелание для мастера.',
+        dcLamps: 'Подвесные лампы', dcStools: 'Барные стулья', dcPlant: 'Растение на столешнице', dcFloorPlant: 'Растение в кадке', dcOverIsland: 'над островом', dcOverCounter: 'над столешницей', dcNeedIsland: 'нужен остров',
+        ap_fridge: 'холодильник', ap_fridgeBuilt: 'встраиваемый холодильник', ap_oven: 'духовой шкаф', ap_micro: 'микроволновая печь', ap_dishwasher: 'посудомоечная машина', ap_washer: 'стиральная машина', ap_hobpanel: 'варочная панель',
+        exDecor: 'интерьер: {x}', exLamps: 'ламп {n}', exStools: 'стульев {n}', exPlant1: 'растение на столешнице', exPlant2: 'растение в кадке', thAppl: 'Техника / примечание',
+        p_compact: 'Компакт с холодильником', p_compact_d: 'Прямая 2,4 м · холодильник · ЛДСП Эконом · белая',
+        p_scandi: 'Скандинавия', p_scandi_d: 'Прямая 3,6 м · встроенный холодильник, посудомойка, пенал с микроволновкой · лампы',
+        p_loft: 'Лофт', p_loft_d: 'Угловая 3 × 1,8 м · встроенный холодильник, посудомойка, пенал с духовкой · без ручек',
+        p_classic: 'Классика', p_classic_d: 'П-образная · встроенный холодильник, стиральная машина, пенал с духовкой и микроволновкой',
         seg_econ: 'Эконом', seg_mid: 'Стандарт', seg_prem: 'Премиум',
-        p_practic: 'Практик', p_practic_d: 'Прямая 3 м · ЛДСП Эконом · светло-серая · фурнитура эконом',
-        p_duo: 'Дуэт', p_duo_d: 'Угловая 3 × 1,2 м · ЛМДФ Эконом · крем · фурнитура эконом',
-        p_comfort: 'Комфорт', p_comfort_d: 'Угловая 2,4 × 1,2 м · ЛМДФ Премиум · светлое дерево · без ручек · подсветка',
-        p_enamel: 'Индиго Люкс', p_enamel_d: 'Угловая 3 × 1,8 м · ЛМДФ Платинум · индиго · камень · Blum · подсветка',
-        p_prestige: 'Престиж с островом', p_prestige_d: 'Угловая 2,4 × 1,8 м + остров · акрил Турция · кварц · Blum · подсветка',
+        p_practic: 'Практик', p_practic_d: 'Прямая 3,6 м · стиральная машина и холодильник · ЛДСП Эконом',
+        p_duo: 'Дуэт', p_duo_d: 'Угловая 3 × 1,8 м · холодильник и посудомойка · ЛМДФ Эконом · крем',
+        p_comfort: 'Комфорт', p_comfort_d: 'Угловая 3 × 1,8 м · пенал: духовка + микроволновка · посудомойка · холодильник',
+        p_enamel: 'Индиго Люкс', p_enamel_d: 'Угловая 3 × 1,8 м · пенал с духовкой · встроенный холодильник · Blum · подсветка',
+        p_prestige: 'Престиж с островом', p_prestige_d: 'Угловая + остров · встроенный холодильник, пенал духовка+микроволновка · лампы и стулья',
         hardware: 'Фурнитура', hardwareLabel: 'Фурнитура (петли, ящики, подъёмники)',
         hwDesc_econ: 'Базовый класс: петли и направляющие проще, доводчики не везде.',
         hwDesc_std: 'Петли с доводчиком, ящики на шариковых направляющих с плавным закрыванием.',
@@ -1472,16 +1505,30 @@
         popupBlocked: 'Brauzer shartnoma oynasini blokladi. Ushbu sayt uchun qalqib chiquvchi oynalarga ruxsat bering.',
         mod_sink: 'Rakovina osti moduli', mod_drawers: 'Tortmali tumba', mod_hob: 'Plita osti moduli', mod_door: 'Eshikli shkaf',
         mod_dryer: 'Idish quritgich shkafi', mod_hood: 'Vytyajka usti shkafi', mod_side: 'Yon shkaf', mod_lower: 'Pastki modul {i}', mod_upper: 'Yuqori modul {i}',
-        p_compact: 'Kompakt', p_compact_d: 'Toʻgʻri 1,8 m · LDSP Ekonom · oq',
-        p_scandi: 'Skandinaviya', p_scandi_d: 'Toʻgʻri 2,4 m · LDSP Premium · oq, yogʻoch stoleshnitsa',
-        p_loft: 'Loft', p_loft_d: 'Burchakli 2,4 × 1,8 m · LMDF Premium · grafit eman · dastasiz',
-        p_classic: 'Klassika', p_classic_d: 'P-shaklida · LMDF Premium · bej · sunʼiy tosh',
+        mod_oven: 'Duxovka shkafi', mod_dishwasher: 'Idish yuvish mashinasi', mod_washer: 'Kir yuvish mashinasi', mod_fridge: 'Muzlatgich', mod_tower: 'Shiftgacha penal',
+        mod_glass: 'Oynali shkaf', mod_open: 'Ochiq tokchalar',
+        kind_door: 'Shkaf', kind_drawers: 'Tortmalar', kind_sink: 'Rakovina osti', kind_hob: 'Plita osti', kind_oven: 'Duxovka', kind_dishwasher: 'Idish yuvgich', kind_washer: 'Kir yuvgich',
+        kind_fridge: 'Muzlatgich', kind_tower: 'Shiftgacha penal', kind_dryer: 'Quritgich', kind_hood: 'Vytyajka usti', kind_side: 'Yon shkaf', kind_glass: 'Oynali', kind_open: 'Ochiq tokcha',
+        tw_storage: 'Saqlash uchun penal', tw_oven: 'Duxovkali penal', tw_ovenMicro: 'Penal: duxovka + mikroto‘lqinli pech', tw_micro: 'Mikroto‘lqinli pechli penal',
+        fr_free: 'Alohida turadigan (nishada)', fr_built: 'O‘rnatma (fasad ostida)',
+        plHint: 'Oshxonani o‘zingiz joylashtiring: «Qo‘shish» tugmasini bosib shkaf yoki texnikani tanlang, kartani boshqa joyga yoki boshqa devorga suring. Karta ustiga bossangiz, o‘lcham va sozlamalar chiqadi.',
+        plAdd: 'Qo‘shish', plMax: 'Modullar soni chegarasiga yetildi', plLast: 'Kamida bitta pastki modul kerak', plSum: 'past {l} sm · yuqori {u} sm', plUpperWider: 'yuqori qator pastkidan keng', plEmpty: 'Bo‘sh — shkaf qo‘shing',
+        plLowerGroup: 'Pastki', plApplGroup: 'O‘rnatma texnika', plTallGroup: 'Shiftgacha', plUpperGroup: 'Yuqori', plPick: 'O‘lcham, tur va joyini o‘zgartirish uchun shkaf kartasini bosing',
+        plType: 'Turi', plTower: 'Penal to‘ldirilishi', plFridge: 'Muzlatgich', plNote: 'Texnika modeli / ustaga istak', plNotePh: 'masalan: Bosch duxovka 60 sm', plLeft: 'Chapga', plRight: 'O‘ngga', plDup: 'Nusxa', plDel: 'Olib tashlash',
+        decorTitle: 'Chizmadagi interer', decorHint: 'Osma chiroqlar, bar stullari va o‘simliklar vizualizatsiya va chizmalarda ko‘rsatiladi. Narxga kirmaydi — usta uchun istak.',
+        dcLamps: 'Osma chiroqlar', dcStools: 'Bar stullari', dcPlant: 'Stol ustidagi o‘simlik', dcFloorPlant: 'Qozondagi o‘simlik', dcOverIsland: 'orol ustida', dcOverCounter: 'stol ustida', dcNeedIsland: 'orol kerak',
+        ap_fridge: 'muzlatgich', ap_fridgeBuilt: 'o‘rnatma muzlatgich', ap_oven: 'duxovka', ap_micro: 'mikroto‘lqinli pech', ap_dishwasher: 'idish yuvish mashinasi', ap_washer: 'kir yuvish mashinasi', ap_hobpanel: 'plita paneli',
+        exDecor: 'interer: {x}', exLamps: 'chiroq {n}', exStools: 'stul {n}', exPlant1: 'stol ustida o‘simlik', exPlant2: 'qozondagi o‘simlik', thAppl: 'Texnika / izoh',
+        p_compact: 'Muzlatgichli Kompakt', p_compact_d: 'Toʻgʻri 2,4 m · muzlatgich · LDSP Ekonom · oq',
+        p_scandi: 'Skandinaviya', p_scandi_d: 'Toʻgʻri 3,6 m · oʻrnatma muzlatgich, idish yuvgich, mikroʻtolqinli penal · chiroqlar',
+        p_loft: 'Loft', p_loft_d: 'Burchakli 3 × 1,8 m · oʻrnatma muzlatgich, idish yuvgich, duxovkali penal · dastasiz',
+        p_classic: 'Klassika', p_classic_d: 'P-shaklida · oʻrnatma muzlatgich, kir yuvgich, duxovka+mikroʻtolqinli penal',
         seg_econ: 'Ekonom', seg_mid: 'Standart', seg_prem: 'Premium',
-        p_practic: 'Praktik', p_practic_d: 'Toʻgʻri 3 m · LDSP Ekonom · och kulrang · ekonom furnitura',
-        p_duo: 'Duet', p_duo_d: 'Burchakli 3 × 1,2 m · LMDF Ekonom · krem · ekonom furnitura',
-        p_comfort: 'Komfort', p_comfort_d: 'Burchakli 2,4 × 1,2 m · LMDF Premium · och yogʻoch · dastasiz · yoritgich',
-        p_enamel: 'Indigo Lyuks', p_enamel_d: 'Burchakli 3 × 1,8 m · LMDF Platinum · indigo · tosh · Blum · yoritgich',
-        p_prestige: 'Orolli Prestij', p_prestige_d: 'Burchakli 2,4 × 1,8 m + orol · akril (Turkiya) · kvars · Blum · yoritgich',
+        p_practic: 'Praktik', p_practic_d: 'Toʻgʻri 3,6 m · kir yuvgich va muzlatgich · LDSP Ekonom',
+        p_duo: 'Duet', p_duo_d: 'Burchakli 3 × 1,8 m · muzlatgich va idish yuvgich · LMDF Ekonom · krem',
+        p_comfort: 'Komfort', p_comfort_d: 'Burchakli 3 × 1,8 m · penal: duxovka + mikroʻtolqinli pech · idish yuvgich · muzlatgich',
+        p_enamel: 'Indigo Lyuks', p_enamel_d: 'Burchakli 3 × 1,8 m · duxovkali penal · oʻrnatma muzlatgich · Blum · yoritgich',
+        p_prestige: 'Orolli Prestij', p_prestige_d: 'Burchakli + orol · oʻrnatma muzlatgich, duxovka+mikroʻtolqinli penal · chiroq va stullar',
         hardware: 'Furnitura', hardwareLabel: 'Furnitura (ilmoqlar, tortmalar, koʻtargichlar)',
         hwDesc_econ: 'Asosiy sinf: ilmoq va yoʻnaltirgichlar oddiyroq, yumshoq yopgich hamma joyda emas.',
         hwDesc_std: 'Yumshoq yopiladigan ilmoqlar, sharikli yoʻnaltirgichdagi tortmalar.',
@@ -1543,57 +1590,6 @@
     let activeCatalogTone = 'all';
 
     /* ===================== ЧЕРТЕЖИ И ВСПОМОГАТЕЛЬНОЕ (из прежней версии) ===================== */
-    function syncWallAssignments() {
-      if (currentType === 'straight') {
-        lowerSections.forEach(s => s.wall = 'main');
-        upperSections.forEach(s => s.wall = 'main');
-      } else if (currentType === 'l-shape') {
-        lowerSections.forEach((s, i) => { if (i === 0) s.wall = 'left'; else if (!s.wall || s.wall==='right') s.wall = 'main'; });
-        upperSections.forEach((s, i) => { if (i === 0) s.wall = 'left'; else if (!s.wall || s.wall==='right') s.wall = 'main'; });
-      } else if (currentType === 'u-shape') {
-        lowerSections.forEach((s, i) => {
-          if (i === 0) s.wall = 'left';
-          else if (i === lowerSections.length - 1) s.wall = 'right';
-          else if (!s.wall) s.wall = 'main';
-        });
-        upperSections.forEach((s, i) => {
-          if (i === 0) s.wall = 'left';
-          else if (i === upperSections.length - 1) s.wall = 'right';
-          else if (!s.wall) s.wall = 'main';
-        });
-      }
-    }
-
-    function syncWallsFromSections() {
-      if (currentType === 'straight') {
-        let sumW = lowerSections.reduce((acc, s) => acc + (parseFloat(s.width) || 0), 0);
-        document.getElementById('mainWall').value = Math.round(sumW);
-      } else if (currentType === 'l-shape') {
-        let mainSum = 0, leftSum = 0;
-        lowerSections.forEach(s => {
-          if (s.wall === 'left') leftSum += (parseFloat(s.width) || 0);
-          else mainSum += (parseFloat(s.width) || 0);
-        });
-        document.getElementById('mainWall').value = Math.round(mainSum || 200);
-        document.getElementById('leftWall').value = Math.round(leftSum > 0 ? leftSum + 60 : 120);
-      } else if (currentType === 'u-shape') {
-        let mainSum = 0, leftSum = 0, rightSum = 0;
-        lowerSections.forEach(s => {
-          if (s.wall === 'left') leftSum += (parseFloat(s.width) || 0);
-          else if (s.wall === 'right') rightSum += (parseFloat(s.width) || 0);
-          else mainSum += (parseFloat(s.width) || 0);
-        });
-        document.getElementById('mainWall').value = Math.round(mainSum || 200);
-        document.getElementById('leftWall').value = Math.round(leftSum > 0 ? leftSum + 60 : 120);
-        document.getElementById('rightWall').value = Math.round(rightSum > 0 ? rightSum + 60 : 120);
-      }
-    }
-
-    function drawAllCadMinis() {
-      lowerSections.forEach((sec, idx) => drawSectionCadScheme('cadMini_lower_' + idx, 'lower', sec));
-      upperSections.forEach((sec, idx) => drawSectionCadScheme('cadMini_upper_' + idx, 'upper', sec));
-    }
-
     async function captureSpecImage() {
       if (typeof html2canvas !== 'function') return '';
       try {
@@ -1620,6 +1616,99 @@
     }
 
     /* =====================================================================
+       МОДУЛИ: ВЫСОКИЕ (до потолка), ТЕХНИКА, РАСКЛАДКА ПО СТЕНАМ, ИНТЕРЬЕР
+       ===================================================================== */
+    const TALL_KINDS = ['fridge', 'tower'];
+    const isTall = s => !!s && TALL_KINDS.indexOf(s.kind) >= 0;
+    const KIND_LOWER = ['door', 'drawers', 'sink', 'hob', 'oven', 'dishwasher', 'washer'];
+    const KIND_UPPER = ['door', 'dryer', 'hood', 'side', 'glass', 'open'];
+    const KIND_TALL = ['fridge', 'tower'];
+    const FRIDGE_H = 185;         // высота холодильника в нише, см
+    // Ярусы пеналов, см от пола: [тип, от, до]. Типы: door | drawer | oven | micro
+    const TOWERS = {
+      storage:   [['door', 10, 125], ['door', 125, 999]],
+      oven:      [['drawer', 10, 45], ['door', 45, 85], ['oven', 85, 145], ['door', 145, 999]],
+      ovenMicro: [['drawer', 10, 45], ['drawer', 45, 80], ['oven', 80, 140], ['micro', 140, 178], ['door', 178, 999]],
+      micro:     [['drawer', 10, 45], ['door', 45, 86], ['micro', 86, 124], ['door', 124, 999]]
+    };
+    const TOWER_KEYS = Object.keys(TOWERS);
+    function tallTopOf(roomH) { return Math.max(200, Math.min(Number(roomH) || 240, 270)); }
+    function towerBands(cfg, top) {
+      const list = TOWERS[cfg] || TOWERS.storage, out = [];
+      list.forEach(([ty, a, b]) => { const y1 = Math.min(b, top); if (a < y1 - 3) out.push({ ty, y0: a, y1 }); });
+      return out;
+    }
+    // Техника, которую надо назвать мастеру: [тип техники, ширина ниши, высота ниши] — для спецификации
+    function appliancesOf(sec) {
+      if (!sec) return [];
+      if (sec.kind === 'fridge') return [{ k: 'fridge', built: sec.fr === 'built' }];
+      if (sec.kind === 'tower') {
+        const b = TOWERS[sec.tw || 'storage'] || [];
+        return b.filter(x => x[0] === 'oven' || x[0] === 'micro').map(x => ({ k: x[0] === 'oven' ? 'oven' : 'micro' }));
+      }
+      if (sec.kind === 'oven') return [{ k: 'oven' }];
+      if (sec.kind === 'dishwasher') return [{ k: 'dishwasher' }];
+      if (sec.kind === 'washer') return [{ k: 'washer' }];
+      if (sec.kind === 'hob') return [{ k: 'hobpanel' }];
+      return [];
+    }
+
+    // Раскладка одной стены в координатах «от угла» (основная стена — слева направо).
+    // Верхние шкафы стоят по порядку, но обходят высокие модули нижнего ряда.
+    function layoutRun(lowArr, upArr, kind) {
+      const ord = a => (kind === 'left' ? a.slice().reverse() : a);
+      let u = 0;
+      const lower = ord(lowArr || []).map(sec => { const w = parseFloat(sec.width) || 0; const r = { sec, u0: u, u1: u + w }; u += w; return r; });
+      const talls = lower.filter(r => isTall(r.sec));
+      let v = 0;
+      const upper = [];
+      ord(upArr || []).forEach(sec => {
+        const w = parseFloat(sec.width) || 0;
+        for (let guard = 0, moved = true; moved && guard < 50; guard++) {
+          moved = false;
+          for (let k = 0; k < talls.length; k++) {
+            const tl = talls[k];
+            if (v < tl.u1 - 0.01 && v + w > tl.u0 + 0.01) { v = tl.u1; moved = true; }
+          }
+        }
+        upper.push({ sec, u0: v, u1: v + w });
+        v += w;
+      });
+      return { lower, upper, talls, totalLower: u, totalUpper: v, total: Math.max(u, v) };
+    }
+    function wallsOfType(type) { return type === 'straight' ? ['main'] : (type === 'l-shape' ? ['left', 'main'] : ['left', 'main', 'right']); }
+    function wallOfSecIn(type, s) { return type === 'straight' ? 'main' : (s.wall || 'main'); }
+    function layoutAll(lower, upper, type) {
+      const pick = (arr, w) => (arr || []).filter(s => wallOfSecIn(type, s) === w && (w !== 'right' || type === 'u-shape') && (w !== 'left' || type !== 'straight'));
+      const res = {};
+      ['main', 'left', 'right'].forEach(w => { res[w] = layoutRun(pick(lower, w), pick(upper, w), w); });
+      return res;
+    }
+
+    // Интерьер: подвесные светильники, барные стулья, растения
+    const DECOR_DEFAULT = { lamps: 0, stools: 0, plant: false, fplant: false };
+    let decorState = Object.assign({}, DECOR_DEFAULT);
+    function decorClean(d) {
+      d = d || {};
+      const n = (v, a, b) => Math.max(a, Math.min(b, Math.round(Number(v) || 0)));
+      return { lamps: n(d.lamps, 0, 6), stools: n(d.stools, 0, 8), plant: !!d.plant, fplant: !!d.fplant };
+    }
+    // Где висят светильники и стоят стулья (см): над островом, а без острова — вдоль основной стены перед столешницей
+    function decorSpots(st, W, isl) {
+      const dc = decorClean(st.decor);
+      const lamps = [], stools = [];
+      if (dc.lamps > 0) {
+        if (isl) { const L = isl.x1 - isl.x0; for (let i = 0; i < dc.lamps; i++) lamps.push({ x: isl.x0 + (i + 0.5) * L / dc.lamps, z: (isl.z0 + isl.z1) / 2 }); }
+        else { for (let i = 0; i < dc.lamps; i++) lamps.push({ x: (i + 0.5) * W / dc.lamps, z: 72 }); }
+      }
+      if (dc.stools > 0 && isl) {
+        const L = isl.x1 - isl.x0, n = Math.min(dc.stools, Math.max(1, Math.floor(L / 42)));
+        for (let i = 0; i < n; i++) stools.push({ x: isl.x0 + (i + 0.5) * L / n, z: isl.z1 + 30 });
+      }
+      return { lamps, stools, plant: dc.plant, fplant: dc.fplant };
+    }
+
+    /* =====================================================================
        ТЕХНИЧЕСКИЕ ЧЕРТЕЖИ В ЦВЕТЕ С РАЗМЕРАМИ (мм)
        ===================================================================== */
     const DIM_COL = '#0369a1';
@@ -1633,6 +1722,7 @@
       b.rect = (x, y, w, h, attrs, noFit) => { b.out.push(`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${Math.max(0, w).toFixed(2)}" height="${Math.max(0, h).toFixed(2)}" ${attrs}/>`); if (!noFit) { b.pt(x, y); b.pt(x + w, y + h); } };
       b.line = (x1, y1, x2, y2, attrs) => { b.out.push(`<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" ${attrs}/>`); b.pt(x1, y1); b.pt(x2, y2); };
       b.path = (d, attrs) => b.out.push(`<path d="${d}" ${attrs}/>`);
+      b.circle = (cx, cy, r, attrs) => { b.out.push(`<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${r.toFixed(2)}" ${attrs}/>`); b.pt(cx - r, cy - r); b.pt(cx + r, cy + r); };
       b.text = (x, y, str, fs, attrs, rot) => {
         const s = esc(str), w = String(str).length * fs * 0.58;
         b.out.push(`<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" font-size="${fs.toFixed(2)}" font-family="Manrope, Arial, sans-serif" text-anchor="middle" ${rot ? `transform="rotate(-90 ${x.toFixed(2)} ${y.toFixed(2)})"` : ''} ${attrs || ''}>${s}</text>`);
@@ -1680,26 +1770,59 @@
       const handle = dark ? '#e2e8f0' : '#475569';
       const shelfA = `stroke="${dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.30)'}" stroke-width="1" stroke-dasharray="4,3" ${STK}`;
       const L = (ax, ay, bx, by, c, sw, extra) => b.line(ax, ay, bx, by, `stroke="${c}" stroke-width="${sw}" stroke-linecap="round" ${STK} ${extra || ''}`);
+      const k = sec.kind;
+      const open = sec.openType || 'handles';
+      if (tier === 'upper' && k === 'open') {
+        b.rect(x0 + g, yt, w - 2 * g, h, `fill="${shadeColor(col, -0.1)}" stroke="#1f2937" stroke-width="1" ${STK}`);
+        for (let i = 0; i <= 3; i++) { const y = yt + h * i / 3; b.rect(x0 + g, y - 0.8, w - 2 * g, 1.6, `fill="${shadeColor(col, 0.05)}" stroke="#1f2937" stroke-width="0.8" ${STK}`, true); }
+        return;
+      }
+      if (tier === 'lower' && k === 'washer') {
+        b.rect(x0 + g, yt, w - 2 * g, h, `fill="#f3f4f6" stroke="#475569" stroke-width="1" ${STK}`);
+        const cy = yt + h * 0.58, r = Math.min(w * 0.34, h * 0.3);
+        b.circle(uc, cy, r, `fill="#aab2ba" stroke="#6b7480" stroke-width="1" ${STK}`);
+        b.circle(uc, cy, r * 0.72, `fill="#38444e" ${STK}`);
+        b.rect(x0 + g + 2, yt + 2, w - 2 * g - 4, h * 0.1, 'fill="#dfe3e7"', true);
+        return;
+      }
+      if (tier === 'lower' && k === 'oven') {
+        const ovB = yb - (yb - yt) * 0.22;
+        b.rect(x0 + g, ovB, w - 2 * g, yb - ovB, `fill="${col}" stroke="#1f2937" stroke-width="1" ${STK}`);
+        L(uc - Math.min(12, w * 0.25), yb - 4, uc + Math.min(12, w * 0.25), yb - 4, handle, 2.4);
+        b.rect(x0 + g, yt, w - 2 * g, ovB - yt, `fill="#20252a" stroke="#0e1114" stroke-width="1" ${STK}`);
+        b.rect(x0 + w * 0.12, yt + h * 0.2, w * 0.76, (ovB - yt) * 0.62, 'fill="#2d3338" stroke="#4a545d" stroke-width="0.8"', true);
+        b.rect(x0 + w * 0.3, yt + 3, w * 0.4, 3, 'fill="#0a0c0e"', true);
+        L(x0 + 5, yt + h * 0.16, x1 - 5, yt + h * 0.16, '#c3cad0', 2.4);
+        return;
+      }
       b.rect(x0 + g, yt, w - 2 * g, h, `fill="${col}" stroke="#1f2937" stroke-width="1" ${STK}`);
       b.rect(x0 + g, yt, w - 2 * g, h, `fill="url(#${b.uid}sh)"`, true);
-      const open = sec.openType || 'handles';
+      if (tier === 'lower' && k === 'dishwasher') {
+        b.rect(x0 + g + 0.5, yt, w - 2 * g - 1, Math.max(3, h * 0.07), 'fill="#262b30"', true);
+        return;
+      }
+      if (tier === 'upper' && k === 'glass') {
+        b.rect(x0 + 2.2, yt + 2.2, w - 4.4, h - 4.4, 'fill="rgba(176,208,226,0.55)" stroke="rgba(255,255,255,0.8)" stroke-width="1"', true);
+        const hw = Math.min(8, w * 0.2); L(uc - hw, yb - 5, uc + hw, yb - 5, handle, 2.4);
+        return;
+      }
       if (tier === 'lower' && open === 'gola') b.rect(x0, yt, w, 3, 'fill="#1f2328"', true);
       const drawers = tier === 'lower' ? (sec.drawers | 0) : 0;
       if (drawers > 0) {
         const hk = h / drawers;
-        for (let k = 1; k < drawers; k++) {
-          const y = yt + k * hk;
+        for (let j = 1; j < drawers; j++) {
+          const y = yt + j * hk;
           if (open === 'gola') b.rect(x0, y - 1.5, w, 3, 'fill="#1f2328"', true);
           else L(x0 + 1, y, x1 - 1, y, edge, 1);
         }
-        if (open === 'handles') for (let k = 0; k < drawers; k++) {
-          const y = yt + k * hk + Math.min(5, hk / 3), hw = Math.min(12, w * 0.25);
+        if (open === 'handles') for (let j = 0; j < drawers; j++) {
+          const y = yt + j * hk + Math.min(5, hk / 3), hw = Math.min(12, w * 0.25);
           L(uc - hw, y, uc + hw, y, handle, 2.4);
         }
         return;
       }
       const shelves = sec.shelves | 0;
-      for (let k = 1; k <= shelves; k++) { const y = yt + k * h / (shelves + 1); b.line(x0 + 2, y, x1 - 2, y, shelfA); }
+      for (let j = 1; j <= shelves; j++) { const y = yt + j * h / (shelves + 1); b.line(x0 + 2, y, x1 - 2, y, shelfA); }
       if (tier === 'upper' && (sec.gasLifts | 0) > 0) {
         if (open === 'handles') { const hw = Math.min(12, w * 0.25); L(uc - hw, yb - 5, uc + hw, yb - 5, handle, 2.4); }
         const ar = Math.min(w, h) * 0.16;
@@ -1716,6 +1839,54 @@
       }
     }
 
+    // Высокий модуль (вид спереди): холодильник или пенал до потолка. Y = -см от пола
+    function techTall(b, x0, x1, sec, col, fs, top) {
+      const w = x1 - x0, uc = (x0 + x1) / 2, g = Math.min(0.3, w / 20);
+      const dark = luminance(col) < 0.4;
+      const edge = dark ? 'rgba(255,255,255,0.40)' : 'rgba(0,0,0,0.38)';
+      const handle = dark ? '#e2e8f0' : '#475569';
+      const open = sec.openType || 'handles';
+      const L = (ax, ay, bx, by, c, sw) => b.line(ax, ay, bx, by, `stroke="${c}" stroke-width="${sw}" stroke-linecap="round" ${STK}`);
+      const door = (a, bb, ty) => {
+        b.rect(x0 + g, -bb, w - 2 * g, bb - a, `fill="${col}" stroke="#1f2937" stroke-width="1" ${STK}`);
+        b.rect(x0 + g, -bb, w - 2 * g, bb - a, `fill="url(#${b.uid}sh)"`, true);
+        if (open === 'handles') {
+          if (ty === 'drawer') { const hw = Math.min(12, w * 0.25); L(uc - hw, -(bb - 5), uc + hw, -(bb - 5), handle, 2.4); }
+          else if (w >= 45) { L(uc, -(bb - 0.5), uc, -(a + 0.5), edge, 1); L(uc - 3.5, -(a + 6), uc - 3.5, -Math.min(a + 22, bb - 4), handle, 2.4); L(uc + 3.5, -(a + 6), uc + 3.5, -Math.min(a + 22, bb - 4), handle, 2.4); }
+          else L(x1 - 4, -(a + 6), x1 - 4, -Math.min(a + 24, bb - 4), handle, 2.4);
+        } else if (open === 'gola') b.rect(x0, -(bb), w, 3, 'fill="#1f2328"', true);
+      };
+      const PLH = 10;
+      b.rect(x0 + 0.3, -PLH, w - 0.6, PLH, 'fill="#3a3a3f"');
+      if (sec.kind === 'fridge') {
+        const built = sec.fr === 'built', y0 = PLH, y1 = PLH + (built ? 178 : FRIDGE_H), split = y0 + (y1 - y0) * 0.34;
+        if (built) { door(y0, split, 'door'); door(split, y1, 'door'); }
+        else {
+          b.rect(x0 + 0.6, -y1, w - 1.2, y1 - y0, 'fill="#d3d7db" stroke="#6b7480" stroke-width="1" ' + STK);
+          L(x0 + 0.8, -split, x1 - 0.8, -split, '#8f98a2', 1.4);
+          L(x0 + 5, -(split + 8), x0 + 5, -(split + 42), '#7b8591', 2.6);
+          L(x0 + 5, -(split - 30), x0 + 5, -(split - 6), '#7b8591', 2.6);
+        }
+        if (top - (y1 + 2) > 6) door(y1 + 2, top, 'door');
+        return;
+      }
+      towerBands(sec.tw, top).forEach(bd => {
+        const a = bd.y0 === 10 ? PLH : bd.y0, bb = bd.y1;
+        if (bd.ty === 'door' || bd.ty === 'drawer') { door(a, bb, bd.ty); return; }
+        if (bd.ty === 'oven') {
+          b.rect(x0 + g, -bb, w - 2 * g, bb - a, 'fill="#20252a" stroke="#0e1114" stroke-width="1" ' + STK);
+          b.rect(x0 + w * 0.1, -(bb - 14), w * 0.8, (bb - 14) - (a + 4), 'fill="#2d3338" stroke="#4a545d" stroke-width="0.8"', true);
+          b.rect(x0 + w * 0.3, -(bb - 5.5), w * 0.4, 3.5, 'fill="#0a0c0e"', true);
+          L(x0 + 5, -(bb - 17), x1 - 5, -(bb - 17), '#c3cad0', 2.6);
+          return;
+        }
+        b.rect(x0 + g, -bb, w - 2 * g, bb - a, 'fill="#2a3036" stroke="#0e1114" stroke-width="1" ' + STK);
+        b.rect(x0 + 2, -(bb - 3), w * 0.72 - 2, (bb - 3) - (a + 3), 'fill="#1e2226" stroke="#4a545d" stroke-width="0.8"', true);
+        b.rect(x0 + w * 0.8, -(bb - 4), w * 0.17, 7, 'fill="#0f1215"', true);
+        L(x0 + w * 0.77, -(bb - 4), x0 + w * 0.77, -(a + 4), '#c3cad0', 2.2);
+      });
+    }
+
     function techLabel(b, x, y, str, fs, color) {
       const f = fs * 0.72, pw = String(str).length * f * 0.62 + f * 0.8;
       b.rect(x - pw / 2, y, pw, f * 1.35, 'fill="#0f172a" rx="1.5"', true);
@@ -1726,7 +1897,20 @@
       const s = getCalcState();
       const top = CONFIG.countertops[s.top];
       const CT = top.thick || 3.8;
-      return { s, topCol: top.color, CT, PL: 10, BOX: 85, TOPY: 85 + CT, UB: 145, UH: s.upperH, UT: 145 + s.upperH };
+      return { s, topCol: top.color, CT, PL: 10, BOX: 85, TOPY: 85 + CT, UB: 145, UH: s.upperH, UT: 145 + s.upperH, TT: tallTopOf(s.roomH) };
+    }
+
+    // Подвесной светильник в чертеже (вид спереди), x — центр, yCeil и yBot — см от пола
+    function techLamp(b, x, yCeil, yBot) {
+      const lw = 4.5, top = yBot + 36;
+      b.line(x, -yCeil, x, -top, `stroke="#2b2f33" stroke-width="1.2" ${STK}`);
+      b.rect(x - lw, -top, lw * 2, 36, `fill="#17191c" stroke="#000" stroke-width="1" ${STK}`);
+      b.rect(x - lw, -(yBot + 3), lw * 2, 3, 'fill="#d6a84f"', true);
+    }
+    function techPlantFront(b, x, yBase, s) {
+      b.rect(x - 5 * s, -(yBase + 10 * s), 10 * s, 10 * s, 'fill="#8b6b4f" stroke="rgba(0,0,0,.35)" stroke-width="1" ' + STK);
+      [[-0.6, 22, '#4f8a55'], [0, 26, '#3f7347'], [0.6, 22, '#62a066']].forEach(([dx, len, c]) => b.out.push(`<ellipse cx="${(x + dx * 7 * s).toFixed(1)}" cy="${(-(yBase + 10 * s + len * s * 0.5)).toFixed(1)}" rx="${(5 * s).toFixed(1)}" ry="${(len * s * 0.5).toFixed(1)}" fill="${c}" stroke="rgba(20,60,30,.4)" stroke-width="1" ${STK}/>`));
+      b.pt(x - 8 * s, -(yBase + 10 * s + 26 * s)); b.pt(x + 8 * s, -yBase);
     }
 
     /* ---------- ВИД СПЕРЕДИ: развёртка по стенам ---------- */
@@ -1736,68 +1920,72 @@
       const G = techGeometry(), s = G.s;
       hasUpper = hasUpper && upperSections.length > 0;
       const facade = selectedFacadeColor.hex;
-      const wallOf = sec => (currentType === 'straight' ? 'main' : (sec.wall || 'main'));
-      const order = currentType === 'straight' ? ['main'] : (currentType === 'l-shape' ? ['left', 'main'] : ['left', 'main', 'right']);
-      const sumW = a => a.reduce((acc, x) => acc + (parseFloat(x.width) || 0), 0);
-      const segs = order.map(w => {
-        const lo = lowerSections.filter(x => wallOf(x) === w);
-        const up = hasUpper ? upperSections.filter(x => wallOf(x) === w) : [];
-        return { w, lo, up, wl: sumW(lo), wu: sumW(up) };
-      }).filter(g => g.lo.length || g.up.length);
+      const LAY = layoutAll(lowerSections, hasUpper ? upperSections : [], currentType);
+      const segs = wallsOfType(currentType).map(w => ({ w, L: LAY[w] })).filter(g => g.L.lower.length || g.L.upper.length);
       const GAP = 30;
       let x = 0;
-      segs.forEach(g => { g.width = Math.max(g.wl, g.wu, 1); g.x = x; x += g.width + GAP; });
+      segs.forEach(g => { g.width = Math.max(g.L.total, 1); g.x = x; x += g.width + GAP; });
       const totalW = x - GAP;
       const fs = Math.max(6, totalW / 30);
       const Y = y => -y;
       const b = techBuilder();
-      const topY = hasUpper ? G.UT : G.TOPY + 25;
+      const hasTall = segs.some(g => g.L.talls.length);
+      const Wm = Math.max(60, LAY.main.total), islX = s.island ? { x0: Wm / 2 - s.islL / 2, x1: Wm / 2 + s.islL / 2, z0: 0, z1: 0 } : null;
+      const dec = decorSpots(s, Wm, islX);
+      const lampsOn = decorClean(s.decor).lamps > 0;
+      const topY = Math.max(hasUpper ? G.UT : G.TOPY + 25, hasTall ? G.TT : 0, lampsOn ? s.roomH : 0);
       const wallName = w => (w === 'left' ? t('wLeft') : (w === 'right' ? t('wRight') : t('wMain')));
+      const xOf = (g, r) => (g.w === 'left' ? g.x + g.width - r.u1 : g.x + r.u0);
 
       // стена и пол
       b.rect(-8, Y(topY + 10), totalW + 16, topY + 10, 'fill="#f3eee7"', true);
       b.line(-8, 0, totalW + 8, 0, `stroke="#475569" stroke-width="2.5" ${STK}`);
 
       segs.forEach((g, gi) => {
-        const loStart = g.w === 'left' ? g.x + g.width - g.wl : g.x;
-        const upStart = g.w === 'left' ? g.x + g.width - g.wu : g.x;
         // фартук
         b.rect(g.x, Y(G.UB), g.width, G.UB - G.TOPY, `fill="#fbfaf7" stroke="rgba(0,0,0,0.08)" stroke-width="1" ${STK}`, true);
         for (let tx = g.x + 15; tx < g.x + g.width; tx += 15) b.line(tx, Y(G.UB), tx, Y(G.TOPY), `stroke="rgba(0,0,0,0.06)" stroke-width="1" ${STK}`);
-        // нижние шкафы
-        let u = loStart, hob = null;
-        g.lo.forEach(sec => {
-          const w = parseFloat(sec.width) || 0;
-          b.rect(u + 0.3, Y(G.PL), w - 0.6, G.PL, 'fill="#3a3a3f"');
-          techFront(b, u, u + w, Y(G.BOX), Y(G.PL), sec, 'lower', facade, fs);
-          if (w >= 14) techLabel(b, u + w / 2, Y(G.BOX) + 2, `Н-${sec.id}`, fs, '#fbbf24');
-          if (sec.kind === 'sink') {
-            const c = u + w / 2;
+        // верхние шкафы (рисуем до высоких модулей, чтобы пеналы были поверх)
+        let hob = null;
+        g.L.upper.forEach(r => {
+          const x0 = xOf(g, r), w = r.u1 - r.u0;
+          techFront(b, x0, x0 + w, Y(G.UT), Y(G.UB), r.sec, 'upper', facade, fs);
+          if (w >= 14) techLabel(b, x0 + w / 2, Y(G.UT) + 2, `В-${r.sec.id}`, fs, '#38bdf8');
+        });
+        // нижние шкафы и высокие модули
+        g.L.lower.forEach(r => {
+          const x0 = xOf(g, r), w = r.u1 - r.u0;
+          if (isTall(r.sec)) {
+            techTall(b, x0, x0 + w, r.sec, facade, fs, G.TT);
+            if (w >= 14) techLabel(b, x0 + w / 2, Y(G.TT) + 2, `Н-${r.sec.id}`, fs, '#fbbf24');
+            return;
+          }
+          b.rect(x0 + 0.3, Y(G.PL), w - 0.6, G.PL, 'fill="#3a3a3f"');
+          techFront(b, x0, x0 + w, Y(G.BOX), Y(G.PL), r.sec, 'lower', facade, fs);
+          if (w >= 14) techLabel(b, x0 + w / 2, Y(G.BOX) + 2, `Н-${r.sec.id}`, fs, '#fbbf24');
+          if (r.sec.kind === 'sink') {
+            const c = x0 + w / 2;
             b.path(`M${c} ${Y(G.TOPY)} L${c} ${Y(G.TOPY + 24)} Q${c} ${Y(G.TOPY + 28)} ${c + 6} ${Y(G.TOPY + 27)} L${c + 11} ${Y(G.TOPY + 25)}`, `stroke="#64748b" stroke-width="2.4" fill="none" stroke-linecap="round" ${STK}`);
           }
-          if (sec.kind === 'hob') { hob = { u0: u, u1: u + w }; b.rect(u + 4, Y(G.TOPY + 1.4), w - 8, 1.4, 'fill="#18181b"', true); }
-          u += w;
+          if (r.sec.kind === 'hob') { hob = { u0: x0, u1: x0 + w }; b.rect(x0 + 4, Y(G.TOPY + 1.4), w - 8, 1.4, 'fill="#18181b"', true); }
         });
-        if (g.lo.length) b.rect(loStart, Y(G.TOPY), g.wl, G.CT, `fill="${G.topCol}" stroke="#1f2937" stroke-width="1" ${STK}`);
-        // верхние шкафы
-        let uu = upStart;
-        g.up.forEach(sec => {
-          const w = parseFloat(sec.width) || 0;
-          techFront(b, uu, uu + w, Y(G.UT), Y(G.UB), sec, 'upper', facade, fs);
-          if (w >= 14) techLabel(b, uu + w / 2, Y(G.UT) + 2, `В-${sec.id}`, fs, '#38bdf8');
-          uu += w;
-        });
-        if (hob && g.up.length) b.rect(hob.u0 + 2, Y(G.UB), hob.u1 - hob.u0 - 4, 8, `fill="#c3c9cf" stroke="#8f979f" stroke-width="1" ${STK}`, true);
-
-        // размеры снизу: каждый шкаф и стена целиком
-        let ux = loStart;
-        g.lo.forEach(sec => { const w = parseFloat(sec.width) || 0; b.dimH(ux, ux + w, fs * 1.9, String(MM(w)), fs, 0.5); ux += w; });
-        if (g.lo.length) b.dimH(loStart, loStart + g.wl, fs * 4.0, `${wallName(g.w)}: ${MM(g.wl)}${g.w !== 'main' ? ' ' + t('techPlusCorner') : ''}`, fs, fs * 1.9);
-        // размеры сверху: верхние шкафы
-        if (g.up.length) {
-          let vx = upStart;
-          g.up.forEach(sec => { const w = parseFloat(sec.width) || 0; b.dimH(vx, vx + w, Y(G.UT) - fs * 1.7, String(MM(w)), fs, Y(G.UT) - 0.5); vx += w; });
+        // столешница кусками между высокими модулями
+        const runSegs = [];
+        let cur = null;
+        g.L.lower.forEach(r => { if (isTall(r.sec)) cur = null; else if (!cur) { cur = { a: r.u0, b: r.u1 }; runSegs.push(cur); } else cur.b = r.u1; });
+        const slabs = runSegs.map(sg => { const xa = xOf(g, { u0: sg.a, u1: sg.b }); return { x0: xa, x1: xa + (sg.b - sg.a) }; });
+        slabs.forEach(sl => b.rect(sl.x0, Y(G.TOPY), sl.x1 - sl.x0, G.CT, `fill="${G.topCol}" stroke="#1f2937" stroke-width="1" ${STK}`));        if (hob && g.L.upper.some(r => { const x0 = xOf(g, r); return x0 < hob.u1 && x0 + (r.u1 - r.u0) > hob.u0; })) b.rect(hob.u0 + 2, Y(G.UB), hob.u1 - hob.u0 - 4, 8, `fill="#c3c9cf" stroke="#8f979f" stroke-width="1" ${STK}`, true);
+        // растение на столешнице
+        if (decorClean(s.decor).plant && g.w === 'main') {
+          const sl = slabs[slabs.length - 1];
+          if (sl) techPlantFront(b, Math.max(sl.x0 + 8, sl.x1 - 12), G.TOPY + G.CT * 0, 1);
         }
+
+        // размеры снизу: каждый модуль и стена целиком
+        g.L.lower.forEach(r => { const x0 = xOf(g, r), w = r.u1 - r.u0; b.dimH(x0, x0 + w, fs * 1.9, String(MM(w)), fs, 0.5); });
+        if (g.L.lower.length) b.dimH(g.x + (g.w === 'left' ? g.width - g.L.totalLower : 0), g.x + (g.w === 'left' ? g.width : g.L.totalLower), fs * 4.0, `${wallName(g.w)}: ${MM(g.L.totalLower)}${g.w !== 'main' ? ' ' + t('techPlusCorner') : ''}`, fs, fs * 1.9);
+        // размеры сверху: верхние шкафы
+        g.L.upper.forEach(r => { const x0 = xOf(g, r), w = r.u1 - r.u0; b.dimH(x0, x0 + w, Y(G.UT) - fs * 1.7, String(MM(w)), fs, Y(G.UT) - 0.5); });
         // угол между стенами
         if (gi < segs.length - 1) {
           const cx = g.x + g.width + GAP / 2;
@@ -1805,6 +1993,13 @@
           b.text(cx - fs * 0.4, Y(topY / 2), t('techCorner'), fs * 0.8, 'fill="#64748b" font-weight="700"', true);
         }
       });
+
+      // подвесные светильники (перед стеной, над основной стеной / островом)
+      if (lampsOn) {
+        const mg = segs.find(g => g.w === 'main');
+        if (mg) dec.lamps.forEach(sp => techLamp(b, mg.x + sp.x, s.roomH, 168));
+        else { const mx = totalW / 2; dec.lamps.forEach((sp, i) => techLamp(b, mx + (i - (dec.lamps.length - 1) / 2) * 45, s.roomH, 168)); }
+      }
 
       // высоты слева
       const xV = -8 - fs * 1.8, xV2 = -8 - fs * 4.0;
@@ -1814,7 +2009,8 @@
         b.dimV(Y(G.UB), Y(G.UT), xV, String(MM(G.UH)), fs, -8);
         b.dimV(0, Y(G.UT), xV2, String(MM(G.UT)), fs, xV);
       }
-      b.text(totalW, Y(topY) - fs * (hasUpper ? 3.6 : 1.2), t('techCeiling', { x: MM(s.roomH) }), fs * 0.8, 'fill="#64748b" text-anchor="end"');
+      if (hasTall) b.dimV(0, Y(G.TT), hasUpper ? xV2 - fs * 2.2 : xV2, String(MM(G.TT)), fs, hasUpper ? xV2 : -8);
+      b.text(totalW, Y(topY) - fs * (hasUpper || hasTall ? 3.6 : 1.2), t('techCeiling', { x: MM(s.roomH) }), fs * 0.8, 'fill="#64748b" text-anchor="end"');
       b.render(svg, 0.02, 0.03);
     }
 
@@ -1825,23 +2021,23 @@
       const G = techGeometry(), s = G.s;
       hasUpper = hasUpper && upperSections.length > 0;
       const LD = 60, UD = s.upperD, WT = 8;
-      const wallOf = sec => (currentType === 'straight' ? 'main' : (sec.wall || 'main'));
-      const sumW = a => a.reduce((acc, x) => acc + (parseFloat(x.width) || 0), 0);
-      const loM = lowerSections.filter(x => wallOf(x) === 'main'), loL = lowerSections.filter(x => wallOf(x) === 'left'), loR = currentType === 'u-shape' ? lowerSections.filter(x => wallOf(x) === 'right') : [];
-      const upM = hasUpper ? upperSections.filter(x => wallOf(x) === 'main') : [], upL = hasUpper ? upperSections.filter(x => wallOf(x) === 'left') : [], upR = hasUpper && currentType === 'u-shape' ? upperSections.filter(x => wallOf(x) === 'right') : [];
-      const W = Math.max(60, sumW(loM), sumW(upM));
-      const lenL = LD + Math.max(sumW(loL), sumW(upL)), lenR = LD + Math.max(sumW(loR), sumW(upR));
-      const fs = Math.max(6, (W + (loL.length ? 60 : 0)) / 26);
+      const LAY = layoutAll(lowerSections, hasUpper ? upperSections : [], currentType);
+      const W = Math.max(60, LAY.main.total);
+      const lenL = LD + LAY.left.total, lenR = LD + LAY.right.total;
+      const fs = Math.max(6, (W + (LAY.left.lower.length ? 60 : 0)) / 26);
       const b = techBuilder();
       const wallC = 'fill="#475569"';
       const isL = currentType !== 'straight', isU = currentType === 'u-shape';
-      let depthMax = Math.max(LD, isL ? lenL : 0, isU ? lenR : 0);
+      const hasLeft = isL && LAY.left.lower.length > 0, hasRight = isU && LAY.right.lower.length > 0;
+      let depthMax = Math.max(LD, hasLeft ? lenL : 0, hasRight ? lenR : 0);
       let isl = null;
       if (s.island) {
         const L = s.islL, Wd = s.islW, z0 = Math.max(depthMax, LD) + 100;
         isl = { x0: W / 2 - L / 2, x1: W / 2 + L / 2, z0, z1: z0 + Wd };
       }
-      const floorD = (isl ? isl.z1 : depthMax) + 40;
+      const dec = decorSpots(s, W, isl);
+      const extraFront = dec.stools.length ? 50 : 0;
+      const floorD = (isl ? isl.z1 : depthMax) + 40 + extraFront;
 
       // пол и стены
       b.rect(isL ? 0 : -25, 0, W + (isL ? 0 : 50) + (isU ? 0 : (isL ? 25 : 0)), floorD, 'fill="#f3eee7"', true);
@@ -1849,8 +2045,10 @@
       if (isL) b.rect(-WT, 0, WT, Math.max(lenL, 120) + 20, wallC);
       if (isU) b.rect(W, 0, WT, Math.max(lenR, 120) + 20, wallC);
 
-      const modRect = (x, y, w, h, id) => {
-        b.rect(x, y, w, h, `fill="${G.topCol}" stroke="#1f2937" stroke-width="1" ${STK}`);
+      const modRect = (x, y, w, h, id, sec) => {
+        const tall = isTall(sec);
+        b.rect(x, y, w, h, `fill="${tall ? '#cbd5e1' : G.topCol}" stroke="#1f2937" stroke-width="${tall ? 1.6 : 1}" ${STK}`);
+        if (tall) { b.line(x, y, x + w, y + h, `stroke="#64748b" stroke-width="1" ${STK}`); b.line(x + w, y, x, y + h, `stroke="#64748b" stroke-width="1" ${STK}`); }
         if (Math.min(w, h) >= 14) b.text(x + w / 2, y + h / 2 + fs * 0.3, id, fs * 0.75, 'fill="#0f172a" font-weight="800"');
       };
       const upRect = (x, y, w, h) => b.rect(x, y, w, h, `fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="5,3" ${STK}`, true);
@@ -1866,45 +2064,51 @@
         b.rect(cx - 27, cy - 25, 54, 50, `fill="#27272a" rx="2"`, true);
         pts.forEach(([dx, dy]) => b.out.push(`<circle cx="${(cx + dx).toFixed(1)}" cy="${(cy + dy).toFixed(1)}" r="${r}" fill="none" stroke="#a1a1aa" stroke-width="1" ${STK}/>`));
       };
+      const marks = (r, x, y, w, h, vertical) => { if (r.sec.kind === 'sink') sinkAt(x, y, w, h, vertical); if (r.sec.kind === 'hob') hobAt(x, y, w, h, vertical); };
 
       // основная стена
-      let x = 0;
-      loM.forEach(sec => { const w = parseFloat(sec.width) || 0; modRect(x, 0, w, LD, `Н-${sec.id}`); if (sec.kind === 'sink') sinkAt(x, 0, w, LD); if (sec.kind === 'hob') hobAt(x, 0, w, LD); x += w; });
-      let ux = 0;
-      upM.forEach(sec => { const w = parseFloat(sec.width) || 0; upRect(ux, 0, w, UD); ux += w; });
-      // левая стена: первый шкаф — дальний от угла
-      let y = lenL;
-      loL.forEach(sec => { const w = parseFloat(sec.width) || 0; y -= w; modRect(0, y, LD, w, `Н-${sec.id}`); if (sec.kind === 'sink') sinkAt(0, y, LD, w, true); if (sec.kind === 'hob') hobAt(0, y, LD, w, true); });
-      let uy = LD + sumW(upL);
-      upL.forEach(sec => { const w = parseFloat(sec.width) || 0; uy -= w; upRect(0, uy, UD, w); });
-      // правая стена: от угла
-      let yr = LD;
-      loR.forEach(sec => { const w = parseFloat(sec.width) || 0; modRect(W - LD, yr, LD, w, `Н-${sec.id}`); if (sec.kind === 'sink') sinkAt(W - LD, yr, LD, w, true); if (sec.kind === 'hob') hobAt(W - LD, yr, LD, w, true); yr += w; });
-      let uyr = LD;
-      upR.forEach(sec => { const w = parseFloat(sec.width) || 0; upRect(W - UD, uyr, UD, w); uyr += w; });
+      LAY.main.lower.forEach(r => { const w = r.u1 - r.u0; modRect(r.u0, 0, w, LD, `Н-${r.sec.id}`, r.sec); marks(r, r.u0, 0, w, LD, false); });
+      LAY.main.upper.forEach(r => upRect(r.u0, 0, r.u1 - r.u0, UD));
+      // левая стена: от угла вниз
+      LAY.left.lower.forEach(r => { const w = r.u1 - r.u0, y = LD + r.u0; modRect(0, y, LD, w, `Н-${r.sec.id}`, r.sec); marks(r, 0, y, LD, w, true); });
+      LAY.left.upper.forEach(r => upRect(0, LD + r.u0, UD, r.u1 - r.u0));
+      // правая стена: от угла вниз
+      if (isU) {
+        LAY.right.lower.forEach(r => { const w = r.u1 - r.u0, y = LD + r.u0; modRect(W - LD, y, LD, w, `Н-${r.sec.id}`, r.sec); marks(r, W - LD, y, LD, w, true); });
+        LAY.right.upper.forEach(r => upRect(W - UD, LD + r.u0, UD, r.u1 - r.u0));
+      }
       // остров
       if (isl) {
         b.rect(isl.x0, isl.z0, isl.x1 - isl.x0, isl.z1 - isl.z0, `fill="${G.topCol}" stroke="#1f2937" stroke-width="1" ${STK}`);
         b.text((isl.x0 + isl.x1) / 2, (isl.z0 + isl.z1) / 2 + fs * 0.3, t('techIsland'), fs * 0.8, 'fill="#0f172a" font-weight="800"');
-        b.dimH(isl.x0, isl.x1, isl.z1 + fs * 1.8, String(MM(isl.x1 - isl.x0)), fs, isl.z1 + 0.5);
+        b.dimH(isl.x0, isl.x1, isl.z1 + fs * 1.8 + extraFront, String(MM(isl.x1 - isl.x0)), fs, isl.z1 + 0.5);
         b.dimV(isl.z0, isl.z1, isl.x1 + fs * 1.8, String(MM(isl.z1 - isl.z0)), fs, isl.x1 + 0.5);
         b.dimV(depthMax, isl.z0, (isl.x0 + isl.x1) / 2 - fs * 2.5, `${t('techAisle')} ${MM(isl.z0 - depthMax)}`, fs);
       }
+      // интерьер: светильники (круг с крестом), стулья, растения
+      dec.lamps.forEach(sp => {
+        b.out.push(`<circle cx="${sp.x.toFixed(1)}" cy="${sp.z.toFixed(1)}" r="5" fill="#17191c" stroke="#d6a84f" stroke-width="1.6" ${STK}/>`);
+        b.pt(sp.x - 6, sp.z - 6); b.pt(sp.x + 6, sp.z + 6);
+      });
+      dec.stools.forEach(sp => { b.out.push(`<circle cx="${sp.x.toFixed(1)}" cy="${sp.z.toFixed(1)}" r="8.5" fill="#c2a37c" stroke="#7a5a35" stroke-width="1" ${STK}/>`); b.pt(sp.x - 9, sp.z - 9); b.pt(sp.x + 9, sp.z + 9); });
+      if (dec.plant) {
+        const sl = LAY.main.lower.filter(r => !isTall(r.sec)).pop();
+        const px = sl ? Math.max(8, sl.u1 - 12) : W - 14;
+        b.out.push(`<circle cx="${px.toFixed(1)}" cy="14" r="7" fill="#4f8a55" stroke="#2f5f3a" stroke-width="1" ${STK}/>`);
+      }
+      if (dec.fplant && !isU) { b.out.push(`<circle cx="${(W + 26).toFixed(1)}" cy="30" r="13" fill="#4f8a55" stroke="#2f5f3a" stroke-width="1" ${STK}/>`); b.pt(W + 40, 44); }
 
       // размеры: основная стена сверху
-      let dx = 0;
-      loM.forEach(sec => { const w = parseFloat(sec.width) || 0; b.dimH(dx, dx + w, -WT - fs * 1.7, String(MM(w)), fs, -WT); dx += w; });
+      LAY.main.lower.forEach(r => b.dimH(r.u0, r.u1, -WT - fs * 1.7, String(MM(r.u1 - r.u0)), fs, -WT));
       b.dimH(0, W, -WT - fs * 3.8, `${t('wMain')}: ${MM(W)}`, fs, -WT - fs * 1.7);
       // левая стена слева
-      if (isL && loL.length) {
-        let dy = lenL;
-        loL.forEach(sec => { const w = parseFloat(sec.width) || 0; b.dimV(dy - w, dy, -WT - fs * 1.7, String(MM(w)), fs, -WT); dy -= w; });
+      if (hasLeft) {
+        LAY.left.lower.forEach(r => b.dimV(LD + r.u0, LD + r.u1, -WT - fs * 1.7, String(MM(r.u1 - r.u0)), fs, -WT));
         b.dimV(0, lenL, -WT - fs * 3.8, `${t('wLeft')}: ${MM(lenL)}`, fs, -WT - fs * 1.7);
       }
       // правая стена справа
-      if (isU && loR.length) {
-        let dy = LD;
-        loR.forEach(sec => { const w = parseFloat(sec.width) || 0; b.dimV(dy, dy + w, W + WT + fs * 1.7, String(MM(w)), fs, W + WT); dy += w; });
+      if (hasRight) {
+        LAY.right.lower.forEach(r => b.dimV(LD + r.u0, LD + r.u1, W + WT + fs * 1.7, String(MM(r.u1 - r.u0)), fs, W + WT));
         b.dimV(0, lenR, W + WT + fs * 3.8, `${t('wRight')}: ${MM(lenR)}`, fs, W + WT + fs * 1.7);
       }
       // глубина
@@ -1918,12 +2122,16 @@
       const svg = typeof svgElementId === 'string' ? document.getElementById(svgElementId) : svgElementId;
       if (!svg) return;
       const isLower = type === 'lower';
+      const tall = isLower && isTall(sec);
+      const TT = tallTopOf(Number(document.getElementById('totalHeight').value) || 240);
       const w = Math.max(10, parseFloat(sec.width) || 50);
-      const h = isLower ? 85 : (parseFloat(document.getElementById('upperHeight').value) || 72);
+      const h = tall ? TT : (isLower ? 85 : (parseFloat(document.getElementById('upperHeight').value) || 72));
       const fs = Math.max(4.5, Math.max(w, h) / 9);
       const b = techBuilder();
       const facade = selectedFacadeColor.hex;
-      if (isLower) {
+      if (tall) {
+        techTall(b, 0, w, sec, facade, fs, TT);
+      } else if (isLower) {
         b.rect(0.3, -10, w - 0.6, 10, 'fill="#3a3a3f"');
         techFront(b, 0, w, -h, -10, sec, 'lower', facade, fs);
       } else {
@@ -2016,8 +2224,7 @@
       applyI18n();
       populateSelects();
       updateColorUIBadges();
-      renderSections('lower');
-      renderSections('upper');
+      renderPlanner();
       renderPresetCards();
       updateCalculator();
       if (el('colorCatalogModal').style.display === 'block') renderCatalog();
@@ -2057,13 +2264,15 @@
         lower: lowerSections, upper: upperSections,
         island: chk('hasIsland'), islL: num('islandLength', 140), islW: num('islandWidth', 80),
         sink: chk('optSinkCut'), hob: chk('optHobCut'), app: chk('optBuiltInAppliances'),
-        hw: selIdx('hardwareLevel'), led: Object.assign({}, ledState),
+        hw: selIdx('hardwareLevel'), led: Object.assign({}, ledState), decor: decorClean(decorState),
         facadeHex: selectedFacadeColor.hex, bodyHex: selectedBodyColor.hex
       };
     }
 
     /* Количество дверей шкафа (по ним считаются петли): шкаф с ящиками или подъёмником дверей не имеет, шире 45 см — две двери */
     function doorsOf(sec, tier) {
+      if (isTall(sec) || sec.kind === 'oven' || sec.kind === 'washer' || sec.kind === 'open') return 0;
+      if (sec.kind === 'dishwasher') return 1;
       const inner = tier === 'lower' ? (sec.drawers | 0) > 0 : (sec.gasLifts | 0) > 0;
       return inner ? 0 : ((parseFloat(sec.width) || 0) >= 45 ? 2 : 1);
     }
@@ -2073,7 +2282,12 @@
       // ящики шкафа: первый — низкий (M), остальные — высокие
       const drawers = n => n > 0 ? H.drawer + (n - 1) * (H.drawerTall || H.drawer) : 0;
       s.lower.forEach(x => {
-        const doors = doorsOf(x, 'lower'), nd = x.drawers | 0;
+        if (isTall(x)) {   // пенал: двери — по 3 петли, ящики — высокие; встроенный холодильник — фасад на двух шарнирах
+          if (x.kind === 'fridge') { if (x.fr === 'built') sum += 4 * H.hinge; return; }
+          towerBands(x.tw || 'storage', 250).forEach(b => { if (b.ty === 'door') sum += 3 * H.hinge; else if (b.ty === 'drawer') sum += (H.drawerTall || H.drawer); });
+          return;
+        }
+        const doors = doorsOf(x, 'lower'), nd = x.kind === 'oven' ? 1 : (x.drawers | 0);
         sum += doors * 2 * H.hinge + drawers(nd);
         if (x.openType === 'push') sum += nd > 0 ? nd * (H.pushDrawer || H.push) : H.push * Math.max(1, doors);
       });
@@ -2114,19 +2328,35 @@
       else if (s.type === 'u-shape') lowerMeters += (s.leftW - 60) / 100 + (s.rightW - 60) / 100;
 
       let total = lowerMeters * ((facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + work);
+      const AW = CONFIG.applianceWork, TT = tallTopOf(s.roomH), carcass = facadePriceM * 0.55 + bodyPriceM * 0.5;
+      let tallWidth = 0;
       s.lower.forEach(x => {
         total += (x.shelves || 0) * 50000;
         if (x.openType === 'gola') total += 95000;
+        const w = (parseFloat(x.width) || 0) / 100;
+        if (isTall(x)) {   // высокий модуль: вместо стандартной тумбы с столешницей — корпус до потолка
+          tallWidth += w;
+          const base = carcass + topPriceM + work, tall = carcass * (TT / 85) + work;
+          total -= w * base;
+          if (x.kind === 'tower') total += w * tall;
+          else total += w * (x.fr === 'built' ? tall * 0.55 : carcass * 0.25);
+        }
+        appliancesOf(x).forEach(a => {
+          if (a.k === 'oven' || a.k === 'micro' || a.k === 'dishwasher' || a.k === 'washer') total += AW[a.k] || 0;
+          else if (a.k === 'fridge') total += a.built ? AW.fridgeBuilt : AW.fridge;
+        });
       });
 
       if (s.hasUpper) {
         let upperMeters = s.mainW / 100;
         if (s.type === 'l-shape') upperMeters += Math.max(0, s.leftW - 35) / 100;
         else if (s.type === 'u-shape') upperMeters += (Math.max(0, s.leftW - 35) + Math.max(0, s.rightW - 35)) / 100;
+        upperMeters = Math.max(0, upperMeters - tallWidth);   // над высокими модулями верхних шкафов нет
         total += upperMeters * ((facadePriceM * 0.45) + (bodyPriceM * 0.4)) * (s.upperH / 72) * (s.upperD / 35);
         s.upper.forEach(x => {
           total += (x.shelves || 0) * 50000;
           if (x.openType === 'gola') total += 95000;
+          if (x.kind === 'glass') total += AW.glass * Math.max(1, Math.round((parseFloat(x.width) || 0) / 45));
         });
       }
 
@@ -2142,7 +2372,7 @@
 
     function renderStateFrom(s) {
       return { type: s.type, lower: s.lower, upper: s.upper, hasUpper: s.hasUpper, upperH: s.upperH, upperD: s.upperD, roomH: s.roomH,
-        facade: s.facadeHex, body: s.bodyHex, top: CONFIG.countertops[s.top].color, island: s.island, islL: s.islL, islW: s.islW, led: s.led };
+        facade: s.facadeHex, body: s.bodyHex, top: CONFIG.countertops[s.top].color, island: s.island, islL: s.islL, islW: s.islW, led: s.led, decor: s.decor };
     }
 
     function updateCalculator() {
@@ -2239,7 +2469,192 @@
       return ru ? `${h.ru} (${h.brandsRu})` : `${mat(h)} (${LANG === 'uz' ? h.brandsUz : h.brandsRu})`;
     }
 
-    /* ===================== ШКАФЫ ===================== */
+    /* ===================== ШКАФЫ: РАССТАНОВКА (планировщик) ===================== */
+    let selSec = null;                         // выбранный модуль (объект из lowerSections / upperSections)
+    let addMenuWall = null;                    // стена, для которой открыто меню «Добавить»
+    const KIND_ORDER_LOWER = ['door', 'drawers', 'sink', 'hob', 'oven', 'dishwasher', 'washer'];
+    const WIDTH_CHIPS = [30, 40, 45, 50, 60, 70, 80, 90, 100];
+
+    function tierOf(sec) { return upperSections.indexOf(sec) >= 0 ? 'upper' : 'lower'; }
+    function secsOf(tier) { return tier === 'lower' ? lowerSections : upperSections; }
+    function renumber() {
+      lowerSections.forEach((s, i) => { s.id = i + 1; if (s.autoName) s.name = defaultModuleName(s.kind, 'lower', s.id, s); });
+      upperSections.forEach((s, i) => { s.id = i + 1; if (s.autoName) s.name = defaultModuleName(s.kind, 'upper', s.id, s); });
+    }
+    // Стены, допустимые для текущей формы кухни
+    function wallValid(w) { return w === 'main' || (w === 'left' && currentType !== 'straight') || (w === 'right' && currentType === 'u-shape'); }
+    // Порядок в массиве: сначала левая стена, потом основная, потом правая; внутри стены — порядок слева направо
+    function syncWallAssignments() {
+      [lowerSections, upperSections].forEach((arr, ti) => {
+        arr.forEach(s => { if (currentType === 'straight' || !wallValid(s.wall)) s.wall = 'main'; });
+        const g = { left: [], main: [], right: [] };
+        arr.forEach(s => g[s.wall].push(s));
+        const merged = [].concat(g.left, g.main, g.right);
+        if (ti === 0) lowerSections = merged; else upperSections = merged;
+      });
+      renumber();
+    }
+    // При переходе от прямой кухни к угловой/П-образной — первый модуль встаёт на левую стену (последний — на правую)
+    function defaultSplit() {
+      [lowerSections, upperSections].forEach(arr => {
+        if (arr.length >= 2) arr[0].wall = 'left';
+        if (currentType === 'u-shape' && arr.length >= 3) arr[arr.length - 1].wall = 'right';
+      });
+    }
+    function syncWallsFromSections() {
+      const sum = w => lowerSections.filter(s => wallOfSecIn(currentType, s) === w).reduce((a, s) => a + (parseFloat(s.width) || 0), 0);
+      el('mainWall').value = Math.round(sum('main') || 200);
+      if (currentType !== 'straight') el('leftWall').value = Math.round(sum('left') > 0 ? sum('left') + 60 : 120);
+      if (currentType === 'u-shape') el('rightWall').value = Math.round(sum('right') > 0 ? sum('right') + 60 : 120);
+    }
+
+    function openDefault() { const f = lowerSections[0]; return (f && f.openType) || 'handles'; }
+    function newModule(tier, kind, wall) {
+      const lowerExtra = kind === 'drawers' ? 3 : 0;
+      const upperExtra = (kind === 'dryer' || kind === 'hood') ? 1 : 0;
+      const noShelves = ['drawers', 'oven', 'dishwasher', 'washer', 'fridge', 'tower', 'hood', 'glass', 'open'].indexOf(kind) >= 0;
+      const sec = mkSec(tier, 0, kind, STD_W, noShelves ? 0 : 1, tier === 'lower' ? lowerExtra : upperExtra, openDefault(), wall || 'main');
+      if (kind === 'tower') sec.tw = 'storage';
+      if (kind === 'fridge') sec.fr = 'free';
+      sec.name = defaultModuleName(kind, tier, 0, sec);
+      return sec;
+    }
+    function insertModule(tier, sec) {
+      const arr = secsOf(tier);
+      const g = { left: [], main: [], right: [] };
+      arr.forEach(s => g[s.wall].push(s));
+      if (sec.wall === 'left') g.left.unshift(sec); else g[sec.wall].push(sec);
+      const merged = [].concat(g.left, g.main, g.right);
+      if (tier === 'lower') lowerSections = merged; else upperSections = merged;
+    }
+    function plannerChanged(opts) {
+      opts = opts || {};
+      syncWallAssignments();
+      if (selSec && lowerSections.indexOf(selSec) < 0 && upperSections.indexOf(selSec) < 0) selSec = null;
+      syncWallsFromSections();
+      renderPlanner();
+      updateCalculator();
+    }
+    function addModule(tier, kind, wall) {
+      if (secsOf(tier).length >= MAX_SECTIONS) { if (typeof msToast === 'function') msToast(t('plMax')); return; }
+      const sec = newModule(tier, kind, wallValid(wall) ? wall : 'main');
+      insertModule(tier, sec);
+      selSec = sec;
+      addMenuWall = null;
+      plannerChanged();
+    }
+    function removeSelected() {
+      if (!selSec) return;
+      const tier = tierOf(selSec), arr = secsOf(tier);
+      if (tier === 'lower' && arr.length <= 1) { if (typeof msToast === 'function') msToast(t('plLast')); return; }
+      arr.splice(arr.indexOf(selSec), 1);
+      selSec = null;
+      plannerChanged();
+    }
+    function duplicateSelected() {
+      if (!selSec) return;
+      const tier = tierOf(selSec), arr = secsOf(tier);
+      if (arr.length >= MAX_SECTIONS) { if (typeof msToast === 'function') msToast(t('plMax')); return; }
+      const copy = Object.assign({}, selSec);
+      arr.splice(arr.indexOf(selSec) + 1, 0, copy);
+      selSec = copy;
+      plannerChanged();
+    }
+    // Сдвиг выбранного модуля на соседнее место (по порядку слева направо внутри стены)
+    function moveSelected(dir) {
+      if (!selSec) return;
+      const tier = tierOf(selSec), arr = secsOf(tier);
+      const same = arr.filter(s => s.wall === selSec.wall);
+      const i = same.indexOf(selSec), j = i + dir;
+      if (j < 0 || j >= same.length) return;
+      const a = arr.indexOf(selSec), b = arr.indexOf(same[j]);
+      arr[a] = same[j]; arr[b] = selSec;
+      plannerChanged();
+    }
+    // Перенос на другую стену / на новое место (перетаскивание)
+    function placeAt(sec, wall, index) {
+      const tier = tierOf(sec), arr = secsOf(tier);
+      arr.splice(arr.indexOf(sec), 1);
+      sec.wall = wall;
+      const g = { left: [], main: [], right: [] };
+      arr.forEach(s => g[s.wall].push(s));
+      const list = g[wall];
+      list.splice(Math.max(0, Math.min(list.length, index)), 0, sec);
+      const merged = [].concat(g.left, g.main, g.right);
+      if (tier === 'lower') lowerSections = merged; else upperSections = merged;
+      selSec = sec;
+      plannerChanged();
+    }
+    function selUpdate(field, val) {
+      const s = selSec; if (!s) return;
+      const tier = tierOf(s);
+      if (field === 'name') { s.autoName = false; s.name = String(val).slice(0, 60); }
+      else if (field === 'kind') {
+        s.kind = val;
+        delete s.tw; delete s.fr;
+        if (val === 'tower') s.tw = 'storage';
+        if (val === 'fridge') s.fr = 'free';
+        if (tier === 'lower') s.drawers = val === 'drawers' ? 3 : 0; else s.gasLifts = (val === 'dryer' || val === 'hood') ? 1 : 0;
+        s.shelves = ['drawers', 'oven', 'dishwasher', 'washer', 'fridge', 'tower', 'hood', 'glass', 'open'].indexOf(val) >= 0 ? 0 : (s.shelves || 1);
+        s.autoName = true;
+      } else if (field === 'width') s.width = Math.max(15, Math.min(150, parseFloat(val) || 0));
+      else if (field === 'wall') {
+        if (wallValid(val)) { const tierArr = secsOf(tier); const same = tierArr.filter(x => x.wall === val); placeAt(s, val, val === 'left' ? 0 : same.length); return; }
+      } else s[field] = val;
+      if (s.autoName) s.name = defaultModuleName(s.kind, tier, s.id, s);
+      plannerChanged();
+    }
+    function selWidthStep(d) { if (selSec) selUpdate('width', (parseFloat(selSec.width) || 0) + d); }
+
+    /* Подгонка стены под длину, которую ввёл клиент: лишнее убираем с конца, недостающее добираем шкафами по 60 см */
+    function fitWallToLength(wall, len) {
+      len = Math.max(30, Math.round(len));
+      const lowerOf = () => lowerSections.filter(s => s.wall === wall);
+      let lo = lowerOf();
+      let sum = lo.reduce((a, s) => a + (parseFloat(s.width) || 0), 0);
+      // слишком длинно: убираем обычные шкафы с края, затем ужимаем последний
+      for (let guard = 0; sum > len + 0.5 && guard < 40; guard++) {
+        const cand = lo.slice().reverse().find(s => !isTall(s));
+        if (!cand) break;
+        const w = parseFloat(cand.width) || 0;
+        if (sum - w >= len - 15 || lo.length > 1) { if (sum - w >= len || lo.length > 1) { lowerSections.splice(lowerSections.indexOf(cand), 1); lo = lowerOf(); sum -= w; continue; } }
+        cand.width = Math.max(15, w - (sum - len)); sum = len; break;
+      }
+      lo = lowerOf();
+      sum = lo.reduce((a, s) => a + (parseFloat(s.width) || 0), 0);
+      if (sum < len - 0.5 && lo.length) {
+        const rest = len - sum;
+        if (rest < 15) { const last = lo.slice().reverse().find(s => !isTall(s)) || lo[lo.length - 1]; last.width = (parseFloat(last.width) || 0) + rest; }
+        else standardWidths(rest).forEach(w => { const s = newModule('lower', 'door', wall); s.width = w; insertModule('lower', s); });
+      } else if (!lo.length) standardWidths(len).forEach(w => { const s = newModule('lower', 'door', wall); s.width = w; insertModule('lower', s); });
+      // верхний ряд: покрывает длину стены за вычетом высоких модулей
+      const tallW = lowerOf().filter(isTall).reduce((a, s) => a + (parseFloat(s.width) || 0), 0);
+      const want = Math.max(0, len - tallW);
+      let up = upperSections.filter(s => s.wall === wall);
+      let upSum = up.reduce((a, s) => a + (parseFloat(s.width) || 0), 0);
+      for (let guard = 0; upSum > want + 0.5 && guard < 40; guard++) {
+        const last = up[up.length - 1]; if (!last) break;
+        const w = parseFloat(last.width) || 0;
+        if (upSum - w >= want - 0.5 || up.length > 1) { upperSections.splice(upperSections.indexOf(last), 1); up = upperSections.filter(s => s.wall === wall); upSum -= w; }
+        else { last.width = Math.max(15, want); upSum = want; break; }
+      }
+      if (upSum < want - 0.5) {
+        const rest = want - upSum;
+        if (rest < 15 && up.length) up[up.length - 1].width = (parseFloat(up[up.length - 1].width) || 0) + rest;
+        else if (rest >= 15) standardWidths(rest).forEach(w => { const s = newModule('upper', 'door', wall); s.width = w; insertModule('upper', s); });
+      }
+    }
+    function onWallInputManual(wallId) {
+      const input = el(wallId);
+      let len = parseFloat(input.value) || 0;
+      const isMain = wallId === 'mainWall';
+      const min = isMain ? 30 : 75;
+      if (len < min) { len = min; input.value = min; }
+      const wall = isMain ? 'main' : (wallId === 'leftWall' ? 'left' : 'right');
+      fitWallToLength(wall, isMain ? len : len - 60);
+      plannerChanged();
+    }
+
     function initDefaultSections() {
       lowerSections = [
         mkSec('lower', 1, 'sink', STD_W, 1, 0), mkSec('lower', 2, 'drawers', STD_W, 0, 3),
@@ -2249,146 +2664,193 @@
         mkSec('upper', 1, 'dryer', STD_W, 1, 1), mkSec('upper', 2, 'door', STD_W, 1, 0),
         mkSec('upper', 3, 'hood', STD_W, 0, 1), mkSec('upper', 4, 'side', STD_W, 1, 0)
       ];
-      el('countLowerInput').value = 4;
-      el('countUpperInput').value = 4;
+      selSec = null;
       syncWallAssignments();
       syncWallsFromSections();
-      renderSections('lower');
-      renderSections('upper');
+      renderPlanner();
       updateColorUIBadges();
     }
 
-    function changeSectionsCount(type, delta) {
-      const input = el(type === 'lower' ? 'countLowerInput' : 'countUpperInput');
-      let val = parseInt(input.value) || 4;
-      val = Math.max(1, Math.min(MAX_SECTIONS, val + delta));
-      input.value = val;
-      const arr = type === 'lower' ? lowerSections : upperSections;
-      if (val > arr.length) {
-        for (let i = arr.length + 1; i <= val; i++) arr.push(mkSec(type, i, null, STD_W, 1, 0, 'handles', 'main'));
-      } else if (val < arr.length) {
-        arr.splice(val);
-      }
-      syncWallAssignments();
-      syncWallsFromSections();
-      renderSections(type);
+    /* ---------- отрисовка ---------- */
+    function cardSvg(sec, tier) {
+      const b = techBuilder();
+      const facade = selectedFacadeColor.hex;
+      const w = Math.max(10, parseFloat(sec.width) || 50);
+      const TT = tallTopOf(Number(el('totalHeight').value) || 240);
+      let h;
+      if (tier === 'lower' && isTall(sec)) { h = TT; techTall(b, 0, w, sec, facade, 6, TT); }
+      else if (tier === 'lower') { h = 85; b.rect(0.3, -10, w - 0.6, 10, 'fill="#3a3a3f"'); techFront(b, 0, w, -h, -10, sec, 'lower', facade, 6); }
+      else { h = parseFloat(el('upperHeight').value) || 72; techFront(b, 0, w, -h, 0, sec, 'upper', facade, 6); }
+      return `<svg viewBox="0 ${-h} ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${b.uid}sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.18"/><stop offset="0.6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.10"/></linearGradient></defs>${b.out.join('')}</svg>`;
+    }
+    function cardTitle(sec, tier) { return `${tier === 'lower' ? 'Н' : 'В'}-${sec.id} · ${sec.name} · ${MM(sec.width)} мм`; }
+
+    function renderPlanner() {
+      const host = el('plannerWalls');
+      if (!host) return;
+      const hasUp = chk('hasUpperTier');
+      const LAY = layoutAll(lowerSections, hasUp ? upperSections : [], currentType);
+      const walls = wallsOfType(currentType);
+      const maxTotal = Math.max(100, ...walls.map(w => LAY[w].total));
+      const avail = Math.max(150, host.clientWidth || 320);
+      const S = (avail - 4) / maxTotal;
+      const UPH = 58, LOH = 92, GAPH = 8;
+      const boardH = hasUp ? UPH + GAPH + LOH : LOH;
+      const wname = w => (w === 'left' ? t('wallLeft') : (w === 'right' ? t('wallRight') : t('wallMain')));
+      host.innerHTML = walls.map(w => {
+        const L = LAY[w];
+        const total = L.total;
+        const xOf = r => (w === 'left' ? total - r.u1 : r.u0);
+        const card = (r, tier) => {
+          const sec = r.sec, tallCard = tier === 'lower' && isTall(sec);
+          const left = xOf(r) * S, width = (r.u1 - r.u0) * S;
+          const top = tallCard ? 0 : (tier === 'upper' ? 0 : (hasUp ? UPH + GAPH : 0));
+          const height = tallCard ? boardH : (tier === 'upper' ? UPH : LOH);
+          const sel = selSec === sec ? ' sel' : '';
+          const dim = tier === 'upper' && !hasUp ? ' hidden' : '';
+          return `<div class="pl-card${sel}${tallCard ? ' tall' : ''}${dim}" data-tier="${tier}" data-i="${secsOf(tier).indexOf(sec)}" tabindex="0" role="button" title="${esc(cardTitle(sec, tier))}" aria-label="${esc(cardTitle(sec, tier))}" style="left:${left.toFixed(1)}px;top:${top}px;width:${Math.max(8, width - 2).toFixed(1)}px;height:${height}px">${cardSvg(sec, tier)}<span class="pl-id">${tier === 'lower' ? 'Н' : 'В'}${sec.id}</span><span class="pl-w">${Math.round(Number(sec.width) || 0)}</span></div>`;
+        };
+        const cards = L.lower.map(r => card(r, 'lower')).join('') + (hasUp ? L.upper.map(r => card(r, 'upper')).join('') : '');
+        const overW = L.totalUpper > L.totalLower + 0.5 && hasUp;
+        const menuOpen = addMenuWall === w;
+        return `<div class="pl-wall" data-wall="${w}">
+          <div class="pl-wall-head"><b>${esc(wname(w))}</b><span class="pl-sum">${esc(t('plSum', { l: Math.round(L.totalLower), u: Math.round(L.totalUpper) }))}${overW ? ' · ' + esc(t('plUpperWider')) : ''}</span>
+            <button type="button" class="pl-add" onclick="toggleAddMenu('${w}')">＋ ${esc(t('plAdd'))}</button></div>
+          ${menuOpen ? addMenuHtml(w) : ''}
+          <div class="pl-board" data-wall="${w}" style="height:${boardH}px;width:${(total * S).toFixed(1)}px;${w === 'left' ? 'margin-left:auto;' : ''}">${cards}${!L.lower.length ? `<div class="pl-empty">${esc(t('plEmpty'))}</div>` : ''}</div>
+        </div>`;
+      }).join('');
+      renderPlannerEdit();
+      renderDecorUI();
+    }
+
+    function addMenuHtml(w) {
+      const chip = (tier, kind) => `<button type="button" class="pl-chip" onclick="addModule('${tier}','${kind}','${w}')">${esc(t('kind_' + kind))}</button>`;
+      const hasUp = chk('hasUpperTier');
+      return `<div class="pl-menu">
+        <div class="pl-menu-row"><span>${esc(t('plLowerGroup'))}</span>${KIND_ORDER_LOWER.filter(k => ['door', 'drawers', 'sink', 'hob'].indexOf(k) >= 0).map(k => chip('lower', k)).join('')}</div>
+        <div class="pl-menu-row"><span>${esc(t('plApplGroup'))}</span>${['oven', 'dishwasher', 'washer'].map(k => chip('lower', k)).join('')}</div>
+        <div class="pl-menu-row"><span>${esc(t('plTallGroup'))}</span>${['fridge', 'tower'].map(k => chip('lower', k)).join('')}</div>
+        ${hasUp ? `<div class="pl-menu-row"><span>${esc(t('plUpperGroup'))}</span>${KIND_UPPER.map(k => chip('upper', k)).join('')}</div>` : ''}
+      </div>`;
+    }
+    function toggleAddMenu(w) { addMenuWall = addMenuWall === w ? null : w; renderPlanner(); }
+
+    function renderPlannerEdit() {
+      const box = el('plannerEdit');
+      if (!box) return;
+      const s = selSec;
+      if (!s) { box.innerHTML = `<div class="pl-edit-hint">${esc(t('plPick'))}</div>`; return; }
+      const tier = tierOf(s);
+      const opt = (v, label, cur) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${esc(label)}</option>`;
+      const kinds = tier === 'lower' ? [].concat(KIND_LOWER, KIND_TALL) : KIND_UPPER;
+      const walls = wallsOfType(currentType);
+      const apps = appliancesOf(s);
+      const isTower = s.kind === 'tower', isFr = s.kind === 'fridge';
+      const showShelves = !isTall(s) && ['drawers', 'oven', 'dishwasher', 'washer', 'hood', 'glass', 'open'].indexOf(s.kind) < 0;
+      const showDrawers = tier === 'lower' && (s.kind === 'door' || s.kind === 'drawers' || s.kind === 'sink' || s.kind === 'hob');
+      const showGas = tier === 'upper' && ['door', 'dryer', 'hood', 'side'].indexOf(s.kind) >= 0;
+      box.innerHTML = `<div class="pl-edit">
+        <div class="pl-edit-head"><b>${tier === 'lower' ? 'Н' : 'В'}-${s.id}</b> <span>${esc(s.name)}</span></div>
+        <div class="inputs-grid">
+          <div class="field-group"><label>${esc(t('plType'))}</label>
+            <select onchange="selUpdate('kind', this.value)">${kinds.map(k => opt(k, t('kind_' + k), s.kind)).join('')}</select></div>
+          <div class="field-group"><label>${esc(t('fWidth'))}</label>
+            <div class="number-stepper"><button type="button" class="btn-step" onclick="selWidthStep(-5)">−</button><input type="number" value="${Number(s.width) || 0}" min="15" max="150" onchange="selUpdate('width', this.value)"><button type="button" class="btn-step" onclick="selWidthStep(5)">+</button></div></div>
+        </div>
+        <div class="pl-wchips">${WIDTH_CHIPS.map(w => `<button type="button" class="pl-wchip ${Math.round(s.width) === w ? 'on' : ''}" onclick="selUpdate('width', ${w})">${w}</button>`).join('')}</div>
+        <div class="inputs-grid">
+          ${isTower ? `<div class="field-group" style="grid-column: span 2;"><label>${esc(t('plTower'))}</label><select onchange="selUpdate('tw', this.value)">${TOWER_KEYS.map(k => opt(k, t('tw_' + k), s.tw || 'storage')).join('')}</select></div>` : ''}
+          ${isFr ? `<div class="field-group" style="grid-column: span 2;"><label>${esc(t('plFridge'))}</label><select onchange="selUpdate('fr', this.value)">${opt('free', t('fr_free'), s.fr || 'free')}${opt('built', t('fr_built'), s.fr || 'free')}</select></div>` : ''}
+          ${currentType !== 'straight' ? `<div class="field-group"><label>${esc(t('fWall'))}</label><select onchange="selUpdate('wall', this.value)">${walls.map(w => opt(w, w === 'left' ? t('wallLeft') : (w === 'right' ? t('wallRight') : t('wallMain')), s.wall)).join('')}</select></div>` : ''}
+          ${!isTall(s) && ['oven', 'dishwasher', 'washer', 'open', 'glass'].indexOf(s.kind) < 0 || isTall(s) ? `<div class="field-group"><label>${esc(t('fOpen'))}</label><select onchange="selUpdate('openType', this.value)">${opt('handles', t('openHandles'), s.openType)}${opt('push', t('openPush'), s.openType)}${opt('gola', t('openGola'), s.openType)}</select></div>` : ''}
+          ${showShelves ? `<div class="field-group"><label>${esc(t('fShelves'))}</label><input type="number" value="${s.shelves | 0}" min="0" max="5" onchange="selUpdate('shelves', parseInt(this.value)||0)"></div>` : ''}
+          ${showDrawers ? `<div class="field-group"><label>${esc(t('fDrawers'))}</label><input type="number" value="${s.drawers | 0}" min="0" max="4" onchange="selUpdate('drawers', parseInt(this.value)||0)"></div>` : ''}
+          ${showGas ? `<div class="field-group"><label>${esc(t('fGas'))}</label><input type="number" value="${s.gasLifts | 0}" min="0" max="2" onchange="selUpdate('gasLifts', parseInt(this.value)||0)"></div>` : ''}
+          ${apps.length ? `<div class="field-group" style="grid-column: span 2;"><label>${esc(t('plNote'))}</label><input type="text" maxlength="120" value="${esc(s.note || '')}" placeholder="${esc(t('plNotePh'))}" onchange="selUpdate('note', this.value.slice(0,120))"></div>` : ''}
+        </div>
+        <div class="pl-edit-actions">
+          <button type="button" class="pl-act" onclick="moveSelected(-1)">◀ ${esc(t('plLeft'))}</button>
+          <button type="button" class="pl-act" onclick="moveSelected(1)">${esc(t('plRight'))} ▶</button>
+          <button type="button" class="pl-act" onclick="duplicateSelected()">⧉ ${esc(t('plDup'))}</button>
+          <button type="button" class="pl-act danger" onclick="removeSelected()">✕ ${esc(t('plDel'))}</button>
+        </div>
+      </div>`;
+    }
+
+    /* ---------- интерьер ---------- */
+    function renderDecorUI() {
+      const box = el('decorBox');
+      if (!box) return;
+      const d = decorClean(decorState), isl = chk('hasIsland');
+      const step = (key, label, val, max, disabled, note) => `<div class="decor-row ${disabled ? 'disabled' : ''}"><span>${esc(label)}${note ? ` <em>(${esc(note)})</em>` : ''}</span>
+        <div class="number-stepper"><button type="button" class="btn-step" ${disabled ? 'disabled' : ''} onclick="stepDecor('${key}', -1)">−</button><input type="number" value="${val}" readonly><button type="button" class="btn-step" ${disabled ? 'disabled' : ''} onclick="stepDecor('${key}', 1)">+</button></div></div>`;
+      box.innerHTML = step('lamps', t('dcLamps'), d.lamps, 6, false, isl ? t('dcOverIsland') : t('dcOverCounter')) +
+        step('stools', t('dcStools'), d.stools, 8, !isl, isl ? '' : t('dcNeedIsland')) +
+        `<div class="options-grid"><label class="option-chip"><input type="checkbox" ${d.plant ? 'checked' : ''} onchange="toggleDecor('plant')"><span>${esc(t('dcPlant'))}</span></label>
+         <label class="option-chip"><input type="checkbox" ${d.fplant ? 'checked' : ''} onchange="toggleDecor('fplant')"><span>${esc(t('dcFloorPlant'))}</span></label></div>`;
+    }
+    function stepDecor(key, d) {
+      const cur = decorClean(decorState);
+      cur[key] = Math.max(0, cur[key] + d);
+      decorState = decorClean(cur);
+      renderDecorUI();
       updateCalculator();
     }
+    function toggleDecor(key) { decorState = decorClean(Object.assign({}, decorState, { [key]: !decorClean(decorState)[key] })); updateCalculator(); }
 
-    function renderSections(type) {
-      const container = el(type === 'lower' ? 'lowerSectionsContainer' : 'upperSectionsContainer');
-      const arr = type === 'lower' ? lowerSections : upperSections;
-      const tag = type === 'lower' ? 'Н-' : 'В-';
-      container.innerHTML = arr.map((sec, idx) => `
-        <div class="section-card-item">
-          <div>
-            <div class="section-card-header">
-              <span>${esc(t('cab'))} [${tag}${sec.id}]</span>
-              <span style="color:var(--text-muted)">${esc(type === 'lower' ? t('tierLower') : t('tierUpper'))}</span>
-            </div>
-            <div class="inputs-grid" style="margin-bottom:8px;">
-              <div class="field-group">
-                <label>${esc(t('fName'))}</label>
-                <input type="text" value="${esc(sec.name)}" maxlength="60" onchange="updateSec('${type}', ${idx}, 'name', this.value)">
-              </div>
-              <div class="field-group">
-                <label>${esc(t('fWidth'))}</label>
-                <input type="number" value="${Number(sec.width) || 0}" min="20" max="150" oninput="updateSec('${type}', ${idx}, 'width', parseFloat(this.value)||0)">
-              </div>
-            </div>
-            ${currentType !== 'straight' ? `
-            <div class="field-group" style="margin-bottom:8px;">
-              <label>${esc(t('fWall'))}</label>
-              <select onchange="updateSec('${type}', ${idx}, 'wall', this.value)">
-                <option value="main" ${sec.wall === 'main' ? 'selected' : ''}>${esc(t('wallMain'))}</option>
-                <option value="left" ${sec.wall === 'left' ? 'selected' : ''}>${esc(t('wallLeft'))}</option>
-                ${currentType === 'u-shape' ? `<option value="right" ${sec.wall === 'right' ? 'selected' : ''}>${esc(t('wallRight'))}</option>` : ''}
-              </select>
-            </div>` : ''}
-            <div class="inputs-grid" style="margin-bottom:0;">
-              <div class="field-group">
-                <label>${esc(t('fShelves'))}</label>
-                <input type="number" value="${sec.shelves | 0}" min="0" max="5" oninput="updateSec('${type}', ${idx}, 'shelves', parseInt(this.value)||0)">
-              </div>
-              ${type === 'lower' ? `
-              <div class="field-group">
-                <label>${esc(t('fDrawers'))}</label>
-                <input type="number" value="${sec.drawers | 0}" min="0" max="4" oninput="updateSec('${type}', ${idx}, 'drawers', parseInt(this.value)||0)">
-              </div>` : `
-              <div class="field-group">
-                <label>${esc(t('fGas'))}</label>
-                <input type="number" value="${sec.gasLifts | 0}" min="0" max="2" oninput="updateSec('${type}', ${idx}, 'gasLifts', parseInt(this.value)||0)">
-              </div>`}
-              <div class="field-group" style="grid-column: span 2;">
-                <label>${esc(t('fOpen'))}</label>
-                <select onchange="updateSec('${type}', ${idx}, 'openType', this.value)">
-                  <option value="handles" ${sec.openType === 'handles' ? 'selected' : ''}>${esc(t('openHandles'))}</option>
-                  <option value="push" ${sec.openType === 'push' ? 'selected' : ''}>${esc(t('openPush'))}</option>
-                  <option value="gola" ${sec.openType === 'gola' ? 'selected' : ''}>${esc(t('openGola'))}</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="section-mini-svg"><svg viewBox="0 0 140 140" id="cadMini_${type}_${idx}"></svg></div>
-        </div>`).join('');
-      drawAllCadMinis();
-    }
-
-    function updateSec(type, idx, field, val) {
-      const arr = type === 'lower' ? lowerSections : upperSections;
-      if (!arr[idx]) return;
-      if (field === 'name') { arr[idx].autoName = false; val = String(val).slice(0, 60); }
-      arr[idx][field] = val;
-      if (field === 'width' || field === 'wall') syncWallsFromSections();
-      drawAllCadMinis();
-      updateCalculator();
-    }
-
-    /* Клиент ввёл длину стены — раскладываем шкафы по 60 см (остаток — узкий шкаф или прибавка к последнему) */
-    function standardWidths(len) {
-      len = Math.round(len);
-      const n = Math.floor(len / STD_W), r = len - n * STD_W;
-      const w = new Array(n).fill(STD_W);
-      if (r >= 15) w.push(r);
-      else if (w.length) w[w.length - 1] += r;
-      else w.push(Math.max(15, len));
-      return w;
-    }
-    function fillWall(wall, len) {
-      const widths = standardWidths(len);
-      ['lower', 'upper'].forEach(tier => {
-        const arr = tier === 'lower' ? lowerSections : upperSections;
-        const wallOf = s => (currentType === 'straight' ? 'main' : (s.wall || 'main'));
-        const parts = { left: [], main: [], right: [] };
-        arr.forEach(s => parts[wallOf(s)].push(s));
-        const old = parts[wall];
-        const open = old[0] ? old[0].openType : 'handles';
-        parts[wall] = widths.map((w, i) => {
-          const s = old[i] ? Object.assign({}, old[i]) : mkSec(tier, 0, 'door', w, 1, 0, open, wall);
-          s.width = w;
-          s.wall = wall;
-          return s;
-        });
-        const merged = [...parts.left, ...parts.main, ...parts.right].slice(0, MAX_SECTIONS);
-        merged.forEach((s, i) => { s.id = i + 1; if (s.autoName) s.name = defaultModuleName(s.kind, tier, s.id); });
-        if (tier === 'lower') lowerSections = merged; else upperSections = merged;
+    /* ---------- перетаскивание карточек (мышь и касание) ---------- */
+    (function initPlannerDrag() {
+      let drag = null;
+      document.addEventListener('pointerdown', e => {
+        const card = e.target.closest && e.target.closest('.pl-card');
+        if (!card || e.button > 0) return;
+        const tier = card.dataset.tier, sec = secsOf(tier)[+card.dataset.i];
+        if (!sec) return;
+        drag = { card, tier, sec, x0: e.clientX, y0: e.clientY, moved: false, id: e.pointerId };
       });
-      el('countLowerInput').value = lowerSections.length;
-      el('countUpperInput').value = upperSections.length;
-    }
-    function onWallInputManual(wallId) {
-      const input = el(wallId);
-      let len = parseFloat(input.value) || 0;
-      const isMain = wallId === 'mainWall';
-      const min = isMain ? 30 : 75;
-      if (len < min) { len = min; input.value = min; }
-      const wall = isMain ? 'main' : (wallId === 'leftWall' ? 'left' : 'right');
-      fillWall(wall, isMain ? len : len - 60);
-      syncWallAssignments();
-      renderSections('lower');
-      renderSections('upper');
-      updateCalculator();
-    }
+      document.addEventListener('pointermove', e => {
+        if (!drag || e.pointerId !== drag.id) return;
+        const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+        if (!drag.moved && Math.hypot(dx, dy) < 7) return;
+        if (!drag.moved) { drag.moved = true; drag.card.classList.add('dragging'); try { drag.card.setPointerCapture(e.pointerId); } catch (err) {} }
+        drag.card.style.transform = `translate(${dx}px, ${dy}px)`;
+        document.querySelectorAll('.pl-board.drop').forEach(b => b.classList.remove('drop'));
+        const under = document.elementsFromPoint(e.clientX, e.clientY).find(n => n.classList && n.classList.contains('pl-board'));
+        if (under) under.classList.add('drop');
+      });
+      const finish = e => {
+        if (!drag || e.pointerId !== drag.id) return;
+        const d = drag; drag = null;
+        document.querySelectorAll('.pl-board.drop').forEach(b => b.classList.remove('drop'));
+        if (!d.moved) { selSec = d.sec; renderPlanner(); return; }
+        d.card.classList.remove('dragging'); d.card.style.transform = '';
+        const board = document.elementsFromPoint(e.clientX, e.clientY).find(n => n.classList && n.classList.contains('pl-board'));
+        if (!board) { renderPlanner(); return; }
+        const wall = board.dataset.wall;
+        if (!wallValid(wall)) { renderPlanner(); return; }
+        // новое место — по положению курсора среди карточек того же ряда
+        const rect = board.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const same = secsOf(d.tier).filter(s => s !== d.sec && s.wall === wall);
+        const cards = Array.prototype.slice.call(board.querySelectorAll(`.pl-card[data-tier="${d.tier}"]`)).filter(c => secsOf(d.tier)[+c.dataset.i] !== d.sec);
+        let idx = same.length;
+        for (let k = 0; k < cards.length; k++) {
+          const cx = cards[k].offsetLeft + cards[k].offsetWidth / 2;
+          if (px < cx) { idx = same.indexOf(secsOf(d.tier)[+cards[k].dataset.i]); break; }
+        }
+        placeAt(d.sec, wall, idx < 0 ? same.length : idx);
+      };
+      document.addEventListener('pointerup', finish);
+      document.addEventListener('pointercancel', e => { if (drag && e.pointerId === drag.id) { drag.card.classList.remove('dragging'); drag.card.style.transform = ''; drag = null; renderPlanner(); } });
+      document.addEventListener('keydown', e => {
+        const card = e.target.closest && e.target.closest('.pl-card');
+        if (!card) return;
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selSec = secsOf(card.dataset.tier)[+card.dataset.i]; renderPlanner(); }
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); selSec = secsOf(card.dataset.tier)[+card.dataset.i]; moveSelected(e.key === 'ArrowLeft' ? -1 : 1); }
+      });
+      window.addEventListener('resize', () => { if (typeof renderPlanner === 'function' && el('plannerWalls') && el('plannerWalls').innerHTML) renderPlanner(); });
+    })();
 
     function updateTypeUI() {
       document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === currentType));
@@ -2403,21 +2865,21 @@
     }
 
     function setKitchenType(type) {
+      const prev = currentType;
       currentType = type;
       updateTypeUI();
-      syncWallAssignments();
-      syncWallsFromSections();
-      renderSections('lower');
-      renderSections('upper');
-      updateCalculator();
+      if (prev === 'straight' && type !== 'straight') defaultSplit();
+      else if (prev !== 'u-shape' && type === 'u-shape') { [lowerSections, upperSections].forEach(arr => { const m = arr.filter(s => s.wall === 'main'); if (m.length >= 2) m[m.length - 1].wall = 'right'; }); }
+      plannerChanged();
     }
 
     function toggleUpperTierControls() {
-      el('upperTierControls').style.display = chk('hasUpperTier') ? 'block' : 'none';
+      renderPlanner();
       updateCalculator();
     }
     function toggleIslandOptions() {
       updateIslandUI();
+      renderDecorUI();
       updateCalculator();
     }
     function updateIslandUI() {
@@ -2426,8 +2888,21 @@
       el('islandToggle').classList.toggle('active', on);
       el('islandToggle').querySelector('.island-check').textContent = on ? '✓' : '＋';
     }
-    function toggleDetailMode() {
-      el('sectionsDetail').style.display = chk('detailMode') ? 'block' : 'none';
+    /* Клиент ввёл длину стены — раскладываем шкафы по 60 см (остаток — узкий шкаф или прибавка к последнему) */
+    function standardWidths(len) {
+      len = Math.round(len);
+      const n = Math.floor(len / STD_W), r = len - n * STD_W;
+      const w = new Array(n).fill(STD_W);
+      if (r >= 15) w.push(r);
+      else if (w.length) w[w.length - 1] += r;
+      else w.push(Math.max(15, len));
+      return w;
+    }
+    function updateSec(type, idx, field, val) {   // совместимость со старым кодом (лист замера)
+      const arr = secsOf(type);
+      if (!arr[idx]) return;
+      arr[idx][field] = val;
+      plannerChanged();
     }
 
     /* ===================== КАТАЛОГ ЦВЕТОВ ===================== */
@@ -2575,15 +3050,13 @@
       const UD = Math.max(20, Math.min(60, st.upperD || 35));
       const UH = Math.max(30, Math.min(130, st.upperH || 72));
       const roomH = Math.max(st.roomH || 240, UB + UH + 15);
+      const TT = tallTopOf(roomH);
       const type = st.type;
-      const wallOf = s => (type === 'straight' ? 'main' : (s.wall || 'main'));
       const lower = st.lower || [], upper = st.hasUpper ? (st.upper || []) : [];
-      const pick = (arr, w) => arr.filter(s => wallOf(s) === w && (w !== 'right' || type === 'u-shape'));
-      const lowMain = pick(lower, 'main'), lowLeft = pick(lower, 'left'), lowRight = pick(lower, 'right');
-      const upMain = pick(upper, 'main'), upLeft = pick(upper, 'left'), upRight = pick(upper, 'right');
-      const sumW = a => a.reduce((acc, s) => acc + (parseFloat(s.width) || 0), 0);
-      const W = Math.max(60, sumW(lowMain), sumW(upMain));
-      const sideMax = Math.max(sumW(lowLeft), sumW(lowRight), sumW(upLeft), sumW(upRight));
+      const LAY = layoutAll(lower, upper, type);
+      const W = Math.max(60, LAY.main.total);
+      const sideMax = Math.max(LAY.left.total, LAY.right.total);
+      const hasRun = k => LAY[k].lower.length > 0 || LAY[k].upper.length > 0;
       let zFront = LD + sideMax;
       let isl = null;
       if (st.island) {
@@ -2592,11 +3065,13 @@
         isl = { x0: W / 2 - L / 2, x1: W / 2 + L / 2, z0, z1: z0 + Wd };
         zFront = Math.max(zFront, isl.z1);
       }
+      const DEC = decorSpots(st, W, isl);
+      if (DEC.stools.length) zFront = Math.max(zFront, isl.z1 + 55);
       const floorZ = zFront + 60;
       const view = st.view || {};
       let camX = W / 2 + (view.shift || 0) * W;
-      if (lowLeft.length || upLeft.length) camX = Math.max(camX, LD + 15);
-      if (lowRight.length || upRight.length) camX = Math.min(camX, W - LD - 15);
+      if (hasRun('left')) camX = Math.max(camX, LD + 15);
+      if (hasRun('right')) camX = Math.min(camX, W - LD - 15);
       const cam = { x: camX, y: view.camY || 165, z: floorZ + Math.max(W, 260) * 1.15 + 120 };
       const P = (x, y, z) => { const d = Math.max(1, cam.z - z); return [(x - cam.x) / d * 1000, -(y - cam.y) / d * 1000]; };
       const shapes = [];
@@ -2605,6 +3080,7 @@
       const pt = (run, u, v, d) => [run.o[0] + u * run.u[0] + d * run.n[0], v, run.o[2] + u * run.u[2] + d * run.n[2]];
       const quad = (run, u0, u1, v0, v1, d) => [pt(run, u0, v0, d), pt(run, u1, v0, d), pt(run, u1, v1, d), pt(run, u0, v1, d)];
       const flat = (run, u0, u1, d0, d1, y) => [pt(run, u0, y, d0), pt(run, u1, y, d0), pt(run, u1, y, d1), pt(run, u0, y, d1)];
+      const ring = (run, uc, vc, d, r, n, ry) => { const a = []; for (let k = 0; k < n; k++) { const t = k / n * Math.PI * 2; a.push(pt(run, uc + Math.cos(t) * r, vc + Math.sin(t) * (ry || r), d)); } return a; };
 
       const facade = st.facade || '#f8fafc';
       const bodyCol = st.body || '#ffffff';
@@ -2613,6 +3089,7 @@
       const edgeCol = darkFacade ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.28)';
       const handleCol = darkFacade ? '#cbd5e1' : '#6b7280';
       const golaCol = '#1f2328';
+      const STEEL = '#d3d7db', STEEL_D = '#9aa3ad', GLASS = '#1e2226';
 
       // --- стены, пол, фартук
       const xL = type === 'straight' ? -260 : 0;
@@ -2622,20 +3099,27 @@
       if (type === 'u-shape') poly([[W, 0, 0], [W, 0, floorZ], [W, roomH, floorZ], [W, roomH, 0]], '#e2d8ca', { fit: false });
       poly([[xL, 0, 0], [xR, 0, 0], [xR, 0, floorZ], [xL, 0, floorZ]], '#ccb08d', { fit: false });
       for (let x = Math.ceil(xL / 22) * 22; x <= xR; x += 22) seg([x, 0, 0], [x, 0, floorZ], 'rgba(90,60,30,0.10)', 1);
-      // фартук
-      poly([[0, TOPY, 0.2], [W, TOPY, 0.2], [W, UB, 0.2], [0, UB, 0.2]], '#f8f6f2', { fit: false, stroke: 'rgba(0,0,0,0.05)' });
-      for (let x = 15; x < W; x += 15) seg([x, TOPY, 0.3], [x, UB, 0.3], 'rgba(0,0,0,0.06)', 1);
-      for (let y = TOPY + 11; y < UB; y += 11) seg([0, y, 0.3], [W, y, 0.3], 'rgba(0,0,0,0.06)', 1);
-      if (lowLeft.length) poly([[0.2, TOPY, 0], [0.2, TOPY, LD + sumW(lowLeft)], [0.2, UB, LD + sumW(lowLeft)], [0.2, UB, 0]], '#f1eee8', { fit: false });
-      if (lowRight.length) poly([[W - 0.2, TOPY, 0], [W - 0.2, TOPY, LD + sumW(lowRight)], [W - 0.2, UB, LD + sumW(lowRight)], [W - 0.2, UB, 0]], '#f1eee8', { fit: false });
+      // фартук (только над столешницей, не за высокими модулями)
+      const mainRun0 = { o: [0, 0, 0], u: [1, 0, 0], n: [0, 0, 1], side: false };
+      const apronSegs = [];
+      (function () {
+        let a = null;
+        LAY.main.lower.forEach(r => { if (isTall(r.sec)) { a = null; } else if (!a) { a = { u0: r.u0, u1: r.u1 }; apronSegs.push(a); } else a.u1 = r.u1; });
+        if (!LAY.main.lower.length) apronSegs.push({ u0: 0, u1: W });
+      })();
+      apronSegs.forEach(sg => {
+        poly(quad(mainRun0, sg.u0, sg.u1, TOPY, UB, 0.2), '#f8f6f2', { fit: false, stroke: 'rgba(0,0,0,0.05)' });
+        for (let x = Math.ceil(sg.u0 / 15) * 15; x < sg.u1; x += 15) seg([x, TOPY, 0.3], [x, UB, 0.3], 'rgba(0,0,0,0.06)', 1);
+      });
+      for (let y = TOPY + 11; y < UB; y += 11) apronSegs.forEach(sg => seg([sg.u0, y, 0.3], [sg.u1, y, 0.3], 'rgba(0,0,0,0.06)', 1));
+      if (LAY.left.lower.length) poly([[0.2, TOPY, 0], [0.2, TOPY, LD + LAY.left.totalLower], [0.2, UB, LD + LAY.left.totalLower], [0.2, UB, 0]], '#f1eee8', { fit: false });
+      if (LAY.right.lower.length) poly([[W - 0.2, TOPY, 0], [W - 0.2, TOPY, LD + LAY.right.totalLower], [W - 0.2, UB, LD + LAY.right.totalLower], [W - 0.2, UB, 0]], '#f1eee8', { fit: false });
 
-      // --- фасад одного шкафа
-      function front(run, u0, u1, v0, v1, d, sec, tier) {
-        const g = 0.4, w = u1 - u0;
-        poly(quad(run, u0 + g, u1 - g, v0, v1, d), facade, { stroke: edgeCol, shade: true, side: run.side });
+      // --- ручки и стыки одного фасада
+      function handlesOf(run, u0, u1, v0, v1, d, sec, tier) {
+        const w = u1 - u0, uc = (u0 + u1) / 2;
         const L = (ua, va, ub, vb, col, sw) => seg(pt(run, ua, va, d + 0.05), pt(run, ub, vb, d + 0.05), col, sw);
         const open = sec.openType || 'handles';
-        const uc = (u0 + u1) / 2;
         if (tier === 'lower' && open === 'gola') poly(quad(run, u0, u1, v1 - 3.5, v1, d + 0.05), golaCol, { fit: false });
         const drawers = tier === 'lower' ? (sec.drawers | 0) : 0;
         if (drawers > 0) {
@@ -2665,77 +3149,185 @@
         }
       }
 
+      // --- фасад одного шкафа (обычного, не высокого)
+      function front(run, u0, u1, v0, v1, d, sec, tier) {
+        const g = 0.4, w = u1 - u0, uc = (u0 + u1) / 2;
+        const k = sec.kind;
+        const L = (ua, va, ub, vb, col, sw) => seg(pt(run, ua, va, d + 0.08), pt(run, ub, vb, d + 0.08), col, sw);
+        if (tier === 'upper' && k === 'open') {
+          // открытые полки: задняя стенка и доски
+          poly(quad(run, u0 + g, u1 - g, v0, v1, d - UD + 1), shadeColor(bodyCol, -0.1), { stroke: edgeCol, side: run.side });
+          const n = 2;
+          for (let i = 0; i <= n + 1; i++) { const vy = v0 + (v1 - v0) * i / (n + 1); poly(quad(run, u0 + g, u1 - g, vy - 0.9, vy + 0.9, d), shadeColor(facade, -0.04), { stroke: edgeCol, fit: false }); }
+          return;
+        }
+        if (tier === 'lower' && k === 'washer') {
+          poly(quad(run, u0 + g, u1 - g, v0, v1, d), '#f3f4f6', { stroke: STEEL_D, shade: true, side: run.side });
+          poly(quad(run, u0 + g + 1, u1 - g - 1, v1 - 7, v1 - 1.5, d + 0.05), '#dfe3e7', { fit: false });
+          const vc = v0 + (v1 - v0) * 0.40, r = Math.min(w * 0.34, 20);
+          poly(ring(run, uc, vc, d + 0.08, r, 18), '#aab2ba', { stroke: '#7b8591' });
+          poly(ring(run, uc, vc, d + 0.1, r * 0.72, 18), '#38444e', { stroke: '#1f2933' });
+          poly(ring(run, uc - r * 0.2, vc + r * 0.22, d + 0.12, r * 0.28, 10), 'rgba(255,255,255,0.28)', { fit: false });
+          return;
+        }
+        if (tier === 'lower' && k === 'dishwasher') {
+          poly(quad(run, u0 + g, u1 - g, v0, v1, d), facade, { stroke: edgeCol, shade: true, side: run.side });
+          poly(quad(run, u0 + g + 0.5, u1 - g - 0.5, v1 - 5, v1 - 0.8, d + 0.06), '#262b30', { fit: false });
+          for (let i = 0; i < 3; i++) poly(ring(run, uc - 5 + i * 5, v1 - 2.9, d + 0.1, 0.9, 6), '#9aa3ad', { fit: false });
+          return;
+        }
+        if (tier === 'lower' && k === 'oven') {
+          // духовой шкаф в нижнем шкафу: ящик внизу, духовка сверху
+          const ovB = v0 + (v1 - v0) * 0.22;
+          poly(quad(run, u0 + g, u1 - g, v0, ovB - 0.3, d), facade, { stroke: edgeCol, shade: true, side: run.side });
+          L(uc - Math.min(12, w * 0.25), ovB - 4, uc + Math.min(12, w * 0.25), ovB - 4, handleCol, 2.2);
+          poly(quad(run, u0 + g, u1 - g, ovB, v1, d), '#20252a', { stroke: '#0e1114', shade: true, side: run.side });
+          poly(quad(run, u0 + w * 0.12, u1 - w * 0.12, ovB + 3, v1 - 12, d + 0.06), GLASS, { stroke: '#3b444c', fit: false });
+          poly(quad(run, u0 + w * 0.28, u1 - w * 0.28, v1 - 8, v1 - 5, d + 0.08), '#0a0c0e', { fit: false });
+          L(u0 + 5, v1 - 14, u1 - 5, v1 - 14, '#c3cad0', 2.4);
+          return;
+        }
+        poly(quad(run, u0 + g, u1 - g, v0, v1, d), tier === 'upper' && k === 'glass' ? shadeColor(facade, 0.0) : facade, { stroke: edgeCol, shade: true, side: run.side });
+        if (tier === 'upper' && k === 'glass') {
+          poly(quad(run, u0 + 2.2, u1 - 2.2, v0 + 2.2, v1 - 2.2, d + 0.06), 'rgba(176,208,226,0.55)', { stroke: 'rgba(255,255,255,0.7)', fit: false });
+          const hw = Math.min(8, w * 0.2);
+          L(uc - hw, v0 + 5, uc + hw, v0 + 5, handleCol, 2.2);
+          return;
+        }
+        handlesOf(run, u0, u1, v0, v1, d, sec, tier);
+      }
+
+      // --- высокий модуль: холодильник или пенал до потолка
+      function tallFront(run, u0, u1, sec) {
+        const g = 0.4, w = u1 - u0, uc = (u0 + u1) / 2, d = LD;
+        const open = sec.openType || 'handles';
+        const L = (ua, va, ub, vb, col, sw) => seg(pt(run, ua, va, d + 0.08), pt(run, ub, vb, d + 0.08), col, sw);
+        const door = (a, b, tie) => {
+          poly(quad(run, u0 + g, u1 - g, a, b - 0.3, d), facade, { stroke: edgeCol, shade: true, side: run.side });
+          if (open === 'handles') {
+            if (tie === 'drawer') { const hw = Math.min(12, w * 0.25); L(uc - hw, b - Math.min(6, (b - a) / 3), uc + hw, b - Math.min(6, (b - a) / 3), handleCol, 2.2); }
+            else if (w >= 45) { L(uc, a + 0.5, uc, b - 1, edgeCol, 1); L(uc - 3.5, a + 6, uc - 3.5, Math.min(a + 22, b - 4), handleCol, 2.2); L(uc + 3.5, a + 6, uc + 3.5, Math.min(a + 22, b - 4), handleCol, 2.2); }
+            else L(u1 - 4, a + 6, u1 - 4, Math.min(a + 24, b - 4), handleCol, 2.2);
+          } else if (open === 'gola') poly(quad(run, u0, u1, b - 3, b, d + 0.05), golaCol, { fit: false });
+        };
+        if (sec.kind === 'fridge') {
+          const built = sec.fr === 'built';
+          const y0 = PL, y1 = PL + (built ? 178 : FRIDGE_H), split = y0 + (y1 - y0) * 0.34;
+          if (built) {
+            door(y0, split, 'door');
+            door(split, y1, 'door');
+          } else {
+            poly(quad(run, u0 + 0.6, u1 - 0.6, y0, y1, d), STEEL, { stroke: STEEL_D, shade: true, side: run.side });
+            L(u0 + 0.8, split, u1 - 0.8, split, STEEL_D, 1.4);
+            L(u0 + 5, split + 8, u0 + 5, split + 42, '#8f98a2', 2.6);
+            L(u0 + 5, split - 30, u0 + 5, split - 6, '#8f98a2', 2.6);
+            poly(quad(run, uc - 6, uc + 6, y1 - 14, y1 - 9, d + 0.1), '#2a3036', { fit: false });
+          }
+          // антресоль над холодильником
+          const a0 = y1 + 2;
+          if (TT - a0 > 6) door(a0, TT, 'door');
+          return;
+        }
+        towerBands(sec.tw, TT).forEach(bd => {
+          const a = bd.y0 === 10 ? PL : bd.y0, b = bd.y1;
+          if (bd.ty === 'door' || bd.ty === 'drawer') { door(a, b, bd.ty); return; }
+          if (bd.ty === 'oven') {
+            poly(quad(run, u0 + g, u1 - g, a, b - 0.3, d), '#20252a', { stroke: '#0e1114', shade: true, side: run.side });
+            poly(quad(run, u0 + w * 0.1, u1 - w * 0.1, a + 4, b - 14, d + 0.06), GLASS, { stroke: '#3b444c', fit: false });
+            poly(quad(run, u0 + w * 0.3, u1 - w * 0.3, b - 9, b - 5.5, d + 0.08), '#0a0c0e', { fit: false });
+            for (let i = 0; i < 3; i++) poly(ring(run, u0 + w * (0.22 + i * 0.28), b - 3.0, d + 0.1, 1.5, 8), '#9aa3ad', { fit: false });
+            L(u0 + 5, b - 17, u1 - 5, b - 17, '#c3cad0', 2.6);
+            return;
+          }
+          // микроволновая печь
+          poly(quad(run, u0 + g, u1 - g, a, b - 0.3, d), '#2a3036', { stroke: '#0e1114', shade: true, side: run.side });
+          poly(quad(run, u0 + 2, u0 + w * 0.74, a + 3, b - 3, d + 0.06), GLASS, { stroke: '#4a545d', fit: false });
+          poly(quad(run, u0 + w * 0.8, u1 - 2.5, b - 11, b - 4, d + 0.07), '#0f1215', { fit: false });
+          for (let i = 0; i < 2; i++) poly(ring(run, u0 + w * 0.87, a + 6 + i * 6, d + 0.1, 1.6, 8), '#9aa3ad', { fit: false });
+          L(u0 + w * 0.77, a + 4, u0 + w * 0.77, b - 4, '#c3cad0', 2.2);
+        });
+      }
+
       function makeRun(kind, depthStart) {
         if (kind === 'main') return { o: [0, 0, 0], u: [1, 0, 0], n: [0, 0, 1], side: false };
         if (kind === 'left') return { o: [0, 0, depthStart], u: [0, 0, 1], n: [1, 0, 0], side: true };
         return { o: [W, 0, depthStart], u: [0, 0, 1], n: [-1, 0, 0], side: true };
       }
-      // левая стена: первый в списке шкаф — дальний от угла
-      const ordered = (arr, kind) => (kind === 'left' ? arr.slice().reverse() : arr);
 
       // --- подсветка: свет под верхними шкафами на фартуке и на полу у цоколя
       const led = st.led && st.led.level > 0 ? st.led : null;
       const warm = led ? (led.level === 2 ? '#fff1cf' : '#ffd978') : '#ffd978';
       if (led && led.work) {
-        [['main', upMain], ['left', upLeft], ['right', upRight]].forEach(([kind, arr]) => {
-          if (!arr.length) return;
-          const run = makeRun(kind, UD), tot = sumW(arr);
-          poly(quad(run, 0, tot, UB - 34, UB, 0.45), `url(#${uid}gl)`, { fit: false });
-          seg(pt(run, 0.5, UB - 0.6, UD - 1), pt(run, tot - 0.5, UB - 0.6, UD - 1), '#fffbe3', 3);
+        ['main', 'left', 'right'].forEach(kind => {
+          const Lr = LAY[kind]; if (!Lr.upper.length) return;
+          const run = makeRun(kind, UD);
+          Lr.upper.forEach(r => {
+            poly(quad(run, r.u0, r.u1, UB - 34, UB, 0.45), `url(#${uid}gl)`, { fit: false });
+            seg(pt(run, r.u0 + 0.5, UB - 0.6, UD - 1), pt(run, r.u1 - 0.5, UB - 0.6, UD - 1), '#fffbe3', 3);
+          });
         });
       }
       if (led && led.plinth) {
-        [['main', lowMain], ['left', lowLeft], ['right', lowRight]].forEach(([kind, arr]) => {
-          if (!arr.length) return;
-          const run = makeRun(kind, LD), tot = sumW(arr);
-          poly(flat(run, 0, tot, LD - 4, LD + 16, 0.1), `url(#${uid}gl)`, { fit: false });
+        ['main', 'left', 'right'].forEach(kind => {
+          const Lr = LAY[kind]; if (!Lr.lower.length) return;
+          const run = makeRun(kind, LD);
+          poly(flat(run, 0, Lr.totalLower, LD - 4, LD + 16, 0.1), `url(#${uid}gl)`, { fit: false });
         });
       }
 
       // --- верхние шкафы
       const hobInfo = { run: null };
-      function upperRun(arr, kind) {
-        if (!arr.length) return;
+      function upperRun(kind) {
+        const Lr = LAY[kind];
+        if (!Lr.upper.length) return;
         const run = makeRun(kind, UD);
-        if (kind === 'main') poly(quad(run, 0, sumW(arr), UB - 14, UB, 0.4), 'rgba(0,0,0,0.07)', { fit: false });
-        let u = 0;
-        ordered(arr, kind).forEach(sec => {
-          const w = parseFloat(sec.width) || 0;
-          front(run, u, u + w, UB, UB + UH, UD, sec, 'upper');
-          u += w;
+        Lr.upper.forEach(r => {
+          if (kind === 'main') poly(quad(run, r.u0, r.u1, UB - 14, UB, 0.4), 'rgba(0,0,0,0.07)', { fit: false });
+          front(run, r.u0, r.u1, UB, UB + UH, UD, r.sec, 'upper');
+          if (cam.y > UB + UH) poly(flat(run, r.u0, r.u1, 0, UD, UB + UH), shadeColor(bodyCol, 0.04), { stroke: 'rgba(0,0,0,0.12)' });
         });
-        if (kind !== 'main') poly([pt(run, u, UB, 0), pt(run, u, UB, UD), pt(run, u, UB + UH, UD), pt(run, u, UB + UH, 0)], shadeColor(bodyCol, -0.12), { stroke: 'rgba(0,0,0,0.15)' });
-        if (kind === 'main' && cam.x > u + 1 && type !== 'u-shape') poly([pt(run, u, UB, 0), pt(run, u, UB, UD), pt(run, u, UB + UH, UD), pt(run, u, UB + UH, 0)], shadeColor(bodyCol, -0.12), { stroke: 'rgba(0,0,0,0.15)' });
-        if (cam.y > UB + UH) poly(flat(run, 0, u, 0, UD, UB + UH), shadeColor(bodyCol, 0.04), { stroke: 'rgba(0,0,0,0.12)' });
+        const u = Lr.upper[Lr.upper.length - 1].u1;
+        const end = () => poly([pt(run, u, UB, 0), pt(run, u, UB, UD), pt(run, u, UB + UH, UD), pt(run, u, UB + UH, 0)], shadeColor(bodyCol, -0.12), { stroke: 'rgba(0,0,0,0.15)' });
+        if (kind !== 'main') end();
+        else if (cam.x > u + 1 && type !== 'u-shape') end();
       }
-      upperRun(upMain, 'main');
-      upperRun(upLeft, 'left');
-      upperRun(upRight, 'right');
+      upperRun('main');
+      upperRun('left');
+      upperRun('right');
 
-      // --- нижние шкафы, столешница, мойка и варочная панель
-      function lowerRun(arr, kind) {
-        if (!arr.length) return;
+      // --- нижние шкафы, высокие модули, столешница, мойка и варочная панель
+      function lowerRun(kind) {
+        const Lr = LAY[kind];
+        if (!Lr.lower.length) return;
         const run = makeRun(kind, LD);
-        const total = sumW(arr);
+        const total = Lr.totalLower;
         poly(quad(run, 0, total, 0, PL, LD - 5), '#3a3a3f', {});
-        let u = 0;
         const marks = [];
-        ordered(arr, kind).forEach(sec => {
-          const w = parseFloat(sec.width) || 0;
-          front(run, u, u + w, PL, LTOP, LD, sec, 'lower');
-          if (sec.kind === 'sink' || sec.kind === 'hob') marks.push({ kind: sec.kind, u0: u, u1: u + w });
-          u += w;
+        Lr.lower.forEach(r => {
+          if (isTall(r.sec)) { tallFront(run, r.u0, r.u1, r.sec); return; }
+          front(run, r.u0, r.u1, PL, LTOP, LD, r.sec, 'lower');
+          if (r.sec.kind === 'sink' || r.sec.kind === 'hob') marks.push({ kind: r.sec.kind, u0: r.u0, u1: r.u1 });
         });
+        // видимый торец в конце ряда
+        const last = Lr.lower[Lr.lower.length - 1];
+        const endTop = isTall(last.sec) ? TT : LTOP;
         if (kind !== 'main' || (cam.x > total + 1 && type !== 'u-shape')) {
-          poly([pt(run, total, PL, 0), pt(run, total, PL, LD), pt(run, total, LTOP, LD), pt(run, total, LTOP, 0)], shadeColor(bodyCol, -0.12), { stroke: 'rgba(0,0,0,0.15)' });
+          poly([pt(run, total, PL, 0), pt(run, total, PL, LD), pt(run, total, endTop, LD), pt(run, total, endTop, 0)], shadeColor(bodyCol, -0.12), { stroke: 'rgba(0,0,0,0.15)' });
         }
-        // столешница
-        poly(flat(run, 0, total + (kind === 'main' ? 0 : 1), 0, LD + 2, TOPY), shadeColor(topCol, 0.08), { stroke: 'rgba(0,0,0,0.12)' });
-        poly(quad(run, 0, total + (kind === 'main' ? 0 : 1), LTOP, TOPY, LD + 2), shadeColor(topCol, -0.15), {});
-        if (kind !== 'main' || (cam.x > total + 1 && type !== 'u-shape')) poly([pt(run, total + (kind === 'main' ? 0 : 1), LTOP, 0), pt(run, total + (kind === 'main' ? 0 : 1), LTOP, LD + 2), pt(run, total + (kind === 'main' ? 0 : 1), TOPY, LD + 2), pt(run, total + (kind === 'main' ? 0 : 1), TOPY, 0)], shadeColor(topCol, -0.25), {});
-        if (/#(c|b|a|9)/i.test(topCol) && luminance(topCol) < 0.75) {
-          for (let k = 1; k < 4; k++) seg(pt(run, 0, TOPY + 0.05, (LD + 2) * k / 4), pt(run, total, TOPY + 0.05, (LD + 2) * k / 4), 'rgba(90,55,20,0.12)', 1);
-        }
+        // столешница кусками между высокими модулями
+        const segs = [];
+        let cur = null;
+        Lr.lower.forEach(r => { if (isTall(r.sec)) cur = null; else if (!cur) { cur = { a: r.u0, b: r.u1 }; segs.push(cur); } else cur.b = r.u1; });
+        segs.forEach(sg => {
+          const reachesEnd = sg.b >= total - 0.01;
+          const e = sg.b + (reachesEnd && kind !== 'main' ? 1 : 0);
+          poly(flat(run, sg.a, e, 0, LD + 2, TOPY), shadeColor(topCol, 0.08), { stroke: 'rgba(0,0,0,0.12)' });
+          poly(quad(run, sg.a, e, LTOP, TOPY, LD + 2), shadeColor(topCol, -0.15), {});
+          if (reachesEnd && (kind !== 'main' || (cam.x > total + 1 && type !== 'u-shape'))) poly([pt(run, e, LTOP, 0), pt(run, e, LTOP, LD + 2), pt(run, e, TOPY, LD + 2), pt(run, e, TOPY, 0)], shadeColor(topCol, -0.25), {});
+          if (/#(c|b|a|9)/i.test(topCol) && luminance(topCol) < 0.75) {
+            for (let k = 1; k < 4; k++) seg(pt(run, sg.a, TOPY + 0.05, (LD + 2) * k / 4), pt(run, sg.b, TOPY + 0.05, (LD + 2) * k / 4), 'rgba(90,55,20,0.12)', 1);
+          }
+        });
         marks.forEach(m => {
           const uc = (m.u0 + m.u1) / 2, half = Math.max(10, Math.min(26, (m.u1 - m.u0) / 2 - 4));
           if (m.kind === 'sink') {
@@ -2746,23 +3338,23 @@
           } else {
             poly(flat(run, uc - half, uc + half, 8, 52, TOPY + 0.1), '#18181b', { stroke: '#3f3f46' });
             [[-0.5, 19], [0.5, 19], [-0.5, 41], [0.5, 41]].forEach(([fu, fd]) => {
-              const cu = uc + fu * half, r = Math.min(7, half / 2.4), ring = [];
-              for (let a = 0; a < 14; a++) { const ang = a / 14 * Math.PI * 2; ring.push(pt(run, cu + Math.cos(ang) * r, TOPY + 0.2, fd + Math.sin(ang) * r)); }
-              poly(ring, 'none', { stroke: '#52525b', fit: false });
+              const cu = uc + fu * half, r = Math.min(7, half / 2.4), rg = [];
+              for (let a = 0; a < 14; a++) { const ang = a / 14 * Math.PI * 2; rg.push(pt(run, cu + Math.cos(ang) * r, TOPY + 0.2, fd + Math.sin(ang) * r)); }
+              poly(rg, 'none', { stroke: '#52525b', fit: false });
             });
             if (kind === 'main') hobInfo.run = { u0: m.u0, u1: m.u1 };
           }
         });
       }
-      lowerRun(lowMain, 'main');
+      lowerRun('main');
       // вытяжка под верхним шкафом над плитой
-      if (hobInfo.run && upMain.length) {
+      if (hobInfo.run && LAY.main.upper.some(r => r.u0 < hobInfo.run.u1 && r.u1 > hobInfo.run.u0)) {
         const run = makeRun('main');
         const h = hobInfo.run;
         poly(quad(run, h.u0 + 2, h.u1 - 2, UB - 9, UB, UD + 3), '#c3c9cf', { stroke: '#8f979f' });
       }
-      lowerRun(lowLeft, 'left');
-      lowerRun(lowRight, 'right');
+      lowerRun('left');
+      lowerRun('right');
 
       // --- остров
       if (isl) {
@@ -2777,6 +3369,48 @@
         poly([[isl.x0 - 3, LTOP, isl.z1 + 3], [isl.x1 + 3, LTOP, isl.z1 + 3], [isl.x1 + 3, TOPY, isl.z1 + 3], [isl.x0 - 3, TOPY, isl.z1 + 3]], shadeColor(topCol, -0.15), {});
       }
 
+      // --- интерьер: растения, стулья, подвесные светильники
+      const front0 = { o: [0, 0, 0], u: [1, 0, 0], n: [0, 0, 1], side: false };
+      const leaf = (cx, cy, z, len, ang, col) => {
+        const a = ang * Math.PI / 180, w = len * 0.32;
+        const tipx = cx + Math.sin(a) * len, tipy = cy + Math.cos(a) * len;
+        const px = Math.cos(a) * w, py = -Math.sin(a) * w;
+        poly([[cx, cy, z], [cx + (tipx - cx) * 0.5 + px, cy + (tipy - cy) * 0.5 + py, z], [tipx, tipy, z], [cx + (tipx - cx) * 0.5 - px, cy + (tipy - cy) * 0.5 - py, z]], col, { stroke: 'rgba(20,60,30,0.35)', fit: true });
+      };
+      const plantAt = (x, y0, z, scale) => {
+        const s = scale;
+        poly([[x - 6 * s, y0 + 11 * s, z], [x + 6 * s, y0 + 11 * s, z], [x + 4.5 * s, y0, z], [x - 4.5 * s, y0, z]], '#8b6b4f', { stroke: 'rgba(0,0,0,0.25)' });
+        const cols = ['#4f8a55', '#3f7347', '#62a066', '#2f5f3a'];
+        [[-62, 24], [-38, 30], [-14, 34], [10, 32], [34, 29], [58, 23], [-26, 22], [24, 21]].forEach(([ang, len], i) => leaf(x, y0 + 11 * s, z + 0.1 * (i % 3), len * s, ang, cols[i % 4]));
+      };
+      if (DEC.plant) {
+        const lm = LAY.main.lower;
+        const lastSeg = lm.filter(r => !isTall(r.sec)).pop();
+        if (lastSeg) plantAt(Math.max(8, lastSeg.u1 - 12), TOPY, 14, 1);
+        else plantAt(W - 14, TOPY, 14, 1);
+      }
+      if (DEC.fplant && type !== 'u-shape') plantAt(W + 26, 0, 30, 2.4);
+      DEC.stools.forEach(sp => {
+        const sy = 66, zc = sp.z;
+        [[-9, -9], [9, -9], [-9, 9], [9, 9]].forEach(([dx, dz]) => seg([sp.x + dx * 1.15, 0, zc + dz * 1.15], [sp.x + dx, sy, zc + dz], '#2b2f33', 2.4));
+        const fr = []; for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2; fr.push([sp.x + Math.cos(a) * 11, 26, zc + Math.sin(a) * 10]); }
+        poly(fr, 'none', { stroke: '#2b2f33', fit: false });
+        const seatPts = []; for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2; seatPts.push([sp.x + Math.cos(a) * 17, sy, zc + Math.sin(a) * 15]); }
+        poly(seatPts, '#c2a37c', { stroke: 'rgba(60,40,20,0.35)' });
+        poly([[sp.x - 15, sy + 1, zc + 14], [sp.x + 15, sy + 1, zc + 14], [sp.x + 14, sy + 22, zc + 14], [sp.x - 14, sy + 22, zc + 14]], '#b48f64', { stroke: 'rgba(60,40,20,0.35)' });
+      });      if (DEC.lamps.length) {
+        const lampBottom = isl ? 168 : 172, lampH = 36, lw = 4.5;
+        DEC.lamps.forEach(sp => {
+          const top = lampBottom + lampH;
+          seg([sp.x, roomH, sp.z], [sp.x, top, sp.z], '#2b2f33', 1.4);
+          poly([[sp.x - lw, top, sp.z], [sp.x + lw, top, sp.z], [sp.x + lw, lampBottom, sp.z], [sp.x - lw, lampBottom, sp.z]], '#17191c', { stroke: '#000000' });
+          poly([[sp.x - lw, lampBottom + 3, sp.z], [sp.x + lw, lampBottom + 3, sp.z], [sp.x + lw, lampBottom, sp.z], [sp.x - lw, lampBottom, sp.z]], '#d6a84f', { fit: false });
+          poly([[sp.x - lw * 0.6, lampBottom, sp.z], [sp.x + lw * 0.6, lampBottom, sp.z], [sp.x + lw * 0.6, lampBottom - 0.8, sp.z], [sp.x - lw * 0.6, lampBottom - 0.8, sp.z]], '#fff2c4', { fit: false });
+          const gl = []; for (let k = 0; k < 18; k++) { const a = k / 18 * Math.PI * 2; gl.push([sp.x + Math.cos(a) * 30, lampBottom - 3 + Math.sin(a) * 6, sp.z]); }
+          shapes.push({ p: gl.map(q => P(q[0], q[1], q[2])), fill: `url(#${uid}lg)`, fit: false });
+        });
+      }
+
       // --- вывод
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       shapes.forEach(s => { if (!s.fit) return; s.p.forEach(([x, y]) => { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }); });
@@ -2786,7 +3420,7 @@
       svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
       svg.style.overflow = 'hidden';
       const ptsStr = p => p.map(([x, y]) => x.toFixed(2) + ',' + y.toFixed(2)).join(' ');
-      let out = `<defs><linearGradient id="${uid}sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/><stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.10"/></linearGradient><linearGradient id="${uid}gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${warm}" stop-opacity="0.95"/><stop offset="0.5" stop-color="${warm}" stop-opacity="0.45"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></linearGradient></defs>`;
+      let out = `<defs><linearGradient id="${uid}sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/><stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.10"/></linearGradient><linearGradient id="${uid}gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${warm}" stop-opacity="0.95"/><stop offset="0.5" stop-color="${warm}" stop-opacity="0.45"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></linearGradient><radialGradient id="${uid}lg"><stop offset="0" stop-color="#ffe9a8" stop-opacity="0.55"/><stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/></radialGradient></defs>`;
       shapes.forEach(s => {
         if (s.line) {
           out += `<line x1="${s.p[0][0].toFixed(2)}" y1="${s.p[0][1].toFixed(2)}" x2="${s.p[1][0].toFixed(2)}" y2="${s.p[1][1].toFixed(2)}" stroke="${s.stroke}" stroke-width="${s.sw}" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
@@ -2805,39 +3439,39 @@
     // seg — сегмент (econ/mid/prem), hw — фурнитура (0 эконом, 1 стандарт, 2 премиум), lg — подсветка [класс, рабочая зона, цоколь, полок], isl — остров [вкл, длина, ширина]
     const PRESETS = [
       { id: 'compact', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec6', bc: 'ec6', open: 'h', o: [1, 1, 0],
-        lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0]],
+        lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1]] },
       { id: 'practic', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 0, fc: 'ec32', bc: 'ec6', open: 'h', o: [1, 1, 0],
-        lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0], ['door', 60, 1, 0]],
-        up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
+        lo: [['washer', 60, 0, 0], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
+        up: [['door', 60, 1, 0], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
       { id: 'duo', seg: 'econ', t: 'l-shape', f: 1, b: 0, c: 0, hw: 0, fc: 'ec21', bc: 'ec6', open: 'h', o: [1, 1, 0],
-        lo: [['door', 60, 1, 0, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0], ['door', 60, 1, 0]],
-        up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
-      { id: 'scandi', seg: 'mid', t: 'straight', f: 2, b: 0, c: 1, hw: 1, fc: 'pr8', bc: 'ec6', open: 'h', o: [1, 1, 0],
-        lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
+        lo: [['fridge', 60, 0, 0, 'l', 'free'], ['door', 60, 1, 0, 'l'], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
+        up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
+      { id: 'scandi', seg: 'mid', t: 'straight', f: 2, b: 0, c: 1, hw: 1, fc: 'pr8', bc: 'ec6', open: 'h', o: [1, 1, 1], dc: [2, 0, 1, 0],
+        lo: [['fridge', 60, 0, 0, 'm', 'built'], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['tower', 60, 0, 0, 'm', 'micro']],
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
       { id: 'comfort', seg: 'mid', t: 'l-shape', f: 3, b: 0, c: 1, hw: 1, fc: 'si2', bc: 'ec6', open: 'p', o: [1, 1, 1], lg: [1, 1, 0, 0],
-        lo: [['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
+        lo: [['tower', 60, 0, 0, 'l', 'ovenMicro'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
         up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'loft', seg: 'mid', t: 'l-shape', f: 3, b: 2, c: 1, hw: 1, fc: 'pr23', bc: 'si5', open: 'g', o: [1, 1, 1], lg: [1, 1, 0, 0],
-        lo: [['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 60, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
-        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'classic', seg: 'prem', t: 'u-shape', f: 3, b: 2, c: 2, hw: 2, fc: 'pr6', bc: 'pr6', open: 'h', o: [1, 1, 1],
-        lo: [['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 60, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']],
-        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']] },
-      { id: 'enamel', seg: 'prem', t: 'l-shape', f: 5, b: 3, c: 2, hw: 2, fc: 'co5', bc: 'pr8', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2],
-        lo: [['drawers', 60, 0, 3, 'l'], ['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
-        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
-      { id: 'prestige', seg: 'prem', t: 'l-shape', f: 7, b: 5, c: 3, hw: 2, fc: 'ac9', bc: 'pl5', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90],
-        lo: [['drawers', 60, 0, 3, 'l'], ['door', 60, 1, 0, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
-        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['door', 60, 1, 0]] }
+      { id: 'loft', seg: 'mid', t: 'l-shape', f: 3, b: 2, c: 1, hw: 1, fc: 'pr23', bc: 'si5', open: 'g', o: [1, 1, 1], lg: [1, 1, 0, 0], dc: [3, 0, 1, 1],
+        lo: [['fridge', 60, 0, 0, 'l', 'built'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['tower', 60, 0, 0, 'm', 'oven']],
+        up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['glass', 60, 0, 0]] },
+      { id: 'classic', seg: 'prem', t: 'u-shape', f: 3, b: 2, c: 2, hw: 2, fc: 'pr6', bc: 'pr6', open: 'h', o: [1, 1, 1], dc: [3, 0, 0, 1],
+        lo: [['fridge', 60, 0, 0, 'l', 'built'], ['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['washer', 60, 0, 0, 'r'], ['tower', 60, 0, 0, 'r', 'ovenMicro']],
+        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['glass', 60, 0, 0, 'r']] },
+      { id: 'enamel', seg: 'prem', t: 'l-shape', f: 5, b: 3, c: 2, hw: 2, fc: 'co5', bc: 'pr8', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2], dc: [2, 0, 1, 0],
+        lo: [['tower', 60, 0, 0, 'l', 'oven'], ['drawers', 60, 0, 3, 'l'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'built']],
+        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1]] },
+      { id: 'prestige', seg: 'prem', t: 'l-shape', f: 7, b: 5, c: 3, hw: 2, fc: 'ac9', bc: 'pl5', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90], dc: [3, 3, 1, 1],
+        lo: [['fridge', 60, 0, 0, 'l', 'built'], ['tower', 60, 0, 0, 'l', 'ovenMicro'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
+        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['glass', 60, 0, 0]] }
     ];
 
     function presetState(p) {
-      const conv = arr => arr.map(e => [e[0], '', e[1], e[2], e[3], p.open, e[4] || 'm']);
+      const conv = arr => arr.map(e => [e[0], '', e[1], e[2], e[3], p.open, e[4] || 'm', e[5] || '']);
       const sumWall = (arr, w) => arr.filter(e => (e[4] || 'm') === w).reduce((a, e) => a + e[1], 0);
       const main = sumWall(p.lo, 'm'), left = sumWall(p.lo, 'l'), right = sumWall(p.lo, 'r');
-      return { v: 4, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: 1, uh: 72, ud: 35,
+      return { v: 5, dc: p.dc || [0, 0, 0, 0], t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: 1, uh: 72, ud: 35,
         f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: p.fc, bc: p.bc, lo: conv(p.lo), up: conv(p.up), o: p.o, i: p.isl || [0, 140, 80] };
     }
 
@@ -2848,13 +3482,15 @@
     }
     function stateToCalc(st) {
       const om = { h: 'handles', p: 'push', g: 'gola' }, wm = { m: 'main', l: 'left', r: 'right' };
-      const lo = st.lo.map(e => ({ kind: e[0], width: e[2], shelves: e[3], drawers: e[4], openType: om[e[5]] || 'handles', wall: wm[e[6]] || 'main' }));
+      const cfg = e => (e[0] === 'tower' ? { tw: e[7] || 'storage' } : (e[0] === 'fridge' ? { fr: e[7] || 'free' } : {}));
+      const lo = st.lo.map(e => Object.assign({ kind: e[0], width: e[2], shelves: e[3], drawers: e[4], openType: om[e[5]] || 'handles', wall: wm[e[6]] || 'main' }, cfg(e)));
       const up = st.up.map(e => ({ kind: e[0], width: e[2], shelves: e[3], gasLifts: e[4], openType: om[e[5]] || 'handles', wall: wm[e[6]] || 'main' }));
       const fcol = findColor(st.fc), bcol = findColor(st.bc);
       return { type: st.t, mainW: st.m, leftW: st.l, rightW: st.r, roomH: st.h, hasUpper: !!st.u, upperH: st.uh, upperD: st.ud,
         facade: st.f, body: st.b, top: st.c, markup: CONFIG.colorMarkup[fcol ? fcol.tier : 0] || 0, lower: lo, upper: up,
         island: !!st.i[0], islL: st.i[1], islW: st.i[2], sink: !!st.o[0], hob: !!st.o[1], app: !!st.o[2],
         hw: st.hw === undefined ? CONFIG.defaults.hw : st.hw, led: ledFromArr(st.lg),
+        decor: decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3] } : null),
         facadeHex: fcol ? fcol.item.hex : '#f8fafc', bodyHex: bcol ? bcol.item.hex : '#ffffff' };
     }
 
@@ -2885,8 +3521,9 @@
     /* ===================== ССЫЛКА «ПОДЕЛИТЬСЯ» ===================== */
     function serializeState() {
       const s = getCalcState();
-      const enc = (arr, tier) => arr.map(x => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0]]);
-      return { v: 4, t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, uh: s.upperH, ud: s.upperD,
+      const enc = (arr, tier) => arr.map(x => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || '', String(x.note || '').slice(0, 120)]);
+      const dc = decorClean(decorState);
+      return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW] };
@@ -2935,21 +3572,25 @@
       const om = { h: 'handles', p: 'push', g: 'gola' }, wm = { m: 'main', l: 'left', r: 'right' };
       const build = (arr, tier) => (Array.isArray(arr) ? arr.slice(0, MAX_SECTIONS) : []).map((e, i) => {
         e = Array.isArray(e) ? e : [];
-        const kind = (typeof e[0] === 'string' && I18N.ru['mod_' + e[0]] !== undefined && e[0] !== 'lower' && e[0] !== 'upper') ? e[0] : null;
+        const okKinds = tier === 'lower' ? KIND_LOWER.concat(KIND_TALL) : KIND_UPPER;
+        const kind = (typeof e[0] === 'string' && okKinds.indexOf(e[0]) >= 0) ? e[0] : 'door';
         const s = { id: i + 1, kind, autoName: !e[1], width: clampN(e[2], 10, 300, 50), depth: tier === 'lower' ? 60 : 35, height: tier === 'lower' ? 85 : 72,
           shelves: clampN(e[3], 0, 5, 1) | 0, openType: om[e[5]] || 'handles', wall: wm[e[6]] || 'main' };
         if (tier === 'lower') s.drawers = clampN(e[4], 0, 4, 0) | 0; else s.gasLifts = clampN(e[4], 0, 2, 0) | 0;
+        if (kind === 'tower') s.tw = TOWER_KEYS.indexOf(e[7]) >= 0 ? e[7] : 'storage';
+        if (kind === 'fridge') s.fr = e[7] === 'built' ? 'built' : 'free';
+        if (e[8]) s.note = String(e[8]).slice(0, 120);
         s.name = s.autoName ? defaultModuleName(kind, tier, s.id) : String(e[1]).slice(0, 60);
         return s;
       });
       const lo = build(st.lo, 'lower');
       if (!lo.length) return false;
       let up = build(st.up, 'upper');
-      if (!up.length) up = [mkSec('upper', 1, 'door', STD_W, 1, 0)];
       lowerSections = lo;
       upperSections = up;
-      el('countLowerInput').value = lo.length;
-      el('countUpperInput').value = up.length;
+      selSec = null;
+      addMenuWall = null;
+      decorState = decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3] } : null);
 
       currentType = ['straight', 'l-shape', 'u-shape'].includes(st.t) ? st.t : 'straight';
       updateTypeUI();
@@ -2984,10 +3625,8 @@
       el('hasIsland').checked = !!isl[0];
       el('islandLength').value = clampN(isl[1], 80, 300, 140);
       el('islandWidth').value = clampN(isl[2], 50, 150, 80);
-      el('upperTierControls').style.display = chk('hasUpperTier') ? 'block' : 'none';
       updateIslandUI();
-      renderSections('lower');
-      renderSections('upper');
+      renderPlanner();
       updateColorUIBadges();
       updateCalculator();
       return true;
@@ -3016,10 +3655,33 @@
       if (s.app) ex.push(tr('exApp', {}));
       if (s.island) ex.push(tr('exIsland', { l: s.islL, w: s.islW }));
       if (!noLed && s.led && s.led.level > 0) ex.push((ru ? I18N.ru.lighting : t('lighting')).toLowerCase() + ': ' + ledText(s, ru));
+      const dt = decorText(s, ru); if (dt) ex.push(dt);
       return ex.length ? ex.join(', ') : tr('none', {});
     }
     function wallText(w) { return w === 'left' ? t('wLeft') : (w === 'right' ? t('wRight') : t('wMain')); }
     function openText(o) { return o === 'push' ? t('oPush') : (o === 'gola' ? t('oGola') : t('oHandles')); }
+    // Что мастеру нужно знать про модуль: техника, начинка пенала, пожелание клиента
+    function secInfo(sec, ru) {
+      const tr = k => ru ? I18N.ru[k] : t(k);
+      const parts = [];
+      if (sec.kind === 'tower') parts.push(tr('tw_' + (sec.tw || 'storage')) + ', ' + (ru || LANG !== 'uz' ? 'до потолка' : 'shiftgacha'));
+      if (sec.kind === 'fridge') parts.push(tr(sec.fr === 'built' ? 'fr_built' : 'fr_free'));
+      if (sec.kind === 'glass') parts.push(tr('kind_glass'));
+      if (sec.kind === 'open') parts.push(tr('kind_open'));
+      if (sec.kind !== 'tower') appliancesOf(sec).forEach(a => { if (a.k !== 'hobpanel' && a.k !== 'fridge') parts.push(tr('ap_' + a.k)); });
+      if (sec.note) parts.push('«' + sec.note + '»');
+      return parts.join('; ');
+    }
+    function decorText(s, ru) {
+      const tr = (k, v) => ru ? (I18N.ru[k] || k).replace(/\{(\w+)\}/g, (_, x) => v[x]) : t(k, v);
+      const d = s.decor || {}, p = [];
+      if (d.lamps) p.push(tr('exLamps', { n: d.lamps }));
+      if (d.stools) p.push(tr('exStools', { n: d.stools }));
+      if (d.plant) p.push(tr('exPlant1', {}));
+      if (d.fplant) p.push(tr('exPlant2', {}));
+      return p.length ? tr('exDecor', { x: p.join(', ') }) : '';
+    }
+    function nameCell(sec, ru) { const i = secInfo(sec, ru); return esc(sec.name) + (i ? `<br><small>${esc(i)}</small>` : ''); }
 
     function openSummaryModal() {
       const s = getCalcState();
@@ -3040,10 +3702,10 @@
       renderKitchen(el('modalRender'), renderStateFrom(s));
 
       el('resLowerTableBody').innerHTML = lowerSections.map(sec =>
-        `<tr><td>[Н-${sec.id}]</td><td>${esc(sec.name)}</td><td>${esc(wallText(sec.wall))}</td><td>${Number(sec.width) || 0} см</td><td>${sec.shelves | 0}</td><td>${sec.drawers | 0}</td><td>${esc(openText(sec.openType))}</td></tr>`).join('');
+        `<tr><td>[Н-${sec.id}]</td><td>${nameCell(sec)}</td><td>${esc(wallText(sec.wall))}</td><td>${Number(sec.width) || 0} см</td><td>${sec.shelves | 0}</td><td>${sec.drawers | 0}</td><td>${esc(openText(sec.openType))}</td></tr>`).join('');
       el('modalUpperTableBlock').style.display = s.hasUpper ? 'block' : 'none';
       el('resUpperTableBody').innerHTML = s.hasUpper ? upperSections.map(sec =>
-        `<tr><td>[В-${sec.id}]</td><td>${esc(sec.name)}</td><td>${esc(wallText(sec.wall))}</td><td>${Number(sec.width) || 0} см</td><td>${sec.shelves | 0}</td><td>${sec.gasLifts | 0}</td><td>${esc(openText(sec.openType))}</td></tr>`).join('') : '';
+        `<tr><td>[В-${sec.id}]</td><td>${nameCell(sec)}</td><td>${esc(wallText(sec.wall))}</td><td>${Number(sec.width) || 0} см</td><td>${sec.shelves | 0}</td><td>${sec.gasLifts | 0}</td><td>${esc(openText(sec.openType))}</td></tr>`).join('') : '';
 
       let minis = lowerSections.map((sec, idx) => `<div class="modal-mini-card"><svg viewBox="0 0 140 140" id="resMini_lower_${idx}"></svg><div class="modal-mini-title">[Н-${sec.id}] ${esc(sec.name)}</div></div>`).join('');
       if (s.hasUpper) minis += upperSections.map((sec, idx) => `<div class="modal-mini-card"><svg viewBox="0 0 140 140" id="resMini_upper_${idx}"></svg><div class="modal-mini-title">[В-${sec.id}] ${esc(sec.name)}</div></div>`).join('');
@@ -3098,8 +3760,8 @@
           'Допы': extrasText(s, true, true),
           'Язык клиента': LANG === 'uz' ? 'узбекский' : 'русский'
         },
-        lower: lowerSections.map(x => ({ id: x.id, name: x.name, width: x.width, shelves: x.shelves, drawers: x.drawers || 0, openType: x.openType })),
-        upper: s.hasUpper ? upperSections.map(x => ({ id: x.id, name: x.name, width: x.width, shelves: x.shelves, gasLifts: x.gasLifts || 0, openType: x.openType })) : []
+        lower: lowerSections.map(x => ({ id: x.id, name: x.name + (secInfo(x, true) ? ' — ' + secInfo(x, true) : ''), width: x.width, shelves: x.shelves, drawers: x.drawers || 0, openType: x.openType })),
+        upper: s.hasUpper ? upperSections.map(x => ({ id: x.id, name: x.name + (secInfo(x, true) ? ' — ' + secInfo(x, true) : ''), width: x.width, shelves: x.shelves, gasLifts: x.gasLifts || 0, openType: x.openType })) : []
       };
       if (typeof msLeadDetails === 'function') msLeadDetails(payload.details);
       return payload;
@@ -3154,7 +3816,7 @@
       const client = el('clientName').value.trim() || t('notSet');
       const shapeName = { 'straight': t('typeStraight'), 'l-shape': t('typeL'), 'u-shape': t('typeU') }[s.type] + (s.island ? ' + ' + t('typeIsland') : '');
       const sw = (hex, title, sub, img) => `<div class="sw"><div class="sw-c" style="background:${hex}; overflow:hidden">${img ? `<img src="${img}" alt="" style="display:block; width:100%; height:100%; object-fit:cover; transform:scale(1.4)">` : ''}</div><div><b>${esc(title)}</b><br><span>${esc(sub)}</span></div></div>`;
-      const rows = (arr, tier) => arr.map(x => `<tr><td>${tier === 'lower' ? 'Н' : 'В'}-${x.id}</td><td>${esc(x.name)}</td><td>${esc(wallText(x.wall))}</td><td>${MM(x.width)}</td><td>${x.shelves | 0}</td><td>${tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0)}</td><td>${esc(openText(x.openType))}</td></tr>`).join('');
+      const rows = (arr, tier) => arr.map(x => `<tr><td>${tier === 'lower' ? 'Н' : 'В'}-${x.id}</td><td>${nameCell(x)}</td><td>${esc(wallText(x.wall))}</td><td>${MM(x.width)}</td><td>${x.shelves | 0}</td><td>${tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0)}</td><td>${esc(openText(x.openType))}</td></tr>`).join('');
       const head = gas => `<tr><th>№</th><th>${esc(t('thName'))}</th><th>${esc(t('thWall'))}</th><th>${esc(t('thWidth'))}, мм</th><th>${esc(t('thShelves'))}</th><th>${esc(gas ? t('thGas') : t('thDrawers'))}</th><th>${esc(t('thOpen'))}</th></tr>`;
       const master = LANG === 'uz' ? CONFIG.masterNameUz : CONFIG.masterName;
 
@@ -3289,8 +3951,8 @@
       tmp.setAttribute('style', 'width:100%;height:260px;display:block;background:#f3eee7;border:1px solid #999;');
       const renderSvg = tmp.outerHTML;
 
-      const lowerRows = lowerSections.map(x => `<tr><td>Н-${x.id}</td><td>${esc(x.name)}</td><td>${wallRu(x.wall)}</td><td>${Number(x.width) || 0}</td><td>${x.shelves | 0}</td><td>${x.drawers | 0}</td><td>${openRu(x.openType)}</td></tr>`).join('');
-      const upperRows = s.hasUpper ? upperSections.map(x => `<tr><td>В-${x.id}</td><td>${esc(x.name)}</td><td>${wallRu(x.wall)}</td><td>${Number(x.width) || 0}</td><td>${x.shelves | 0}</td><td>${x.gasLifts | 0}</td><td>${openRu(x.openType)}</td></tr>`).join('') : '';
+      const lowerRows = lowerSections.map(x => `<tr><td>Н-${x.id}</td><td>${nameCell(x, true)}</td><td>${wallRu(x.wall)}</td><td>${Number(x.width) || 0}</td><td>${x.shelves | 0}</td><td>${x.drawers | 0}</td><td>${openRu(x.openType)}</td></tr>`).join('');
+      const upperRows = s.hasUpper ? upperSections.map(x => `<tr><td>В-${x.id}</td><td>${nameCell(x, true)}</td><td>${wallRu(x.wall)}</td><td>${Number(x.width) || 0}</td><td>${x.shelves | 0}</td><td>${x.gasLifts | 0}</td><td>${openRu(x.openType)}</td></tr>`).join('') : '';
       const client = el('clientName').value.trim(), phone = el('clientPhone').value.trim(), notes = el('clientNotes').value.trim();
 
       const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Договор № ${num}</title>

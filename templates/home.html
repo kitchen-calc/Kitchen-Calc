@@ -599,15 +599,15 @@
 
     // Готовые варианты: картинки — визуализации из калькулятора (static/home/<id>.svg)
     var KITCHENS = [
-      { id: 'loft', seg: 'mid', ru: ['Лофт', 'Угловая 2,4 × 1,8 м · ЛМДФ Премиум · дуб графит · без ручек'], uz: ['Loft', 'Burchakli 2,4 × 1,8 m · LMDF Premium · grafit eman · dastasiz'] },
-      { id: 'classic', seg: 'prem', ru: ['Классика', 'П-образная · ЛМДФ Премиум · беж · искусственный камень'], uz: ['Klassika', 'P-shaklida · LMDF Premium · bej · sunʼiy tosh'] },
-      { id: 'prestige', seg: 'prem', ru: ['Престиж с островом', 'Угловая 2,4 × 1,8 м + остров · акрил Турция · кварц · Blum · подсветка'], uz: ['Orolli Prestij', 'Burchakli 2,4 × 1,8 m + orol · akril (Turkiya) · kvars · Blum · yoritgich'] },
-      { id: 'scandi', seg: 'mid', ru: ['Скандинавия', 'Прямая 2,4 м · ЛДСП Премиум · белая, столешница под дерево'], uz: ['Skandinaviya', 'Toʻgʻri 2,4 m · LDSP Premium · oq, yogʻoch stoleshnitsa'] },
-      { id: 'enamel', seg: 'prem', ru: ['Индиго Люкс', 'Угловая 3 × 1,8 м · ЛМДФ Платинум · индиго · камень · Blum · подсветка'], uz: ['Indigo Lyuks', 'Burchakli 3 × 1,8 m · LMDF Platinum · indigo · tosh · Blum · yoritgich'] },
-      { id: 'comfort', seg: 'mid', ru: ['Комфорт', 'Угловая 2,4 × 1,2 м · ЛМДФ Премиум · светлое дерево · без ручек · подсветка'], uz: ['Komfort', 'Burchakli 2,4 × 1,2 m · LMDF Premium · och yogʻoch · dastasiz · yoritgich'] },
-      { id: 'duo', seg: 'econ', ru: ['Дуэт', 'Угловая 3 × 1,2 м · ЛМДФ Эконом · крем · фурнитура эконом'], uz: ['Duet', 'Burchakli 3 × 1,2 m · LMDF Ekonom · krem · ekonom furnitura'] },
-      { id: 'practic', seg: 'econ', ru: ['Практик', 'Прямая 3 м · ЛДСП Эконом · светло-серая · фурнитура эконом'], uz: ['Praktik', 'Toʻgʻri 3 m · LDSP Ekonom · och kulrang · ekonom furnitura'] },
-      { id: 'compact', seg: 'econ', ru: ['Компакт', 'Прямая 1,8 м · ЛДСП Эконом · белая'], uz: ['Kompakt', 'Toʻgʻri 1,8 m · LDSP Ekonom · oq'] }
+      { id: 'loft', seg: 'mid', ru: ['Лофт', 'Угловая 3 × 1,8 м · встроенный холодильник, посудомойка, пенал с духовкой · без ручек'], uz: ['Loft', 'Burchakli 3 × 1,8 m · oʻrnatma muzlatgich, idish yuvgich, duxovkali penal · dastasiz'] },
+      { id: 'classic', seg: 'prem', ru: ['Классика', 'П-образная · встроенный холодильник, стиральная машина, пенал с духовкой и микроволновкой'], uz: ['Klassika', 'P-shaklida · oʻrnatma muzlatgich, kir yuvgich, duxovka+mikroʻtolqinli penal'] },
+      { id: 'prestige', seg: 'prem', ru: ['Престиж с островом', 'Угловая + остров · встроенный холодильник, пенал духовка+микроволновка · лампы и стулья'], uz: ['Orolli Prestij', 'Burchakli + orol · oʻrnatma muzlatgich, duxovka+mikroʻtolqinli penal · chiroq va stullar'] },
+      { id: 'scandi', seg: 'mid', ru: ['Скандинавия', 'Прямая 3,6 м · встроенный холодильник, посудомойка, пенал с микроволновкой · лампы'], uz: ['Skandinaviya', 'Toʻgʻri 3,6 m · oʻrnatma muzlatgich, idish yuvgich, mikroʻtolqinli penal · chiroqlar'] },
+      { id: 'enamel', seg: 'prem', ru: ['Индиго Люкс', 'Угловая 3 × 1,8 м · пенал с духовкой · встроенный холодильник · Blum · подсветка'], uz: ['Indigo Lyuks', 'Burchakli 3 × 1,8 m · duxovkali penal · oʻrnatma muzlatgich · Blum · yoritgich'] },
+      { id: 'comfort', seg: 'mid', ru: ['Комфорт', 'Угловая 3 × 1,8 м · пенал: духовка + микроволновка · посудомойка · холодильник'], uz: ['Komfort', 'Burchakli 3 × 1,8 m · penal: duxovka + mikroʻtolqinli pech · idish yuvgich · muzlatgich'] },
+      { id: 'duo', seg: 'econ', ru: ['Дуэт', 'Угловая 3 × 1,8 м · холодильник и посудомойка · ЛМДФ Эконом · крем'], uz: ['Duet', 'Burchakli 3 × 1,8 m · muzlatgich va idish yuvgich · LMDF Ekonom · krem'] },
+      { id: 'practic', seg: 'econ', ru: ['Практик', 'Прямая 3,6 м · стиральная машина и холодильник · ЛДСП Эконом'], uz: ['Praktik', 'Toʻgʻri 3,6 m · kir yuvgich va muzlatgich · LDSP Ekonom'] },
+      { id: 'compact', seg: 'econ', ru: ['Компакт с холодильником', 'Прямая 2,4 м · холодильник · ЛДСП Эконом · белая'], uz: ['Muzlatgichli Kompakt', 'Toʻgʻri 2,4 m · muzlatgich · LDSP Ekonom · oq'] }
     ];
 
     // Декоры из каталога поставщика (static/catalog/<раздел>/<NN>.webp)

@@ -189,7 +189,7 @@ def _section_line(sec, tier):
     if not isinstance(sec, dict):
         return ""
     prefix = "Н" if tier == "lower" else "В"
-    parts = [f"{prefix}-{_esc(sec.get('id'), 4)} {_esc(sec.get('name'), 60)}"]
+    parts = [f"{prefix}-{_esc(sec.get('id'), 4)} {_esc(sec.get('name'), 150)}"]
     parts.append(f"{_esc(sec.get('width'), 6)} см")
     if sec.get("shelves"):
         parts.append(f"полки {_esc(sec.get('shelves'), 3)}")
@@ -223,14 +223,14 @@ def build_lead_text(data):
         lines.append("")
         lines.append("<b>Параметры</b>")
         for label, value in list(details.items())[:20]:
-            lines.append(f"{_esc(label, 40)}: {_esc(value, 120)}")
+            lines.append(f"{_esc(label, 40)}: {_esc(value, 200)}")
 
     for key, title, tier in (("lower", "Нижние модули", "lower"), ("upper", "Верхние модули", "upper")):
         items = data.get(key)
         if isinstance(items, list) and items:
             lines.append("")
             lines.append(f"<b>{title}</b>")
-            for sec in items[:12]:
+            for sec in items[:16]
                 line = _section_line(sec, tier)
                 if line:
                     lines.append(line)
