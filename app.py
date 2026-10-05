@@ -91,6 +91,12 @@ async def yandex_verification():
             '    </head>\n    <body>Verification: c4a2d69f3e5cf5ea</body>\n</html>')
 
 
+@app.get("/googled74069028bb9f909.html", response_class=PlainTextResponse)
+async def google_verification():
+    # Подтверждение прав на сайт в Google Search Console
+    return "google-site-verification: googled74069028bb9f909.html"
+
+
 @app.get("/partners", response_class=HTMLResponse)
 async def partners():
     # Страница для дизайнеров и строителей (сотрудничество)
