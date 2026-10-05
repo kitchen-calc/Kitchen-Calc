@@ -1167,31 +1167,32 @@
          «ЛДСП Эконом» — опорная точка (2,5 млн/п.м. фасада, как в прежнем прайсе); всё остальное считается от неё.
          Доставка материалов не внесена в лист: она есть ниже, в logistics (4% + фиксированная сумма). */
       mat: {
-        usdRate: 11800,        // курс, сум за $ (ЦБ РУз 04.10.2026: 11 773; банки продают ≈ 11 800–11 850)
+        usdRate: 11800,        // курс, сум за $ (ЦБ РУз 04.10.2026: 11 773; банки продают ≈ 11 800–11 850) — для акрила, он в долларах
         retailK: 2.5,          // во сколько раз цена для клиента выше себестоимости (материалы ≈ 40% цены кухни)
         facadeArea: 1.4,       // м² фасадов на 1 п.м. кухни (нижний + верхний ряд)
         bodyArea: 4.7,         // м² корпуса (стенки, дно, полки) на 1 п.м. кухни
-        cutPerM2: 9000,        // распил, сум за м² листа (ОЦЕНКА — уточните у цеха)
+        cutPerM2: 7950,        // распил эконом 40 000 сум за лист 2750×1830 (≈ 5 м²) — прайс мастера, октябрь 2026
         edgeFacadeM: 8,        // кромка фасадов, п.м. на 1 п.м. кухни
         edgeBodyM: 14,         // кромка корпуса, п.м. на 1 п.м. кухни
-        edgeFacade: 6000,      // кромка ПВХ 2 мм, сум за п.м. (ОЦЕНКА)
-        edgeBody: 2500,        // кромка ПВХ 0,4 мм, сум за п.м. (ОЦЕНКА)
-        edgeAcrylic: 12000,    // кромка/торец акрила, сум за п.м. (ОЦЕНКА)
+        edgeFacade: 4900,      // кромка ПВХ 2 мм, сум за п.м. — прайс мастера
+        edgeBody: 2500,        // кромка ПВХ 0,4 мм, сум за п.м. (ОЦЕНКА; 1 мм по прайсу мастера — 4 000)
+        edgeAcrylic: 10400,    // кромка акрила, сум за п.м. — прайс мастера
         mdfExtra: 30000,       // ЛМДФ вместо ЛДСП: небольшая надбавка за обработку, сум на п.м. фасада (чтобы цены шли строго по возрастанию в порядке списка)
         acrylicExtra: 900000,  // акрил: плёнка, шлифовка торцов, брак при монтаже, сум на п.м. фасада
         // формат листа, м, и коэффициент отходов (акрил — с большими отходами)
         sheet: { dsp: { w: 2.75, h: 1.83, waste: 1.15 }, mdf: { w: 2.8, h: 2.07, waste: 1.15 }, acr: { w: 2.4, h: 1.2, waste: 1.25 } },
-        // ступени каталога: цена листа, $ (ЛДСП и ЛМДФ) — от Эконом $35 по возрастанию
+        // ступени: цена ЛИСТА, сум (прайс мастера, октябрь 2026).
+        // cats — разделы каталога цветов, доступные в этой ступени: 0 Эконом, 1 Сильвер, 2 Премиум, 3 Цветной, 4 Платинум
+        // (отдельных ступеней Сильвер и Цветной нет: их цвета входят в Премиум и Платинум)
         tiers: [
-          { ru: 'Эконом',   uz: 'Ekonom',            dsp: 35, mdf: 44 },
-          { ru: 'Сильвер',  uz: 'Silver',            dsp: 42, mdf: 52 },
-          { ru: 'Премиум',  uz: 'Premium',           dsp: 52, mdf: 65 },
-          { ru: 'Цветной',  uz: 'Rangli (monoton)',  dsp: 60, mdf: 75 },
-          { ru: 'Платинум', uz: 'Platinum',          dsp: 70, mdf: 88 }
+          { ru: 'Эконом',   uz: 'Ekonom',   dsp: 360000, mdf: 510000, cats: [0] },
+          { ru: 'Премиум',  uz: 'Premium',  dsp: 500000, mdf: 600000, cats: [2, 1] },
+          { ru: 'Платинум', uz: 'Platinum', dsp: 560000, mdf: 660000, cats: [4, 3] }
         ],
+        // акрил — цена листа 2440×1220 в долларах: [от, до], в расчёт идёт середина
         acrylic: [
-          { ru: 'Акрил Китай',  uz: 'Akril (Xitoy)',    usd: 60 },
-          { ru: 'Акрил Турция', uz: 'Akril (Turkiya)',  usd: 90 }
+          { ru: 'Акрил Китай',  uz: 'Akril (Xitoy)',    usd: [47, 52] },
+          { ru: 'Акрил Турция', uz: 'Akril (Turkiya)',  usd: [70, 105] }
         ]
       },
       facades: [],   // заполняются автоматически из mat (см. buildMaterialPrices ниже)
@@ -1229,34 +1230,37 @@
       // Сравнение «Эконом / Стандарт / Премиум»: номера материалов из списков выше (с нуля)
       tiers: [
         { key: 'econ', facade: 0, body: 0, top: 0, hw: 0 },
-        { key: 'std',  facade: 5, body: 4, top: 1, hw: 1 },
-        { key: 'prem', facade: 11, body: 9, top: 2, hw: 2 }
+        { key: 'std',  facade: 3, body: 2, top: 1, hw: 1 },
+        { key: 'prem', facade: 7, body: 5, top: 2, hw: 2 }
       ],
-      defaults: { facade: 4, body: 0, top: 0, hw: 1 }
+      // фасады: 0 ЛДСП Эк, 1 ЛМДФ Эк, 2 ЛДСП Прем, 3 ЛМДФ Прем, 4 ЛДСП Плат, 5 ЛМДФ Плат, 6 Акрил Китай, 7 Акрил Турция; корпус — те же 0–5
+      defaults: { facade: 2, body: 0, top: 0, hw: 1 }
     };
 
     /* ===================== РАСЧЁТ ЦЕН МАТЕРИАЛОВ (из CONFIG.mat) ===================== */
     (function buildMaterialPrices() {
       const M = CONFIG.mat, round = v => Math.round(v / 10000) * 10000;
       const area = k => M.sheet[k].w * M.sheet[k].h;
-      // себестоимость материала на 1 п.м. кухни: листы с отходами + распил + кромка, сум
-      const costF = (k, usd, edge) => { const g = M.facadeArea * M.sheet[k].waste; return g / area(k) * usd * M.usdRate + g * M.cutPerM2 + M.edgeFacadeM * edge; };
-      const costB = (k, usd) => { const g = M.bodyArea * M.sheet[k].waste; return g / area(k) * usd * M.usdRate + g * M.cutPerM2 + M.edgeBodyM * M.edgeBody; };
+      // себестоимость материала на 1 п.м. кухни: листы с отходами + распил + кромка, сум (sheet — цена листа в сумах)
+      const costF = (k, sheet, edge) => { const g = M.facadeArea * M.sheet[k].waste; return g / area(k) * sheet + g * M.cutPerM2 + M.edgeFacadeM * edge; };
+      const costB = (k, sheet) => { const g = M.bodyArea * M.sheet[k].waste; return g / area(k) * sheet + g * M.cutPerM2 + M.edgeBodyM * M.edgeBody; };
       const baseF = costF('dsp', M.tiers[0].dsp, M.edgeFacade), baseB = costB('dsp', M.tiers[0].dsp);
       const ANCHOR = 2500000;      // «ЛДСП Эконом», сум за п.м. фасада
       const facades = [], bodies = [];
-      M.tiers.forEach((tr, ci) => {
+      M.tiers.forEach(tr => {
         [['dsp', 'ЛДСП', 'LDSP', 0], ['mdf', 'ЛМДФ', 'LMDF', M.mdfExtra]].forEach(([k, ru, uz, extra]) => {
           const f = ANCHOR + M.retailK * (costF(k, tr[k], M.edgeFacade) - baseF) + extra;
           // корпус: в формуле нижний ряд берёт 0,5 и верхний 0,4 от коэффициента — делим на 0,9, чтобы метр кухни получил ровно свою разницу
           const b = M.retailK * (costB(k, tr[k]) - baseB) / 0.9;
-          facades.push({ price: round(f), ru: ru + ' ' + tr.ru, uz: uz + ' ' + tr.uz, kind: k, cat: ci, usd: tr[k] });
-          bodies.push({ price: round(b), ru: ru + ' ' + tr.ru, uz: uz + ' ' + tr.uz, kind: k, cat: ci, usd: tr[k] });
+          const m = { ru: ru + ' ' + tr.ru, uz: uz + ' ' + tr.uz, kind: k, cat: tr.cats[0], cats: tr.cats, sheet: tr[k] };
+          facades.push(Object.assign({ price: round(f) }, m));
+          bodies.push(Object.assign({ price: round(b) }, m));
         });
       });
       M.acrylic.forEach(a => {
-        const f = ANCHOR + M.retailK * (costF('acr', a.usd, M.edgeAcrylic) - baseF) + M.acrylicExtra;
-        facades.push({ price: round(f), ru: a.ru, uz: a.uz, kind: 'acr', cat: 5, usd: a.usd });
+        const usd = (a.usd[0] + a.usd[1]) / 2;
+        const f = ANCHOR + M.retailK * (costF('acr', usd * M.usdRate, M.edgeAcrylic) - baseF) + M.acrylicExtra;
+        facades.push({ price: round(f), ru: a.ru, uz: a.uz, kind: 'acr', cat: 5, cats: [5], sheet: usd * M.usdRate });
       });
       CONFIG.facades = facades;
       CONFIG.bodies = bodies;
@@ -1346,8 +1350,8 @@
         seg_econ: 'Эконом', seg_mid: 'Стандарт', seg_prem: 'Премиум',
         p_practic: 'Практик', p_practic_d: 'Прямая 3 м · ЛДСП Эконом · светло-серая · фурнитура эконом',
         p_duo: 'Дуэт', p_duo_d: 'Угловая 3 × 1,2 м · ЛМДФ Эконом · крем · фурнитура эконом',
-        p_comfort: 'Комфорт', p_comfort_d: 'Угловая 2,4 × 1,2 м · ЛМДФ Сильвер · светлое дерево · без ручек · подсветка',
-        p_enamel: 'Индиго Люкс', p_enamel_d: 'Угловая 3 × 1,8 м · ЛМДФ Цветной · индиго · камень · Blum · подсветка',
+        p_comfort: 'Комфорт', p_comfort_d: 'Угловая 2,4 × 1,2 м · ЛМДФ Премиум · светлое дерево · без ручек · подсветка',
+        p_enamel: 'Индиго Люкс', p_enamel_d: 'Угловая 3 × 1,8 м · ЛМДФ Платинум · индиго · камень · Blum · подсветка',
         p_prestige: 'Престиж с островом', p_prestige_d: 'Угловая 2,4 × 1,8 м + остров · акрил Турция · кварц · Blum · подсветка',
         hardware: 'Фурнитура', hardwareLabel: 'Фурнитура (петли, ящики, подъёмники)',
         hwDesc_econ: 'Базовый класс: DTC и аналоги. Петли и направляющие проще, доводчики не везде.',
@@ -1446,8 +1450,8 @@
         seg_econ: 'Ekonom', seg_mid: 'Standart', seg_prem: 'Premium',
         p_practic: 'Praktik', p_practic_d: 'Toʻgʻri 3 m · LDSP Ekonom · och kulrang · ekonom furnitura',
         p_duo: 'Duet', p_duo_d: 'Burchakli 3 × 1,2 m · LMDF Ekonom · krem · ekonom furnitura',
-        p_comfort: 'Komfort', p_comfort_d: 'Burchakli 2,4 × 1,2 m · LMDF Silver · och yogʻoch · dastasiz · yoritgich',
-        p_enamel: 'Indigo Lyuks', p_enamel_d: 'Burchakli 3 × 1,8 m · LMDF Rangli · indigo · tosh · Blum · yoritgich',
+        p_comfort: 'Komfort', p_comfort_d: 'Burchakli 2,4 × 1,2 m · LMDF Premium · och yogʻoch · dastasiz · yoritgich',
+        p_enamel: 'Indigo Lyuks', p_enamel_d: 'Burchakli 3 × 1,8 m · LMDF Platinum · indigo · tosh · Blum · yoritgich',
         p_prestige: 'Orolli Prestij', p_prestige_d: 'Burchakli 2,4 × 1,8 m + orol · akril (Turkiya) · kvars · Blum · yoritgich',
         hardware: 'Furnitura', hardwareLabel: 'Furnitura (ilmoqlar, tortmalar, koʻtargichlar)',
         hwDesc_econ: 'Asosiy sinf: DTC va analoglar. Ilmoq va yoʻnaltirgichlar oddiyroq, yumshoq yopgich hamma joyda emas.',
@@ -1919,6 +1923,8 @@
     const FACADE_V1_MAP = [0, 1, 2, 4, 5, 7];                            // v1 -> v2
     const FACADE_V2_MAP = [0, 1, 4, 3, 5, 7, 10, 11];                    // v2 -> v3: ЛДСП Эк, ЛМДФ Эк, Egger→ЛДСП Премиум, плёнка→ЛМДФ Сильвер, ЛМДФ Прем, эмаль→ЛМДФ Цветной, акрил→Китай, шпон→Турция
     const BODY_V2_MAP = [0, 4];                                          // v2 -> v3: ЛДСП Стандарт→Эконом, влагостойкий→ЛДСП Премиум
+    const FACADE_V3_MAP = [0, 1, 2, 3, 2, 3, 4, 5, 4, 5, 6, 7];          // v3 -> v4: Сильвер→Премиум, Цветной→Платинум (ЛДСП/ЛМДФ сохраняются)
+    const BODY_V3_MAP = [0, 1, 2, 3, 2, 3, 4, 5, 4, 5];
 
     /* ===================== ПОМОЩНИКИ ===================== */
     function vars() {
@@ -2410,11 +2416,11 @@
       const q = si.value.trim().toLowerCase().replace(/ё/g, 'е');
       const mt = curMat(activeColorTarget);
       const note = el('colorTierNote');
-      if (note) note.textContent = mt.cat === 5 ? t('colorAcrylNote') : t('colorTierNote', { t: t('cat' + mt.cat) });
+      if (note) note.textContent = mt.cat === 5 ? t('colorAcrylNote') : t('colorTierNote', { t: catNames(mt) });
 
       let html = '';
       colorCatalog.forEach((cat, ci) => {
-        if (ci !== mt.cat) return;   // только ступень выбранного материала
+        if (!matCats(mt).includes(ci)) return;   // только разделы каталога, входящие в ступень выбранного материала
         const items = cat.items.filter(it => (activeCatalogTone === 'all' || it.tone === activeCatalogTone) &&
           (!q || it.name.toLowerCase().replace(/ё/g, 'е').includes(q) || String(it.n) === q.replace('№', '')));
         if (!items.length) return;
@@ -2473,13 +2479,17 @@
       const p = h => { h = String(h).replace('#', ''); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; };
       const x = p(a), y = p(b); return 3 * (x[0] - y[0]) ** 2 + 4 * (x[1] - y[1]) ** 2 + 2 * (x[2] - y[2]) ** 2;
     }
+    // Разделы каталога, из которых можно брать цвет для материала (Премиум = Премиум + Сильвер, Платинум = Платинум + Цветной)
+    function matCats(m) { return m.cats || [m.cat]; }
+    function catNames(m) { return matCats(m).map(ci => t('cat' + ci)).join(' + '); }
     function fitColorToMaterial(target) {
       const m = curMat(target), cur = target === 'facade' ? selectedFacadeColor : selectedBodyColor;
-      if (!m || (cur && cur.tier === m.cat)) return null;
-      const items = colorCatalog[m.cat].items;
-      let best = items[0];
-      items.forEach(it => { if (colorDist(it.hex, cur ? cur.hex : '#ffffff') < colorDist(best.hex, cur ? cur.hex : '#ffffff')) best = it; });
-      const c = colorObj({ item: best, tier: m.cat });
+      if (!m || (cur && matCats(m).includes(cur.tier))) return null;
+      let best = null, bestTier = m.cat;
+      matCats(m).forEach(ci => colorCatalog[ci].items.forEach(it => {
+        if (!best || colorDist(it.hex, cur ? cur.hex : '#ffffff') < colorDist(best.hex, cur ? cur.hex : '#ffffff')) { best = it; bestTier = ci; }
+      }));
+      const c = colorObj({ item: best, tier: bestTier });
       if (target === 'facade') selectedFacadeColor = c; else selectedBodyColor = c;
       return c;
     }
@@ -2493,10 +2503,10 @@
     // Цвет выбран из общего каталога (шапка): подстраиваем материал под его ступень, сохраняя ЛДСП/ЛМДФ
     function setMaterialForColor(target, c) {
       const list = matList(target), cur = curMat(target);
-      if (cur && cur.cat === c.tier) return false;
+      if (cur && matCats(cur).includes(c.tier)) return false;
       const kind = cur && cur.kind === 'mdf' ? 'mdf' : 'dsp';
-      let ni = list.findIndex(m => m.cat === c.tier && m.kind === kind);
-      if (ni < 0) ni = list.findIndex(m => m.cat === c.tier);
+      let ni = list.findIndex(m => matCats(m).includes(c.tier) && m.kind === kind);
+      if (ni < 0) ni = list.findIndex(m => matCats(m).includes(c.tier));
       if (ni < 0) return false;
       setSel(matSelId(target), ni);
       return list[ni];
@@ -2505,7 +2515,7 @@
       ['facade', 'body'].forEach(target => {
         const m = curMat(target), box = el(target + 'MatNote');
         if (!box || !m) return;
-        box.textContent = m.cat === 5 ? t('matNoteAcr') : t('matNoteCat', { t: t('cat' + m.cat), n: colorCatalog[m.cat].items.length });
+        box.textContent = m.cat === 5 ? t('matNoteAcr') : t('matNoteCat', { t: catNames(m), n: matCats(m).reduce((s, ci) => s + colorCatalog[ci].items.length, 0) });
       });
     }
 
@@ -2770,22 +2780,22 @@
       { id: 'duo', seg: 'econ', t: 'l-shape', f: 1, b: 0, c: 0, hw: 0, fc: 'ec21', bc: 'ec6', open: 'h', o: [1, 1, 0],
         lo: [['door', 60, 1, 0, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0], ['door', 60, 1, 0]],
         up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
-      { id: 'scandi', seg: 'mid', t: 'straight', f: 4, b: 0, c: 1, hw: 1, fc: 'pr8', bc: 'ec6', open: 'h', o: [1, 1, 0],
+      { id: 'scandi', seg: 'mid', t: 'straight', f: 2, b: 0, c: 1, hw: 1, fc: 'pr8', bc: 'ec6', open: 'h', o: [1, 1, 0],
         lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
       { id: 'comfort', seg: 'mid', t: 'l-shape', f: 3, b: 0, c: 1, hw: 1, fc: 'si2', bc: 'ec6', open: 'p', o: [1, 1, 1], lg: [1, 1, 0, 0],
         lo: [['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
         up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'loft', seg: 'mid', t: 'l-shape', f: 5, b: 2, c: 1, hw: 1, fc: 'pr23', bc: 'si5', open: 'g', o: [1, 1, 1], lg: [1, 1, 0, 0],
+      { id: 'loft', seg: 'mid', t: 'l-shape', f: 3, b: 2, c: 1, hw: 1, fc: 'pr23', bc: 'si5', open: 'g', o: [1, 1, 1], lg: [1, 1, 0, 0],
         lo: [['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 60, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
         up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
-      { id: 'classic', seg: 'prem', t: 'u-shape', f: 5, b: 4, c: 2, hw: 2, fc: 'pr6', bc: 'pr6', open: 'h', o: [1, 1, 1],
+      { id: 'classic', seg: 'prem', t: 'u-shape', f: 3, b: 2, c: 2, hw: 2, fc: 'pr6', bc: 'pr6', open: 'h', o: [1, 1, 1],
         lo: [['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['sink', 60, 1, 0], ['door', 60, 1, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']],
         up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']] },
-      { id: 'enamel', seg: 'prem', t: 'l-shape', f: 7, b: 5, c: 2, hw: 2, fc: 'co5', bc: 'pr8', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2],
+      { id: 'enamel', seg: 'prem', t: 'l-shape', f: 5, b: 3, c: 2, hw: 2, fc: 'co5', bc: 'pr8', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2],
         lo: [['drawers', 60, 0, 3, 'l'], ['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['door', 60, 1, 0]],
         up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
-      { id: 'prestige', seg: 'prem', t: 'l-shape', f: 11, b: 9, c: 3, hw: 2, fc: 'ac9', bc: 'pl5', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90],
+      { id: 'prestige', seg: 'prem', t: 'l-shape', f: 7, b: 5, c: 3, hw: 2, fc: 'ac9', bc: 'pl5', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90],
         lo: [['drawers', 60, 0, 3, 'l'], ['door', 60, 1, 0, 'l'], ['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
         up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 60, 1, 0], ['dryer', 60, 1, 1], ['hood', 60, 0, 1], ['door', 60, 1, 0]] }
     ];
@@ -2794,7 +2804,7 @@
       const conv = arr => arr.map(e => [e[0], '', e[1], e[2], e[3], p.open, e[4] || 'm']);
       const sumWall = (arr, w) => arr.filter(e => (e[4] || 'm') === w).reduce((a, e) => a + e[1], 0);
       const main = sumWall(p.lo, 'm'), left = sumWall(p.lo, 'l'), right = sumWall(p.lo, 'r');
-      return { v: 3, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: 1, uh: 72, ud: 35,
+      return { v: 4, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: 1, uh: 72, ud: 35,
         f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: p.fc, bc: p.bc, lo: conv(p.lo), up: conv(p.up), o: p.o, i: p.isl || [0, 140, 80] };
     }
 
@@ -2843,7 +2853,7 @@
     function serializeState() {
       const s = getCalcState();
       const enc = (arr, tier) => arr.map(x => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0]]);
-      return { v: 3, t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, uh: s.upperH, ud: s.upperD,
+      return { v: 4, t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW] };
@@ -2922,7 +2932,8 @@
       const ver = st.v | 0;
       let fIdx = st.f, bIdx = st.b;
       if (ver < 2) fIdx = FACADE_V1_MAP[st.f | 0] !== undefined ? FACADE_V1_MAP[st.f | 0] : 2;
-      if (ver < 3) { fIdx = FACADE_V2_MAP[fIdx | 0] !== undefined ? FACADE_V2_MAP[fIdx | 0] : CONFIG.defaults.facade; bIdx = BODY_V2_MAP[bIdx | 0] !== undefined ? BODY_V2_MAP[bIdx | 0] : CONFIG.defaults.body; }
+      if (ver < 3) { fIdx = FACADE_V2_MAP[fIdx | 0] !== undefined ? FACADE_V2_MAP[fIdx | 0] : 4; bIdx = BODY_V2_MAP[bIdx | 0] !== undefined ? BODY_V2_MAP[bIdx | 0] : 0; }
+      if (ver < 4) { fIdx = FACADE_V3_MAP[fIdx | 0] !== undefined ? FACADE_V3_MAP[fIdx | 0] : CONFIG.defaults.facade; bIdx = BODY_V3_MAP[bIdx | 0] !== undefined ? BODY_V3_MAP[bIdx | 0] : CONFIG.defaults.body; }
       setSel('facadeMaterial', clampN(fIdx, 0, CONFIG.facades.length - 1, CONFIG.defaults.facade));
       setSel('hardwareLevel', clampN(st.hw, 0, CONFIG.hardware.length - 1, CONFIG.defaults.hw));
       ledState = ledFromArr(st.lg);
