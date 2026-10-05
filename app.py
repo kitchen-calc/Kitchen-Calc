@@ -11,6 +11,7 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from seo import SITE_URL, render_home
+from landings import PAGES as LANDINGS, render_landing
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -43,7 +44,8 @@ async def sitemap():
     urls = (f"<url><loc>{SITE_URL}/</loc>{alt('/')}<priority>1.0</priority></url>"
             f"<url><loc>{SITE_URL}/uz</loc>{alt('/uz')}<priority>0.9</priority></url>"
             f"<url><loc>{SITE_URL}/calc</loc><priority>0.8</priority></url>"
-            f"<url><loc>{SITE_URL}/partners</loc><priority>0.6</priority></url>")
+            f"<url><loc>{SITE_URL}/partners</loc><priority>0.6</priority></url>"
+            + "".join(f"<url><loc>{SITE_URL}/{s}</loc><priority>0.8</priority></url>" for s in LANDINGS))
     xml = ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
            'xmlns:xhtml="http://www.w3.org/1999/xhtml">' + urls + "</urlset>")
     return HTMLResponse(xml, media_type="application/xml")
@@ -95,6 +97,17 @@ async def yandex_verification():
 async def google_verification():
     # Подтверждение прав на сайт в Google Search Console
     return "google-site-verification: googled74069028bb9f909.html"
+
+
+def _make_landing(slug):
+    async def landing():
+        return HTMLResponse(render_landing(slug))
+    return landing
+
+
+# Посадочные страницы под поисковые запросы (см. landings.py): по одному явному адресу на страницу
+for _slug in LANDINGS:
+    app.add_api_route("/" + _slug, _make_landing(_slug), methods=["GET"], response_class=HTMLResponse)
 
 
 @app.get("/partners", response_class=HTMLResponse)
