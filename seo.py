@@ -23,7 +23,8 @@ SEO = {
         "desc": "Кухни и корпусная мебель на заказ в Ташкенте под ключ: бесплатный замер, своё производство 3–30 рабочих дней, "
                 "доставка и монтаж, гарантия 12 месяцев. Рассчитайте стоимость онлайн за 2 минуты.",
         "biz": "AbdulAziz — кухни и корпусная мебель на заказ",
-        "services": ["Кухни на заказ", "Корпусная мебель на заказ", "Шкафы и гардеробные на заказ", "Прихожие на заказ", "Мебель под ключ"],
+        "services": ["Кухни на заказ", "Спальни на заказ", "Гардеробные и шкафы на заказ", "Прихожие на заказ",
+                     "Мебель для гостиной и ТВ-зоны на заказ", "Детская мебель на заказ", "Корпусная мебель под ключ"],
         "catalog": "Мебель на заказ",
         "faq": [
             ("Сколько стоит кухня на заказ в Ташкенте?",
@@ -38,13 +39,18 @@ SEO = {
             ("Что входит в «под ключ»?",
              "Замер, проект, изготовление, доставка по Ташкенту, сборка и установка. Подключение техники, мойки, воды и "
              "электричества 220 В в стоимость не входит — подскажем проверенных мастеров."),
+            ("Вы работаете по договору?",
+             "Да, работаем под ключ и только по письменному договору. В нём фиксируются цена и порядок оплаты, сроки изготовления "
+             "и монтажа, спецификация (размеры, материалы, фурнитура, техника), порядок приёмки и гарантия 12 месяцев. "
+             "Шаблон договора можно скачать на сайте."),
             ("Какая гарантия на мебель?",
              "Гарантия 12 месяцев по договору. На фурнитуру Blum действует официальная гарантия производителя."),
             ("Из каких материалов вы делаете мебель?",
              "ЛДСП и ЛМДФ трёх классов (Эконом, Премиум, Платинум), акрил (Китай и Турция). Столешницы — ЛДСП, искусственный камень "
              "и кварцевый агломерат. Фурнитура — от базовой до Blum."),
             ("Вы делаете только кухни?",
-             "Кроме кухонь мы изготавливаем корпусную мебель по индивидуальным размерам: шкафы, прихожие, гардеробные, тумбы и комоды. "
+             "Нет. Кроме кухонь мы изготавливаем корпусную мебель по индивидуальным размерам: спальни, шкафы и гардеробные, прихожие, "
+             "ТВ-зоны и мебель для гостиной, детские комнаты. "
              "Напишите в Telegram или позвоните — обсудим вашу задачу."),
         ],
     },
@@ -57,7 +63,8 @@ SEO = {
         "desc": "Toshkentda buyurtma asosida oshxona va korpusli mebel, kalit topshirish bilan: bepul oʻlchov, oʻz ishlab chiqarish "
                 "3–30 ish kuni, yetkazish va oʻrnatish, 12 oy kafolat. Narxni onlayn 2 daqiqada hisoblang.",
         "biz": "AbdulAziz — buyurtma asosida oshxona va korpusli mebel",
-        "services": ["Buyurtma oshxonalar", "Buyurtma korpusli mebel", "Shkaf va garderob xonalari", "Prixojaya", "Kalit topshirish mebel"],
+        "services": ["Buyurtma oshxonalar", "Buyurtma yotoqxonalar", "Shkaf va garderob xonalari", "Prixojaya",
+                     "Mehmonxona va TV zonasi mebeli", "Bolalar xonasi mebeli", "Kalit topshirish asosida korpusli mebel"],
         "catalog": "Buyurtma mebel",
         "faq": [
             ("Toshkentda buyurtma asosida oshxona narxi qancha?",
@@ -73,14 +80,19 @@ SEO = {
             ("«Kalit topshirish» nimalarni oʻz ichiga oladi?",
              "Oʻlchov, loyiha, tayyorlash, Toshkent boʻylab yetkazish, yigʻish va oʻrnatish. Texnika, moyka, suv va 220 V "
              "elektrni ulash narxga kirmaydi — ishonchli ustalarni tavsiya qilamiz."),
+            ("Shartnoma asosida ishlaysizmi?",
+             "Ha, kalit topshirish asosida va faqat yozma shartnoma bilan ishlaymiz. Shartnomada narx va toʻlov tartibi, tayyorlash va "
+             "montaj muddatlari, spetsifikatsiya (oʻlchamlar, materiallar, furnitura, texnika), qabul qilish tartibi va 12 oy kafolat "
+             "belgilanadi. Shartnoma namunasini saytdan yuklab olish mumkin."),
             ("Mebelga qanday kafolat berasiz?",
              "Shartnoma boʻyicha 12 oy kafolat. Blum furniturasiga ishlab chiqaruvchining rasmiy kafolati amal qiladi."),
             ("Mebelni qaysi materiallardan tayyorlaysiz?",
              "Uch sinfdagi LDSP va LMDF (Ekonom, Premium, Platinum), akril (Xitoy va Turkiya). Stoleshnitsa — LDSP, sunʼiy tosh "
              "va kvars aglomerat. Furnitura — oddiydan Blumgacha."),
             ("Faqat oshxona tayyorlaysizmi?",
-             "Oshxonadan tashqari individual oʻlchamlar boʻyicha korpusli mebel ham tayyorlaymiz: shkaflar, prixojaya, garderob "
-             "xonalari, tumba va komodlar. Telegramga yozing yoki qoʻngʻiroq qiling — vazifangizni muhokama qilamiz."),
+             "Yoʻq. Oshxonadan tashqari individual oʻlchamlar boʻyicha korpusli mebel ham tayyorlaymiz: yotoqxonalar, shkaf va garderob "
+             "xonalari, prixojaya, TV zonalari va mehmonxona mebeli, bolalar xonalari. Telegramga yozing yoki qoʻngʻiroq qiling — "
+             "vazifangizni muhokama qilamiz."),
         ],
     },
 }

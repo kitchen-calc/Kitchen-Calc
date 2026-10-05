@@ -93,6 +93,25 @@ HOME_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "h
 HOME_TYPES = {"svg": "image/svg+xml", "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "ico": "image/x-icon"}
 
 
+DOCS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "docs")
+DOC_TYPES = {
+    "pdf": "application/pdf",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
+
+@app.get("/docs/{filename}")
+async def download_doc(filename: str):
+    # Шаблон договора для скачивания: только простые имена файлов .pdf / .docx из static/docs
+    m = re.fullmatch(r"[a-z0-9_-]{1,50}\.(pdf|docx)", filename)
+    path = os.path.join(DOCS_DIR, filename)
+    if not m or not os.path.isfile(path):
+        return JSONResponse({"error": "not found"}, status_code=404)
+    disposition = "inline" if m.group(1) == "pdf" else "attachment"
+    return FileResponse(path, media_type=DOC_TYPES[m.group(1)],
+                        headers={"Content-Disposition": f'{disposition}; filename="{filename}"', "Cache-Control": "public, max-age=3600"})
+
+
 @app.get("/static/home/{filename}")
 async def home_asset(filename: str):
     # Картинки главной: только простые имена файлов (latin, цифры, - _) с картиночным расширением
