@@ -44,6 +44,7 @@ async def sitemap():
     urls = (f"<url><loc>{SITE_URL}/</loc>{alt('/')}<priority>1.0</priority></url>"
             f"<url><loc>{SITE_URL}/uz</loc>{alt('/uz')}<priority>0.9</priority></url>"
             f"<url><loc>{SITE_URL}/calc</loc><priority>0.8</priority></url>"
+            f"<url><loc>{SITE_URL}/shkaf</loc><priority>0.8</priority></url>"
             f"<url><loc>{SITE_URL}/partners</loc><priority>0.6</priority></url>"
             + "".join(f"<url><loc>{SITE_URL}/{s}</loc><priority>0.8</priority></url>" for s in LANDINGS))
     xml = ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
@@ -114,6 +115,12 @@ for _slug in LANDINGS:
 async def partners():
     # Страница для дизайнеров и строителей (сотрудничество), оформлена как и остальные посадочные
     return HTMLResponse(render_landing("partners"))
+
+
+@app.get("/shkaf", response_class=HTMLResponse)
+async def wardrobe_calc():
+    # Калькулятор шкафов-купе, гардеробных и прихожих
+    return FileResponse(os.path.join(os.path.dirname(__file__), "templates", "wardrobe.html"))
 
 
 @app.get("/calc", response_class=HTMLResponse)
