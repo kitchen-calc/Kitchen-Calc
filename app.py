@@ -10,12 +10,13 @@ import urllib.request
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
+from seo import SITE_URL, render_home
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-# Основной адрес сайта. Старый адрес на onrender.com перекидывает сюда (кроме /health — его пингует GitHub Actions).
-SITE_URL = "https://kitchen-calc.uz"
+# Основной адрес сайта (SITE_URL, см. seo.py). Старый адрес на onrender.com перекидывает сюда
+# (кроме /health — его пингует GitHub Actions).
 
 
 @app.middleware("http")
@@ -34,8 +35,16 @@ async def robots():
 
 @app.get("/sitemap.xml")
 async def sitemap():
-    urls = "".join(f"<url><loc>{SITE_URL}{p}</loc></url>" for p in ("/", "/calc"))
-    xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + urls + "</urlset>"
+    # главная на русском и узбекском (с указанием версий друг для друга) и калькулятор
+    def alt(url):
+        return (f'<xhtml:link rel="alternate" hreflang="ru" href="{SITE_URL}/"/>'
+                f'<xhtml:link rel="alternate" hreflang="uz" href="{SITE_URL}/uz"/>'
+                f'<xhtml:link rel="alternate" hreflang="x-default" href="{SITE_URL}/"/>')
+    urls = (f"<url><loc>{SITE_URL}/</loc>{alt('/')}<priority>1.0</priority></url>"
+            f"<url><loc>{SITE_URL}/uz</loc>{alt('/uz')}<priority>0.9</priority></url>"
+            f"<url><loc>{SITE_URL}/calc</loc><priority>0.8</priority></url>")
+    xml = ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+           'xmlns:xhtml="http://www.w3.org/1999/xhtml">' + urls + "</urlset>")
     return HTMLResponse(xml, media_type="application/xml")
 
 # --- Настройки Telegram (задаются в Render -> Environment, в код НЕ вписывать) ---
@@ -54,8 +63,24 @@ MAX_IMAGE_BYTES = 8 * 1024 * 1024
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     # Главная — витрина; калькулятор переехал на /calc
-    file_path = os.path.join(os.path.dirname(__file__), "templates", "home.html")
-    return FileResponse(file_path)
+    return HTMLResponse(render_home("ru"))
+
+
+@app.get("/uz", response_class=HTMLResponse)
+async def read_root_uz(request: Request):
+    # Та же главная на узбекском: отдельный адрес, чтобы её находили по запросам на узбекском
+    return HTMLResponse(render_home("uz"))
+
+
+@app.get("/uz/")
+async def read_root_uz_slash():
+    return RedirectResponse("/uz", status_code=301)
+
+
+@app.get("/favicon.ico")
+async def favicon_ico():
+    # Браузеры и поисковики запрашивают иконку по этому адресу, даже если она не указана в странице
+    return FileResponse(os.path.join(HOME_DIR, "favicon.ico"), media_type="image/x-icon", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/calc", response_class=HTMLResponse)
@@ -65,13 +90,13 @@ async def calculator(request: Request):
 
 
 HOME_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "home")
-HOME_TYPES = {"svg": "image/svg+xml", "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
+HOME_TYPES = {"svg": "image/svg+xml", "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "ico": "image/x-icon"}
 
 
 @app.get("/static/home/{filename}")
 async def home_asset(filename: str):
     # Картинки главной: только простые имена файлов (latin, цифры, - _) с картиночным расширением
-    m = re.fullmatch(r"[a-z0-9_-]{1,40}\.(svg|jpg|jpeg|png|webp)", filename)
+    m = re.fullmatch(r"[a-z0-9_-]{1,40}\.(svg|jpg|jpeg|png|webp|ico)", filename)
     path = os.path.join(HOME_DIR, filename)
     if not m or not os.path.isfile(path):
         return JSONResponse({"error": "not found"}, status_code=404)

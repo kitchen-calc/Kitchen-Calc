@@ -1,16 +1,31 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="__LANG__">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Кухни на заказ в Ташкенте | АбдулАзиз</title>
-  <meta name="description" content="Кухни на заказ в Ташкенте под ваши размеры: бесплатный замер, изготовление 3–30 рабочих дней, доставка и монтаж, гарантия 12 месяцев. Рассчитайте стоимость онлайн.">
-  <link rel="canonical" href="https://kitchen-calc.uz/">
+  <title>__TITLE__</title>
+  <meta name="description" content="__DESC__">
+  <meta name="theme-color" content="#11100e">
+  <link rel="canonical" href="__URL__">
+  <link rel="alternate" hreflang="ru" href="https://kitchen-calc.uz/">
+  <link rel="alternate" hreflang="uz" href="https://kitchen-calc.uz/uz">
+  <link rel="alternate" hreflang="x-default" href="https://kitchen-calc.uz/">
+  <link rel="icon" type="image/svg+xml" href="/static/home/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/home/favicon-32.png">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/static/home/apple-touch-icon.png">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://kitchen-calc.uz/">
-  <meta property="og:title" content="Кухни на заказ в Ташкенте | АбдулАзиз">
-  <meta property="og:description" content="Бесплатный замер, изготовление 3–30 рабочих дней, доставка и монтаж. Рассчитайте стоимость кухни онлайн за 2 минуты.">
-  <meta property="og:locale" content="ru_RU">
+  <meta property="og:site_name" content="AbdulAziz">
+  <meta property="og:url" content="__URL__">
+  <meta property="og:title" content="__TITLE__">
+  <meta property="og:description" content="__DESC__">
+  <meta property="og:locale" content="__OGLOCALE__">
+  <meta property="og:image" content="https://kitchen-calc.uz/static/home/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  __JSONLD__
+  __FAQDATA__
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Marck+Script&display=swap" rel="stylesheet">
@@ -143,6 +158,25 @@
     .mat-foot { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-top: 34px; flex-wrap: wrap; }
     .mat-foot p { color: var(--muted); max-width: 640px; }
 
+    /* ---------- мебель ---------- */
+    .fgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; background: var(--line); border: 1px solid var(--line); }
+    .fcard { background: var(--bg); padding: 34px 26px 30px; display: flex; flex-direction: column; gap: 10px; transition: background .3s; }
+    .fcard:hover { background: var(--bg-2); }
+    .fcard b { font-family: var(--serif); font-size: 2.4rem; line-height: 1; color: rgba(200,164,107,.4); font-weight: 600; }
+    .fcard h3 { font-family: var(--serif); font-size: 1.55rem; line-height: 1.15; font-weight: 600; color: #f4ecdf; }
+    .fcard p { font-size: .9rem; color: var(--muted); flex: 1; }
+
+    /* ---------- вопросы и ответы ---------- */
+    .faq-wrap { max-width: 900px; }
+    .qa { border-top: 1px solid var(--line); }
+    .qa:last-child { border-bottom: 1px solid var(--line); }
+    .qa summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 24px 0; font-family: var(--serif); font-size: 1.4rem; font-weight: 600; color: #f1e9dc; line-height: 1.25; }
+    .qa summary::-webkit-details-marker { display: none; }
+    .qa summary::after { content: '+'; flex: 0 0 auto; font: 400 1.8rem var(--sans); color: var(--gold); transition: transform .25s; }
+    .qa[open] summary::after { transform: rotate(45deg); }
+    .qa summary:hover { color: var(--gold-2); }
+    .qa p { padding: 0 48px 26px 0; color: #cfc5b6; max-width: 760px; }
+
     /* ---------- этапы ---------- */
     .steps { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); }
     .step { padding: 34px 22px 10px 0; position: relative; }
@@ -177,7 +211,7 @@
     @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
 
     /* ---------- адаптив ---------- */
-    @media (max-width: 1180px) {
+    @media (max-width: 1280px) {
       .nav { display: none; }
       .burger { display: inline-flex; align-items: center; justify-content: center; }
       .hdr.open .nav { display: flex; position: absolute; top: 84px; left: 0; right: 0; flex-direction: column; align-items: flex-start; gap: 0; background: rgba(17,16,14,.97); border-bottom: 1px solid var(--line); padding: 8px 24px 18px; }
@@ -189,6 +223,7 @@
       .grid-k { grid-template-columns: repeat(2, 1fr); }
       .calc-band .wrap { grid-template-columns: 1fr; gap: 50px; }
       .steps { grid-template-columns: repeat(2, 1fr); gap: 0 30px; }
+      .fgrid { grid-template-columns: repeat(2, 1fr); }
       .grid-m { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 680px) {
@@ -200,6 +235,7 @@
       .hdr-right .btn { display: none; }
       .hero .wrap { padding-top: 108px; padding-bottom: 80px; }
       .hero-tag { left: 10px; bottom: -22px; }
+      .scroll-hint { display: none; }
       .hero-types i { margin: 0 6px; }
       .facts .wrap { grid-template-columns: 1fr 1fr; padding: 0; }
       .fact { padding: 22px 16px; border-top: 1px solid var(--line); }
@@ -207,6 +243,9 @@
       section.block { padding: 76px 0; }
       .grid-k { grid-template-columns: 1fr; }
       .steps { grid-template-columns: 1fr; }
+      .fgrid { grid-template-columns: 1fr; }
+      .qa summary { font-size: 1.2rem; padding: 20px 0; }
+      .qa p { padding-right: 0; }
       .calc-price { right: 8px; }
       .foot { grid-template-columns: 1fr; }
       .btn { padding: 14px 20px; }
@@ -224,6 +263,7 @@
       <nav class="nav" id="nav">
         <a href="#top" data-t="navHome">Главная</a>
         <a href="#kitchens" data-t="navKitchens">Кухни</a>
+        <a href="#furniture" data-t="navFurniture">Мебель</a>
         <a href="#materials" data-t="navMaterials">Материалы</a>
         <a href="#process" data-t="navProcess">Как мы работаем</a>
         <a href="#contacts" data-t="navContacts">Контакты</a>
@@ -242,9 +282,9 @@
       <div class="hero-bg" aria-hidden="true"></div>
       <div class="wrap">
         <div>
-          <div class="eyebrow" data-t="heroEyebrow">Кухни на заказ · Ташкент</div>
-          <h1 data-t-html="heroTitle">Кухня, в которой <em>хочется жить</em></h1>
-          <p class="lead" data-t="heroLead">Делаем кухни под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену можно узнать онлайн за 2 минуты.</p>
+          <div class="eyebrow" data-t="heroEyebrow">На заказ · Ташкент</div>
+          <h1 data-t-html="heroTitle">Кухни и корпусная мебель <em>под ключ</em></h1>
+          <p class="lead" data-t="heroLead">Делаем кухни и корпусную мебель под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену кухни можно узнать онлайн за 2 минуты.</p>
           <div class="hero-cta">
             <a class="btn btn-gold" href="/calc" data-t="ctaCalc">Рассчитать стоимость</a>
             <a class="btn btn-line" href="#kitchens" data-t="ctaWorks">Смотреть кухни</a>
@@ -308,6 +348,24 @@
       </div>
     </section>
 
+    <section class="block" id="furniture">
+      <div class="wrap">
+        <div class="sec-head rv">
+          <div>
+            <div class="eyebrow" data-t="fEyebrow">Корпусная мебель</div>
+            <h2 data-t="fTitle">Мебель на заказ под ключ</h2>
+          </div>
+          <p data-t="fLead">От кухни до гардеробной — всё под размеры вашего помещения и в едином стиле. Замер, проект, производство, доставка и сборка — в одних руках.</p>
+        </div>
+        <div class="fgrid">
+          <article class="fcard rv"><b>01</b><h3 data-t="fc1t">Кухни на заказ</h3><p data-t="fc1">Прямые, угловые, П-образные и с островом. Стоимость рассчитывается онлайн за 2 минуты.</p><a class="card-link" href="/calc" data-t="fc1l">Рассчитать кухню</a></article>
+          <article class="fcard rv"><b>02</b><h3 data-t="fc2t">Шкафы и гардеробные</h3><p data-t="fc2">Распашные и встроенные шкафы, гардеробные под вашу нишу и планировку.</p><a class="card-link js-tg" href="https://t.me/Kitchencalc" target="_blank" rel="noopener" data-t="fcLink">Обсудить в Telegram</a></article>
+          <article class="fcard rv"><b>03</b><h3 data-t="fc3t">Прихожие</h3><p data-t="fc3">Прихожие под размеры вашего коридора с продуманным хранением.</p><a class="card-link js-tg" href="https://t.me/Kitchencalc" target="_blank" rel="noopener" data-t="fcLink">Обсудить в Telegram</a></article>
+          <article class="fcard rv"><b>04</b><h3 data-t="fc4t">Тумбы, комоды и другая корпусная мебель</h3><p data-t="fc4">Тумбы под ТВ, комоды, прикроватные тумбы и другая корпусная мебель по индивидуальным размерам.</p><a class="card-link js-tg" href="https://t.me/Kitchencalc" target="_blank" rel="noopener" data-t="fcLink">Обсудить в Telegram</a></article>
+        </div>
+      </div>
+    </section>
+
     <section class="block" id="materials">
       <div class="wrap">
         <div class="sec-head rv">
@@ -344,6 +402,18 @@
       </div>
     </section>
 
+    <section class="block" id="faq" style="padding-top:10px">
+      <div class="wrap faq-wrap">
+        <div class="sec-head rv">
+          <div>
+            <div class="eyebrow" data-t="qEyebrow">Вопросы и ответы</div>
+            <h2 data-t="qTitle">Частые вопросы о кухнях и мебели на заказ</h2>
+          </div>
+        </div>
+        <div class="faq" id="faqList"></div>
+      </div>
+    </section>
+
     <section class="visit" id="contacts">
       <div class="visit-bg" aria-hidden="true"></div>
       <div class="wrap rv">
@@ -369,7 +439,9 @@
           <h4 data-t="fNav">Разделы</h4>
           <ul>
             <li><a href="#kitchens" data-t="navKitchens">Кухни</a></li>
+            <li><a href="#furniture" data-t="navFurniture">Мебель</a></li>
             <li><a href="#materials" data-t="navMaterials">Материалы</a></li>
+            <li><a href="#faq" data-t="navFaq">Вопросы и ответы</a></li>
             <li><a href="#process" data-t="navProcess">Как мы работаем</a></li>
             <li><a href="/calc" data-t="navCalc">Калькулятор</a></li>
           </ul>
@@ -422,9 +494,9 @@
     var T = {
       ru: {
         city: 'Ташкент', tagline: 'кухни и мебель на заказ',
-        navHome: 'Главная', navKitchens: 'Кухни', navMaterials: 'Материалы', navProcess: 'Как мы работаем', navContacts: 'Контакты', navCalc: 'Калькулятор',
-        ctaCalcShort: 'Рассчитать', heroEyebrow: 'Кухни на заказ · Ташкент', heroTitle: 'Кухня, в которой <em>хочется жить</em>',
-        heroLead: 'Делаем кухни под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену можно узнать онлайн за 2 минуты.',
+        navHome: 'Главная', navKitchens: 'Кухни', navFurniture: 'Мебель', navFaq: 'Вопросы и ответы', navMaterials: 'Материалы', navProcess: 'Как мы работаем', navContacts: 'Контакты', navCalc: 'Калькулятор',
+        ctaCalcShort: 'Рассчитать', heroEyebrow: 'На заказ · Ташкент', heroTitle: 'Кухни и корпусная мебель <em>под ключ</em>',
+        heroLead: 'Делаем кухни и корпусную мебель под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену кухни можно узнать онлайн за 2 минуты.',
         ctaCalc: 'Рассчитать стоимость', ctaWorks: 'Смотреть кухни',
         typeStraight: 'Прямые', typeCorner: 'Угловые', typeU: 'П-образные', typeIsland: 'С островом',
         heroTagSmall: 'Кухня под ключ', heroTag: 'замер · производство · монтаж', scroll: 'Листайте',
@@ -444,13 +516,20 @@
         s5t: 'Доставка и монтаж', s5: 'Привозим, собираем и устанавливаем.',
         vEyebrow: 'Бесплатный замер', vTitle: 'Приедем, измерим и покажем образцы', vLead: 'Позвоните или напишите в Telegram — договоримся об удобном времени. Замер и консультация бесплатно.',
         fAbout: 'Кухни и мебель на заказ в Ташкенте. Замер, производство, доставка и монтаж. Гарантия 12 месяцев по договору.', fNav: 'Разделы', fContacts: 'Контакты', call: 'Позвонить',
-        pageTitle: 'Кухни на заказ в Ташкенте | АбдулАзиз'
+        fEyebrow: 'Корпусная мебель', fTitle: 'Мебель на заказ под ключ',
+        fLead: 'От кухни до гардеробной — всё под размеры вашего помещения и в едином стиле. Замер, проект, производство, доставка и сборка — в одних руках.',
+        fc1t: 'Кухни на заказ', fc1: 'Прямые, угловые, П-образные и с островом. Стоимость рассчитывается онлайн за 2 минуты.', fc1l: 'Рассчитать кухню',
+        fc2t: 'Шкафы и гардеробные', fc2: 'Распашные и встроенные шкафы, гардеробные под вашу нишу и планировку.',
+        fc3t: 'Прихожие', fc3: 'Прихожие под размеры вашего коридора с продуманным хранением.',
+        fc4t: 'Тумбы, комоды и другая корпусная мебель', fc4: 'Тумбы под ТВ, комоды, прикроватные тумбы и другая корпусная мебель по индивидуальным размерам.',
+        fcLink: 'Обсудить в Telegram',
+        qEyebrow: 'Вопросы и ответы', qTitle: 'Частые вопросы о кухнях и мебели на заказ'
       },
       uz: {
         city: 'Toshkent', tagline: 'buyurtma asosida oshxona va mebel',
-        navHome: 'Bosh sahifa', navKitchens: 'Oshxonalar', navMaterials: 'Materiallar', navProcess: 'Qanday ishlaymiz', navContacts: 'Aloqa', navCalc: 'Kalkulyator',
-        ctaCalcShort: 'Hisoblash', heroEyebrow: 'Buyurtma oshxonalar · Toshkent', heroTitle: 'Yashagingiz keladigan <em>oshxona</em>',
-        heroLead: 'Oshxonani oʻlchamlaringiz boʻyicha tayyorlaymiz: bepul oʻlchov, oʻz ishlab chiqarishimiz, yetkazish va oʻrnatish. Narxni 2 daqiqada onlayn bilib oling.',
+        navHome: 'Bosh sahifa', navKitchens: 'Oshxonalar', navFurniture: 'Mebel', navFaq: 'Savol-javob', navMaterials: 'Materiallar', navProcess: 'Qanday ishlaymiz', navContacts: 'Aloqa', navCalc: 'Kalkulyator',
+        ctaCalcShort: 'Hisoblash', heroEyebrow: 'Buyurtma asosida · Toshkent', heroTitle: 'Oshxona va korpusli mebel <em>kalit topshirish</em> asosida',
+        heroLead: 'Oshxona va korpusli mebelni oʻlchamlaringiz boʻyicha tayyorlaymiz: bepul oʻlchov, oʻz ishlab chiqarishimiz, yetkazish va oʻrnatish. Oshxona narxini 2 daqiqada onlayn bilib oling.',
         ctaCalc: 'Narxni hisoblash', ctaWorks: 'Oshxonalarni koʻrish',
         typeStraight: 'Toʻgʻri', typeCorner: 'Burchakli', typeU: 'P-shaklida', typeIsland: 'Orolli',
         heroTagSmall: 'Kalit topshirish', heroTag: 'oʻlchov · ishlab chiqarish · oʻrnatish', scroll: 'Pastga',
@@ -470,7 +549,14 @@
         s5t: 'Yetkazish va oʻrnatish', s5: 'Olib kelamiz, yigʻamiz va oʻrnatamiz.',
         vEyebrow: 'Bepul oʻlchov', vTitle: 'Kelamiz, oʻlchaymiz va namunalarni koʻrsatamiz', vLead: 'Qoʻngʻiroq qiling yoki Telegramga yozing — qulay vaqtni kelishamiz. Oʻlchov va maslahat bepul.',
         fAbout: 'Toshkentda buyurtma asosida oshxona va mebel. Oʻlchov, ishlab chiqarish, yetkazish va oʻrnatish. Shartnoma boʻyicha 12 oy kafolat.', fNav: 'Boʻlimlar', fContacts: 'Aloqa', call: 'Qoʻngʻiroq',
-        pageTitle: 'Toshkentda buyurtma oshxonalar | AbdulAziz'
+        fEyebrow: 'Korpusli mebel', fTitle: 'Kalit topshirish asosida buyurtma mebel',
+        fLead: 'Oshxonadan garderob xonasigacha — hammasi xonangiz oʻlchamlariga mos va yagona uslubda. Oʻlchov, loyiha, ishlab chiqarish, yetkazish va yigʻish — bir joyda.',
+        fc1t: 'Buyurtma oshxonalar', fc1: 'Toʻgʻri, burchakli, P-shaklida va orolli. Narx onlayn 2 daqiqada hisoblanadi.', fc1l: 'Oshxonani hisoblash',
+        fc2t: 'Shkaf va garderob xonalari', fc2: 'Ochiladigan va ichiga oʻrnatiladigan shkaflar, joyingiz va rejangizga mos garderob xonalari.',
+        fc3t: 'Prixojaya', fc3: 'Koridoringiz oʻlchamlariga mos, oʻylangan saqlash tizimli prixojayalar.',
+        fc4t: 'Tumba, komod va boshqa korpusli mebel', fc4: 'TV tumbasi, komod, krovat yonidagi tumbalar va boshqa korpusli mebel individual oʻlchamlar boʻyicha.',
+        fcLink: 'Telegramda muhokama qilish',
+        qEyebrow: 'Savol-javob', qTitle: 'Buyurtma oshxona va mebel haqida koʻp beriladigan savollar'
       }
     };
     var SEG = { econ: 'segEcon', mid: 'segMid', prem: 'segPrem' };
@@ -497,11 +583,9 @@
       }).join('');
     }
 
+    // Язык определяется адресом страницы (/ — русский, /uz — узбекский); заголовок и теги подставляет сервер
     function applyLang(lang) {
       LANG = lang === 'uz' ? 'uz' : 'ru';
-      try { localStorage.setItem('kc_lang', LANG); } catch (e) {}
-      document.documentElement.lang = LANG;
-      document.title = t('pageTitle');
       document.querySelectorAll('[data-t]').forEach(function (n) { n.textContent = t(n.getAttribute('data-t')); });
       document.querySelectorAll('[data-t-html]').forEach(function (n) { n.innerHTML = t(n.getAttribute('data-t-html')); });
       document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-lang') === LANG); });
@@ -513,7 +597,17 @@
       });
       renderKitchens();
       renderDecors();
+      renderFaq();
       observe();
+    }
+
+    // Вопросы и ответы приходят с сервера на языке страницы (те же, что в разметке для поисковиков)
+    function renderFaq() {
+      var list = [];
+      try { list = JSON.parse(document.getElementById('faq-data').textContent) || []; } catch (e) {}
+      document.getElementById('faqList').innerHTML = list.map(function (qa) {
+        return '<details class="qa rv"><summary>' + esc(qa[0]) + '</summary><p>' + esc(qa[1]) + '</p></details>';
+      }).join('');
     }
 
     // Появление блоков при прокрутке
@@ -537,7 +631,16 @@
       document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x === b); });
       renderKitchens();
     });
-    document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { applyLang(b.getAttribute('data-lang')); }); });
+    // Переключатель языка ведёт на адрес нужной версии и запоминает выбор
+    var PAGE_LANG = location.pathname.indexOf('/uz') === 0 ? 'uz' : 'ru';
+    document.querySelectorAll('.lang button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var l = b.getAttribute('data-lang');
+        if (l === PAGE_LANG) return;
+        try { localStorage.setItem('kc_lang', l); } catch (e) {}
+        location.href = (l === 'uz' ? '/uz' : '/') + location.hash;
+      });
+    });
 
     // Логотип: наверх; 5 быстрых нажатий — скрытый вход в раскрой для мастера
     var taps = [];
@@ -551,14 +654,19 @@
 
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    var lang = 'ru';
+    // Выбор языка человеком: ?lang= в ссылке, сохранённый выбор или язык браузера.
+    // Поисковые роботы остаются на том адресе, куда пришли (русский на /, узбекский на /uz).
+    var wanted = null;
     try {
       var q = new URLSearchParams(location.search).get('lang');
       var saved = null;
       try { saved = localStorage.getItem('kc_lang'); } catch (e) {}
-      lang = q || saved || ((navigator.language || '').toLowerCase().indexOf('uz') === 0 ? 'uz' : 'ru');
+      wanted = q || saved || null;
+      if (!wanted && PAGE_LANG === 'ru' && (navigator.language || '').toLowerCase().indexOf('uz') === 0) wanted = 'uz';
     } catch (e) {}
-    applyLang(lang);
+    if (PAGE_LANG === 'ru' && wanted === 'uz') { location.replace('/uz' + location.hash); return; }
+    if (PAGE_LANG === 'uz' && new URLSearchParams(location.search).get('lang') === 'ru') { location.replace('/' + location.hash); return; }
+    applyLang(PAGE_LANG);
     onScroll();
   })();
   </script>
