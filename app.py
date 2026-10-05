@@ -286,6 +286,16 @@ def build_lead_text(data):
                 if line:
                     lines.append(line)
 
+    blocks = data.get("blocks")
+    if isinstance(blocks, list):
+        for blk in blocks[:5]:
+            if not isinstance(blk, dict) or not isinstance(blk.get("items"), list):
+                continue
+            lines.append("")
+            lines.append(f"<b>{_esc(blk.get('title'), 60)}</b>")
+            for it in blk["items"][:20]:
+                lines.append("• " + _esc(it, 160))
+
     # Ссылка открывает на сайте ровно ту кухню, которую собрал клиент
     if source.startswith(("https://", "http://")):
         link_line = f'🔗 <a href="{html.escape(source, quote=True)}">Открыть расчёт клиента на сайте</a>'
