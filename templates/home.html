@@ -417,25 +417,6 @@
       </div>
     </section>
 
-    <section class="block" id="presets" style="padding-top:20px">
-      <div class="wrap">
-        <div class="sec-head rv">
-          <div>
-            <div class="eyebrow" data-t="pvEyebrow">Готовые планировки</div>
-            <h2 data-t="pvTitle">Выберите планировку и измените под себя</h2>
-          </div>
-          <div class="tabs" id="tabs">
-            <button class="tab on" data-seg="all" data-t="segAll">Все</button>
-            <button class="tab" data-seg="econ" data-t="segEcon">Эконом</button>
-            <button class="tab" data-seg="mid" data-t="segMid">Стандарт</button>
-            <button class="tab" data-seg="prem" data-t="segPrem">Премиум</button>
-          </div>
-        </div>
-        <div class="grid-k" id="gridK"></div>
-        <p class="rv" style="color:var(--muted);font-size:.85rem;margin-top:26px" data-t="kNote">Изображения — визуализации из нашего калькулятора. Любой вариант откроется в калькуляторе: поменяйте размеры, цвет и материалы — цена пересчитается сразу.</p>
-      </div>
-    </section>
-
     <section class="block" id="furniture">
       <div class="wrap">
         <div class="sec-head rv">
@@ -769,16 +750,6 @@
     function t(k) { return (T[LANG] && T[LANG][k] !== undefined) ? T[LANG][k] : T.ru[k]; }
     function calcUrl(extra) { return '/calc?' + (extra ? extra + '&' : '') + 'lang=' + LANG; }
 
-    function renderKitchens() {
-      var list = KITCHENS.filter(function (k) { return seg === 'all' || k.seg === seg; });
-      document.getElementById('gridK').innerHTML = list.map(function (k) {
-        var tx = k[LANG] || k.ru;
-        return '<a class="card rv in" href="' + calcUrl('preset=' + k.id) + '">' +
-          '<div class="card-img"><span class="badge">' + esc(t(SEG[k.seg])) + '</span><img src="/static/home/' + k.id + '.svg" alt="' + esc(tx[0]) + '" loading="lazy"></div>' +
-          '<div class="card-body"><h3>' + esc(tx[0]) + '</h3><p>' + esc(tx[1]) + '</p><span class="card-link">' + esc(t('kOpen')) + '</span></div></a>';
-      }).join('');
-    }
-
     function phButton(group, i, p) {
       var cap = LANG === 'uz' ? p[2] : p[1];
       return '<button type="button" class="ph rv" data-g="' + group + '" data-i="' + i + '" aria-label="' + esc(cap) + '">' +
@@ -841,7 +812,6 @@
         u.searchParams.set('lang', LANG);
         a.setAttribute('href', u.pathname + u.search);
       });
-      renderKitchens();
       renderGalleries();
       renderDecors();
       renderFaq();
@@ -872,12 +842,6 @@
     document.getElementById('burger').addEventListener('click', function () { hdr.classList.toggle('open'); onScroll(); });
     document.getElementById('nav').addEventListener('click', function (e) { if (e.target.tagName === 'A') { hdr.classList.remove('open'); onScroll(); } });
 
-    document.getElementById('tabs').addEventListener('click', function (e) {
-      var b = e.target.closest('.tab'); if (!b) return;
-      seg = b.getAttribute('data-seg');
-      document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x === b); });
-      renderKitchens();
-    });
     document.addEventListener('click', function (e) {
       var ph = e.target.closest && e.target.closest('.ph');
       if (ph) { lbOpen(ph.getAttribute('data-g'), +ph.getAttribute('data-i')); return; }
