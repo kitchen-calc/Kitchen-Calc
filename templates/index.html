@@ -2563,7 +2563,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=5');
+        const mod = await import('/static/js/kitchen3d.js?v=6');
         K3 = mod.createK3D(el('k3dCanvas'), {
           onSelect: sel => { selSec = sel ? (secsOf(sel.tier).find(x => x.id === sel.id) || null) : null; renderPlanner(); },
           onMove: (sel, wall, u) => k3dMoveTo(sel, wall, u)
@@ -3370,16 +3370,37 @@
     }
     // угловые шкафы в углах Г- и П-образной кухни; в прямой и параллельной — обычные шкафы
     function ensureCorners() {
-      if (!hasLeftWall(currentType)) { lowerSections.forEach(x => { if (x.kind === 'corner') { x.kind = 'door'; x.width = Math.min(Number(x.width) || 60, 90); x.autoName = true; } }); return; }
+      const unCorner = x => { x.kind = 'door'; x.autoName = true; };   // ширину не трогаем — ряд и верхние шкафы не сдвигаются
+      if (!hasLeftWall(currentType)) { lowerSections.forEach(x => { if (x.kind === 'corner') unCorner(x); }); return; }
       const mainOf = () => lowerSections.filter(x => x.wall === 'main');
-      const fix = (x, at) => {
-        if (x && x.kind === 'corner') return;
-        if (x && x.kind === 'door' && !isTall(x)) { x.kind = 'corner'; x.width = Math.max(90, Number(x.width) || 0); x.autoName = true; return; }
-        const c = newModule('lower', 'corner', 'main'); lowerSections.splice(at, 0, c);
+      const fix = (x, at) => {   // возвращает, на сколько см сдвинулся основной ряд
+        if (x && x.kind === 'corner') return 0;
+        if (x && x.kind === 'door' && !isTall(x)) { const w0 = Number(x.width) || 0; x.kind = 'corner'; x.width = Math.max(90, w0); x.autoName = true; return x.width - w0; }
+        const c = newModule('lower', 'corner', 'main'); lowerSections.splice(at, 0, c); return c.width;
+      };
+      // верхний ряд сдвигаем на столько же, чтобы вытяжка осталась над варочной, а сушка — над мойкой
+      const shiftUpper = d => {
+        if (d < 1) return;
+        const mu = upperSections.filter(x => x.wall === 'main'); if (!mu.length) return;
+        const w0 = Number(mu[0].width) || 0;
+        if (w0 + d <= 120) mu[0].width = w0 + d;
+        else { const u = newModule('upper', 'door', 'main'); u.width = Math.round(d); upperSections.splice(upperSections.indexOf(mu[0]), 0, u); }
       };
       let m = mainOf();
-      fix(m[0], m.length ? lowerSections.indexOf(m[0]) : lowerSections.length);
-      if (currentType === 'u-shape') { m = mainOf(); const last = m[m.length - 1]; if (m.length >= 2) fix(last, lowerSections.indexOf(last) + 1); else fix(null, lowerSections.indexOf(last) + 1); }
+      shiftUpper(fix(m[0], m.length ? lowerSections.indexOf(m[0]) : lowerSections.length));
+      if (currentType === 'u-shape') {
+        m = mainOf(); const last = m[m.length - 1]; if (m.length >= 2) fix(last, lowerSections.indexOf(last) + 1); else fix(null, lowerSections.indexOf(last) + 1);
+        // верхний ряд доводим до правого угла, чтобы он сошёлся с правой стеной
+        const L = layoutAll(lowerSections, upperSections, currentType), ml = L.main.lower, mu = L.main.upper;
+        const gap = L.main.totalLower - L.main.totalUpper;
+        if (mu.length && L.right.upper.length && ml.length && !isTall(ml[ml.length - 1].sec) && gap >= 30) {
+          const u = newModule('upper', 'door', 'main'); u.width = Math.min(100, Math.round(gap));
+          upperSections.splice(upperSections.indexOf(mu[mu.length - 1].sec) + 1, 0, u);
+        }
+      }
+      // угловой шкаф не в углу (остался от другой формы кухни) — обычный шкаф
+      m = mainOf();
+      lowerSections.forEach(x => { if (x.kind === 'corner' && !(x === m[0] || (currentType === 'u-shape' && x === m[m.length - 1]))) unCorner(x); });
     }
 
     function setKitchenType(type) {
@@ -3977,14 +3998,14 @@
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1]] },
       // Комфорт: основа GTV (~70%), около трети шкафов — на Blum (ящики TANDEMBOX, ящик под мойку, подъёмники AVENTOS)
       { id: 'comfort', seg: 'mid', t: 'l-shape', f: 3, b: 0, c: 1, hw: 1, fc: 'si2', bc: 'ec6', open: 'p', o: [1, 1, 1], lg: [1, 1, 0, 0],
-        kh: { sinkbox: 'antaro' },
-        lo: [['tower', 60, 0, 0, 'l', 'ovenMicro'], ['drawers', 60, 0, 3, 'l', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_b'] }], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
-        up: [['door', 60, 1, 0, 'l'], ['dryer', 60, 1, 1, 'm', '', PR_HK], ['door', 60, 1, 0], ['hood', 60, 0, 1, 'm', '', { hx: { lift: 'hk_s' } }], ['door', 60, 1, 0]] },
+        kh: { sinkbox: 'antaro', corner: 'flex' },
+        lo: [['tower', 60, 0, 0, 'l', 'ovenMicro'], ['drawers', 60, 0, 3, 'l', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_b'] }], ['corner', 100, 1, 0], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
+        up: [['door', 60, 1, 0, 'l'], ['door', 100, 1, 0], ['dryer', 60, 1, 1, 'm', '', PR_HK], ['door', 60, 1, 0], ['door', 60, 1, 0], ['hood', 60, 0, 1, 'm', '', { hx: { lift: 'hk_s' } }]] },
       // Премиум: всё на Blum — петли BLUMOTION, ящики LEGRABOX, AVENTOS на всех верхних, ящик под мойку, SPACE TWIN; гола и подсветка
       { id: 'prestige', seg: 'prem', t: 'l-shape', f: 7, b: 5, c: 3, hw: 4, fc: 'ac9', bc: 'pl5', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90], dc: [3, 3, 1, 1],
-        kh: { hinge: 'std_soft', lift: 'hk_top', sinkbox: 'legrabox', sx: { twin_l: 1 } },
-        lo: [['fridge', 60, 0, 0, 'l', 'built'], ['tower', 60, 0, 0, 'l', 'ovenMicro', { dsys: ['lbx_c', 'lbx_c'] }], ['drawers', 60, 0, 3, 'm', '', PR_LBX], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3, 'm', '', PR_LBX]],
-        up: [['door', 60, 1, 1, 'l', '', PR_HK], ['door', 60, 1, 1, 'm', '', PR_HK], ['dryer', 60, 1, 1, 'm', '', { hx: { lift: 'hf_top' } }], ['hood', 60, 0, 1, 'm', '', { hx: { lift: 'hk_s' } }], ['glass', 60, 0, 0]] }
+        kh: { hinge: 'std_soft', lift: 'hk_top', sinkbox: 'legrabox', corner: 'space_c', sx: { twin_l: 1 } },
+        lo: [['fridge', 60, 0, 0, 'l', 'built'], ['tower', 60, 0, 0, 'l', 'ovenMicro', { dsys: ['lbx_c', 'lbx_c'] }], ['drawers', 60, 0, 3, 'l', '', PR_LBX], ['corner', 100, 1, 0], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3, 'm', '', PR_LBX]],
+        up: [['door', 60, 1, 1, 'l', '', PR_HK], ['door', 100, 1, 1, 'm', '', PR_HK], ['dryer', 60, 1, 1, 'm', '', { hx: { lift: 'hf_top' } }], ['door', 60, 1, 1, 'm', '', PR_HK], ['hood', 60, 0, 1, 'm', '', { hx: { lift: 'hk_s' } }], ['glass', 60, 0, 0]] }
     ];
 
     function presetState(p) {

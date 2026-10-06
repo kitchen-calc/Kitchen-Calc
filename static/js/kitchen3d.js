@@ -509,6 +509,21 @@ export function createK3D(container, hooks = {}) {
         root.add(g); pick.push(g);
       });
     });
+    // угловое соединение верхних шкафов: вставка-корпус закрывает дыру между рядами (верх мельче низа), фасад — в линию с боковым рядом
+    if (st.hasUpper && cornerKit) {
+      const mu = st.runs.main.upper, HH = st.UH * st.tiers;
+      const join = (right) => {
+        const su = st.runs[right ? 'right' : 'left'].upper;
+        if (!mu.length || !su.some(r => r.u0 < 1)) return;
+        if (right ? Math.abs(mu[mu.length - 1].u1 - st.W) > 1 : mu[0].u0 > 1) return;
+        const g = new THREE.Group(); root.add(g);
+        const xa = right ? st.W - st.UD : 0;
+        box(g, st.UD, HH, st.LD - st.UD, M.body, xa, st.UB, st.UD, 60);
+        box(g, FT, HH - .6, st.LD - st.UD - .3, M.facade, right ? st.W - st.UD - FT : st.UD, st.UB + .3, st.UD + .3, 60);
+        if (st.led && st.led.level && st.led.work) box(g, 1.4, .6, st.LD - st.UD - 4, M.led, right ? xa + 3 : st.UD - 6, st.UB - .7, st.UD + 2);
+      };
+      join(false); if (st.type === 'u-shape') join(true);
+    }
     countertops(M, st);
     room(M, st, bounds);
     island(M, st, bounds);
