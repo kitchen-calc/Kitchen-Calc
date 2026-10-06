@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Marck+Script&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Marck+Script&display=swap"></noscript>
   <style>
-    :root { --bg:#f7f4ee; --card:#fff; --text:#111827; --muted:#6b7280; --gold:#b07d12; --gold-2:#d99a1c; --line:#e6e0d4; --dark:#11100e; --serif:'Cormorant Garamond',Georgia,serif; --sans:'Manrope','Segoe UI',system-ui,sans-serif; --script:'Marck Script',cursive; }
+    :root { --bg:#f7f4ee; --card:#fff; --text:#111827; --muted:#566070; --gold:#b07d12; --gold-2:#d99a1c; --line:#e6e0d4; --dark:#11100e; --serif:'Cormorant Garamond',Georgia,serif; --sans:'Manrope','Segoe UI',system-ui,sans-serif; --script:'Marck Script',cursive; }
     * { box-sizing:border-box; margin:0; padding:0; }
     body { background:linear-gradient(135deg,#fff 0%,#faf8f4 50%,#f7f4ee 100%); background-attachment:fixed; font-family:var(--sans); color:var(--text); line-height:1.5; padding-bottom:70px; }
     a { color:inherit; text-decoration:none; }
@@ -105,7 +105,9 @@
     .cbox iframe { width:100%; height:100%; border:0; }
     .cclose { position:absolute; top:10px; right:12px; z-index:3; width:38px; height:38px; border-radius:50%; border:1px solid #ddd; background:#fff; font-size:1.1rem; cursor:pointer; }
     @media (max-width:900px) { .grid { grid-template-columns:1fr; } .sticky { position:static; } .presets { grid-template-columns:1fr; } }
-    @media (max-width:520px) { .tiers { grid-template-columns:1fr; } .row, .row3 { grid-template-columns:1fr 1fr; } }
+    #presets { min-height:386px; }
+    @media (max-width:900px) { #presets { min-height:0; } }
+    @media (max-width:520px) { #presets { min-height:1090px; } .tiers { grid-template-columns:1fr; } .row, .row3 { grid-template-columns:1fr 1fr; } }
   
 /* --- спецификация (как в калькуляторе кухни) --- */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:1000;overflow-y:auto;padding:10px}
@@ -138,7 +140,7 @@
   <div class="links"><a class="lk" href="/">← Главная</a><button type="button" class="lk" id="catBtn" style="cursor:pointer">🎨 Каталог цветов</button><a class="lk" href="/calc">Калькулятор кухни</a><!--LANGLINK--><a class="lk gold" href="tel:+998920934510">+998 92 093-45-10</a></div>
 </div></div>
 
-<div class="wrap">
+<main class="wrap">
   <h1>Калькулятор шкафов: купе, гардеробные, прихожие</h1>
   <p class="sub">Выберите готовый вариант или настройте под свои размеры: двери, зеркала, наполнение. Цена и чертёж считаются сразу. Итоговую стоимость мастер уточняет после замера.</p>
   <div class="tabs" id="tabs">
@@ -170,7 +172,7 @@
       </div>
     </div>
   </div>
-</div>
+</main>
 <div class="cmodal" id="cmodal"><div class="cbox"><button type="button" class="cclose" id="cclose" aria-label="Закрыть">✕</button><iframe id="cframe" title="Каталог цветов ЛДСП / ЛМДФ"></iframe></div></div>
 <div class="modal-overlay" id="specModal">
   <div class="modal-content" id="specCapture">
@@ -209,7 +211,6 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="/static/js/shkaf-data.js?v=4"></script>
 <!--LANGSCRIPT-->
 <script src="/static/js/contract-data.js?v=1"></script>
@@ -876,6 +877,16 @@ function spec() {
   return rows;
 }
 
+
+/* доступность: подписи к полям, у которых нет связанного label */
+function labelControls() {
+  document.querySelectorAll('select, textarea, input:not([type=hidden])').forEach(el => {
+    if (el.getAttribute('aria-label') || (el.id && document.querySelector('label[for="' + el.id + '"]'))) return;
+    const box = el.closest('div'), l = box && box.querySelector('label');
+    const t = (l && l.textContent.trim()) || (el.dataset && el.dataset.fill !== undefined ? 'Дверь ' + (+el.dataset.fill + 1) : '') || el.placeholder || (el.dataset && (el.dataset.k || el.dataset.p)) || '';
+    if (t) el.setAttribute('aria-label', t);
+  });
+}
 let LAST = null;
 function refresh() {
   const r = calc(); LAST = r;
@@ -886,6 +897,7 @@ function refresh() {
   const names = r.lines.map(l => l.n.replace(/\s*\(\d+ шт\.\)/, '').replace(/^Зеркало.*/, 'Зеркало'));
   $('incl').innerHTML = `<b>Что входит в цену:</b><ul>${[...new Set(names)].map(n => `<li>${esc(n)}</li>`).join('')}<li>Изготовление, доставка по Ташкенту и монтаж</li></ul><table class="spec">${spec().map(r2 => `<tr><td>${esc(r2[0])}</td><td>${esc(r2[1])}</td></tr>`).join('')}</table>`;
   renderMaster(r);
+  labelControls();
   try { history.replaceState(null, '', '#s=' + btoa(unescape(encodeURIComponent(JSON.stringify(M))))); } catch (e) {}
 }
 
@@ -1281,6 +1293,9 @@ function openSpec() {
 }
 function closeSpec() { $('specModal').style.display = 'none'; document.body.style.overflow = ''; }
 async function downloadSpecImage() {
+  if (typeof html2canvas !== 'function') {
+    await new Promise(res => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; s.onload = res; s.onerror = res; document.head.appendChild(s); });
+  }
   if (typeof html2canvas !== 'function') { toast('Не загрузилась библиотека изображения, сделайте скриншот'); return; }
   try {
     const canvas = await html2canvas($('specCapture'), { scale: 1.5, backgroundColor: '#ffffff', useCORS: true, logging: false });
