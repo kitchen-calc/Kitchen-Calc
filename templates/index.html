@@ -22,7 +22,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="/static/js/kis-data.js?v=2"></script>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+  <script src="/static/js/kis-data.js?v=3"></script>
   <script src="/static/js/kis-art.js?v=1"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
   <script src="/static/js/shkaf-uz.js?v=6"></script>
@@ -483,6 +484,28 @@
     /* КАЛЬКУЛЯТОР */
     .steps { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
     .render-card { padding: 14px; }
+
+    /* --- 3D-визуализация --- */
+    .r3-tabs { display: flex; gap: 6px; margin: 0 0 8px; }
+    .r3-tab { border: 1px solid var(--border-gold); background: #fff; color: #6b4a07; border-radius: 999px; padding: 5px 14px; font-weight: 700; font-size: .8rem; cursor: pointer; }
+    .r3-tab.on { background: linear-gradient(135deg, #d99a1c, #b07d12); color: #fff; border-color: transparent; }
+    .k3d-box { position: relative; height: 400px; background: #ece6dc; }
+    .k3d-canvas { position: absolute; inset: 0; }
+    .k3d-load { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #8a7a5a; font-weight: 600; pointer-events: none; }
+    .k3d-bar { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 5px; flex-wrap: wrap; z-index: 3; pointer-events: none; }
+    .k3d-bar button { pointer-events: auto; background: rgba(20,17,12,.78); color: #f6dc9a; border: 1px solid rgba(217,154,28,.55); border-radius: 8px; padding: 5px 9px; font-size: .74rem; font-weight: 700; cursor: pointer; backdrop-filter: blur(4px); }
+    .k3d-bar button:hover { background: #b07d12; color: #fff; }
+    .k3d-bar .sp { flex: 1; }
+    .k3d-edit { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 3; background: rgba(20,17,12,.88); color: #f3ead7; border: 1px solid rgba(217,154,28,.55); border-radius: 12px; padding: 8px 10px; font-size: .78rem; max-height: 55%; overflow: auto; backdrop-filter: blur(6px); }
+    .k3d-edit .k3e-t { font-weight: 800; color: #f6dc9a; margin-bottom: 6px; }
+    .k3d-edit .k3e-r { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin: 4px 0; }
+    .k3d-edit .k3e-r > span { color: #bda673; min-width: 54px; }
+    .k3d-edit button { background: rgba(255,255,255,.08); color: #fff4dc; border: 1px solid rgba(255,226,154,.3); border-radius: 7px; padding: 4px 8px; font-size: .74rem; cursor: pointer; }
+    .k3d-edit button.on, .k3d-edit button:hover { background: #b07d12; border-color: #e9b44c; }
+    .k3d-edit select { background: #1d1912; color: #fff4dc; border: 1px solid rgba(255,226,154,.35); border-radius: 7px; padding: 3px 6px; font-size: .74rem; max-width: 100%; }
+    .k3d-edit .k3e-hint { color: #bda673; }
+    .k3d-full { position: fixed !important; inset: 0; z-index: 1200; height: 100vh !important; border-radius: 0 !important; border: 0 !important; }
+    @media (max-width: 760px) { .k3d-box { height: 340px; } }
     .render-box { background: #f3eee7; border-radius: 10px; border: 1px solid var(--border-gold); overflow: hidden; }
     .render-svg { width: 100%; height: 300px; display: block; }
     .render-note { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; text-align: center; }
@@ -687,7 +710,7 @@
       .cat-nav span { display: none; }
       .header-catalog { padding: 7px 9px; font-size: 0.85rem; }
     }
-    @media (max-width: 360px) { .header-catalog span { display: none; } }
+    @media (max-width: 440px) { .header-catalog span { display: none; } .header-actions { gap: 6px; } }
 
     /* ===== Светлая тема: точечные правки поверх автоматической замены ===== */
     body { background: linear-gradient(180deg, #fbfaf7 0%, #f5f1e8 100%) !important; background-attachment: fixed; color: var(--text-main); }
@@ -778,7 +801,7 @@
       <div class="header-actions">
         <a class="header-catalog" href="/" style="text-decoration:none">← <span data-i18n="navHome">Главная</span></a>
         <button type="button" class="header-catalog" onclick="openDecor()">🎨 <span data-i18n="catBtn">Каталог</span></button>
-        <a class="header-catalog" href="/shkaf" style="text-decoration:none">🗄 Шкафы</a>
+        <a class="header-catalog" href="/shkaf" style="text-decoration:none">🗄 <span>Шкафы</span></a>
         <div class="lang-switch">
           <button type="button" class="lang-btn active" data-lang="ru" onclick="setLang('ru')">RU</button>
           <button type="button" class="lang-btn" data-lang="uz" onclick="setLang('uz')">UZ</button>
@@ -829,7 +852,14 @@
         <div class="sticky-sidebar">
           <div class="card render-card">
             <div class="drawing-title"><span data-i18n="yourKitchen">Ваша кухня</span></div>
-            <div class="render-box"><svg id="kitchenRender" class="render-svg"></svg></div>
+            <div class="r3-tabs" id="r3Tabs"><button type="button" class="r3-tab on" id="k3dTab" onclick="setRenderMode('3d')">3D</button><button type="button" class="r3-tab" onclick="setRenderMode('2d')" data-i18n="r3Scheme">Схема</button></div>
+            <div class="render-box k3d-box" id="k3dBox">
+              <div class="k3d-canvas" id="k3dCanvas"></div>
+              <div class="k3d-load" id="k3dLoad" data-i18n="r3Loading">Загрузка 3D…</div>
+              <div class="k3d-bar" id="k3dBar"></div>
+              <div class="k3d-edit" id="k3dEdit"></div>
+            </div>
+            <div class="render-box" id="k2dBox" style="display:none"><svg id="kitchenRender" class="render-svg"></svg></div>
             <div class="render-note" data-i18n="renderNote">Визуализация условная, точный проект — после замера</div>
           </div>
 
@@ -1350,7 +1380,7 @@
         ctaPick: 'Подобрать кухню', ctaCall: 'Позвонить',
         presetsTitle: 'Готовые варианты', presetsSub: 'Нажмите на понравившийся — дальше можно поменять размеры, цвет и материалы.',
         from: 'от {x} сум', sum: 'сум',
-        yourKitchen: 'Ваша кухня', renderNote: 'Визуализация условная, точный проект — после замера',
+        yourKitchen: 'Ваша кухня', r3Scheme: 'Схема', r3Loading: 'Загрузка 3D…', renderNote: 'Визуализация условная, точный проект — после замера',
         priceTitle: 'Ориентировочная стоимость', priceNote: 'Итоговую стоимость уточняет мастер после замера.',
         installment: 'или от {x} сум/мес в рассрочку на {n} мес.',
         shareTg: 'Отправить в Telegram', shareCopy: 'Скопировать ссылку', shareCopied: 'Ссылка скопирована!', shareCopyFail: 'Не удалось скопировать — выделите адрес страницы вручную.',
@@ -1473,7 +1503,7 @@
         ctaPick: 'Oshxona tanlash', ctaCall: 'Qoʻngʻiroq qilish',
         presetsTitle: 'Tayyor variantlar', presetsSub: 'Yoqqanini bosing — keyin oʻlcham, rang va materiallarni oʻzgartirish mumkin.',
         from: '{x} soʻmdan', sum: 'soʻm',
-        yourKitchen: 'Sizning oshxonangiz', renderNote: 'Vizualizatsiya taxminiy, aniq loyiha — oʻlchovdan keyin',
+        yourKitchen: 'Sizning oshxonangiz', r3Scheme: 'Sxema', r3Loading: '3D yuklanmoqda…', renderNote: 'Vizualizatsiya taxminiy, aniq loyiha — oʻlchovdan keyin',
         priceTitle: 'Taxminiy narx', priceNote: 'Yakuniy narxni usta oʻlchovdan keyin aniqlaydi.',
         installment: 'yoki {n} oyga muddatli toʻlov: oyiga {x} soʻmdan',
         shareTg: 'Telegramda yuborish', shareCopy: 'Havolani nusxalash', shareCopied: 'Havola nusxalandi!', shareCopyFail: 'Nusxalab boʻlmadi — sahifa manzilini qoʻlda belgilang.',
@@ -1697,12 +1727,13 @@
     function layoutRun(lowArr, upArr, kind) {
       const ord = a => (kind === 'left' ? a.slice().reverse() : a);
       let u = 0;
-      const lower = ord(lowArr || []).map(sec => { const w = parseFloat(sec.width) || 0; const r = { sec, u0: u, u1: u + w }; u += w; return r; });
+      const lower = ord(lowArr || []).map(sec => { const w = parseFloat(sec.width) || 0; u += (sec.gap | 0); const r = { sec, u0: u, u1: u + w }; u += w; return r; });
       const talls = lower.filter(r => isTall(r.sec));
       let v = 0;
       const upper = [];
       ord(upArr || []).forEach(sec => {
         const w = parseFloat(sec.width) || 0;
+        v += (sec.gap | 0);
         for (let guard = 0, moved = true; moved && guard < 50; guard++) {
           moved = false;
           for (let k = 0; k < talls.length; k++) {
@@ -2398,6 +2429,112 @@
       updateCalculator();
     });
 
+
+    /* ===================== 3D-ВИЗУАЛИЗАЦИЯ (static/js/kitchen3d.js) ===================== */
+    let K3 = null, k3dMode = '3d', k3dLoading = false;
+    const L3 = (ru, uz) => LANG === 'uz' ? uz : ru;
+    const HW_DRAWER_VIS = { econ: 'ball', std: 'ball', tbx: 'tbx_m', merivo: 'mer_m', legra: 'lbx_m', tbxp: 'tbx_b', legrafree: 'lbx_fc' };
+    function drawerVisMap() { const m = { ball: { h: 10, col: '#d9cdb8' } }; Object.keys(KIS.drawerSys).forEach(k => { if (KIS.drawerSys[k].vis) m[k] = KIS.drawerSys[k].vis; }); return m; }
+    function defaultDsys(s) { const h = CONFIG.hardware[s.hw] || CONFIG.hardware[CONFIG.defaults.hw]; return HW_DRAWER_VIS[h.key] || 'ball'; }
+    function k3dSelKey() { return selSec ? { tier: tierOf(selSec), id: selSec.id } : null; }
+    function k3dState() {
+      const s = getCalcState(), G = techGeometry();
+      const hasUpper = s.hasUpper && upperSections.length > 0;
+      const LAY = layoutAll(lowerSections, hasUpper ? upperSections : [], currentType);
+      const def = defaultDsys(s);
+      return { type: currentType, W: Math.max(60, LAY.main.total), LD: 60, UD: s.upperD, UB: 145, UH: s.upperH, tiers: s.upperTiers === 2 ? 2 : 1,
+        TT: G.TT, CT: G.CT, PL: 10, BOX: 85, roomH: Math.max(G.TT + 10, s.roomH || 260), FRIDGE_H, hasUpper, runs: LAY,
+        colors: { facade: { hex: selectedFacadeColor.hex, img: selectedFacadeColor.img }, body: { hex: selectedBodyColor.hex, img: selectedBodyColor.img }, top: { hex: CONFIG.countertops[s.top].color } },
+        hw: Object.assign({}, KHW), led: Object.assign({}, ledState), decor: decorClean(decorState),
+        island: s.island ? { L: s.islL, W: s.islW } : null, selected: k3dSelKey(), drawerVis: drawerVisMap(),
+        dsysOf: (sec, i) => { const k = sec.dsys && sec.dsys[i]; return (k && k !== 'tier' && KIS.drawerSys[k]) ? k : def; }, towerBands };
+    }
+    function k3dSupported() { try { const c = document.createElement('canvas'); return !!(window.WebGL2RenderingContext && c.getContext('webgl2')); } catch (e) { return false; } }
+    async function initK3D() {
+      if (K3 || k3dLoading) return;
+      k3dLoading = true;
+      try {
+        const mod = await import('/static/js/kitchen3d.js?v=3');
+        K3 = mod.createK3D(el('k3dCanvas'), {
+          onSelect: sel => { selSec = sel ? (secsOf(sel.tier).find(x => x.id === sel.id) || null) : null; renderPlanner(); }
+        });
+        el('k3dLoad').style.display = 'none';
+        renderK3dBar(); K3.update(k3dState()); renderK3dEdit();
+      } catch (e) {
+        console.warn('3D недоступно', e); el('k3dTab').style.display = 'none'; setRenderMode('2d');
+      }
+      k3dLoading = false;
+    }
+    function setRenderMode(m) {
+      k3dMode = m === '2d' || !k3dSupported() ? '2d' : '3d';
+      el('k3dBox').style.display = k3dMode === '3d' ? '' : 'none';
+      el('k2dBox').style.display = k3dMode === '3d' ? 'none' : '';
+      document.querySelectorAll('#r3Tabs .r3-tab').forEach((b, i) => b.classList.toggle('on', (i === 0) === (k3dMode === '3d')));
+      try { localStorage.setItem('kc_r3', k3dMode); } catch (e) {}
+      if (k3dMode === '3d') { if (!K3) initK3D(); else K3.update(k3dState()); }
+    }
+    function k3dRefresh() { if (K3 && k3dMode === '3d') { K3.update(k3dState()); renderK3dEdit(); } }
+    function renderK3dBar() {
+      const b = (act, txt) => `<button type="button" onclick="k3dAct('${act}')">${txt}</button>`;
+      el('k3dBar').innerHTML = b('v:angle', L3('◩ Угол', '◩ Burchak')) + b('v:front', L3('▭ Спереди', '▭ Old')) + b('v:top', L3('▦ Сверху', '▦ Yuqori')) +
+        b('openAll', L3('↔ Открыть всё', '↔ Hammasini ochish')) + b('closeAll', L3('Закрыть', 'Yopish')) + '<span class="sp"></span>' + b('full', L3('⛶ На весь экран', '⛶ Toʻliq ekran'));
+    }
+    function k3dRun(sec) {
+      const tier = tierOf(sec), LAY = layoutAll(lowerSections, upperSections, currentType), wall = wallOfSecIn(currentType, sec);
+      return (LAY[wall][tier === 'lower' ? 'lower' : 'upper'] || []).map(r => r.sec);
+    }
+    function k3dAct(a, v) {
+      if (a.startsWith('v:')) { if (K3) K3.setView(a.slice(2)); return; }
+      if (a === 'openAll' || a === 'closeAll') { if (K3) K3.openAll(a === 'openAll'); return; }
+      if (a === 'full') {   // во весь экран: окно переносится в body, чтобы быть поверх всей страницы
+        const box = el('k3dBox');
+        if (!box.classList.contains('k3d-full')) { box._ph = document.createComment('k3d'); box.parentNode.insertBefore(box._ph, box); document.body.appendChild(box); box.classList.add('k3d-full'); document.body.style.overflow = 'hidden'; }
+        else { box.classList.remove('k3d-full'); if (box._ph && box._ph.parentNode) { box._ph.parentNode.insertBefore(box, box._ph); box._ph.remove(); } document.body.style.overflow = ''; }
+        return;
+      }
+      const s = selSec; if (!s) return;
+      const tier = tierOf(s);
+      if (a === 'shift') {   // сдвиг на 5 см вдоль стены: соседи справа остаются на месте, пока есть зазор
+        const run = k3dRun(s), next = run[run.indexOf(s) + 1], d = +v;
+        if (d > 0) { s.gap = (s.gap | 0) + 5; if (next && (next.gap | 0) >= 5) next.gap -= 5; }
+        else { if ((s.gap | 0) < 5) return; s.gap -= 5; if (next) next.gap = (next.gap | 0) + 5; }
+        plannerChanged(); return;
+      }
+      if (a === 'gap0') { s.gap = 0; plannerChanged(); return; }
+      if (a === 'swap') { moveSelected(wallOfSecIn(currentType, s) === 'left' ? -v : +v); return; }
+      if (a === 'wall') { const list = secsOf(tier).filter(x => x.wall === v && x !== s); placeAt(s, v, list.length); return; }
+      if (a === 'hinge') { s.hinge = v; plannerChanged(); return; }
+      if (a === 'open') { if (K3) K3.toggle(tier + ':' + s.id); setTimeout(renderK3dEdit, 30); return; }
+      if (a === 'dup') { duplicateSelected(); return; }
+      if (a === 'del') { removeSelected(); return; }
+    }
+    function k3dDsys(i, k) { const s = selSec; if (!s) return; s.dsys = (s.dsys || []).slice(); while (s.dsys.length <= i) s.dsys.push('tier'); s.dsys[i] = k; updateCalculator(); }
+    function k3dDrawerCount(s) { if (s.kind === 'tower') return towerBands(s.tw || 'storage', 250).filter(b => b.ty === 'drawer').length; if (s.kind === 'oven') return 1; return s.drawers | 0; }
+    function renderK3dEdit() {
+      const box = el('k3dEdit'); if (!box) return;
+      const s = selSec;
+      if (!s) { box.innerHTML = `<div class="k3e-hint">${esc(L3('Нажмите на шкаф, чтобы выбрать и переставить. Двойной клик — открыть. Крутите мышью или пальцем, колесо — приблизить.', 'Shkafni tanlash uchun bosing. Ikki marta bosish — ochish. Sichqoncha yoki barmoq bilan aylantiring.'))}</div>`; return; }
+      const tier = tierOf(s), code = (tier === 'lower' ? 'Н-' : 'В-') + s.id, wall = wallOfSecIn(currentType, s);
+      const btn = (a, v, txt, on) => `<button type="button" class="${on ? 'on' : ''}" onclick="k3dAct('${a}','${v}')">${txt}</button>`;
+      let h = `<div class="k3e-t">${esc(code)} · ${esc(s.name)} · ${Number(s.width) || 0} ${esc(L3('см', 'sm'))}${(s.gap | 0) ? ' · ' + esc(L3('отступ', 'oraliq')) + ' ' + (s.gap | 0) + ' ' + esc(L3('см', 'sm')) : ''}</div>`;
+      h += `<div class="k3e-r"><span>${esc(L3('Сдвиг', 'Surish'))}</span>${btn('shift', -1, '◀ 5 ' + L3('см', 'sm'))}${btn('shift', 1, '5 ' + L3('см', 'sm') + ' ▶')}${(s.gap | 0) ? btn('gap0', 0, L3('без отступа', 'oraliqsiz')) : ''}${btn('swap', -1, '⇤ ' + L3('местами', 'joyini almashtirish'))}${btn('swap', 1, L3('местами', 'joyini almashtirish') + ' ⇥')}</div>`;
+      if (currentType !== 'straight') h += `<div class="k3e-r"><span>${esc(L3('Стена', 'Devor'))}</span>${wallValid('left') ? btn('wall', 'left', L3('Левая', 'Chap'), wall === 'left') : ''}${btn('wall', 'main', L3('Основная', 'Asosiy'), wall === 'main')}${wallValid('right') ? btn('wall', 'right', L3('Правая', 'Oʻng'), wall === 'right') : ''}</div>`;
+      const single = (Number(s.width) || 0) < 45 && !(s.drawers | 0) && !(s.gasLifts | 0) && ['oven', 'dishwasher', 'washer', 'open'].indexOf(s.kind) < 0;
+      if (single || s.kind === 'tower') h += `<div class="k3e-r"><span>${esc(L3('Петли', 'Ilmoq'))}</span>${btn('hinge', 'L', L3('слева', 'chapda'), s.hinge !== 'R')}${btn('hinge', 'R', L3('справа', 'oʻngda'), s.hinge === 'R')}</div>`;
+      const open = K3 && K3.isOpen(tier + ':' + s.id);
+      h += `<div class="k3e-r">${btn('open', 0, open ? L3('Закрыть', 'Yopish') : L3('▶ Показать, как открывается', '▶ Qanday ochilishini koʻrsatish'))}${btn('dup', 0, L3('Копия', 'Nusxa'))}${btn('del', 0, L3('Удалить', 'Oʻchirish'))}</div>`;
+      const nd = tier === 'lower' ? k3dDrawerCount(s) : 0;
+      for (let i = 0; i < nd; i++) {
+        const cur = (s.dsys && s.dsys[i]) || 'tier';
+        h += `<div class="k3e-r"><span>${esc(L3('Ящик', 'Tortma'))} ${i + 1}</span><select onchange="k3dDsys(${i}, this.value)">${Object.keys(KIS.drawerSys).map(k => `<option value="${k}" ${k === cur ? 'selected' : ''}>${esc(LANG === 'uz' && window.kcTr ? window.kcTr(KIS.drawerSys[k].ru) : KIS.drawerSys[k].ru)}</option>`).join('')}</select></div>`;
+      }
+      box.innerHTML = h;
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && el('k3dBox') && el('k3dBox').classList.contains('k3d-full')) k3dAct('full'); });
+    // после любой перерисовки планировщика — обновить подсветку и панель 3D
+    const _renderPlannerBase = renderPlanner;
+    renderPlanner = function () { _renderPlannerBase.apply(this, arguments); if (K3 && k3dMode === '3d') { K3.select(k3dSelKey()); renderK3dEdit(); } };
+
     /* ===================== РАСЧЁТ ЦЕНЫ (формула прежнего калькулятора) ===================== */
     function getCalcState() {
       const num = (id, d) => parseFloat(el(id).value) || d;
@@ -2432,17 +2569,19 @@
       const SB = (K.sinkbox && K.sinkbox !== 'none' && KIS.sinkbox[K.sinkbox]) ? KIS.sinkbox[K.sinkbox].price : 0;                // ящик под мойку
       let sum = 0;
       const handles = (x, n) => { if (HDL && n > 0 && (x.openType || 'handles') === 'handles') sum += n * HDL; };
-      // ящики шкафа: первый — низкий (M), остальные — высокие
+      // ящики шкафа: первый — низкий (M), остальные — высокие; у ящика может быть своя система Blum (x.dsys[i])
       const drawers = n => n > 0 ? H.drawer + (n - 1) * (H.drawerTall || H.drawer) : 0;
+      const drawersOf = (x, n, base) => { let c = 0; for (let i = 0; i < n; i++) { const k = x.dsys && x.dsys[(base | 0) + i]; c += (k && k !== 'tier' && KIS.drawerSys[k]) ? KIS.drawerSys[k].price : ((base | 0) + i === 0 ? H.drawer : (H.drawerTall || H.drawer)); } return c; };
       s.lower.forEach(x => {
         if (isTall(x)) {   // пенал: двери — по 3 петли, ящики — высокие; встроенный холодильник — фасад на двух шарнирах
           if (x.kind === 'fridge') { if (x.fr === 'built') sum += 4 * HG; return; }
-          towerBands(x.tw || 'storage', 250).forEach(b => { if (b.ty === 'door') { sum += 3 * HG; handles(x, 1); } else if (b.ty === 'drawer') { sum += (H.drawerTall || H.drawer); handles(x, 1); } });
+          let di = 0;
+          towerBands(x.tw || 'storage', 250).forEach(b => { if (b.ty === 'door') { sum += 3 * HG; handles(x, 1); } else if (b.ty === 'drawer') { const k = x.dsys && x.dsys[di]; sum += (k && k !== 'tier' && KIS.drawerSys[k]) ? KIS.drawerSys[k].price : (H.drawerTall || H.drawer); di++; handles(x, 1); } });
           return;
         }
         if (x.kind === 'sink' && SB) { sum += SB; handles(x, 1); return; }   // глубокий ящик Blum вместо дверок под мойкой
         const doors = doorsOf(x, 'lower'), nd = x.kind === 'oven' ? 1 : (x.drawers | 0);
-        sum += doors * 2 * HG + drawers(nd);
+        sum += doors * 2 * HG + drawersOf(x, nd);
         if (x.openType === 'push') sum += nd > 0 ? nd * (H.pushDrawer || H.push) : PUSH * Math.max(1, doors);
         handles(x, doors + nd);
       });
@@ -2492,6 +2631,7 @@
       if (s.type === 'l-shape') lowerMeters += (s.leftW - 60) / 100;
       else if (s.type === 'u-shape') lowerMeters += (s.leftW - 60) / 100 + (s.rightW - 60) / 100;
 
+      lowerMeters = Math.max(0.3, lowerMeters - s.lower.reduce((a, x) => a + (x.gap | 0), 0) / 100);   // промежутки между шкафами — без мебели
       let total = lowerMeters * ((facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + work);
       const AW = CONFIG.applianceWork, TT = tallTopOf(s.roomH), carcass = facadePriceM * 0.55 + bodyPriceM * 0.5;
       let tallWidth = 0;
@@ -2516,7 +2656,7 @@
         let upperMeters = s.mainW / 100;
         if (s.type === 'l-shape') upperMeters += Math.max(0, s.leftW - 35) / 100;
         else if (s.type === 'u-shape') upperMeters += (Math.max(0, s.leftW - 35) + Math.max(0, s.rightW - 35)) / 100;
-        upperMeters = Math.max(0, upperMeters - tallWidth);   // над высокими модулями верхних шкафов нет
+        upperMeters = Math.max(0, upperMeters - tallWidth - s.upper.reduce((a, x) => a + (x.gap | 0), 0) / 100);   // над высокими модулями верхних шкафов нет
         total += upperMeters * ((facadePriceM * 0.45) + (bodyPriceM * 0.4)) * (s.upperH / 72) * (s.upperD / 35) * (s.upperTiers === 2 ? 2 : 1);
         s.upper.forEach(x => {
           total += (x.shelves || 0) * 50000;
@@ -2556,7 +2696,8 @@
 
       drawFullFrontView('svgFront', s.hasUpper);
       drawTopViewPlan('svgTop', s.hasUpper);
-      renderKitchen(el('kitchenRender'), renderStateFrom(s));
+      if (k3dMode !== '3d' || !K3) renderKitchen(el('kitchenRender'), renderStateFrom(s));
+      k3dRefresh();
       renderTiers(s);
       syncSinkBox();
       updateHwDesc();
@@ -2670,7 +2811,7 @@
       });
     }
     function syncWallsFromSections() {
-      const sum = w => lowerSections.filter(s => wallOfSecIn(currentType, s) === w).reduce((a, s) => a + (parseFloat(s.width) || 0), 0);
+      const sum = w => lowerSections.filter(s => wallOfSecIn(currentType, s) === w).reduce((a, s) => a + (parseFloat(s.width) || 0) + (s.gap | 0), 0);
       el('mainWall').value = Math.round(sum('main') || 200);
       if (currentType !== 'straight') el('leftWall').value = Math.round(sum('left') > 0 ? sum('left') + 60 : 120);
       if (currentType === 'u-shape') el('rightWall').value = Math.round(sum('right') > 0 ? sum('right') + 60 : 120);
@@ -3692,7 +3833,7 @@
     /* ===================== ССЫЛКА «ПОДЕЛИТЬСЯ» ===================== */
     function serializeState() {
       const s = getCalcState();
-      const enc = (arr, tier) => arr.map(x => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || '', String(x.note || '').slice(0, 120)]);
+      const enc = (arr, tier) => arr.map(x => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(',')]);
       const dc = decorClean(decorState);
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
@@ -3751,6 +3892,9 @@
         if (kind === 'tower') s.tw = TOWER_KEYS.indexOf(e[7]) >= 0 ? e[7] : 'storage';
         if (kind === 'fridge') s.fr = e[7] === 'built' ? 'built' : 'free';
         if (e[8]) s.note = String(e[8]).slice(0, 120);
+        if (e[9]) s.gap = Math.round(clampN(e[9], 0, 300, 0) / 5) * 5;
+        if (e[10] === 'L' || e[10] === 'R') s.hinge = e[10];
+        if (typeof e[11] === 'string' && e[11]) s.dsys = e[11].split(',').slice(0, 8).map(k => KIS.drawerSys[k] ? k : 'tier');
         s.name = s.autoName ? defaultModuleName(kind, tier, s.id) : String(e[1]).slice(0, 60);
         return s;
       });
@@ -3831,6 +3975,8 @@
       if (corners && K.corner && K.corner !== 'none' && KIS.corner[K.corner]) r.push('Угловой механизм: ' + KIS.corner[K.corner].ru + ' × ' + corners);
       if (K.sinkbox && K.sinkbox !== 'none' && KIS.sinkbox[K.sinkbox] && s.lower.some(x => x.kind === 'sink')) r.push(KIS.sinkbox[K.sinkbox].ru);
       [['cx', 'cargo'], ['sx', 'space']].forEach(([f, g]) => { if (K[f]) Object.keys(K[f]).forEach(k => { if (K[f][k] > 0 && KIS[g][k]) r.push(KIS[g][k].ru + ' × ' + K[f][k]); }); });
+      const dc = {}; s.lower.forEach(x => (x.dsys || []).forEach((k, i) => { if (k && k !== 'tier' && KIS.drawerSys[k] && i < Math.max(x.drawers | 0, x.kind === 'tower' ? 3 : (x.kind === 'oven' ? 1 : 0))) dc[k] = (dc[k] || 0) + 1; }));
+      Object.keys(dc).forEach(k => r.push('Ящики: ' + KIS.drawerSys[k].ru + ' × ' + dc[k]));
       return (ru === false && LANG === 'uz' && window.kcTr) ? r.map(window.kcTr) : r;
     }
 
@@ -4262,6 +4408,7 @@ ${body}
         updateCalculator();
       }
       renderPresetCards();
+      setRenderMode((() => { try { return localStorage.getItem('kc_r3'); } catch (e) { return null; } })() || '3d');
       const hero = PRESETS.find(p => p.id === 'comfort');
       renderKitchen(el('heroRender'), renderStateFrom(stateToCalc(presetState(hero))));
       if (typeof msInit === 'function') msInit();

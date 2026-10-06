@@ -101,6 +101,25 @@ const KIS = {
     bottle:   { ru: 'Бутылочница VS TAL Rack15', price: 2527000 }
   }
 };
+/* Системы ящиков Blum (комплект на один ящик, kis.uz). vis — как рисовать в 3D: h — высота боковины (см), col — цвет, rail — релинг, slim — тонкая боковина, hidden — скрытые направляющие */
+KIS.drawerSys = {
+  tier:        { ru: 'По классу комплектации' },
+  tandem_fix:  { ru: 'Blum TANDEM на фиксаторах (скрытые направляющие)', price: 151620, vis: { h: 0, col: '#d9cdb8', hidden: true } },
+  tandem_lock: { ru: 'Blum TANDEM на замках (скрытые направляющие)', price: 182210, vis: { h: 0, col: '#d9cdb8', hidden: true } },
+  movento:     { ru: 'Blum MOVENTO (скрытые направляющие)', price: 315000, vis: { h: 0, col: '#d9cdb8', hidden: true } },
+  tbx_m:       { ru: 'Blum TANDEMBOX plus · стандартный (M)', price: 503800, vis: { h: 8.3, col: '#8d9399' } },
+  tbx_b:       { ru: 'Blum TANDEMBOX plus · с одинарным релингом (B)', price: 575625, vis: { h: 8.3, col: '#8d9399', rail: 1 } },
+  tbx_d:       { ru: 'Blum TANDEMBOX plus · с двойным релингом (D)', price: 662075, vis: { h: 8.3, col: '#8d9399', rail: 2 } },
+  tbx_ds:      { ru: 'Blum TANDEMBOX plus · с двусторонней боковиной (D)', price: 776455, vis: { h: 14.4, col: '#8d9399', rail: 1 } },
+  tbx_in:      { ru: 'Blum TANDEMBOX plus · внутренний с двойным релингом (D)', price: 973960, vis: { h: 14.4, col: '#8d9399', rail: 2 } },
+  lbx_m:       { ru: 'Blum LEGRABOX pure · стандартный (M)', price: 683100, vis: { h: 9, col: '#b9bec2', slim: true } },
+  lbx_c:       { ru: 'Blum LEGRABOX pure · с высоким фасадом (C)', price: 849470, vis: { h: 17.7, col: '#b9bec2', slim: true } },
+  lbx_fc:      { ru: 'Blum LEGRABOX free · с высоким фасадом (C)', price: 868090, vis: { h: 17.7, col: '#e5e7e9', slim: true } },
+  lbx_f:       { ru: 'Blum LEGRABOX pure · с высоким фасадом (F)', price: 1170135, vis: { h: 24.1, col: '#b9bec2', slim: true } },
+  mer_m:       { ru: 'MERIVOBOX (M) стандартный ящик, царга 91 мм', price: 611535, vis: { h: 9.1, col: '#aab0b5', slim: true } },
+  mer_k:       { ru: 'MERIVOBOX (K) стандартный ящик, царга 129 мм', price: 696000, vis: { h: 12.9, col: '#aab0b5', slim: true } },
+  mer_e:       { ru: 'MERIVOBOX (E) с релингом, царга 192 мм', price: 759300, vis: { h: 19.2, col: '#aab0b5', slim: true, rail: 1 } }
+};
 /* Для кухни: газлифт по классу + подъёмники Blum (без «обычных петель») */
 KIS.liftsK = Object.assign({ tier: { ru: 'По классу комплектации (газлифт)' } }, (() => { const o = Object.assign({}, KIS.lifts); delete o.hinge; return o; })());
 /* Короткое имя выбранного варианта для чертежей и спецификации */
