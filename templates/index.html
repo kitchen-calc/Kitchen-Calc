@@ -2618,16 +2618,31 @@
       if (a === 'dup') { duplicateSelected(); return; }
       if (a === 'del') { removeSelected(); return; }
     }
-    // перетащили шкаф в 3D: новое место по координате вдоль стены
+    // перетащили шкаф в 3D: встаёт туда, куда отпустили (шаг 5 см); соседи остаются на месте, между шкафами — промежуток
     function k3dMoveTo(sel, wall, u) {
-      const s = secsOf(sel.tier).find(x => x.id === sel.id); if (!s) return;
+      const tier = sel.tier, low = tier === 'lower';
+      const s = secsOf(tier).find(x => x.id === sel.id); if (!s) return;
       if (!wallValid(wall)) wall = 'main';
+      const from = wallOfSecIn(currentType, s);
       const LAY = layoutAll(lowerSections, upperSections, currentType);
-      const run = (LAY[wall][sel.tier === 'lower' ? 'lower' : 'upper'] || []).filter(r => r.sec !== s);
-      let idx = run.filter(r => (r.u0 + r.u1) / 2 < u).length;
-      if (wall === 'left') idx = run.length - idx;   // левая стена хранится в обратном порядке
-      s.gap = 0;
-      placeAt(s, wall, idx);
+      const runOf = w => (LAY[w][low ? 'lower' : 'upper'] || []).map(r => ({ sec: r.sec, u0: r.u0, w: r.u1 - r.u0 }));
+      // со старой стены шкаф уходит — следующий за ним остаётся на своём месте
+      if (from !== wall) { const old = runOf(from), i = old.findIndex(r => r.sec === s); if (i >= 0 && old[i + 1]) old[i + 1].sec.gap = Math.min(300, (old[i + 1].sec.gap | 0) + (s.gap | 0) + old[i].w); }
+      const run = runOf(wall).filter(r => r.sec !== s);
+      const w = Number(s.width) || 0;
+      run.push({ sec: s, u0: Math.max(0, u - w / 2), w });
+      run.sort((p, q) => (p.u0 + p.w / 2) - (q.u0 + q.w / 2));
+      let end = 0;
+      run.forEach(r => { const g = Math.max(0, Math.min(300, Math.round((r.u0 - end) / 5) * 5)); r.sec.gap = g; end += g + r.w; });
+      const ordered = run.map(r => r.sec); if (wall === 'left') ordered.reverse();   // левая стена хранится от дальнего края к углу
+      s.wall = wall;
+      const g = { left: [], main: [], right: [] };
+      secsOf(tier).forEach(x => { if (x !== s && wallOfSecIn(currentType, x) !== wall) g[wallOfSecIn(currentType, x)].push(x); });
+      g[wall] = ordered;
+      const merged = [].concat(g.left, g.main, g.right);
+      if (low) lowerSections = merged; else upperSections = merged;
+      selSec = s;
+      plannerChanged();
     }
     function k3dHw(field, v) { const s = selSec; if (!s) return; const o = Object.assign({}, s.hx || {}); if (v) o[field] = v; else delete o[field]; const hx = cleanHx(o); if (hx) s.hx = hx; else delete s.hx; updateCalculator(); }
     function k3dHwRows(s, tier) {
