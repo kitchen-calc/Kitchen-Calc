@@ -34,6 +34,8 @@ COMMON_STEPS = [
 TG_URL = "https://t.me/" + TG
 
 # Секции: ("list", заголовок, [пункты]) · ("text", заголовок, текст) · ("steps", заголовок) · ("cards", заголовок, [(название, текст)])
+HERO_SM = {'hero.webp': ('hero-900.webp', 1774), 'ph-w4.webp': ('ph-w4-900.webp', 1600), 'ph-w1.webp': ('ph-w1-900.webp', 1600), 'ph-h2.webp': ('ph-h2-900.webp', 1600), 'ph-b2.webp': ('ph-b2-900.webp', 1600), 'ph-k2.webp': ('ph-k2-900.webp', 1600)}   # главное фото -> (уменьшенная копия для телефонов, ширина оригинала)
+
 PAGES = {
     "kuhni-na-zakaz-tashkent": {
         "nav": "Кухни", "hero": "hero.webp", "eyebrow": "Кухни · Ташкент",
@@ -434,6 +436,12 @@ def _nav(active):
         "</nav>"
     )
 
+def _hero_srcset(name):
+    sm = HERO_SM.get(name)
+    if not sm:
+        return ""
+    return f' srcset="/static/home/{sm[0]} 900w, /static/home/{name} {sm[1]}w" sizes="(max-width: 900px) 100vw, {sm[1]}px"'
+
 
 def render_landing(slug):
     p = _all().get(slug)
@@ -530,7 +538,7 @@ def render_landing(slug):
 <div class="hdr-right"><a class="pill" href="/partners">Партнёрам</a><a class="btn btn-gold btn-sm" href="/calc">Рассчитать</a><button class="burger" id="burger" aria-label="Меню">☰</button></div>
 </div></header>
 <main>
-<section class="hero"><img class="hero-photo" src="/static/home/{p['hero']}" alt="{_e(h1_plain)}" fetchpriority="high"><div class="wrap"><div>
+<section class="hero"><img class="hero-photo" src="/static/home/{p['hero']}"{_hero_srcset(p['hero'])} alt="{_e(h1_plain)}" fetchpriority="high"><div class="wrap"><div>
 <div class="eyebrow">{_e(p['eyebrow'])}</div><h1>{p['h1']}</h1><p class="lead">{_e(p['lead'])}</p>
 <div class="hero-cta"><a class="btn btn-gold" href="{_e(p['cta_url'])}"{cta_attr}>{_e(p['cta_label'])}</a><a class="btn btn-line" href="tel:{PHONE_TEL}">{PHONE}</a></div>
 </div></div></section>
