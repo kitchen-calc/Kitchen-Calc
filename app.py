@@ -41,10 +41,14 @@ async def sitemap():
         return (f'<xhtml:link rel="alternate" hreflang="ru" href="{SITE_URL}/"/>'
                 f'<xhtml:link rel="alternate" hreflang="uz" href="{SITE_URL}/uz"/>'
                 f'<xhtml:link rel="alternate" hreflang="x-default" href="{SITE_URL}/"/>')
+    alt_shkaf = (f'<xhtml:link rel="alternate" hreflang="ru" href="{SITE_URL}/shkaf"/>'
+                 f'<xhtml:link rel="alternate" hreflang="uz" href="{SITE_URL}/uz/shkaf"/>'
+                 f'<xhtml:link rel="alternate" hreflang="x-default" href="{SITE_URL}/shkaf"/>')
     urls = (f"<url><loc>{SITE_URL}/</loc>{alt('/')}<priority>1.0</priority></url>"
             f"<url><loc>{SITE_URL}/uz</loc>{alt('/uz')}<priority>0.9</priority></url>"
             f"<url><loc>{SITE_URL}/calc</loc><priority>0.8</priority></url>"
-            f"<url><loc>{SITE_URL}/shkaf</loc><priority>0.8</priority></url>"
+            f"<url><loc>{SITE_URL}/shkaf</loc>{alt_shkaf}<priority>0.8</priority></url>"
+            f"<url><loc>{SITE_URL}/uz/shkaf</loc>{alt_shkaf}<priority>0.7</priority></url>"
             f"<url><loc>{SITE_URL}/partners</loc><priority>0.6</priority></url>"
             + "".join(f"<url><loc>{SITE_URL}/{s}</loc><priority>0.8</priority></url>" for s in LANDINGS))
     xml = ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
@@ -117,10 +121,43 @@ async def partners():
     return HTMLResponse(render_landing("partners"))
 
 
+SHKAF_UZ_TITLE = "Buyurtma shkaf-kupe, garderob xonasi va prixojaya kalkulyatori | Kitchen Calc"
+SHKAF_UZ_DESC = ("Toshkentda buyurtma asosida shkaf-kupe, garderob xonasi va prixojaya onlayn kalkulyatori: o'lcham, eshik, "
+                 "oyna va ichki to'ldirishni tanlang — narx va chizma 2 daqiqada. Ekonom, Standart, Premium.")
+
+
+def render_shkaf(lang):
+    # Один шаблон на двух языках: узбекская версия по адресу /uz/shkaf (текст переводит static/js/shkaf-uz.js)
+    with open(os.path.join(os.path.dirname(__file__), "templates", "wardrobe.html"), encoding="utf-8") as f:
+        page = f.read()
+    hre = (f'<link rel="alternate" hreflang="ru" href="{SITE_URL}/shkaf">'
+           f'<link rel="alternate" hreflang="uz" href="{SITE_URL}/uz/shkaf">'
+           f'<link rel="alternate" hreflang="x-default" href="{SITE_URL}/shkaf">')
+    if lang == "uz":
+        page = page.replace('<html lang="ru">', '<html lang="uz">', 1)
+        page = page.replace("<!--LANGHEAD-->", f'<link rel="canonical" href="{SITE_URL}/uz/shkaf">' + hre, 1)
+        page = page.replace("<!--LANGLINK-->", '<a class="lk" id="langLink" href="/shkaf">RU</a>', 1)
+        page = page.replace("<!--LANGSCRIPT-->", '<script>window.KC_LANG="uz";</script>\n<script src="/static/js/shkaf-uz.js?v=3"></script>', 1)
+        page = page.replace('href="/">← Главная', 'href="/uz">← Главная', 1)
+        page = re.sub(r"<title>.*?</title>", f"<title>{SHKAF_UZ_TITLE}</title>", page, count=1, flags=re.S)
+        page = re.sub(r'(<meta name="description" content=")[^"]*(")', lambda m: m.group(1) + SHKAF_UZ_DESC + m.group(2), page, count=1)
+        page = page.replace('content="https://kitchen-calc.uz/shkaf"', f'content="{SITE_URL}/uz/shkaf"')
+    else:
+        page = page.replace("<!--LANGHEAD-->", f'<link rel="canonical" href="{SITE_URL}/shkaf">' + hre, 1)
+        page = page.replace("<!--LANGLINK-->", '<a class="lk" id="langLink" href="/uz/shkaf">UZ</a>', 1)
+        page = page.replace("<!--LANGSCRIPT-->", "", 1)
+    return page
+
+
 @app.get("/shkaf", response_class=HTMLResponse)
 async def wardrobe_calc():
     # Калькулятор шкафов-купе, гардеробных и прихожих
-    return FileResponse(os.path.join(os.path.dirname(__file__), "templates", "wardrobe.html"))
+    return HTMLResponse(render_shkaf("ru"))
+
+
+@app.get("/uz/shkaf", response_class=HTMLResponse)
+async def wardrobe_calc_uz():
+    return HTMLResponse(render_shkaf("uz"))
 
 
 @app.get("/calc", response_class=HTMLResponse)

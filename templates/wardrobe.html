@@ -6,7 +6,7 @@
   <title>Калькулятор шкафов-купе, гардеробных и прихожих на заказ | Kitchen Calc</title>
   <meta name="description" content="Онлайн-калькулятор шкафа-купе, гардеробной и прихожей на заказ в Ташкенте: выберите размеры, двери, зеркала и наполнение — цена и чертёж за 2 минуты. Эконом, Стандарт, Премиум.">
   <meta name="theme-color" content="#11100e">
-  <link rel="canonical" href="https://kitchen-calc.uz/shkaf">
+  <!--LANGHEAD-->
   <link rel="icon" type="image/svg+xml" href="/static/home/favicon.svg">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <meta property="og:type" content="website">
@@ -135,7 +135,7 @@
 <body>
 <div class="top"><div class="in">
   <a class="brand" id="brand" title="Kitchen Calc">Kitchen Calc</a>
-  <div class="links"><a class="lk" href="/">← Главная</a><button type="button" class="lk" id="catBtn" style="cursor:pointer">🎨 Каталог цветов</button><a class="lk" href="/calc">Калькулятор кухни</a><a class="lk gold" href="tel:+998920934510">+998 92 093-45-10</a></div>
+  <div class="links"><a class="lk" href="/">← Главная</a><button type="button" class="lk" id="catBtn" style="cursor:pointer">🎨 Каталог цветов</button><a class="lk" href="/calc">Калькулятор кухни</a><!--LANGLINK--><a class="lk gold" href="tel:+998920934510">+998 92 093-45-10</a></div>
 </div></div>
 
 <div class="wrap">
@@ -211,6 +211,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="/static/js/shkaf-data.js?v=4"></script>
+<!--LANGSCRIPT-->
 <script src="/static/js/contract-data.js?v=1"></script>
 <script>
 /* =====================================================================
@@ -583,7 +584,7 @@ function drawWardrobe(m, mini) {
       g += R(x0 - .8, WALL - H, 1.6, H, shade(col, -.18));
     }
     g += R(x + w - .8, WALL - H, 1.6, H, shade(col, -.18));
-    g += `<text x="${f2(x + w / 2)}" y="${f2(WALL - H - 8)}" text-anchor="middle" font-size="9" fill="#7a6a4e" font-family="Manrope,sans-serif" font-weight="700">${walls.length > 1 ? 'Стена ' + 'АВС'[wi] + ' · ' : ''}${Math.round(w)} см</text>`;
+    g += `<text x="${f2(x + w / 2)}" y="${f2(WALL - H - 8)}" text-anchor="middle" font-size="9" fill="#7a6a4e" font-family="Manrope,sans-serif" font-weight="700">${walls.length > 1 ? 'Стена ' + 'АБВ'[wi] + ' · ' : ''}${Math.round(w)} см</text>`;
     if (wi < walls.length - 1) g += LN(x + w + GAP / 2, WALL - H - 6, x + w + GAP / 2, WALL, '#b9ab90', .8, 'stroke-dasharray="3 3"');
     x += w + GAP;
   });
@@ -979,6 +980,8 @@ $('sLeadBtn').addEventListener('click', () => {
 });
 $('specModal').addEventListener('click', e => { if (e.target === $('specModal')) closeSpec(); });
 
+$('langLink') && $('langLink').addEventListener('click', e => { e.preventDefault(); location.href = $('langLink').getAttribute('href') + location.hash; });
+
 /* ======================== ЗАПУСК ======================== */
 (function init() {
   try { const sp = JSON.parse(localStorage.getItem('kcw_p') || 'null'); if (sp) Object.assign(P, sp); } catch (e) {}
@@ -1082,8 +1085,8 @@ function buildSpec() {
     let gi = 0;
     walls.forEach((w, wi) => {
       const ns = secsN[wi], secW = (w * 10 - (ns + 1) * tt) / ns;
-      el('Ст-' + 'АВС'[wi], 'Стена ' + 'АВС'[wi], w * 10, H, D, ns + ' секц.');
-      for (let i = 0; i < ns; i++, gi++) { const c = counts(S2, gi); sec('С-' + (gi + 1), 'Стена ' + 'АВС'[wi] + ', секция ' + (i + 1), secW, H - 2 * tt, D, c, [c.pant ? 'пантограф ' + c.pant : '', m.led ? 'подсветка' : ''].filter(Boolean).join(', ')); }
+      el('Ст-' + 'АБВ'[wi], 'Стена ' + 'АБВ'[wi], w * 10, H, D, ns + ' секц.');
+      for (let i = 0; i < ns; i++, gi++) { const c = counts(S2, gi); sec('С-' + (gi + 1), 'Стена ' + 'АБВ'[wi] + ', секция ' + (i + 1), secW, H - 2 * tt, D, c, [c.pant ? 'пантограф ' + c.pant : '', m.led ? 'подсветка' : ''].filter(Boolean).join(', ')); }
     });
     dims = walls.map(w => w * 10).join(' + ') + ` мм, высота ${H}, глубина ${D} мм`;
     facadeInfo = m.drawers ? 'ящики с фасадами; без дверей (открытая система)' : 'открытая система без дверей';
@@ -1166,7 +1169,7 @@ function techFrontSvg(S) {
         b.dimH(x0 + 1.6, x0 + pitch - 1.6, fs * 1.8, String(mmr((pitch - 3.2) * 10)), fs, 0);
         b.text(x0 + pitch / 2, -H + fs * 3, 'С-' + (gi + 1), fs * .9, 'fill="#0f172a" font-weight="700"');
       }
-      b.dimH(x, x + w, fs * 3.8, (walls.length > 1 ? 'Стена ' + 'АВС'[wi] + ': ' : '') + mmr(w * 10), fs, 0);
+      b.dimH(x, x + w, fs * 3.8, (walls.length > 1 ? 'Стена ' + 'АБВ'[wi] + ': ' : '') + mmr(w * 10), fs, 0);
       x += w + GAP;
     });
     b.dimV(-H, 0, -fs * 2, String(mmr(H * 10)), fs, 0);
