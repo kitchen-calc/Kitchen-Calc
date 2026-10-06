@@ -57,8 +57,8 @@
 .kis-hint{color:#a99c80;font-size:.8rem;margin:0 0 10px}
 .kis-grid{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#b88a2a rgba(255,255,255,.06);-webkit-overflow-scrolling:touch}
 .kis-grid::-webkit-scrollbar{height:7px}.kis-grid::-webkit-scrollbar-thumb{background:#b88a2a;border-radius:9px}.kis-grid::-webkit-scrollbar-track{background:rgba(255,255,255,.06);border-radius:9px}
-.kis-c{flex:0 0 212px;scroll-snap-align:start;position:relative;text-align:left;cursor:pointer;border-radius:14px;padding:12px 12px 12px;border:1px solid rgba(255,226,154,.18);
-  background:linear-gradient(170deg,rgba(255,255,255,.06),rgba(255,255,255,.015));color:inherit;font:inherit;transition:.18s;display:flex;flex-direction:column;gap:6px;min-height:150px}
+.kis-c{flex:0 0 200px;scroll-snap-align:start;position:relative;text-align:left;cursor:pointer;border-radius:14px;padding:12px 12px 12px;border:1px solid rgba(255,226,154,.18);
+  background:linear-gradient(170deg,rgba(255,255,255,.06),rgba(255,255,255,.015));color:inherit;font:inherit;transition:.18s;display:flex;flex-direction:column;gap:6px;min-height:0}
 .kis-c:hover{border-color:rgba(217,154,28,.8);transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.35)}
 .kis-c.on{border-color:#e9b44c;background:linear-gradient(170deg,rgba(217,154,28,.28),rgba(217,154,28,.07));box-shadow:0 0 0 1px #e9b44c,0 10px 28px rgba(217,154,28,.22)}
 .kis-c.on:after{content:"✓";position:absolute;top:8px;right:10px;width:22px;height:22px;border-radius:50%;background:#e9b44c;color:#1a1408;font-weight:900;font-size:.8rem;display:flex;align-items:center;justify-content:center}
@@ -79,23 +79,24 @@
 .kis-foot{margin-top:18px;text-align:center;color:#a99c80;font-size:.76rem;border-top:1px dashed rgba(217,154,28,.3);padding-top:12px}
 .kis-sum{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .kis-sum span{background:rgba(217,154,28,.12);border:1px solid rgba(217,154,28,.4);color:#f6dc9a;border-radius:10px;padding:5px 10px;font-size:.78rem}
-@media (max-width:520px){.kis{padding:20px 12px 14px}.kis-title{font-size:1.6rem}.kis-c{flex-basis:176px;min-height:140px}}
+@media (max-width:520px){.kis{padding:20px 12px 14px}.kis-title{font-size:1.6rem}.kis-c{flex-basis:168px}}
 .kis-swipe{color:#a99c80;font-size:.7rem;margin:-4px 0 8px;letter-spacing:.04em}
 `;
     document.head.appendChild(st);
   }
 
-  function card(sec, key, item, active) {
-    const pv = sec.priceOf ? sec.priceOf(key, item) : item.price;
-    const price = pv != null ? `+${fmt(pv)}<small>${T('сум')}${sec.per ? ' / ' + T(sec.per) : ''}</small>` : `<span style="font-size:.9rem;opacity:.85">${T('включено в класс')}</span>`;
-    const tag = item.avail === false ? `<span class="kis-tag ord">${T('под заказ')}</span>` : (pv == null ? `<span class="kis-tag base">${T('базовый')}</span>` : '');
+  function art(sec, key) {
+    const a = window.KISART && KISART.art(sec.grp, key);
+    if (a) return a;
     const ic = ICON[(sec.icon && (typeof sec.icon === 'function' ? sec.icon(key) : sec.icon)) || 'gem'] || ICON.gem;
-    return `<button type="button" class="kis-c${active ? ' on' : ''}" data-kis-ctx="${esc(sec.ctx)}" data-kis-field="${esc(sec.field)}" data-kis-key="${esc(key)}">${tag}<div class="kis-ic">${ic}</div><div class="kis-n">${esc(T(item.ru))}</div><div class="kis-b">${esc(T(BRAND(item.ru)))}</div><div class="kis-p">${price}</div></button>`;
+    return `<div class="kis-ic">${ic}</div>`;
+  }
+  function card(sec, key, item, active) {
+    const tag = item.avail === false ? `<span class="kis-tag ord">${T('под заказ')}</span>` : '';
+    return `<button type="button" class="kis-c${active ? ' on' : ''}" data-kis-ctx="${esc(sec.ctx)}" data-kis-field="${esc(sec.field)}" data-kis-key="${esc(key)}">${tag}${art(sec, key)}<div class="kis-n">${esc(T(item.ru))}</div><div class="kis-b">${esc(T(BRAND(item.ru)))}</div></button>`;
   }
   function counter(sec, key, item, n) {
-    const ic = typeof sec.icon === 'function' ? sec.icon(key) : sec.icon;
-    return `<div class="kis-c${n > 0 ? ' on' : ''}"><div class="kis-ic">${ICON[ic] || ICON.gem}</div><div class="kis-n">${esc(T(item.ru))}</div><div class="kis-b">${esc(T(BRAND(item.ru)))}</div>
-      <div class="kis-p">+${fmt(item.price)}<small>${T('сум')} / ${T('шт.')}</small></div>
+    return `<div class="kis-c${n > 0 ? ' on' : ''}">${art(sec, key)}<div class="kis-n">${esc(T(item.ru))}</div><div class="kis-b">${esc(T(BRAND(item.ru)))}</div>
       <div class="kis-cnt"><button type="button" data-kis-count="1" data-kis-ctx="${esc(sec.ctx)}" data-kis-field="${esc(sec.field)}" data-kis-key="${esc(key)}" data-kis-d="-1">−</button><b>${n}</b><button type="button" data-kis-count="1" data-kis-ctx="${esc(sec.ctx)}" data-kis-field="${esc(sec.field)}" data-kis-key="${esc(key)}" data-kis-d="1">+</button></div></div>`;
   }
 

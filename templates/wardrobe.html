@@ -213,7 +213,8 @@
 
 <script src="/static/js/shkaf-data.js?v=5"></script>
 <script src="/static/js/kis-data.js?v=2"></script>
-<script src="/static/js/kis-ui.js?v=4"></script>
+<script src="/static/js/kis-art.js?v=1"></script>
+<script src="/static/js/kis-ui.js?v=5"></script>
 <!--LANGSCRIPT-->
 <script src="/static/js/contract-data.js?v=1"></script>
 <script>
@@ -888,9 +889,9 @@ function hwPanel() {
   const doorsN = kupe ? M.doors : wd.doors, anteOn = kupe ? M.antresol > 0 : (hall && M.hall.antresol.on);
   const secs = [];
   if (sliding) secs.push({ field: 'sys', grp: 'sliding', keys: ['tier', 'ps48', 'ps06', 'ps40'], value: h.sys, icon: 'slide', per: 'комплект', title: 'Система раздвижных дверей',
-    hint: 'Комплект Cinetto из наличия kis.uz на ' + doorsN + ' ' + (doorsN === 1 ? 'створку' : 'створки') + ' (цена карточки — для вашего количества дверей)', priceOf: (k) => k === 'tier' ? null : slidingBase(k, doorsN) });
+    hint: 'Комплект Cinetto из наличия kis.uz на ' + doorsN + ' ' + (doorsN === 1 ? 'створку' : 'створки'), priceOf: (k) => k === 'tier' ? null : slidingBase(k, doorsN) });
   if (swing || (anteOn && (h.lift || 'hinge') === 'hinge')) secs.push({ field: 'hinge', grp: 'hinges', keys: Object.keys(KIS.hinges), value: h.hinge, icon: 'hinge', per: 'петля', title: 'Петли Blum',
-    hint: 'Тип петель на распашных дверях и дверках антресоли. Цена с ответной планкой.', priceOf: (k, it) => it.price != null ? it.price + KIS.plate : null });
+    hint: 'Тип петель на распашных дверях и дверках антресоли.', priceOf: (k, it) => it.price != null ? it.price + KIS.plate : null });
   if (swing || (wardr && M.drawers > 0)) secs.push({ field: 'open', grp: 'open', value: h.open, icon: k => KIS.open[k] && KIS.open[k].tipon ? 'tipon' : 'handle', per: 'фасад', title: 'Открывание: ручки или TIP-ON',
     hint: 'Ручки на выбор или нажимное открывание без ручек Blum TIP-ON (механизм, держатель и пластина)' });
   if (anteOn) secs.push({ field: 'lift', grp: 'lifts', value: h.lift || 'hinge', icon: k => k === 'hinge' ? 'hinge' : (/^hf/.test(k) ? 'lifthf' : 'lift'), per: 'створку', title: 'Подъёмный механизм антресоли',

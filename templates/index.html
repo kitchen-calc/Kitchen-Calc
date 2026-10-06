@@ -23,8 +23,9 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="/static/js/kis-data.js?v=2"></script>
-  <script src="/static/js/kis-ui.js?v=4"></script>
-  <script src="/static/js/shkaf-uz.js?v=5"></script>
+  <script src="/static/js/kis-art.js?v=1"></script>
+<script src="/static/js/kis-ui.js?v=5"></script>
+  <script src="/static/js/shkaf-uz.js?v=6"></script>
   <style>
     :root {
       --bg-dark: #f7f4ee;
@@ -2363,11 +2364,11 @@
     function kitchenKisPanel() {
       const s = getCalcState(), corners = cornersCount(s.type), hasSink = lowerSections.some(x => x.kind === 'sink');
       const secs = [
-        { field: 'hinge', grp: 'hinges', value: KHW.hinge, icon: 'hinge', per: 'петля', title: 'Петли Blum', hint: 'Тип петель на дверцах всех шкафов. Цена с ответной планкой.', priceOf: (k, it) => it.price != null ? it.price + KIS.plate : null },
+        { field: 'hinge', grp: 'hinges', value: KHW.hinge, icon: 'hinge', per: 'петля', title: 'Петли Blum', hint: 'Тип петель на дверцах всех шкафов.', priceOf: (k, it) => it.price != null ? it.price + KIS.plate : null },
         { field: 'handle', grp: 'open', keys: ['tier', 'handle_eco', 'handle_std', 'handle_design'], value: KHW.handle, icon: 'handle', per: 'фасад', title: 'Ручки', hint: 'Для шкафов, у которых выбрано открывание «ручки». Видно на чертежах.' },
         { field: 'tipon', grp: 'open', keys: ['tier', 'tipon_s', 'tipon_l'], value: KHW.tipon, icon: 'tipon', per: 'фасад', title: 'Нажимное открывание Blum TIP-ON', hint: 'Для шкафов с открыванием Push-to-Open: механизм, держатель и пластина.' },
         { field: 'lift', grp: 'liftsK', value: KHW.lift, icon: k => k === 'tier' ? 'lift' : (/^hf/.test(k) ? 'lifthf' : 'lift'), per: 'фасад', title: 'Подъёмные механизмы верхних шкафов', hint: 'Для верхних шкафов с подъёмом фасада (сушилка, вытяжка, настройка «газлифты» у шкафа).' },
-        corners ? { field: 'corner', grp: 'corner', value: KHW.corner, icon: 'corner', per: 'угол', title: 'Угловой механизм', hint: (s.type === 'u-shape' ? 'П-образная кухня: 2 угла, цена умножается на 2.' : 'Г-образная кухня: 1 угол.') } : null,
+        corners ? { field: 'corner', grp: 'corner', value: KHW.corner, icon: 'corner', per: 'угол', title: 'Угловой механизм', hint: (s.type === 'u-shape' ? 'П-образная кухня: 2 угла.' : 'Г-образная кухня: 1 угол.') } : null,
         hasSink ? { field: 'sinkbox', grp: 'sinkbox', value: KHW.sinkbox, icon: 'sinkbox', per: 'шт.', title: 'Ящик под мойку', hint: 'Вместо дверок под мойкой — глубокий ящик Blum (на чертеже шкаф с мойкой станет с ящиком).' } : null,
         { field: 'cx', grp: 'cargo', keys: ['cromat', 'sub150', 'sub200', 'sub300', 'quadro'], counts: KHW.cx, icon: 'cargo', title: 'Карго — узкие выдвижные ящики', hint: 'Ставятся в узкий шкаф шириной 15–30 см. Укажите, сколько нужно штук.' },
         { field: 'sx', grp: 'space', keys: ['twin_a', 'twin_l', 'tower_a', 'tower_l', 'bottle'], counts: KHW.sx, icon: k => k === 'bottle' ? 'drawer' : 'space', title: 'Внутренние конструкции Blum', hint: 'SPACE TWIN, SPACE TOWER и бутылочница — для комфортного хранения.' }
