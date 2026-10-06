@@ -27,7 +27,8 @@ const DEF = () => ({
     bench: { on: true, W: 80, cushion: true },
     antresol: { on: false, W: 140, H: 40 }
   },
-  decor: { plant: true, lamp: true, pouf: true, rug: true, pics: true }
+  decor: { plant: true, lamp: true, pouf: true, rug: true, pics: true },
+  hw: { sys: 'tier', hinge: 'tier', open: 'tier', lift: 'hinge', pant: 'tier', rod: 'tier', x: { trouser: 0, shoe_rot: 0, basket: 0, leather: 0, access: 0, shoe_box: 0 } }
 });
 
 const PRESETS = {

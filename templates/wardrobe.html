@@ -211,7 +211,9 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="/static/js/shkaf-data.js?v=4"></script>
+<script src="/static/js/shkaf-data.js?v=5"></script>
+<script src="/static/js/kis-data.js?v=1"></script>
+<script src="/static/js/kis-ui.js?v=1"></script>
 <!--LANGSCRIPT-->
 <script src="/static/js/contract-data.js?v=1"></script>
 <script>
@@ -272,16 +274,41 @@ const T = () => P.tiers[M.tier];
 function panelM2(tier) { return tier.sheet / P.sheetArea * P.waste + P.cutM2 + 3 * P.edgeM; }   // ЛДСП 16 мм с распилом и кромкой, сум/м² (себестоимость)
 function glassM2(kind) { return kind === 'laco' ? P.glass.laco : (kind === 'film' ? P.glass.film : P.glass.mirror) + (kind === 'sand' ? P.sandExtra : 0); }
 
+
+/* ---- фурнитура на выбор (цены kis.uz, static/js/kis-data.js) ---- */
+const HWK = () => M.hw || (M.hw = DEF().hw);
+function hingeCost() { const k = HWK().hinge; return k && k !== 'tier' && KIS.hinges[k] ? KIS.hinges[k].price + KIS.plate : null; }
+function slidingBase(k, n) {      // комплект Cinetto на n створок; 1 створка — PS03
+  const s = KIS.sliding[k]; if (!s || !s.p2) return null;
+  if (n <= 1) return 623770;
+  return n === 2 ? s.p2 : s.p3 + (n - 3) * (s.p3 - s.p2);
+}
+function slidingKit(n, Wm, t) {  // null — если выбран «по классу»
+  const k = HWK().sys; if (!k || k === 'tier') return null;
+  const b = slidingBase(k, n); if (b == null) return null;
+  return b + (Wm > 2.7 ? (Wm - 2.7) * 2 * t.rail : 0);   // профили длиннее 2,7 м — доплата за метр направляющих
+}
+function antresolOpen(dn, t) {   // открывание дверок антресоли: петли или подъёмник
+  const l = HWK().lift;
+  if (l && l !== 'hinge' && KIS.lifts[l]) return dn * KIS.lifts[l].price;
+  const hc = hingeCost();
+  return dn * 2 * (hc != null ? hc : t.hinge);
+}
+
 function calc() {
   const t = T(), pm = panelM2(t), L = [];     // L: строки себестоимости {n, q, c}
   const add = (n, q, c, kind) => { if (c > 0) L.push({ n, q, c: Math.round(c), kind: kind || 'mat' }); };
   let front = 0;
+  const openLine = (n, what) => { const k = HWK().open, it = k && k !== 'tier' && KIS.open[k]; if (it && n > 0) add(it.ru + ' · ' + what + ' (' + n + ' шт.)', n, n * it.price, 'hw'); };
   const interior = (secs, secW, H, D) => {   // наполнение: общая часть для купе и гардеробной
     add('Полки (' + M.shelves + ' шт.)', M.shelves, M.shelves * (secW * (D - .03) * pm + 8000));
-    add('Штанги (' + M.rods + ' шт.)', M.rods, M.rods * (secW * t.rod + 24000));
+    const rodU = HWK().rod === 'cabio' ? KIS.rodSel.cabio.price : secW * t.rod + 24000;
+    add('Штанги (' + M.rods + ' шт.)', M.rods, M.rods * rodU);
     const dHw = M.drawerSys && M.drawerSys !== 'tier' && DRAWER_SYS[M.drawerSys] ? DRAWER_SYS[M.drawerSys].price : t.drawer;
     add('Ящики (' + M.drawers + ' шт.)', M.drawers, M.drawers * (dHw + .45 * pm));
-    add('Пантограф (' + M.pant + ' шт.)', M.pant, M.pant * t.pant);
+    const pantU = KIS.pantSel[HWK().pant] && KIS.pantSel[HWK().pant].price != null ? KIS.pantSel[HWK().pant].price : t.pant;
+    add('Пантограф (' + M.pant + ' шт.)', M.pant, M.pant * pantU);
+    if (M.type === 'wardrobe') openLine(M.drawers, 'ящики');
     add('Обувные полки (' + M.shoes + ' шт.)', M.shoes, M.shoes * t.shoe);
     if (M.led) add('Подсветка внутри', 1, secs * H * t.led + t.ledKit);
   };
@@ -301,10 +328,12 @@ function calc() {
       doorsCost += c;
     });
     add('Двери (' + n + ' шт.): наполнение', n, doorsCost);
-    add('Система раздвижных дверей', n, n * t.doorKit + 2 * W * t.rail + n * t.soft);
+    const sk = slidingKit(n, W, t);
+    if (sk) add('Раздвижная система ' + KIS.sliding[HWK().sys].short + ' (' + n + ' створ.)', n, sk, 'hw');
+    else add('Система раздвижных дверей', n, n * t.doorKit + 2 * W * t.rail + n * t.soft);
     if (M.antresol > 0) {
       const ha = M.antresol / 100, dn = Math.max(2, Math.ceil(W / .6));
-      add('Антресоль: корпус и фасады', 1, (W * D + 2 * ha * D) * pm + W * ha * pm + dn * 2 * t.hinge);
+      add('Антресоль: корпус и фасады', 1, (W * D + 2 * ha * D) * pm + W * ha * pm + antresolOpen(dn, t));
     }
     interior(secs, W / secs, H, D);
   } else if (M.type === 'wardrobe') {
@@ -326,12 +355,16 @@ function calc() {
         const dn = w.doors, dh = H, a = W * dh;
         let c = a * pm + 2 * (W + dh) * P.edgeDoorM;
         if (w.mirrorDoor) c = a * .7 * pm + a * .3 * glassM2('mirror');
-        add('Распашные двери' + suffix + ' (' + dn + ' шт.) и петли', dn, c + dn * (dh > 1.2 ? 3 : 2) * t.hinge * 2);
+        const hc = hingeCost(), hu = hc != null ? hc : t.hinge * 2;
+        add('Распашные двери' + suffix + ' (' + dn + ' шт.) и петли', dn, c + dn * (dh > 1.2 ? 3 : 2) * hu);
+        openLine(dn, 'двери' + suffix);
       } else {
         const dn = w.doors, dw = (W + (dn - 1) * .03) / dn, dh = H - .06;
         const c = w.mirrorDoor ? (dw * dh * glassM2('mirror') + dw * dh * pm * (dn - 1)) : dw * dh * pm * dn;
         add('Двери-купе' + suffix + ' (' + dn + ' шт.): наполнение', dn, c);
-        add('Система раздвижных дверей' + suffix, dn, dn * t.doorKit + 2 * W * t.rail + dn * t.soft);
+        const sk = slidingKit(dn, W, t);
+        if (sk) add('Раздвижная система ' + KIS.sliding[HWK().sys].short + suffix + ' (' + dn + ' створ.)', dn, sk, 'hw');
+        else add('Система раздвижных дверей' + suffix, dn, dn * t.doorKit + 2 * W * t.rail + dn * t.soft);
       }
     };
     if (h.wardrobe.on) {
@@ -366,10 +399,13 @@ function calc() {
     }
     if (h.antresol.on) {
       const W = frame ? (U ? (h.wardrobe.W + h.niche.W + h.wardrobe2.W) / 100 : Wn) : h.antresol.W / 100, ha = haM, dn = Math.max(2, Math.ceil(W / .6));
-      add('Антресоль', 1, (W * .38 + 2 * ha * .38 + W * ha) * pm + dn * 2 * t.hinge);
+      add('Антресоль', 1, (W * .38 + 2 * ha * .38 + W * ha) * pm + antresolOpen(dn, t));
     }
     if (frame && h.niche.slats) add('Рейки на задней стенке ниши', 1, Wn * Math.max(.5, Hn) * 250000);
   }
+  // гардеробные системы Cabio (kis.uz): штучные позиции
+  const CABIO_X = ['trouser', 'shoe_rot', 'basket', 'leather', 'access', 'shoe_box'];
+  CABIO_X.forEach(k => { const n = (HWK().x && HWK().x[k]) | 0; if (n > 0) add(KIS.cabio[k].ru + ' (' + n + ' шт.)', n, n * KIS.cabio[k].price, 'hw'); });
   // зеркало на стену (гардеробная, прихожая)
   if ((M.type === 'wardrobe' || M.type === 'hall') && M.mirror.on) {
     const a = M.mirror.W / 100 * M.mirror.H / 100, per = 2 * (M.mirror.W + M.mirror.H) / 100;
@@ -435,12 +471,32 @@ function garments(x0, x1, yRod, drop, seed) {   // одежда на штанг�
   return s;
 }
 
+
+/* --- ручки / TIP-ON и отметка подъёмника (фурнитура на выбор) --- */
+function handleSvg(fx, fy, fw, fh, i, col, m) {
+  const o = (m.hw && m.hw.open) || 'tier', right = i % 2 === 0, hx = right ? fx + fw - 4.6 : fx + 3, mid = fy + fh / 2;
+  const dark = shade(col, lum(col) > .5 ? -.5 : .6);
+  if (o === 'tipon_s' || o === 'tipon_l') { const cx = right ? fx + fw - 5 : fx + 5; return `<circle cx="${f2(cx)}" cy="${f2(mid)}" r="1.6" fill="none" stroke="#c9a24a" stroke-width=".7"/><circle cx="${f2(cx)}" cy="${f2(mid)}" r=".6" fill="#c9a24a"/>`; }
+  if (o === 'handle_eco') return R(hx, mid - 9, 1.4, 18, '#aeb3b7', 'rx=".7"') + R(hx - .4, mid - 9, 2.2, 1.4, '#8e9397') + R(hx - .4, mid + 7.6, 2.2, 1.4, '#8e9397');
+  if (o === 'handle_std') return R(hx - .2, mid - 17, 1.9, 34, '#c9a24a', 'rx=".9"') + `<circle cx="${f2(hx + .75)}" cy="${f2(mid - 17)}" r="1.5" fill="#e0bd6a"/><circle cx="${f2(hx + .75)}" cy="${f2(mid + 17)}" r="1.5" fill="#e0bd6a"/>`;
+  if (o === 'handle_design') return R(hx - .6, mid - 24, 2.6, 48, '#d9b25f', 'rx="1.3"') + R(hx - 1.4, mid - 24, 4.2, 2.2, '#b8903c', 'rx=".8"') + R(hx - 1.4, mid + 21.8, 4.2, 2.2, '#b8903c', 'rx=".8"') + R(hx - .2, mid - 20, .8, 40, '#f5dd9c', 'rx=".4"');
+  return R(hx, mid - 12, 1.6, 24, dark, 'rx=".8"');
+}
+function liftMark(x, y, w, h, m) {
+  const l = m.hw && m.hw.lift; if (!l || l === 'hinge' || !KIS.lifts[l]) return '';
+  const cx = x + w / 2, cy = y + h * .42, s = Math.min(w * .22, h * .3);
+  return `<path d="M ${f2(cx - s)} ${f2(cy + s * .55)} L ${f2(cx)} ${f2(cy - s * .6)} L ${f2(cx + s)} ${f2(cy + s * .55)}" fill="none" stroke="#e9b44c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<text x="${f2(cx)}" y="${f2(y + h - 2.4)}" text-anchor="middle" font-size="${f2(Math.min(5.4, h / 4.4))}" fill="#7a5a12" font-weight="700" font-family="Manrope,sans-serif">${KIS.lifts[l].short}</text>`;
+}
+
 /* --- наполнение одной секции: x0..x1 в см по горизонтали, пол y=0, верх y=-H --- */
 function sectionPlan(S, i, m) {
   const cnt = { rods: m.rods, shelves: m.shelves, drawers: m.drawers, shoes: m.shoes, pant: m.pant };
   const sec = { rods: 0, shelves: 0, drawers: 0, shoes: 0, pant: 0 };
   const off = { rods: 0, shelves: 1, drawers: S - 1, shoes: S > 2 ? S - 2 : 0, pant: 0 };
   Object.keys(cnt).forEach(k => { for (let j = 0; j < cnt[k]; j++) if ((off[k] + j) % S === i) sec[k]++; });
+  const xs = []; Object.keys((m.hw && m.hw.x) || {}).forEach(k => { for (let j = 0; j < (m.hw.x[k] | 0); j++) xs.push(k); });
+  sec.xt = xs.filter((_, j) => j % S === i % S);
   return sec;
 }
 function drawSection(x0, x1, H, sec, seed, led) {
@@ -456,6 +512,29 @@ function drawSection(x0, x1, H, sec, seed, led) {
     b.push(R(ix0, -(floor + 14), iw, 1.6, '#cbbfa8'));
     floor += 14;
   }
+
+  (sec.xt || []).forEach(kx => {
+    if (iw < 18) return;
+    if (kx === 'basket') {
+      const hh = 26; b.push(R(ix0 + 1.5, -(floor + hh), iw - 3, hh, '#cdbb98', 'rx="2" stroke="#9c8a66" stroke-width=".5"'));
+      for (let wy = floor + 5; wy < floor + hh - 2; wy += 5) b.push(LN(ix0 + 2, -wy, ix1 - 2, -wy, '#a89472', .5));
+      b.push(R(ix0 + iw / 2 - 7, -(floor + hh) + 3, 14, 1.8, '#7a6648', 'rx=".9"')); floor += hh + 2;
+    } else if (kx === 'leather' || kx === 'access') {
+      const hh = 17; b.push(R(ix0, -(floor + hh + 1), iw, hh, '#5b3a25', 'rx="1.2" stroke="#2f1d12" stroke-width=".5"') + R(ix0 + 2, -(floor + hh - 1), iw - 4, hh - 4, 'none', 'stroke="#c9a24a" stroke-width=".4" stroke-dasharray="1.2 1"') + R(x0 + w / 2 - 6, -(floor + hh - 5), 12, 1.6, '#d9b25f', 'rx=".8"')); floor += hh + 1.5;
+    } else if (kx === 'shoe_box') {
+      const hh = 20; b.push(R(ix0, -(floor + hh), iw, hh - 1, '#e6dccb', 'rx="1.2" stroke="#a89a82" stroke-width=".4"'));
+      for (let sx = ix0 + 3, jj = 0; sx + 22 < ix1; sx += 25, jj++) b.push(shoePair(sx, -(floor + 2), ['#2f3b4f', '#8b4a3a', '#d8cfc0'][jj % 3]));
+      b.push(R(x0 + w / 2 - 6, -(floor + hh - 4), 12, 1.6, '#8a7c66', 'rx=".8"')); floor += hh + 1;
+    } else if (kx === 'shoe_rot') {
+      const hh = Math.min(64, H * .28), cx = x0 + w / 2, rw = Math.min(iw - 6, 36);
+      b.push(R(cx - rw / 2, -(floor + hh), rw, hh, '#2b2623', 'rx="5" stroke="#d9b25f" stroke-width=".7"'));
+      for (let r = 0; r < 3; r++) { const yy = floor + 6 + r * (hh - 10) / 3; b.push(LN(cx - rw / 2 + 2, -yy - 1, cx + rw / 2 - 2, -yy - 1, '#6b5a3a', .6) + shoePair(cx - 9, -yy - 1, ['#d8cfc0', '#8b4a3a', '#b07d12'][r])); }
+      b.push(`<circle cx="${f2(cx)}" cy="${f2(-(floor + hh) + 2.2)}" r="1.4" fill="#d9b25f"/>`); floor += hh + 2;
+    } else if (kx === 'trouser') {
+      const rx = ix1 - 7; b.push(R(rx + 4.6, -(H - 10), 1.6, 50, '#c9ccce', 'rx=".8"'));
+      for (let t = 0; t < 5; t++) { const yy = -(H - 14 - t * 9); b.push(LN(rx, yy, rx + 4.6, yy, '#aeb3b7', 1) + R(rx - 2.6, yy, 2.6, 22, ['#2f3b4f', '#3a3d41', '#7a5638', '#a9adb0', '#1c1d1f'][t], 'rx=".6"')); }
+    }
+  });
   let hangBottom = H, rods = sec.rods;
   if (sec.pant > 0) {
     b.push(R(ix0, -H + 1.6, iw, 3, '#c9ccce', 'rx="1"'));
@@ -509,7 +588,9 @@ function doorFace(x, y, w, h, fill, m, idx) {
     }
   }
   // алюминиевая рамка двери
-  s += R(x, y, w, h, 'none', 'stroke="#aeb3b7" stroke-width="2.4"') + R(x + 1.2, y + 1.2, w - 2.4, h - 2.4, 'none', 'stroke="#e4e7e9" stroke-width=".6"');
+  const thin = m.hw && m.hw.sys === 'ps40';
+  s += thin ? (R(x, y, w, h, 'none', 'stroke="#3a3d41" stroke-width="1.1"') + R(x + .8, y + .8, w - 1.6, h - 1.6, 'none', 'stroke="#8a8f94" stroke-width=".4"'))
+    : (R(x, y, w, h, 'none', 'stroke="#aeb3b7" stroke-width="2.4"') + R(x + 1.2, y + 1.2, w - 2.4, h - 2.4, 'none', 'stroke="#e4e7e9" stroke-width=".6"'));
   return s;
 }
 function curtainShadow(x, y, h) { return R(x, y, 4, h, 'rgba(0,0,0,.16)'); }
@@ -557,9 +638,10 @@ function drawKupe(m, mode, mini) {
   if (ha > 0) {
     const dn = Math.max(2, Math.ceil(W / 60)), aw = W / dn;
     for (let i = 0; i < dn; i++) {
-      g += R(ox + i * aw, oy - Htot, aw - .6, ha, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(ox + i * aw, oy - Htot, aw - .6, ha, 'url(#gGloss)', 'opacity=".5"') + R(ox + i * aw + aw / 2 - 5, oy - Htot + ha - 5, 10, 1.4, shade(col, -.35), 'rx=".7"');
+      g += R(ox + i * aw, oy - Htot, aw - .6, ha, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(ox + i * aw, oy - Htot, aw - .6, ha, 'url(#gGloss)', 'opacity=".5"') + R(ox + i * aw + aw / 2 - 5, oy - Htot + ha - 5, 10, 1.4, shade(col, -.35), 'rx=".7"') + liftMark(ox + i * aw, oy - Htot, aw - .6, ha, m);
     }
   }
+  if (m.hw && m.hw.sys && m.hw.sys !== 'tier' && KIS.sliding[m.hw.sys]) g += `<text x="${f2(ox + W / 2)}" y="${f2(oy + 19)}" text-anchor="middle" font-size="7.5" fill="#7a5a12" font-weight="700" font-family="Manrope,sans-serif" letter-spacing=".6">CINETTO ${KIS.sliding[m.hw.sys].short}</text>`;
   // светодиодный ореол на полу
   if (m.led) g += `<ellipse cx="${f2(ox + W / 2)}" cy="${f2(oy + 2)}" rx="${f2(W / 2)}" ry="5" fill="url(#gLamp)" opacity=".5"/>`;
   g += R(ox - 1, oy, W + 2, 3, 'rgba(0,0,0,.3)');
@@ -635,14 +717,14 @@ function drawHallWall(m, mode, items, x0, WALL) {
           else {
             g += mir ? (R(fx + .5, top + 1.5, dw - 1, H - 3, 'url(#gMirror)') + `<polygon points="${f2(fx + dw * .15)},${f2(top + H)} ${f2(fx + dw * .45)},${f2(top)} ${f2(fx + dw * .6)},${f2(top)} ${f2(fx + dw * .3)},${f2(top + H)}" fill="url(#gShine)"/>`) :
               (R(fx + .5, top + 1.5, dw - 1, H - 3, col) + R(fx + .5, top + 1.5, dw - 1, H - 3, 'url(#gGloss)', 'opacity=".5"'));
-            g += R(fx + .5, top + 1.5, dw - 1, H - 3, 'none', 'stroke="rgba(0,0,0,.28)" stroke-width=".7"') + R(i % 2 ? fx + 3 : fx + dw - 4.6, top + H / 2 - 12, 1.6, 24, shade(col, lum(col) > .5 ? -.5 : .6), 'rx=".8"');
+            g += R(fx + .5, top + 1.5, dw - 1, H - 3, 'none', 'stroke="rgba(0,0,0,.28)" stroke-width=".7"') + handleSvg(fx, top + 1.5, dw, H - 3, i, col, m);
           }
         }
         if (w.kind === 'sliding') g += R(x - 1, top - 1, W + 2, 3.5, '#9aa0a5');
       }
       if (h.antresol.on) {
         const a = h.antresol, aw = Math.min(a.W, W), dn2 = Math.max(2, Math.ceil(aw / 60)), atop = top - a.H;
-        for (let i = 0; i < dn2; i++) g += R(x + i * aw / dn2, atop, aw / dn2 - .6, a.H, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(x + i * aw / dn2, atop, aw / dn2 - .6, a.H, 'url(#gGloss)', 'opacity=".5"');
+        for (let i = 0; i < dn2; i++) g += R(x + i * aw / dn2, atop, aw / dn2 - .6, a.H, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(x + i * aw / dn2, atop, aw / dn2 - .6, a.H, 'url(#gGloss)', 'opacity=".5"') + liftMark(x + i * aw / dn2, atop, aw / dn2 - .6, a.H, m);
       }
     } else if (it.k === 'h') {
       const W = it.w;
@@ -766,7 +848,7 @@ function drawHallFrame(m, mode, mini) {
   // антресоль над нишей (Г) или на всю ширину (П)
   if (ha > 0) {
     const bx = U ? x1 : xN, bw = U ? total : Wn, dn = Math.max(2, Math.ceil(bw / 60));
-    for (let i = 0; i < dn; i++) g += R(bx + i * bw / dn, WALL - H, bw / dn - .6, ha, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(bx + i * bw / dn, WALL - H, bw / dn - .6, ha, 'url(#gGloss)', 'opacity=".5"') + R(bx + i * bw / dn + bw / dn / 2 - 5, WALL - H + ha - 6, 10, 1.4, shade(col, -.35), 'rx=".7"');
+    for (let i = 0; i < dn; i++) g += R(bx + i * bw / dn, WALL - H, bw / dn - .6, ha, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(bx + i * bw / dn, WALL - H, bw / dn - .6, ha, 'url(#gGloss)', 'opacity=".5"') + R(bx + i * bw / dn + bw / dn / 2 - 5, WALL - H + ha - 6, 10, 1.4, shade(col, -.35), 'rx=".7"') + liftMark(bx + i * bw / dn, WALL - H, bw / dn - .6, ha, m);
   }
   if (m.led) g += R(xN + 2, nTop - 1, Wn - 4, 2, '#ffe29a') + R(xN, nTop, Wn, 46, 'url(#gLedD)', 'opacity=".85"');
   if (dec.lamp) { const lx = xN + Wn / 2; g += LN(lx, 0, lx, nTop + 6, '#2b2f33', 1) + `<path d="M ${f2(lx - 8)} ${f2(nTop + 22)} L ${f2(lx - 5)} ${f2(nTop + 6)} L ${f2(lx + 5)} ${f2(nTop + 6)} L ${f2(lx + 8)} ${f2(nTop + 22)} Z" fill="#f4e4bf" stroke="#c9b27c" stroke-width=".6"/>`; }
@@ -798,6 +880,38 @@ function interiorCard(n) {
   </div>
   <div style="margin-top:12px" class="${M.drawers > 0 ? '' : 'hide'}">${field('Система ящиков', `<select data-k="drawerSys">${Object.keys(DRAWER_SYS).map(k => `<option value="${k}" ${(M.drawerSys || 'tier') === k ? 'selected' : ''}>${DRAWER_SYS[k].ru}</option>`).join('')}</select>`, 'Blum: цены kis.uz; влияют на итоговую стоимость')}</div></div>`;
 }
+
+/* ---- каталог фурнитуры (премиальные карточки) ---- */
+function hwPanel() {
+  const h = HWK(), kupe = M.type === 'kupe', wardr = M.type === 'wardrobe', hall = M.type === 'hall', wd = M.hall.wardrobe;
+  const sliding = kupe || (hall && wd.on && wd.kind === 'sliding'), swing = hall && wd.on && wd.kind === 'swing';
+  const doorsN = kupe ? M.doors : wd.doors, anteOn = kupe ? M.antresol > 0 : (hall && M.hall.antresol.on);
+  const secs = [];
+  if (sliding) secs.push({ field: 'sys', grp: 'sliding', keys: ['tier', 'ps48', 'ps06', 'ps40'], value: h.sys, icon: 'slide', per: 'комплект', title: 'Система раздвижных дверей',
+    hint: 'Комплект Cinetto из наличия kis.uz на ' + doorsN + ' ' + (doorsN === 1 ? 'створку' : 'створки') + ' (цена карточки — для вашего количества дверей)', priceOf: (k) => k === 'tier' ? null : slidingBase(k, doorsN) });
+  if (swing || (anteOn && (h.lift || 'hinge') === 'hinge')) secs.push({ field: 'hinge', grp: 'hinges', keys: Object.keys(KIS.hinges), value: h.hinge, icon: 'hinge', per: 'петля', title: 'Петли Blum',
+    hint: 'Тип петель на распашных дверях и дверках антресоли. Цена с ответной планкой.', priceOf: (k, it) => it.price != null ? it.price + KIS.plate : null });
+  if (swing || (wardr && M.drawers > 0)) secs.push({ field: 'open', grp: 'open', value: h.open, icon: k => KIS.open[k] && KIS.open[k].tipon ? 'tipon' : 'handle', per: 'фасад', title: 'Открывание: ручки или TIP-ON',
+    hint: 'Ручки на выбор или нажимное открывание без ручек Blum TIP-ON (механизм, держатель и пластина)' });
+  if (anteOn) secs.push({ field: 'lift', grp: 'lifts', value: h.lift || 'hinge', icon: k => k === 'hinge' ? 'hinge' : (/^hf/.test(k) ? 'lifthf' : 'lift'), per: 'створку', title: 'Подъёмный механизм антресоли',
+    hint: 'Фасад антресоли может подниматься вверх вместо обычных петель' });
+  if ((kupe || wardr) && M.pant > 0) secs.push({ field: 'pant', grp: 'pantSel', value: h.pant, icon: 'pant', per: 'шт.', title: 'Пантограф (выдвижная штанга)', hint: 'Cabio — премиальная итальянская гардеробная система' });
+  if ((kupe || wardr) && M.rods > 0) secs.push({ field: 'rod', grp: 'rodSel', value: h.rod, icon: 'rod', per: 'шт.', title: 'Штанга для одежды' });
+  if (kupe || wardr || (hall && wd.on)) secs.push({ field: 'x', grp: 'cabio', keys: ['trouser', 'shoe_rot', 'basket', 'leather', 'access', 'shoe_box'], counts: h.x || {}, icon: k => ({ trouser: 'trouser', shoe_rot: 'shoe', basket: 'basket', leather: 'drawer', access: 'drawer', shoe_box: 'shoe' }[k]),
+    title: 'Системы Cabio — украшение гардероба', hint: 'Добавьте штучные модули: вешалки, обувницы, корзины, ящики с кожаным дном' });
+  const sum = [];
+  if (sliding && h.sys !== 'tier') sum.push(KIS.sliding[h.sys].short + ' · ' + doorsN + ' створ.');
+  if (h.hinge !== 'tier' && KIS.hinges[h.hinge]) sum.push('Петли: ' + KIS.hinges[h.hinge].ru.replace('Blum ', ''));
+  if (h.open !== 'tier' && KIS.open[h.open]) sum.push(KIS.open[h.open].ru);
+  if (anteOn && h.lift && h.lift !== 'hinge') sum.push('Антресоль: ' + KIS.lifts[h.lift].short);
+  if (h.pant !== 'tier' && KIS.pantSel[h.pant]) sum.push(KIS.pantSel[h.pant].ru);
+  if (h.rod === 'cabio') sum.push(KIS.rodSel.cabio.ru);
+  Object.keys(h.x || {}).forEach(k => { if (h.x[k] > 0) sum.push(KIS.cabio[k].ru.replace(' Cabio', '') + ' ×' + h.x[k]); });
+  if (!secs.length) return '';
+  return KISUI.panel({ ctx: 'shk', title: 'Каталог фурнитуры', sub: 'Оригинальная фурнитура из наличия — выберите, и цена, чертёж и спецификация обновятся сразу', sections: secs, summary: sum });
+}
+document.addEventListener('kispick', e => { const d = e.detail; if (d.ctx !== 'shk') return; HWK()[d.field] = d.key; activePreset = -1; norm(); renderForm(); refresh(); presetCards(); });
+document.addEventListener('kiscount', e => { const d = e.detail; if (d.ctx !== 'shk') return; const x = HWK().x || (HWK().x = {}); x[d.key] = Math.max(0, Math.min(8, (x[d.key] | 0) + d.delta)); activePreset = -1; renderForm(); refresh(); presetCards(); });
 function decorCard(n) {
   const d = M.decor, names = { plant: 'Растение', lamp: 'Торшер', pouf: 'Пуф / сумка', rug: 'Коврик', pics: 'Картины' };
   return `<div class="card"><h2><span class="n">${n}</span>Декор на картинке</h2><div class="chips">${Object.keys(names).map(k => chip(d[k], `data-decor="${k}"`, names[k])).join('')}</div><div class="hint">Декор нужен только для красоты на картинке и в цену не входит.</div></div>`;
@@ -816,13 +930,13 @@ function formKupe() {
     <div class="row" style="margin-top:12px">${field('Количество дверей', stepper('doors', 2, 6, 1), 'Ширина одной двери ≈ ' + dw + ' см')}${field('Антресоль сверху', `<select data-k="antresol">${[0, 40, 50, 60].map(v => `<option value="${v}" ${M.antresol === v ? 'selected' : ''}>${v ? 'Да, ' + v + ' см' : 'Нет'}</option>`).join('')}</select>`)}</div></div>` +
     `<div class="card"><h2><span class="n">3</span>Двери и цвет</h2>${fills}<label class="f" style="margin-top:12px">Цвет корпуса и ЛДСП</label>${swatches()}
     ${hasLaco ? `<label class="f" style="margin-top:12px">Цвет лакобеля</label><div class="sw">${LACO.map((c, i) => `<button type="button" title="${c[0]}" data-laco="${i}" class="${(M.laco || 0) === i ? 'on' : ''}" style="background:${c[1]}"></button>`).join('')}</div>` : ''}</div>` +
-    interiorCard(4) + decorCard(5);
+    interiorCard(4) + hwPanel() + decorCard(5);
 }
 function formWardrobe() {
   return tiersCard() + `<div class="card"><h2><span class="n">2</span>Планировка</h2><div class="chips" style="margin-bottom:12px">${chip(M.shape === 'line', 'data-shape="line"', 'Линейная')}${chip(M.shape === 'L', 'data-shape="L"', 'Г-образная')}${chip(M.shape === 'U', 'data-shape="U"', 'П-образная')}</div>
     <div class="row3">${field('Стена А, см', stepper('A', 80, 800, 10))}${M.shape !== 'line' ? field('Стена Б, см', stepper('B', 80, 800, 10)) : '<div></div>'}${M.shape === 'U' ? field('Стена В, см', stepper('C', 80, 800, 10)) : '<div></div>'}</div>
     <div class="row" style="margin-top:12px">${field('Высота, см', stepper('H', 190, 290, 5))}${field('Глубина, см', stepper('D', 30, 70, 5))}</div>
-    <label class="f" style="margin-top:12px">Цвет корпуса</label>${swatches()}</div>` + interiorCard(3) + mirrorCard(4) + decorCard(5);
+    <label class="f" style="margin-top:12px">Цвет корпуса</label>${swatches()}</div>` + interiorCard(3) + hwPanel() + mirrorCard(4) + decorCard(5);
 }
 function formHall() {
   const h = M.hall, wd = h.wardrobe, frame = h.shape !== 'line', U = h.shape === 'U';
@@ -839,7 +953,7 @@ function formHall() {
     block(frame ? 'Крючки для одежды в нише' : 'Открытая вешалка', 'hall.hanger', frame ? '<div class="hint">Панель с крючками на задней стенке ниши.</div>' : `<div class="row">${field('Ширина, см', stepper('hall.hanger.W', 40, 200, 10))}<div></div></div>`) +
     block(frame ? 'Сиденье (скамья) в нише' : 'Скамья', 'hall.bench', `<div class="row">${frame ? '<div></div>' : field('Ширина, см', stepper('hall.bench.W', 40, 200, 10))}${field('Подушка', `<div class="chips">${chip(h.bench.cushion, 'data-toggle="hall.bench.cushion"', h.bench.cushion ? 'Мягкая' : 'Нет')}</div>`)}</div>`) +
     block(frame ? (U ? 'Антресоль на всю ширину' : 'Антресоль над нишей') : 'Антресоль над шкафом', 'hall.antresol', `<div class="row">${frame ? '<div></div>' : field('Ширина, см', stepper('hall.antresol.W', 60, 400, 10))}${field('Высота, см', stepper('hall.antresol.H', 25, 80, 5))}</div>`) +
-    mirrorCard(8) + decorCard(9);
+    hwPanel() + mirrorCard(8) + decorCard(9);
 }
 function renderForm() {
   $('form').innerHTML = M.type === 'kupe' ? formKupe() : (M.type === 'wardrobe' ? formWardrobe() : formHall());
@@ -853,6 +967,26 @@ function presetCards() {
   }).join('');
 }
 function calcFor(mm) { const keep = M; M = mm; const r = calc(); M = keep; return r; }
+
+
+/* выбранная фурнитура: строки для «Что входит», спецификации и заявки */
+function hwFlags() {
+  const kupe = M.type === 'kupe', hall = M.type === 'hall', wd = M.hall.wardrobe;
+  return { kupe, wardr: M.type === 'wardrobe', hall, wd,
+    sliding: kupe || (hall && wd.on && wd.kind === 'sliding'), swing: hall && wd.on && wd.kind === 'swing',
+    doorsN: kupe ? M.doors : wd.doors, anteOn: kupe ? M.antresol > 0 : (hall && M.hall.antresol.on) };
+}
+function hwRows() {
+  const h = HWK(), f = hwFlags(), r = [];
+  if (f.sliding && h.sys !== 'tier' && KIS.sliding[h.sys]) r.push(['Система дверей', KIS.sliding[h.sys].ru + ', ' + f.doorsN + ' ' + (f.doorsN === 1 ? 'створка' : 'створки')]);
+  if ((f.swing || (f.anteOn && (h.lift || 'hinge') === 'hinge')) && h.hinge !== 'tier' && KIS.hinges[h.hinge]) r.push(['Петли', KIS.hinges[h.hinge].ru]);
+  if ((f.swing || (f.wardr && M.drawers > 0)) && h.open !== 'tier' && KIS.open[h.open]) r.push(['Открывание', KIS.open[h.open].ru]);
+  if (f.anteOn && h.lift && h.lift !== 'hinge' && KIS.lifts[h.lift]) r.push(['Подъёмники антресоли', KIS.lifts[h.lift].ru + ' на каждую створку']);
+  if ((f.kupe || f.wardr) && M.pant > 0 && h.pant !== 'tier' && KIS.pantSel[h.pant]) r.push(['Пантограф', KIS.pantSel[h.pant].ru + ' × ' + M.pant]);
+  if ((f.kupe || f.wardr) && M.rods > 0 && h.rod === 'cabio') r.push(['Штанги', KIS.rodSel.cabio.ru + ' × ' + M.rods]);
+  Object.keys(h.x || {}).forEach(k => { if (h.x[k] > 0 && KIS.cabio[k]) r.push([KIS.cabio[k].ru, '× ' + h.x[k]]); });
+  return r;
+}
 
 function spec() {
   const t = T(), rows = [['Класс', t.ru], ['Цвет корпуса', M.customColor ? M.customColor.label : PALETTE[M.color][0]]];
@@ -871,6 +1005,7 @@ function spec() {
     if (h.bench.on) rows.push(['Скамья', h.bench.W + ' см' + (h.bench.cushion ? ', с подушкой' : '')]);
     if (h.antresol.on) rows.push(['Антресоль', `${h.antresol.W}×${h.antresol.H} см`]);
   }
+  hwRows().forEach(x => rows.push(x));
   if (M.type !== 'hall' && M.drawers > 0) rows.push(['Система ящиков', (DRAWER_SYS[M.drawerSys || 'tier'] || DRAWER_SYS.tier).ru]);
   if (M.type !== 'hall') rows.push(['Наполнение', `полок ${M.shelves}, штанг ${M.rods}, ящиков ${M.drawers}, пантографов ${M.pant}, обувных полок ${M.shoes}${M.led ? ', подсветка' : ''}`]);
   if (M.type !== 'kupe' && M.mirror.on) rows.push(['Зеркало', `${M.mirror.W}×${M.mirror.H} см, ${MIRRORS[M.mirror.type].toLowerCase()}`]);
@@ -1129,6 +1264,7 @@ function buildSpec() {
   const a = [];
   if (m.type !== 'hall') { if (m.rods) a.push('штанги ' + m.rods + ' шт.'); if (m.pant) a.push('пантограф ' + m.pant + ' шт.'); if (m.shoes) a.push('обувные полки ' + m.shoes + ' шт.'); if (m.drawers) a.push('ящики ' + m.drawers + ' шт. (' + drawSysName + ')'); }
   if (a.length) S.extras.push('Фурнитура и наполнение: ' + a.join(', '));
+  hwRows().forEach(x => S.extras.push(x[0] + ': ' + x[1]));
   S.info = [
     ['Изделие', { kupe: 'Шкаф-купе', wardrobe: 'Гардеробная', hall: 'Прихожая' }[m.type]],
     ['Класс', t.ru + ': ' + t.desc],
