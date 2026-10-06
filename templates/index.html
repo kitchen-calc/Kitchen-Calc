@@ -26,7 +26,7 @@
   <script src="/static/js/kis-data.js?v=3"></script>
   <script src="/static/js/kis-art.js?v=1"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
-  <script src="/static/js/shkaf-uz.js?v=6"></script>
+  <script src="/static/js/shkaf-uz.js?v=7"></script>
   <style>
     :root {
       --bg-dark: #f7f4ee;
@@ -496,7 +496,7 @@
     .k3d-bar button { pointer-events: auto; background: rgba(20,17,12,.78); color: #f6dc9a; border: 1px solid rgba(217,154,28,.55); border-radius: 8px; padding: 5px 9px; font-size: .74rem; font-weight: 700; cursor: pointer; backdrop-filter: blur(4px); }
     .k3d-bar button:hover { background: #b07d12; color: #fff; }
     .k3d-bar .sp { flex: 1; }
-    .k3d-edit { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 3; background: rgba(20,17,12,.88); color: #f3ead7; border: 1px solid rgba(217,154,28,.55); border-radius: 12px; padding: 8px 10px; font-size: .78rem; max-height: 55%; overflow: auto; backdrop-filter: blur(6px); }
+    .k3d-edit { position: absolute; left: 8px; right: 8px; bottom: 8px; max-width: 440px; z-index: 3; background: rgba(20,17,12,.88); color: #f3ead7; border: 1px solid rgba(217,154,28,.55); border-radius: 12px; padding: 8px 10px; font-size: .78rem; max-height: 55%; overflow: auto; backdrop-filter: blur(6px); }
     .k3d-edit .k3e-t { font-weight: 800; color: #f6dc9a; margin-bottom: 6px; }
     .k3d-edit .k3e-r { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin: 4px 0; }
     .k3d-edit .k3e-r > span { color: #bda673; min-width: 54px; }
@@ -2454,7 +2454,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=3');
+        const mod = await import('/static/js/kitchen3d.js?v=4');
         K3 = mod.createK3D(el('k3dCanvas'), {
           onSelect: sel => { selSec = sel ? (secsOf(sel.tier).find(x => x.id === sel.id) || null) : null; renderPlanner(); }
         });
@@ -5121,7 +5121,7 @@ ${body}
       const it = catList[catIdx]; if (!it) return;
       const found = findColor(CAT_ID_PREFIX[it.key] + it.n); if (!found) return;
       const col = colorObj(found), tg = target === 'body' ? 'body' : 'facade';
-      if (EMBED) { try { parent.postMessage({ kc: 'color', hex: col.hex, name: col.name, label: colorLabel(col, true), id: col.id }, location.origin); } catch (e) {} return; }
+      if (EMBED) { try { parent.postMessage({ kc: 'color', hex: col.hex, name: col.name, label: colorLabel(col, true), id: col.id, img: col.img || '' }, location.origin); } catch (e) {} return; }
       const changed = setMaterialForColor(tg, col);       // материал подстраивается под ступень цвета
       if (tg === 'body') selectedBodyColor = col; else selectedFacadeColor = col;
       updateColorUIBadges();

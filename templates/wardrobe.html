@@ -6,6 +6,7 @@
   <title>Калькулятор шкафов-купе, гардеробных и прихожих на заказ | Kitchen Calc</title>
   <meta name="description" content="Онлайн-калькулятор шкафа-купе, гардеробной и прихожей на заказ в Ташкенте: выберите размеры, двери, зеркала и наполнение — цена и чертёж за 2 минуты. Эконом, Стандарт, Премиум.">
   <meta name="theme-color" content="#11100e">
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
   <!--LANGHEAD-->
   <link rel="icon" type="image/svg+xml" href="/static/home/favicon.svg">
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -74,6 +75,29 @@
     .pcard .tx small { display:block; color:var(--muted); font-size:.76rem; margin:2px 0 4px; }
     .pcard .tx em { font-style:normal; font-weight:800; color:var(--gold); font-size:.92rem; }
     .sticky { position:sticky; top:74px; }
+
+    /* --- 3D --- */
+    .r3-tabs { display:flex; gap:6px; margin:0 0 8px; }
+    .r3-tab { border:1px solid var(--line); background:#fff; color:#6b4a07; border-radius:999px; padding:5px 14px; font-weight:700; font-size:.8rem; cursor:pointer; font-family:inherit; }
+    .r3-tab.on { background:linear-gradient(135deg,#d99a1c,#b07d12); color:#fff; border-color:transparent; }
+    .w3d-box { position:relative; height:440px; background:#ece6dc; border-radius:14px; overflow:hidden; border:1px solid var(--line); margin-bottom:10px; }
+    .k3d-canvas { position:absolute; inset:0; }
+    .k3d-load { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#8a7a5a; font-weight:600; pointer-events:none; }
+    .k3d-bar { position:absolute; top:8px; left:8px; right:8px; display:flex; gap:5px; flex-wrap:wrap; z-index:3; pointer-events:none; }
+    .k3d-bar button { pointer-events:auto; background:rgba(20,17,12,.78); color:#f6dc9a; border:1px solid rgba(217,154,28,.55); border-radius:8px; padding:5px 9px; font-size:.74rem; font-weight:700; cursor:pointer; font-family:inherit; }
+    .k3d-bar button:hover { background:#b07d12; color:#fff; }
+    .k3d-bar .sp { flex:1; }
+    .k3d-edit { position:absolute; left:8px; right:8px; bottom:8px; max-width:440px; z-index:3; background:rgba(20,17,12,.88); color:#f3ead7; border:1px solid rgba(217,154,28,.55); border-radius:12px; padding:8px 10px; font-size:.78rem; max-height:56%; overflow:auto; }
+    .k3d-edit .k3e-t { font-weight:800; color:#f6dc9a; margin-bottom:6px; }
+    .k3d-edit .k3e-r { display:flex; flex-wrap:wrap; gap:5px; align-items:center; margin:4px 0; }
+    .k3d-edit .k3e-r > span { color:#bda673; min-width:62px; }
+    .k3d-edit .k3e-r b { min-width:18px; text-align:center; }
+    .k3d-edit button { background:rgba(255,255,255,.08); color:#fff4dc; border:1px solid rgba(255,226,154,.3); border-radius:7px; padding:4px 8px; font-size:.74rem; cursor:pointer; font-family:inherit; }
+    .k3d-edit button.on, .k3d-edit button:hover { background:#b07d12; border-color:#e9b44c; }
+    .k3d-edit select { background:#1d1912; color:#fff4dc; border:1px solid rgba(255,226,154,.35); border-radius:7px; padding:3px 6px; font-size:.74rem; max-width:100%; font-family:inherit; }
+    .k3d-edit .k3e-hint { color:#bda673; }
+    .k3d-full { position:fixed !important; inset:0; z-index:1200; height:100vh !important; border-radius:0 !important; border:0 !important; margin:0 !important; }
+    @media (max-width:760px) { .w3d-box { height:360px; } }
     .view { background:#efe9df; border-radius:14px; overflow:hidden; border:1px solid var(--line); margin-bottom:10px; }
     .view svg { display:block; width:100%; height:auto; }
     .vt { display:flex; gap:8px; margin-bottom:10px; }
@@ -154,8 +178,9 @@
   <div class="grid">
     <div id="form"></div>
     <div class="sticky">
-      <div class="vt" id="vt"></div>
-      <div class="view" id="view"></div>
+      <div class="r3-tabs" id="r3Tabs"><button type="button" class="r3-tab on" id="w3dTab" onclick="setW3Mode('3d')">3D</button><button type="button" class="r3-tab" onclick="setW3Mode('2d')">Схема</button></div>
+      <div class="w3d-box" id="w3dBox"><div class="k3d-canvas" id="w3dCanvas"></div><div class="k3d-load" id="w3dLoad">Загрузка 3D…</div><div class="k3d-bar" id="w3dBar"></div><div class="k3d-edit" id="w3dEdit"></div></div>
+      <div id="w2dWrap" style="display:none"><div class="vt" id="vt"></div><div class="view" id="view"></div></div>
       <div class="price"><small>Ориентировочная стоимость</small><b id="priceTxt">—</b><div class="note">Включает изготовление, доставку по Ташкенту и монтаж. Окончательная цена — после замера.</div></div>
       <div class="incl" id="incl"></div>
       <div class="master" id="master"></div>
@@ -212,7 +237,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="/static/js/shkaf-data.js?v=5"></script>
-<script src="/static/js/kis-data.js?v=2"></script>
+<script src="/static/js/kis-data.js?v=3"></script>
 <script src="/static/js/kis-art.js?v=1"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
 <!--LANGSCRIPT-->
@@ -306,7 +331,9 @@ function calc() {
     const rodU = HWK().rod === 'cabio' ? KIS.rodSel.cabio.price : secW * t.rod + 24000;
     add('Штанги (' + M.rods + ' шт.)', M.rods, M.rods * rodU);
     const dHw = M.drawerSys && M.drawerSys !== 'tier' && DRAWER_SYS[M.drawerSys] ? DRAWER_SYS[M.drawerSys].price : t.drawer;
-    add('Ящики (' + M.drawers + ' шт.)', M.drawers, M.drawers * (dHw + .45 * pm));
+    let dCost = M.drawers * (dHw + .45 * pm);
+    if (secsValid(M)) { dCost = 0; M.secs.forEach(s => { for (let i = 0; i < (s.drawers | 0); i++) { const k = s.dsys && s.dsys[i]; dCost += ((k && k !== 'tier' && KIS.drawerSys[k]) ? KIS.drawerSys[k].price : dHw) + .45 * pm; } }); }
+    add('Ящики (' + M.drawers + ' шт.)', M.drawers, dCost);
     const pantU = KIS.pantSel[HWK().pant] && KIS.pantSel[HWK().pant].price != null ? KIS.pantSel[HWK().pant].price : t.pant;
     add('Пантограф (' + M.pant + ' шт.)', M.pant, M.pant * pantU);
     if (M.type === 'wardrobe') openLine(M.drawers, 'ящики');
@@ -491,14 +518,39 @@ function liftMark(x, y, w, h, m) {
 }
 
 /* --- наполнение одной секции: x0..x1 в см по горизонтали, пол y=0, верх y=-H --- */
-function sectionPlan(S, i, m) {
+/* секции: автоматически или настроенные вручную в 3D — M.secs = [{ wall, w (см), rods, shelves, drawers, shoes, pant, dsys: [система каждого ящика] }] */
+function wallsOf(m) { return m.type === 'kupe' ? [m.W] : (m.shape === 'line' ? [m.A] : (m.shape === 'L' ? [m.A, m.B] : [m.A, m.B, m.C])); }
+function secCounts(m) { return m.type === 'kupe' ? [m.doors] : wallsOf(m).map(w => Math.max(1, Math.ceil(w / 80))); }
+function secsValid(m) {
+  if (!m || m.type === 'hall' || !Array.isArray(m.secs)) return false;
+  const counts = secCounts(m), walls = wallsOf(m);
+  if (m.secs.length !== counts.reduce((a, b) => a + b, 0)) return false;
+  let i = 0;
+  for (let wi = 0; wi < walls.length; wi++) { let sum = 0; for (let k = 0; k < counts[wi]; k++, i++) { const s = m.secs[i]; if (!s || s.wall !== wi || !(s.w >= 25)) return false; sum += s.w; } if (Math.abs(sum - walls[wi]) > .6) return false; }
+  return true;
+}
+function autoPlan(S, i, m) {
   const cnt = { rods: m.rods, shelves: m.shelves, drawers: m.drawers, shoes: m.shoes, pant: m.pant };
   const sec = { rods: 0, shelves: 0, drawers: 0, shoes: 0, pant: 0 };
   const off = { rods: 0, shelves: 1, drawers: S - 1, shoes: S > 2 ? S - 2 : 0, pant: 0 };
   Object.keys(cnt).forEach(k => { for (let j = 0; j < cnt[k]; j++) if ((off[k] + j) % S === i) sec[k]++; });
-  const xs = []; Object.keys((m.hw && m.hw.x) || {}).forEach(k => { for (let j = 0; j < (m.hw.x[k] | 0); j++) xs.push(k); });
-  sec.xt = xs.filter((_, j) => j % S === i % S);
   return sec;
+}
+function makeSecs(m) {
+  const counts = secCounts(m), walls = wallsOf(m), S = counts.reduce((a, b) => a + b, 0), out = [];
+  let gi = 0;
+  walls.forEach((W, wi) => { for (let k = 0; k < counts[wi]; k++, gi++) { const c = autoPlan(S, gi, m); out.push({ wall: wi, w: Math.round(W / counts[wi] * 10) / 10, rods: c.rods, shelves: c.shelves, drawers: c.drawers, shoes: c.shoes, pant: c.pant, dsys: [] }); } });
+  // поправка округления: последняя секция стены добирает остаток
+  walls.forEach((W, wi) => { const list = out.filter(s => s.wall === wi), sum = list.reduce((a, s) => a + s.w, 0); list[list.length - 1].w = Math.round((list[list.length - 1].w + W - sum) * 10) / 10; });
+  return out;
+}
+function secWidths(m, wi) { if (secsValid(m)) return m.secs.filter(s => s.wall === wi).map(s => s.w); const n = secCounts(m)[wi], W = wallsOf(m)[wi]; return Array(n).fill(W / n); }
+function secStarts(ws) { const out = []; let x = 0; ws.forEach(v => { out.push(x); x += v; }); return out; }
+function sectionPlan(S, i, m) {
+  const xs = []; Object.keys((m.hw && m.hw.x) || {}).forEach(k => { for (let j = 0; j < (m.hw.x[k] | 0); j++) xs.push(k); });
+  const xt = xs.filter((_, j) => j % S === i % S);
+  if (secsValid(m) && m.secs[i]) { const c = m.secs[i]; return { rods: c.rods | 0, shelves: c.shelves | 0, drawers: c.drawers | 0, shoes: c.shoes | 0, pant: c.pant | 0, dsys: c.dsys || [], xt }; }
+  const sec = autoPlan(S, i, m); sec.xt = xt; return sec;
 }
 function drawSection(x0, x1, H, sec, seed, led) {
   const w = x1 - x0, ix0 = x0 + 1.6, ix1 = x1 - 1.6, iw = ix1 - ix0, b = [];
@@ -617,10 +669,11 @@ function drawKupe(m, mode, mini) {
   // интерьер: в режиме «внутри» — все секции; иначе — только та секция, где дверь сдвинута
   const showAll = mode === 'in';
   g += R(ox + 1.6, oy - H + 1.6, W - 3.2, H - 3.2, shade(col, .1));
+  const kws = secWidths(m, 0), kxs = secStarts(kws);
   for (let i = 0; i < n; i++) if (showAll || i === 0) {
-    g += `<g transform="translate(0 ${oy})">${drawSection(ox + i * secW, ox + (i + 1) * secW, H, sectionPlan(n, i, m), i * 3 + 1, m.led)}</g>`;
+    g += `<g transform="translate(0 ${oy})">${drawSection(ox + kxs[i], ox + kxs[i] + kws[i], H, sectionPlan(n, i, m), i * 3 + 1, m.led)}</g>`;
   }
-  for (let i = 1; i < n; i++) g += R(ox + i * secW - .8, oy - H + 1.6, 1.6, H - 3.2, shade(col, -.18));
+  for (let i = 1; i < n; i++) g += R(ox + kxs[i] - .8, oy - H + 1.6, 1.6, H - 3.2, shade(col, -.18));
   if (!showAll) {
     // двери: первая сдвинута за вторую, остальные закрыты
     const order = [];
@@ -661,9 +714,9 @@ function drawWardrobe(m, mini) {
   let x = PAD, gi = 0;
   walls.forEach((w, wi) => {
     g += R(x, WALL - H, w, H, shade(col, .16)) + R(x - 1, WALL - H - 3, w + 2, 4, shade(col, -.15)) + R(x, WALL - 7, w, 7, shade(col, -.3));
-    const sw = w / secs[wi];
+    const gws = secWidths(m, wi), gxs = secStarts(gws);
     for (let i = 0; i < secs[wi]; i++, gi++) {
-      const x0 = x + i * sw, x1 = x0 + sw;
+      const x0 = x + gxs[i], x1 = x0 + gws[i];
       g += `<g transform="translate(0 ${WALL})">${drawSection(x0, x1, H, sectionPlan(S, gi, m), gi * 3 + 1, m.led)}</g>`;
       g += R(x0 - .8, WALL - H, 1.6, H, shade(col, -.18));
     }
@@ -986,6 +1039,7 @@ function hwRows() {
   if ((f.kupe || f.wardr) && M.pant > 0 && h.pant !== 'tier' && KIS.pantSel[h.pant]) r.push(['Пантограф', KIS.pantSel[h.pant].ru + ' × ' + M.pant]);
   if ((f.kupe || f.wardr) && M.rods > 0 && h.rod === 'cabio') r.push(['Штанги', KIS.rodSel.cabio.ru + ' × ' + M.rods]);
   Object.keys(h.x || {}).forEach(k => { if (h.x[k] > 0 && KIS.cabio[k]) r.push([KIS.cabio[k].ru, '× ' + h.x[k]]); });
+  if (secsValid(M)) { const dc = {}; M.secs.forEach(s => (s.dsys || []).forEach((k, i) => { if (i < (s.drawers | 0) && k && k !== 'tier' && KIS.drawerSys[k]) dc[k] = (dc[k] || 0) + 1; })); Object.keys(dc).forEach(k => r.push(['Ящики', KIS.drawerSys[k].ru + ' × ' + dc[k]])); }
   return r;
 }
 
@@ -1034,6 +1088,7 @@ function refresh() {
   $('incl').innerHTML = `<b>Что входит в цену:</b><ul>${[...new Set(names)].map(n => `<li>${esc(n)}</li>`).join('')}<li>Изготовление, доставка по Ташкенту и монтаж</li></ul><table class="spec">${spec().map(r2 => `<tr><td>${esc(r2[0])}</td><td>${esc(r2[1])}</td></tr>`).join('')}</table>`;
   renderMaster(r);
   labelControls();
+  w3Refresh();
   try { history.replaceState(null, '', '#s=' + btoa(unescape(encodeURIComponent(JSON.stringify(M))))); } catch (e) {}
 }
 
@@ -1070,6 +1125,10 @@ function norm() {
   ['shelves', 'rods', 'drawers', 'pant', 'shoes'].forEach(k => { M[k] = clamp(M[k], 0, 30); });
   const w = M.hall.wardrobe; w.doors = clamp(w.doors, 1, 5);
   const hh = M.hall; hh.niche.W = clamp(hh.niche.W, 60, 250); hh.wardrobe2.W = clamp(hh.wardrobe2.W, 40, 300); hh.wardrobe2.doors = clamp(hh.wardrobe2.doors, 1, 5);
+  if (Array.isArray(M.secs)) {   // секции, настроенные в 3D: при смене размеров/дверей — сбросить, иначе итоги берутся из секций
+    if (!secsValid(M)) delete M.secs;
+    else ['rods', 'shelves', 'drawers', 'shoes', 'pant'].forEach(k => { M[k] = M.secs.reduce((a, s) => a + (s[k] | 0), 0); });
+  }
   if (hh.shape !== 'line') {   // в нише всё стоит по ширине ниши, антресоль перекрывает нишу (Г) или всю ширину (П)
     hh.bench.W = hh.niche.W; hh.shoe.W = hh.niche.W; hh.hanger.W = Math.max(40, hh.niche.W - 10);
     hh.antresol.W = hh.shape === 'U' ? hh.wardrobe.W + hh.niche.W + hh.wardrobe2.W : hh.niche.W;
@@ -1100,7 +1159,7 @@ document.addEventListener('change', e => {
 $('tabs').addEventListener('click', e => {
   const b = e.target.closest('.tab'); if (!b) return;
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
-  M = merge(DEF(), Object.assign({ type: b.dataset.type }, deep(PRESETS[b.dataset.type][0].m))); activePreset = 0; viewMode = 'out'; norm(); renderForm(); refresh(); presetCards();
+  M = merge(DEF(), Object.assign({ type: b.dataset.type }, deep(PRESETS[b.dataset.type][0].m))); activePreset = 0; viewMode = 'out'; w3Sel = null; norm(); renderForm(); refresh(); presetCards();
 });
 function openCatalog() { const fr = $('cframe'); if (!fr.src) fr.src = '/calc?catalog=1&embed=1'; $('cmodal').classList.add('open'); document.body.style.overflow = 'hidden'; }
 function closeCatalog() { $('cmodal').classList.remove('open'); document.body.style.overflow = ''; }
@@ -1109,7 +1168,7 @@ $('cclose').addEventListener('click', closeCatalog);
 $('cmodal').addEventListener('click', e => { if (e.target === $('cmodal')) closeCatalog(); });
 window.addEventListener('message', e => {
   if (e.origin !== location.origin || !e.data) return;
-  if (e.data.kc === 'color' && /^#[0-9a-fA-F]{6}$/.test(e.data.hex || '')) { M.customColor = { hex: e.data.hex, name: String(e.data.name || '').slice(0, 60), label: String(e.data.label || e.data.name || '').slice(0, 80) }; activePreset = -1; closeCatalog(); renderForm(); refresh(); presetCards(); toast('Цвет: ' + M.customColor.label); }
+  if (e.data.kc === 'color' && /^#[0-9a-fA-F]{6}$/.test(e.data.hex || '')) { M.customColor = { hex: e.data.hex, name: String(e.data.name || '').slice(0, 60), label: String(e.data.label || e.data.name || '').slice(0, 80), img: /^\/static\/catalog\/[\w\/.-]+(\?v=\d+)?$/.test(e.data.img || '') ? e.data.img : '' }; activePreset = -1; closeCatalog(); renderForm(); refresh(); presetCards(); toast('Цвет: ' + M.customColor.label); }
   else if (e.data.kc === 'close') closeCatalog();
 });
 let taps = 0, tapT;
@@ -1130,6 +1189,88 @@ $('specModal').addEventListener('click', e => { if (e.target === $('specModal'))
 
 $('langLink') && $('langLink').addEventListener('click', e => { e.preventDefault(); location.href = $('langLink').getAttribute('href') + location.hash; });
 
+
+/* ======================== 3D (static/js/wardrobe3d.js) ======================== */
+let W3 = null, w3Mode = '3d', w3Loading = false, w3Sel = null;
+function w3DrawerVis() { const m = { ball: { h: 10, col: '#d9cdb8' } }; Object.keys(KIS.drawerSys).forEach(k => { if (KIS.drawerSys[k].vis) m[k] = KIS.drawerSys[k].vis; }); return m; }
+function w3DefDsys() { if (M.drawerSys && M.drawerSys !== 'tier' && KIS.drawerSys[M.drawerSys]) return M.drawerSys; return ['ball', 'ball', 'tbx_m'][M.tier] || 'ball'; }
+function w3State() {
+  const hall = M.type === 'hall', walls = hall ? [] : wallsOf(M), counts = hall ? [] : secCounts(M), S = counts.reduce((a, b) => a + b, 0), plan = [];
+  for (let i = 0; i < S; i++) plan.push(sectionPlan(S, i, M));
+  if (w3Sel && w3Sel.kind === 'sec' && w3Sel.i >= S) w3Sel = null;
+  return { type: M.type, m: deep(M), walls, widths: walls.map((_, wi) => secWidths(M, wi)), plan,
+    colors: { body: { hex: M.customColor ? M.customColor.hex : PALETTE[M.color][1], img: (M.customColor && M.customColor.img) || '' }, laco: LACO[M.laco || 0][1] },
+    hw: Object.assign({}, M.hw), drawerVis: w3DrawerVis(), dsysDefault: w3DefDsys(), hallItems: hall && M.hall.shape === 'line' ? hallLineItems(M) : null, selected: w3Sel };
+}
+function w3Supported() { try { return !!(window.WebGL2RenderingContext && document.createElement('canvas').getContext('webgl2')); } catch (e) { return false; } }
+async function initW3() {
+  if (W3 || w3Loading) return; w3Loading = true;
+  try {
+    const mod = await import('/static/js/wardrobe3d.js?v=4');
+    W3 = mod.createW3D($('w3dCanvas'), { onSelect: sel => { w3Sel = sel; W3.select(sel); renderW3Edit(); } });
+    $('w3dLoad').style.display = 'none'; renderW3Bar(); W3.update(w3State()); renderW3Edit();
+  } catch (e) { console.warn('3D недоступно', e); $('w3dTab').style.display = 'none'; setW3Mode('2d'); }
+  w3Loading = false;
+}
+function setW3Mode(m) {
+  w3Mode = m === '2d' || !w3Supported() ? '2d' : '3d';
+  $('w3dBox').style.display = w3Mode === '3d' ? '' : 'none'; $('w2dWrap').style.display = w3Mode === '3d' ? 'none' : '';
+  document.querySelectorAll('#r3Tabs .r3-tab').forEach((b, i) => b.classList.toggle('on', (i === 0) === (w3Mode === '3d')));
+  try { localStorage.setItem('kcw_r3', w3Mode); } catch (e) {}
+  if (w3Mode === '3d') { if (!W3) initW3(); else W3.update(w3State()); }
+}
+function w3Refresh() { if (W3 && w3Mode === '3d') { W3.update(w3State()); renderW3Edit(); } }
+function renderW3Bar() {
+  const b = (a, t) => `<button type="button" onclick="w3Act('${a}')">${t}</button>`;
+  $('w3dBar').innerHTML = b('v:angle', '◩ Угол') + b('v:front', '▭ Спереди') + b('v:top', '▦ Сверху') + b('openAll', '↔ Открыть всё') + b('closeAll', 'Закрыть') + '<span class="sp"></span>' + b('full', '⛶ На весь экран');
+}
+function w3AfterEdit() { activePreset = -1; norm(); renderForm(); refresh(); presetCards(); }
+function w3Ensure() { if (!secsValid(M)) M.secs = makeSecs(M); }
+function w3Act(a, v) {
+  if (a.startsWith('v:')) { if (W3) W3.setView(a.slice(2)); return; }
+  if (a === 'openAll' || a === 'closeAll') { if (W3) W3.openAll(a === 'openAll'); setTimeout(renderW3Edit, 30); return; }
+  if (a === 'full') {
+    const box = $('w3dBox');
+    if (!box.classList.contains('k3d-full')) { box._ph = document.createComment('w3d'); box.parentNode.insertBefore(box._ph, box); document.body.appendChild(box); box.classList.add('k3d-full'); document.body.style.overflow = 'hidden'; }
+    else { box.classList.remove('k3d-full'); if (box._ph && box._ph.parentNode) { box._ph.parentNode.insertBefore(box, box._ph); box._ph.remove(); } document.body.style.overflow = ''; }
+    return;
+  }
+  if (!w3Sel) return;
+  if (a === 'open') { if (W3) W3.toggle(W3.keyOf(w3Sel)); setTimeout(renderW3Edit, 30); return; }
+  if (w3Sel.kind !== 'sec') return;
+  if (a === 'width') {
+    w3Ensure(); const s = M.secs[w3Sel.i], list = M.secs.filter(x => x.wall === s.wall), k = list.indexOf(s), nb = list[k + 1] || list[k - 1], d = +v;
+    if (!nb) { toast('На этой стене одна секция — меняйте общую ширину'); return; }
+    if (s.w + 5 * d < 30 || nb.w - 5 * d < 30) { toast('Минимальная ширина секции 30 см'); return; }
+    s.w = Math.round((s.w + 5 * d) * 10) / 10; nb.w = Math.round((nb.w - 5 * d) * 10) / 10; w3AfterEdit(); return;
+  }
+  if (a === 'cnt') {
+    w3Ensure(); const [f, d] = String(v).split('|'), s = M.secs[w3Sel.i], lim = { rods: 2, pant: 1, shelves: 8, drawers: 5, shoes: 4 };
+    s[f] = clamp((s[f] | 0) + +d, 0, lim[f]); if (f === 'pant' && s.pant) s.rods = Math.min(s.rods | 0, 1); if (f === 'rods' && s.rods && s.pant && s.rods > 1) s.rods = 1;
+    w3AfterEdit(); return;
+  }
+  if (a === 'reset') { delete M.secs; w3AfterEdit(); return; }
+}
+function w3Dsys(i, k) { w3Ensure(); const s = M.secs[w3Sel.i]; s.dsys = (s.dsys || []).slice(); while (s.dsys.length <= i) s.dsys.push('tier'); s.dsys[i] = k; w3AfterEdit(); }
+function renderW3Edit() {
+  const box = $('w3dEdit'); if (!box) return;
+  const sel = w3Sel;
+  if (!sel) { box.innerHTML = `<div class="k3e-hint">${M.type === 'hall' ? 'Нажмите на шкаф или антресоль — увидите, как открывается. Двойной клик — открыть.' : 'Нажмите на секцию, чтобы изменить ширину, наполнение и систему ящиков. Двойной клик — открыть. Крутите мышью или пальцем.'}</div>`; return; }
+  const open = W3 && W3.isOpen(W3.keyOf(sel));
+  const openBtn = `<button type="button" onclick="w3Act('open')">${open ? 'Закрыть' : '▶ Показать, как открывается'}</button>`;
+  if (sel.kind !== 'sec') { box.innerHTML = `<div class="k3e-t">${sel.kind === 'ant' ? 'Антресоль' : 'Шкаф'}</div><div class="k3e-r">${openBtn}</div>`; return; }
+  const S = secCounts(M).reduce((a, b) => a + b, 0), c = sectionPlan(S, sel.i, M), wi = (() => { let n = 0, cn = secCounts(M); for (let k = 0; k < cn.length; k++) { if (sel.i < n + cn[k]) return k; n += cn[k]; } return 0; })();
+  const ws = secWidths(M, wi), first = secCounts(M).slice(0, wi).reduce((a, b) => a + b, 0), wcm = Math.round(ws[sel.i - first] * 10) / 10;
+  const cnt = (f, t) => `<div class="k3e-r"><span>${t}</span><button type="button" onclick="w3Act('cnt','${f}|-1')">−</button><b>${c[f] | 0}</b><button type="button" onclick="w3Act('cnt','${f}|1')">+</button></div>`;
+  let h = `<div class="k3e-t">С-${sel.i + 1}${M.type === 'wardrobe' && wallsOf(M).length > 1 ? ' · Стена ' + 'АБВ'[wi] : ''} · ${wcm} см</div>`;
+  h += `<div class="k3e-r"><span>Ширина</span><button type="button" onclick="w3Act('width',-1)">− 5 см</button><button type="button" onclick="w3Act('width',1)">+ 5 см</button>${secsValid(M) ? '<button type="button" onclick="w3Act(\'reset\')">Сбросить секции</button>' : ''}</div>`;
+  h += cnt('rods', 'Штанги') + cnt('pant', 'Пантограф') + cnt('shelves', 'Полки') + cnt('drawers', 'Ящики') + cnt('shoes', 'Обувь');
+  for (let i = 0; i < (c.drawers | 0); i++) { const cur = (c.dsys && c.dsys[i]) || 'tier'; h += `<div class="k3e-r"><span>Ящик ${i + 1}</span><select onchange="w3Dsys(${i}, this.value)">${Object.keys(KIS.drawerSys).map(k => `<option value="${k}" ${k === cur ? 'selected' : ''}>${esc(KIS.drawerSys[k].ru)}</option>`).join('')}</select></div>`; }
+  h += `<div class="k3e-r">${openBtn}</div>`;
+  box.innerHTML = h;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('w3dBox') && $('w3dBox').classList.contains('k3d-full')) w3Act('full'); });
+
 /* ======================== ЗАПУСК ======================== */
 (function init() {
   try { const sp = JSON.parse(localStorage.getItem('kcw_p') || 'null'); if (sp) Object.assign(P, sp); } catch (e) {}
@@ -1139,6 +1280,7 @@ $('langLink') && $('langLink').addEventListener('click', e => { e.preventDefault
   if (!loaded) { const type = ['kupe', 'wardrobe', 'hall'].includes(q.get('type')) ? q.get('type') : 'kupe'; const pi = Math.min(PRESETS[type].length - 1, Math.max(0, +q.get('preset') || (q.get('preset') === '0' ? 0 : 1))); M = merge(DEF(), Object.assign({ type }, deep(PRESETS[type][pi].m))); activePreset = pi; }
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.type === M.type));
   norm(); renderForm(); refresh(); presetCards();
+  setW3Mode((() => { try { return localStorage.getItem('kcw_r3'); } catch (e) { return null; } })() || '3d');
 })();
 
 /* ===================== СПЕЦИФИКАЦИЯ (как в калькуляторе кухни): чертежи в мм, таблицы, эскиз, договор ===================== */
@@ -1215,7 +1357,8 @@ function buildSpec() {
     const W = m.W * 10, ha = (m.antresol || 0) * 10, Hb = m.H * 10 - ha, D = m.D * 10, n = m.doors;
     const secW = (W - 2 * tt - (n - 1) * tt) / n;
     el('Корп', 'Корпус шкафа-купе', W, Hb, D, 'боковины, дно, крыша, перегородки ' + (n - 1) + ' шт., задняя стенка ХДФ 3 мм');
-    for (let i = 0; i < n; i++) { const c = counts(n, i); sec('С-' + (i + 1), 'Секция ' + (i + 1), secW, Hb - 2 * tt, D, c, [c.pant ? 'пантограф ' + c.pant : '', m.led ? 'подсветка' : ''].filter(Boolean).join(', ')); }
+    const bws = secWidths(m, 0);
+    for (let i = 0; i < n; i++) { const c = counts(n, i); sec('С-' + (i + 1), 'Секция ' + (i + 1), bws[i] * 10 - tt * (n + 1) / n, Hb - 2 * tt, D, c, [c.pant ? 'пантограф ' + c.pant : '', m.led ? 'подсветка' : ''].filter(Boolean).join(', ')); }
     const dw = (W + (n - 1) * 30) / n, dh = Hb - 40;
     for (let i = 0; i < n; i++) {
       const f = m.fills[i] || 'dsp', ins = `вставка ${mmr(dw - 44)}×${mmr(dh - 128)}`;
@@ -1234,7 +1377,8 @@ function buildSpec() {
     walls.forEach((w, wi) => {
       const ns = secsN[wi], secW = (w * 10 - (ns + 1) * tt) / ns;
       el('Ст-' + 'АБВ'[wi], 'Стена ' + 'АБВ'[wi], w * 10, H, D, ns + ' секц.');
-      for (let i = 0; i < ns; i++, gi++) { const c = counts(S2, gi); sec('С-' + (gi + 1), 'Стена ' + 'АБВ'[wi] + ', секция ' + (i + 1), secW, H - 2 * tt, D, c, [c.pant ? 'пантограф ' + c.pant : '', m.led ? 'подсветка' : ''].filter(Boolean).join(', ')); }
+      const bws = secWidths(m, wi);
+      for (let i = 0; i < ns; i++, gi++) { const c = counts(S2, gi); sec('С-' + (gi + 1), 'Стена ' + 'АБВ'[wi] + ', секция ' + (i + 1), bws[i] * 10 - tt * (ns + 1) / ns, H - 2 * tt, D, c, [c.pant ? 'пантограф ' + c.pant : '', m.led ? 'подсветка' : ''].filter(Boolean).join(', ')); }
     });
     dims = walls.map(w => w * 10).join(' + ') + ` мм, высота ${H}, глубина ${D} мм`;
     facadeInfo = m.drawers ? 'ящики с фасадами; без дверей (открытая система)' : 'открытая система без дверей';
@@ -1299,8 +1443,8 @@ function techFrontSvg(S) {
     b.dimV(-Hb, 0, W + fs * 1.8, String(mmr(Hb * 10)), fs, W);
     if (ha) b.dimV(-H, -Hb, W + fs * 1.8, String(mmr(ha * 10)), fs, W);
     if (ha) b.dimV(-H, 0, W + fs * 4, String(mmr(H * 10)), fs, W + fs * 1.8);
-    const sw = (W - 2 * 1.6 - (n - 1) * 1.6) / n;
-    for (let i = 0; i < n; i++) { const x0 = 1.6 + i * (sw + 1.6); b.dimH(x0, x0 + sw, -H - fs * 1.6, String(mmr(sw * 10)), fs, -H); }
+    const tws = secWidths(m, 0), txs = secStarts(tws);
+    for (let i = 0; i < n; i++) { const x0 = txs[i] + (i ? .8 : 1.6), x1 = txs[i] + tws[i] - (i < n - 1 ? .8 : 1.6); if (i) b.line(txs[i], -H + .5, txs[i], 0, THIN); b.dimH(x0, x1, -H - fs * 1.6, String(mmr((x1 - x0) * 10)), fs, -H); }
   } else if (m.type === 'wardrobe') {
     const walls = m.shape === 'line' ? [m.A] : (m.shape === 'L' ? [m.A, m.B] : [m.A, m.B, m.C]), H = m.H; const GAP = 30;
     const total = walls.reduce((a1, b1) => a1 + b1, 0); fs = Math.max(5, total / 50);
@@ -1308,9 +1452,9 @@ function techFrontSvg(S) {
     let x = 0, gi = 0;
     walls.forEach((w, wi) => {
       b.rect(x, -H, w, H, OUT);
-      const ns = secsN[wi], pitch = w / ns;
+      const ns = secsN[wi], pws = secWidths(m, wi), pxs = secStarts(pws);
       for (let i = 0; i < ns; i++, gi++) {
-        const x0 = x + i * pitch, c = sectionPlan(S2, gi, m);
+        const pitch = pws[i], x0 = x + pxs[i], c = sectionPlan(S2, gi, m);
         if (i) b.line(x0, -H, x0, 0, THIN);
         if (c.rods) b.line(x0 + 2, -H + 8, x0 + pitch - 2, -H + 8, `stroke="#0f172a" stroke-width="2" ${STK}`);
         const free = H - 20 - c.drawers * 18; for (let k = 1; k <= c.shelves; k++) b.line(x0 + 1.6, -(18 * c.drawers + free * k / (c.shelves + 1)), x0 + pitch - 1.6, -(18 * c.drawers + free * k / (c.shelves + 1)), DASH);
