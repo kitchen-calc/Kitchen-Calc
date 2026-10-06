@@ -196,7 +196,7 @@ async def home_asset(filename: str):
     path = os.path.join(HOME_DIR, filename)
     if not m or not os.path.isfile(path):
         return JSONResponse({"error": "not found"}, status_code=404)
-    return FileResponse(path, media_type=HOME_TYPES[m.group(1)], headers={"Cache-Control": "public, max-age=86400"})
+    return FileResponse(path, media_type=HOME_TYPES[m.group(1)], headers={"Cache-Control": "public, max-age=604800"})
 
 
 @app.get("/raskroy", response_class=HTMLResponse)

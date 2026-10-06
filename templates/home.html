@@ -28,7 +28,7 @@
   __FAQDATA__
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Marck+Script&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Marck+Script&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Marck+Script&display=swap"></noscript>
   <script>
     // Старые ссылки на расчёт (сайт/#k=...) ведут в калькулятор
     if (location.hash.indexOf('#k=') === 0) location.replace('/calc' + location.search + location.hash);
@@ -386,7 +386,7 @@
 
   <main id="top">
     <section class="hero">
-      <img class="hero-photo" src="/static/home/hero.webp" alt="Современная кухня на заказ с островом, мраморной столешницей и подсветкой" width="1774" height="887" fetchpriority="high">
+      <img class="hero-photo" src="/static/home/hero.webp" srcset="/static/home/hero-900.webp 900w, /static/home/hero.webp 1774w" sizes="(max-width: 900px) 100vw, 1774px" alt="Современная кухня на заказ с островом, мраморной столешницей и подсветкой" width="1774" height="887" fetchpriority="high">
       <div class="wrap">
         <div>
           <div class="eyebrow" data-t="heroEyebrow">На заказ · Ташкент</div>
