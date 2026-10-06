@@ -101,5 +101,7 @@ const KIS = {
     bottle:   { ru: 'Бутылочница VS TAL Rack15', price: 2527000 }
   }
 };
+/* Для кухни: газлифт по классу + подъёмники Blum (без «обычных петель») */
+KIS.liftsK = Object.assign({ tier: { ru: 'По классу комплектации (газлифт)' } }, (() => { const o = Object.assign({}, KIS.lifts); delete o.hinge; return o; })());
 /* Короткое имя выбранного варианта для чертежей и спецификации */
 KIS.name = (grp, key) => { const g = KIS[grp]; return g && g[key] ? g[key].ru : ''; };

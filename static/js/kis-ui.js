@@ -4,6 +4,7 @@
    По клику на карточку страница получает событие document 'kispick' { ctx, field, key }.
    Счётчики (+ / −): событие 'kiscount' { ctx, field, delta }. */
 (function () {
+  const T = s => { try { if (typeof LANG !== 'undefined' && LANG === 'uz' && window.kcTr) return window.kcTr(s); } catch (e) {} return s; };
   const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/[  ]/g, ' ');
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -54,8 +55,9 @@
 .kis-sec>h4{font-family:var(--serif,'Cormorant Garamond',Georgia,serif);font-size:1.28rem;color:#f6dc9a;margin:0 0 2px;display:flex;align-items:center;gap:10px}
 .kis-sec>h4:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(217,154,28,.6),transparent)}
 .kis-hint{color:#a99c80;font-size:.8rem;margin:0 0 10px}
-.kis-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:10px}
-.kis-c{position:relative;text-align:left;cursor:pointer;border-radius:14px;padding:12px 12px 12px;border:1px solid rgba(255,226,154,.18);
+.kis-grid{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#b88a2a rgba(255,255,255,.06);-webkit-overflow-scrolling:touch}
+.kis-grid::-webkit-scrollbar{height:7px}.kis-grid::-webkit-scrollbar-thumb{background:#b88a2a;border-radius:9px}.kis-grid::-webkit-scrollbar-track{background:rgba(255,255,255,.06);border-radius:9px}
+.kis-c{flex:0 0 212px;scroll-snap-align:start;position:relative;text-align:left;cursor:pointer;border-radius:14px;padding:12px 12px 12px;border:1px solid rgba(255,226,154,.18);
   background:linear-gradient(170deg,rgba(255,255,255,.06),rgba(255,255,255,.015));color:inherit;font:inherit;transition:.18s;display:flex;flex-direction:column;gap:6px;min-height:150px}
 .kis-c:hover{border-color:rgba(217,154,28,.8);transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.35)}
 .kis-c.on{border-color:#e9b44c;background:linear-gradient(170deg,rgba(217,154,28,.28),rgba(217,154,28,.07));box-shadow:0 0 0 1px #e9b44c,0 10px 28px rgba(217,154,28,.22)}
@@ -77,21 +79,23 @@
 .kis-foot{margin-top:18px;text-align:center;color:#a99c80;font-size:.76rem;border-top:1px dashed rgba(217,154,28,.3);padding-top:12px}
 .kis-sum{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .kis-sum span{background:rgba(217,154,28,.12);border:1px solid rgba(217,154,28,.4);color:#f6dc9a;border-radius:10px;padding:5px 10px;font-size:.78rem}
-@media (max-width:520px){.kis{padding:20px 12px 14px}.kis-title{font-size:1.6rem}.kis-grid{grid-template-columns:1fr 1fr}.kis-c{min-height:140px}}
+@media (max-width:520px){.kis{padding:20px 12px 14px}.kis-title{font-size:1.6rem}.kis-c{flex-basis:176px;min-height:140px}}
+.kis-swipe{color:#a99c80;font-size:.7rem;margin:-4px 0 8px;letter-spacing:.04em}
 `;
     document.head.appendChild(st);
   }
 
   function card(sec, key, item, active) {
     const pv = sec.priceOf ? sec.priceOf(key, item) : item.price;
-    const price = pv != null ? `+${fmt(pv)}<small>сум${sec.per ? ' / ' + sec.per : ''}</small>` : `<span style="font-size:.9rem;opacity:.85">включено в класс</span>`;
-    const tag = item.avail === false ? '<span class="kis-tag ord">под заказ</span>' : (pv == null ? '<span class="kis-tag base">базовый</span>' : '');
+    const price = pv != null ? `+${fmt(pv)}<small>${T('сум')}${sec.per ? ' / ' + T(sec.per) : ''}</small>` : `<span style="font-size:.9rem;opacity:.85">${T('включено в класс')}</span>`;
+    const tag = item.avail === false ? `<span class="kis-tag ord">${T('под заказ')}</span>` : (pv == null ? `<span class="kis-tag base">${T('базовый')}</span>` : '');
     const ic = ICON[(sec.icon && (typeof sec.icon === 'function' ? sec.icon(key) : sec.icon)) || 'gem'] || ICON.gem;
-    return `<button type="button" class="kis-c${active ? ' on' : ''}" data-kis-ctx="${esc(sec.ctx)}" data-kis-field="${esc(sec.field)}" data-kis-key="${esc(key)}">${tag}<div class="kis-ic">${ic}</div><div class="kis-n">${esc(item.ru)}</div><div class="kis-b">${esc(BRAND(item.ru))}</div><div class="kis-p">${price}</div></button>`;
+    return `<button type="button" class="kis-c${active ? ' on' : ''}" data-kis-ctx="${esc(sec.ctx)}" data-kis-field="${esc(sec.field)}" data-kis-key="${esc(key)}">${tag}<div class="kis-ic">${ic}</div><div class="kis-n">${esc(T(item.ru))}</div><div class="kis-b">${esc(T(BRAND(item.ru)))}</div><div class="kis-p">${price}</div></button>`;
   }
   function counter(sec, key, item, n) {
-    return `<div class="kis-c${n > 0 ? ' on' : ''}"><div class="kis-ic">${ICON[sec.icon(key)] || ICON.gem}</div><div class="kis-n">${esc(item.ru)}</div><div class="kis-b">${esc(BRAND(item.ru))}</div>
-      <div class="kis-p">+${fmt(item.price)}<small>сум / шт.</small></div>
+    const ic = typeof sec.icon === 'function' ? sec.icon(key) : sec.icon;
+    return `<div class="kis-c${n > 0 ? ' on' : ''}"><div class="kis-ic">${ICON[ic] || ICON.gem}</div><div class="kis-n">${esc(T(item.ru))}</div><div class="kis-b">${esc(T(BRAND(item.ru)))}</div>
+      <div class="kis-p">+${fmt(item.price)}<small>${T('сум')} / ${T('шт.')}</small></div>
       <div class="kis-cnt"><button type="button" data-kis-count="1" data-kis-ctx="${esc(sec.ctx)}" data-kis-field="${esc(sec.field)}" data-kis-key="${esc(key)}" data-kis-d="-1">−</button><b>${n}</b><button type="button" data-kis-count="1" data-kis-ctx="${esc(sec.ctx)}" data-kis-field="${esc(sec.field)}" data-kis-key="${esc(key)}" data-kis-d="1">+</button></div></div>`;
   }
 
@@ -105,19 +109,24 @@
         let body;
         if (s.counts) body = keys.map(k => counter(s, k, KIS[s.grp][k], (s.counts[k] | 0))).join('');
         else body = keys.map(k => card(s, k, KIS[s.grp][k], k === s.value)).join('');
-        return `<div class="kis-sec"><h4>${esc(s.title)}</h4>${s.hint ? `<p class="kis-hint">${esc(s.hint)}</p>` : ''}<div class="kis-grid">${body}</div></div>`;
+        return `<div class="kis-sec"><h4>${esc(T(s.title))}</h4>${s.hint ? `<p class="kis-hint">${esc(T(s.hint))}</p>` : ''}<div class="kis-grid" data-field="${esc(s.field)}">${body}</div>${keys.length > 3 ? `<div class="kis-swipe">${T('← листайте →')}</div>` : ''}</div>`;
       }).join('');
-      return `<section class="kis"><div class="kis-head"><div class="kis-orn">✦ ✦ ✦</div><div class="kis-title">${esc(o.title)}</div><p class="kis-sub">${esc(o.sub || '')}</p>
+      return `<section class="kis" data-ctx="${esc(o.ctx)}"><div class="kis-head"><div class="kis-orn">✦ ✦ ✦</div><div class="kis-title">${esc(T(o.title))}</div><p class="kis-sub">${esc(T(o.sub || ''))}</p>
         <div class="kis-brands"><span>Blum</span><span>Cinetto</span><span>Vauth-Sagel</span><span>Cabio</span><span>Giusti</span></div></div>
         ${secs}
-        ${o.summary ? `<div class="kis-sum">${o.summary.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
-        <div class="kis-foot">Оригинальная фурнитура из наличия · цены kis.uz на ${esc(KIS.date)} · мастер подтвердит перед заказом</div></section>`;
+        ${o.summary ? `<div class="kis-sum">${o.summary.map(x => `<span>${esc(T(x))}</span>`).join('')}</div>` : ''}
+        <div class="kis-foot">${esc(T('Оригинальная фурнитура из наличия · цены kis.uz на'))} ${esc(KIS.date)} · ${esc(T('мастер подтвердит перед заказом'))}</div></section>`;
     }
   };
 
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-kis-key]'); if (!b) return;
-    if (b.dataset.kisCount) document.dispatchEvent(new CustomEvent('kiscount', { detail: { ctx: b.dataset.kisCtx, field: b.dataset.kisField, key: b.dataset.kisKey, delta: +b.dataset.kisD } }));
-    else document.dispatchEvent(new CustomEvent('kispick', { detail: { ctx: b.dataset.kisCtx, field: b.dataset.kisField, key: b.dataset.kisKey } }));
+    const ctx = b.dataset.kisCtx, root = b.closest('.kis'), saved = {}, y = window.scrollY;
+    if (root) root.querySelectorAll('.kis-grid').forEach(g => { saved[g.dataset.field] = g.scrollLeft; });
+    if (b.dataset.kisCount) document.dispatchEvent(new CustomEvent('kiscount', { detail: { ctx, field: b.dataset.kisField, key: b.dataset.kisKey, delta: +b.dataset.kisD } }));
+    else document.dispatchEvent(new CustomEvent('kispick', { detail: { ctx, field: b.dataset.kisField, key: b.dataset.kisKey } }));
+    const nr = document.querySelector('.kis[data-ctx="' + ctx + '"]');   // панель перерисована: вернуть положение лент и страницы
+    if (nr) nr.querySelectorAll('.kis-grid').forEach(g => { if (saved[g.dataset.field] != null) g.scrollLeft = saved[g.dataset.field]; });
+    if (Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y);
   });
 })();
