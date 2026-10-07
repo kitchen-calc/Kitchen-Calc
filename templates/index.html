@@ -4540,7 +4540,7 @@
       if (s.app) ex.push(tr('exApp', {}));
       if (s.island) ex.push(tr('exIsland', { l: s.islL, w: s.islW }));
       if (!noLed && s.led && s.led.level > 0) ex.push((ru ? I18N.ru.lighting : t('lighting')).toLowerCase() + ': ' + ledText(s, ru));
-      const dt = decorText(s, ru); if (dt) ex.push(dt);
+      // лампы, стулья, растения — только для картинки, в итог, спецификацию и договор не попадают
       kitHwLines(s, !!ru).forEach(x => ex.push(x));
       return ex.length ? ex.join(', ') : tr('none', {});
     }
@@ -4647,6 +4647,7 @@
           'Фурнитура': hwText(s, true).slice(0, 118),
           'Подсветка': ledText(s, true).slice(0, 118),
           'Допы': extrasText(s, true, true),
+          'Интерьер на картинке (не в цене)': decorText(s, true) || 'нет',
           'Фурнитура на выбор': kitHwLines(s).join('; ').slice(0, 196) || 'по классу комплектации',
           'Язык клиента': LANG === 'uz' ? 'узбекский' : 'русский'
         },
