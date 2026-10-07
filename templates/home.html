@@ -345,6 +345,11 @@
       .foot { grid-template-columns: 1fr; }
       .btn { padding: 14px 20px; }
     }
+    .full-band { display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin:0 0 26px; padding:18px 22px; border:1px solid rgba(200,164,107,.45); border-radius:14px; background:linear-gradient(120deg, rgba(200,164,107,.14), rgba(200,164,107,.03)); text-decoration:none; color:inherit; transition:border-color .2s, transform .2s; }
+    .full-band:hover { border-color: var(--gold-2); transform: translateY(-2px); }
+    .full-band b { font-family: var(--serif); font-size: 1.25rem; color: var(--gold-2); font-weight: 600; }
+    .full-band span { color: var(--muted); flex: 1 1 260px; }
+    .full-band i { font-style: normal; color: var(--gold); font-size: 1.4rem; }
   </style>
 <script src="/static/js/metrika.js" defer></script>
 </head>
@@ -365,6 +370,7 @@
             <a href="/garderobnye-na-zakaz-tashkent" data-t="subGarderob">Гардеробные</a>
             <a href="/prihozhie-na-zakaz-tashkent" data-t="subPrihozhie">Прихожие</a>
             <a href="/mebel-dlya-spalni-na-zakaz-tashkent" data-t="subSpalni">Спальни</a>
+            <a href="/mebel-pod-klyuch-kvartira-dom-tashkent" data-t="subFull">Квартиры и дома под ключ</a>
             <a href="/shkaf" data-t="subShkaf" style="border-top:1px solid var(--line);color:var(--gold-2)">Калькулятор шкафов</a>
           </div>
         </div>
@@ -458,6 +464,7 @@
           </div>
           <p data-t="fLead">От кухни до гардеробной — всё под размеры вашего помещения и в едином стиле. Замер, проект, производство, доставка и сборка — в одних руках.</p>
         </div>
+        <a class="full-band rv" href="/mebel-pod-klyuch-kvartira-dom-tashkent"><b data-t="fullTitle">Полная меблировка квартир и домов под ключ</b><span data-t="fullText">Кухня · Прихожая · Спальня · Гардероб · Детская — в едином стиле, один замер и один договор</span><i>→</i></a>
         <div id="cats"></div>
         <p class="also rv" data-t="fAlso">Также делаем: тумбы под раковину, кабинеты и офисную мебель, мебель для балкона, перегородки и стеновые панели — по вашему эскизу или проекту дизайнера.</p>
       </div>
@@ -650,7 +657,7 @@
     var T = {
       ru: {
         city: 'Ташкент', tagline: 'кухни и мебель на заказ',
-        navHome: 'Главная', navPartners: 'Партнёрам', subKitchens: 'Кухни на заказ', subShkafy: 'Шкафы-купе', subGarderob: 'Гардеробные', subPrihozhie: 'Прихожие', subSpalni: 'Спальни', subShkaf: 'Калькулятор шкафов',
+        navHome: 'Главная', navPartners: 'Партнёрам', subKitchens: 'Кухни на заказ', subShkafy: 'Шкафы-купе', subGarderob: 'Гардеробные', subPrihozhie: 'Прихожие', subSpalni: 'Спальни', subShkaf: 'Калькулятор шкафов', subFull: 'Квартиры и дома под ключ', fullTitle: 'Полная меблировка квартир и домов под ключ', fullText: 'Кухня · Прихожая · Спальня · Гардероб · Детская — в едином стиле, один замер и один договор',
         ptEyebrow: 'Партнёрам', ptTitle: 'Дизайнерам и строителям', ptLead: 'Если вы ведёте ремонт или проект интерьера, мы возьмём кухню и корпусную мебель на себя: замер, проект, изготовление, доставку и монтаж. Условия сотрудничества обсуждаем индивидуально.', ptCta: 'Условия для партнёров',
         navKitchens: 'Кухни', navFurniture: 'Мебель', navFaq: 'Вопросы и ответы', navMaterials: 'Материалы', navProcess: 'Как мы работаем', navContacts: 'Контакты', navCalc: 'Калькулятор',
         ctaCalcShort: 'Рассчитать', heroEyebrow: 'На заказ · Ташкент', heroTitle: 'Кухни и корпусная мебель <em>под ключ</em>',
@@ -705,7 +712,7 @@
       },
       uz: {
         city: 'Toshkent', tagline: 'buyurtma asosida oshxona va mebel',
-        navHome: 'Bosh sahifa', navPartners: 'Hamkorlarga', subKitchens: 'Buyurtma oshxonalar', subShkafy: 'Shkaf-kupe', subGarderob: 'Garderob xonalari', subPrihozhie: 'Prixojaylar', subSpalni: 'Yotoqxonalar', subShkaf: 'Shkaf kalkulyatori',
+        navHome: 'Bosh sahifa', navPartners: 'Hamkorlarga', subKitchens: 'Buyurtma oshxonalar', subShkafy: 'Shkaf-kupe', subGarderob: 'Garderob xonalari', subPrihozhie: 'Prixojaylar', subSpalni: 'Yotoqxonalar', subShkaf: 'Shkaf kalkulyatori', subFull: 'Kvartira va uylar kalit topshirish', fullTitle: 'Kvartira va uylarni toʻliq mebel bilan jihozlash', fullText: 'Oshxona · Dahliz · Yotoqxona · Garderob · Bolalar xonasi — yagona uslubda, bitta oʻlchov va bitta shartnoma',
         ptEyebrow: 'Hamkorlarga', ptTitle: 'Dizaynerlar va quruvchilarga', ptLead: 'Agar siz taʼmir yoki interyer loyihasini olib borsangiz, oshxona va korpusli mebelni biz oʻz zimmamizga olamiz: oʻlchov, loyiha, ishlab chiqarish, yetkazib berish va oʻrnatish. Hamkorlik shartlari alohida muhokama qilinadi.', ptCta: 'Hamkorlik shartlari',
         navKitchens: 'Oshxonalar', navFurniture: 'Mebel', navFaq: 'Savol-javob', navMaterials: 'Materiallar', navProcess: 'Qanday ishlaymiz', navContacts: 'Aloqa', navCalc: 'Kalkulyator',
         ctaCalcShort: 'Hisoblash', heroEyebrow: 'Buyurtma asosida · Toshkent', heroTitle: 'Oshxona va korpusli mebel <em>kalit topshirish</em> asosida',
