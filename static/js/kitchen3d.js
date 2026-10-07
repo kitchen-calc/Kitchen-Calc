@@ -164,9 +164,11 @@ export function createK3D(container, hooks = {}) {
   /* ---------- корпус (каркас) шкафа ---------- */
   function carcass(g, M, w, h, d, y0, shelves, opts = {}) {
     const t = 1.6, led = opts.led | 0;
-    if (led > 0) {   // подсветка: сначала под крышкой, потом под полками сверху вниз
-      box(g, w - 2 * t - 2, .5, 1, M.led, t + 1, y0 + h - t - .6, d - 7);
-      for (let k = (shelves | 0), n = 1; k >= 1 && n < led; k--, n++) box(g, w - 2 * t - 2, .5, 1, M.led, t + 1, y0 + h * k / ((shelves | 0) + 1) - .6, d - 7);
+    if (led > 0) {   // подсветка: сначала под крышкой, потом под полками сверху вниз; под лентой — тёплое свечение
+      const glow = M.ledGlow || (M.ledGlow = new THREE.MeshBasicMaterial({ color: '#ffcf6e', transparent: true, opacity: .22, depthWrite: false }));
+      const strip = y => { box(g, w - 2 * t - 2, .7, 1.2, M.led, t + 1, y, d - 7); const gl = new THREE.Mesh(boxGeo(w - 2 * t - 1, 9, d - 8), glow); gl.position.set(w / 2, y - 4.6, (d - 8) / 2 + 1); g.add(gl); };
+      strip(y0 + h - t - .8);
+      for (let k = (shelves | 0), n = 1; k >= 1 && n < led; k--, n++) strip(y0 + h * k / ((shelves | 0) + 1) - .8);
     }
     box(g, t, h, d - 2, M.body, 0, y0, 0, 60); box(g, t, h, d - 2, M.body, w - t, y0, 0, 60);
     box(g, w - 2 * t, t, d - 2, M.body, t, y0, 0, 60);
@@ -262,7 +264,10 @@ export function createK3D(container, hooks = {}) {
     const nd = s.drawers | 0;
     if (nd > 0) {
       const hh = (H - GAP * (nd + 1)) / nd;
-      for (let i = 0; i < nd; i++) drawer(g, M, st, key, GAP, PL + GAP + (nd - 1 - i) * (hh + GAP), w - 2 * GAP, hh, zf, D, open, st.dsysOf(s, i), i);
+      for (let i = 0; i < nd; i++) {
+        const dg = drawer(g, M, st, key, GAP, PL + GAP + (nd - 1 - i) * (hh + GAP), w - 2 * GAP, hh, zf, D, open, st.dsysOf(s, i), i);
+        if (i < (s.led | 0)) box(dg, w - 10, .5, 1, M.led, 5, PL + GAP + (nd - 1 - i) * (hh + GAP) + hh - 3.5, zf - 4);   // подсветка в ящике
+      }
     } else if (twoDoors(s, w)) {
       const dw = (w - 3 * GAP) / 2;
       door(g, M, st, key, GAP, PL + GAP, dw, H - 2 * GAP, zf, 'L', open, 'lower');
@@ -352,7 +357,8 @@ export function createK3D(container, hooks = {}) {
       return;
     }
     box(g, w - 4, PL, D - 6, M.plinth, 2, 0, 2);
-    carcass(g, M, w, top - PL, D, PL, 0);
+    carcass(g, M, w, top - PL, D, PL, 0, { led: Math.min(1, s.led | 0) });
+    for (let k = 1; k < (s.led | 0); k++) box(g, w - 6, .5, 1, M.led, 3, PL + (top - PL) * k / (s.led | 0) - .6, D - 7);   // подсветка по высоте пенала
     if (s.kind === 'fridge') {
       const y1 = PL + 178, split = PL + 178 * .34;
       door(g, M, st, key, GAP, PL + GAP, w - 2 * GAP, split - PL - GAP, zf, 'L', open, 'lower');

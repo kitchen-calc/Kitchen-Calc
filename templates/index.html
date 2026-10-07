@@ -2611,7 +2611,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=7');
+        const mod = await import('/static/js/kitchen3d.js?v=8');
         K3 = mod.createK3D(el('k3dCanvas'), {
           onSelect: sel => { selSec = sel ? (secsOf(sel.tier).find(x => x.id === sel.id) || null) : null; renderPlanner(); },
           onMove: (sel, wall, u) => k3dMoveTo(sel, wall, u)
@@ -2726,6 +2726,22 @@
       const box = el('k3dSide'); if (!box) return;
       box.innerHTML = selSec ? k3dSidePart(selSec) : k3dSideKitchen();
     }
+    function ledMax(s) {
+      const k = s.kind || 'door';
+      if (['oven', 'dishwasher', 'washer'].indexOf(k) >= 0 || (k === 'fridge' && s.fr !== 'built')) return 0;
+      if (k === 'fridge') return 1;
+      if (k === 'tower') return 4;
+      if (k === 'cargo') return 1;
+      if ((s.drawers | 0) > 0) return Math.max(1, s.drawers | 0);
+      return (s.shelves | 0) + 1;
+    }
+    // подсветить сразу все шкафы (по максимуму) или выключить
+    function k3dLedZone(z) { if (!ledState.level) ledState.level = 1; ledState[z] = !ledState[z]; updateCalculator(); renderK3dEdit(); }
+    function k3dLedAll(on) {
+      lowerSections.concat(upperSections).forEach(x => { const m = ledMax(x); if (on) { if (m) x.led = m; } else delete x.led; });
+      if (on && !ledState.level) ledState.level = 1;
+      updateCalculator(); renderK3dEdit();
+    }
     const k3B = (on, act, txt) => `<button type="button" class="${on ? 'on' : ''}" onclick="${act}">${esc(txt)}</button>`;
     const k3Step = (val, dec, inc, unit) => `<span class="k3s-step"><button type="button" onclick="${dec}">−</button><b>${val}${unit ? ' ' + unit : ''}</b><button type="button" onclick="${inc}">+</button></span>`;
     const k3Row = (lbl, inner) => `<div class="k3e-r"><span>${esc(lbl)}</span>${inner}</div>`;
@@ -2735,6 +2751,11 @@
       const add = (txt, call) => `<button type="button" onclick="${call}">＋ ${esc(txt)}</button>`;
       let h = `<div class="k3s-h">${esc(L3('Конструктор кухни', 'Oshxona konstruktori'))}</div>
         <div class="k3s-note">${esc(L3('Нажмите на шкаф — справа появятся его параметры. «✥ Передвинуть» — тащите шкафы и технику по полу (вид сверху или спереди).', 'Shkafni bosing — parametrlari chiqadi. «✥ Surish» — shkaf va texnikani polda suring.'))}</div>
+        <div class="k3s-sub">💡 ${esc(L3('Подсветка', 'Yoritish'))}</div>
+        ${k3Row(L3('Класс', 'Sinf'), [0, 1, 2].map(i => k3B(ledState.level === i, 'setLedLevel(' + i + ')', t('led_' + i))).join(''))}
+        ${k3Row(L3('Под шкафами', 'Shkaflar ostida'), k3B(ledState.level && ledState.work, "k3dLedZone('work')", L3('рабочая зона', 'ish zonasi')) + k3B(ledState.level && ledState.plinth, "k3dLedZone('plinth')", L3('цоколь', 'sokol')))}
+        ${k3Row(L3('Внутри шкафов', 'Shkaflar ichida'), k3B(false, 'k3dLedAll(1)', L3('подсветить все', 'hammasini yoritish')) + k3B(false, 'k3dLedAll(0)', L3('убрать', 'olib tashlash')) + `<b style="color:#fff">${lowerSections.concat(upperSections).reduce((a, x) => a + (x.led | 0), 0)} ${esc(L3('точ.', 'ta'))}</b>`)}
+        <div class="k3s-note">${esc(L3('У отдельного шкафа — нажмите на него: «💡 Подсветка внутри».', 'Alohida shkaf — ustiga bosing: «💡 Ichki yoritish».'))}</div>
         <div class="k3s-sub">${esc(L3('Шкафы', 'Shkaflar'))}</div><div class="k3s-grid">
           ${add(L3('Нижний шкаф', 'Pastki shkaf'), "k3dAdd('lower','door',{dn:2})")}${add(L3('Тумба с ящиками', 'Tortmali tumba'), "k3dAdd('lower','drawers')")}
           ${add(L3('Пенал до потолка', 'Shiftgacha penal'), "k3dAdd('lower','tower',{tw:'storage'})")}${add(L3('Карго / бутылочница', 'Kargo'), "k3dAdd('lower','cargo')")}
@@ -2759,10 +2780,6 @@
           k3Row(L3('Ярусов', 'Qavatlar'), k3B(!chk('upperTwoTier'), 'k3dTwoTier(0)', '1') + k3B(chk('upperTwoTier'), 'k3dTwoTier(1)', '2')) : ''}
         <div class="k3s-sub">${esc(L3('Открывание у всех', 'Hammasi uchun ochilish'))}</div>
         <div class="k3e-r">${k3B(false, "setAllOpen('handles')", L3('Ручки', 'Dastalar'))}${k3B(false, "setAllOpen('push')", 'TIP-ON')}${k3B(false, "setAllOpen('gola')", L3('Гола', 'Gola'))}</div>
-        <div class="k3s-sub">💡 ${esc(L3('Подсветка', 'Yoritish'))}</div>
-        ${k3Row(L3('Класс', 'Sinf'), [0, 1, 2].map(i => k3B(ledState.level === i, 'setLedLevel(' + i + ')', t('led_' + i))).join(''))}
-        ${ledState.level ? k3Row(L3('Зоны', 'Zonalar'), k3B(ledState.work, "toggleLedZone('work')", L3('рабочая зона', 'ish zonasi')) + k3B(ledState.plinth, "toggleLedZone('plinth')", L3('цоколь', 'sokol'))) : ''}
-        <div class="k3s-note">${esc(L3('Подсветку внутри шкафа (верх и полки) включайте у самого шкафа.', 'Shkaf ichidagi yoritish — shkafning oʻzida.'))}</div>
         <div class="k3s-sub">🪴 ${esc(L3('Интерьер (в цену не входит)', 'Interyer (narxga kirmaydi)'))}</div>
         ${k3Row(L3('Лампы', 'Chiroqlar'), k3Step(dc.lamps, 'k3dDecor(\'lamps\',-1)', 'k3dDecor(\'lamps\',1)'))}
         ${k3Row(L3('Стулья', 'Stullar'), k3Step(dc.stools, 'k3dDecor(\'stools\',-1)', 'k3dDecor(\'stools\',1)'))}
@@ -2797,7 +2814,9 @@
       if (hasDr) h += k3Row(L3('Ящиков', 'Tortmalar'), k3Step(s.drawers | 0, "k3dStep('drawers',-1)", "k3dStep('drawers',1)"));
       const canShelves = !tall && !(s.drawers | 0) && ['oven', 'dishwasher', 'washer', 'cargo', 'hood'].indexOf(k) < 0 && !((s.gasLifts | 0) && tier === 'upper' && k !== 'door');
       if (canShelves) h += k3Row(L3('Полки', 'Tokchalar'), k3Step(s.shelves | 0, "k3dStep('shelves',-1)", "k3dStep('shelves',1)"));
-      if (canShelves || k === 'open') h += k3Row('💡 ' + L3('Подсветка внутри', 'Ichki yoritish'), k3Step((s.led | 0) + ' / ' + ((s.shelves | 0) + 1), "k3dStep('led',-1)", "k3dStep('led',1)")) + `<div class="k3s-note">${esc(L3('Верх шкафа и каждая полка — по точке подсветки', 'Shkaf usti va har bir tokcha — bittadan'))}</div>`;
+      const lm = ledMax(s);
+      if (lm) h += k3Row('💡 ' + L3('Подсветка внутри', 'Ichki yoritish'), k3Step((s.led | 0) + ' / ' + lm, "k3dStep('led',-1)", "k3dStep('led',1)") + k3B((s.led | 0) === lm, "k3dStep('led',99)", L3('везде', 'hammasi'))) +
+        `<div class="k3s-note">${esc((s.drawers | 0) > 0 ? L3('Подсветка в каждом ящике', 'Har bir tortmada yoritish') : (k === 'tower' ? L3('Подсветка по полкам пенала', 'Penal tokchalari boʻyicha') : L3('Верх шкафа и каждая полка — по точке подсветки', 'Shkaf usti va har bir tokcha — bittadan')))}</div>`;
       if (tier === 'lower' && !tall && ['sink', 'hob'].indexOf(k) < 0) h += k3Row(L3('СВЧ на столешнице', 'Stoldagi mikroto‘lqinli'), k3B(!!s.mwTop, "k3dToggle('mwTop')", s.mwTop ? L3('стоит', 'bor') : L3('нет', 'yoʻq')));
       h += `<div class="k3s-sub">${esc(L3('Фурнитура и открывание', 'Furnitura'))}</div>`;
       h += k3dHwRows(s, tier).replace(/<div class="k3e-sub">[^<]*<\/div>/, '');
@@ -2855,8 +2874,9 @@
       if (field === 'width') { selUpdate('width', (parseFloat(s.width) || 0) + d); return; }
       if (field === 'ug') { if (d === 0) delete s.ug; else s.ug = Math.max(20, Math.min(120, (s.ug != null ? +s.ug : (parseFloat(el('upperGap').value) || 56)) + d)); updateCalculator(); return; }
       if (field === 'drawers') { s.drawers = Math.max(1, Math.min(5, (s.drawers | 0) + d)); }
-      if (field === 'shelves') { s.shelves = Math.max(0, Math.min(5, (s.shelves | 0) + d)); s.led = Math.min(s.led | 0, s.shelves + 1); }
-      if (field === 'led') { s.led = Math.max(0, Math.min((s.shelves | 0) + 1, (s.led | 0) + d)); }
+      if (field === 'shelves') { s.shelves = Math.max(0, Math.min(5, (s.shelves | 0) + d)); s.led = Math.min(s.led | 0, ledMax(s)); }
+      if (field === 'drawers') s.led = Math.min(s.led | 0, ledMax(s));
+      if (field === 'led') { s.led = Math.max(0, Math.min(ledMax(s), (s.led | 0) + d)); if (s.led && !ledState.level) ledState.level = 1; }
       updateCalculator(); renderK3dEdit();
     }
     function k3dToggle(f) { const s = selSec; if (!s) return; s[f] = !s[f]; if (!s[f]) delete s[f]; updateCalculator(); }
@@ -3128,7 +3148,7 @@
     function setLedLevel(i) {
       ledState.level = i;
       if (i > 0 && !ledState.work && !ledState.plinth && !(ledState.shelves > 0)) ledState.work = true;
-      updateCalculator();
+      updateCalculator(); renderK3dEdit();
     }
     function toggleLedZone(key) { ledState[key] = !ledState[key]; updateCalculator(); }
     function stepLedShelves(d) { ledState.shelves = Math.max(0, Math.min(20, (ledState.shelves | 0) + d)); updateCalculator(); }
