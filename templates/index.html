@@ -2655,11 +2655,11 @@
       }
       const s = selSec; if (!s) return;
       const tier = tierOf(s);
-      if (a === 'shift') {   // сдвиг на 5 см вдоль стены: соседи справа остаются на месте, пока есть зазор
-        const run = k3dRun(s), next = run[run.indexOf(s) + 1], d = +v;
-        if (d > 0) { s.gap = (s.gap | 0) + 5; if (next && (next.gap | 0) >= 5) next.gap -= 5; }
-        else { if ((s.gap | 0) < 5) return; s.gap -= 5; if (next) next.gap = (next.gap | 0) + 5; }
-        plannerChanged(); return;
+      if (a === 'shift') {   // сдвиг на 5 см: только в пустоту, на соседний шкаф не наезжает
+        const wl = wallOfSecIn(currentType, s), r = (layoutAll(lowerSections, upperSections, currentType)[wl][tier === 'lower' ? 'lower' : 'upper'] || []).find(q => q.sec === s);
+        if (!r) return;
+        const dir = +v;   // + — от угла, − — к углу
+        placeFree(s, wl, r.u0 + 5 * dir, false); return;
       }
       if (a === 'gap0') { s.gap = 0; plannerChanged(); return; }
       if (a === 'swap') { moveSelected(wallOfSecIn(currentType, s) === 'left' ? -v : +v); return; }
@@ -2670,22 +2670,32 @@
       if (a === 'del') { removeSelected(); return; }
     }
     // перетащили шкаф в 3D: встаёт туда, куда отпустили (шаг 5 см); соседи остаются на месте, между шкафами — промежуток
-    function k3dMoveTo(sel, wall, u) {
-      const tier = sel.tier, low = tier === 'lower';
-      const s = secsOf(tier).find(x => x.id === sel.id); if (!s) return;
+    // ставит шкаф s на стену wall так, чтобы его левый край был в x (см от угла). Шкафы не накладываются друг на друга:
+    // snap — найти ближайшее свободное место, иначе отказ. Соседи никогда не сдвигаются, пустоты между шкафами сохраняются.
+    function placeFree(s, wall, x, snap) {
+      const tier = tierOf(s), low = tier === 'lower';
       if (!wallValid(wall)) wall = 'main';
-      const from = wallOfSecIn(currentType, s);
       const LAY = layoutAll(lowerSections, upperSections, currentType);
-      const runOf = w => (LAY[w][low ? 'lower' : 'upper'] || []).map(r => ({ sec: r.sec, u0: r.u0, w: r.u1 - r.u0 }));
-      // со старой стены шкаф уходит — следующий за ним остаётся на своём месте
-      if (from !== wall) { const old = runOf(from), i = old.findIndex(r => r.sec === s); if (i >= 0 && old[i + 1]) old[i + 1].sec.gap = Math.min(300, (old[i + 1].sec.gap | 0) + (s.gap | 0) + old[i].w); }
-      const run = runOf(wall).filter(r => r.sec !== s);
-      const w = Number(s.width) || 0;
-      run.push({ sec: s, u0: Math.max(0, u - w / 2), w });
-      run.sort((p, q) => (p.u0 + p.w / 2) - (q.u0 + q.w / 2));
+      const from = wallOfSecIn(currentType, s);
+      const others = (LAY[wall][low ? 'lower' : 'upper'] || []).filter(r => r.sec !== s).map(r => ({ sec: r.sec, a: r.u0, b: r.u1 }));
+      const block = others.slice();
+      if (!low) (LAY[wall].lower || []).filter(r => isTall(r.sec)).forEach(r => block.push({ a: r.u0, b: r.u1 }));   // верхний шкаф не залезает на пенал
+      const w = parseFloat(s.width) || 0, cap = roomCap(wall);
+      const fits = p => p >= -.01 && p + w <= cap + .01 && !block.some(o => p < o.b - .01 && p + w > o.a + .01);
+      let pos = Math.round(Math.max(0, Math.min(cap - w, x)) / 5) * 5;
+      if (!fits(pos)) {
+        if (!snap) { if (typeof msToast === 'function') msToast(L3('Дальше нельзя: там другой шкаф или стена', 'Bundan narida boshqa shkaf yoki devor')); return false; }
+        const cand = [0, cap - w]; block.forEach(o => { cand.push(o.b, o.a - w); });
+        const ok = cand.map(p => Math.max(0, p)).filter(fits).sort((p, q) => Math.abs(p - x) - Math.abs(q - x));
+        if (!ok.length) { noRoomToast(); return false; }
+        pos = ok[0];
+      }
+      // со старой стены шкаф уходит — следующий за ним остаётся на месте
+      if (from !== wall) { const old = (LAY[from][low ? 'lower' : 'upper'] || []), k = old.findIndex(r => r.sec === s); if (k >= 0 && old[k + 1]) old[k + 1].sec.gap = Math.min(600, (old[k + 1].sec.gap | 0) + (s.gap | 0) + w); }
+      const list = others.map(o => ({ sec: o.sec, a: o.a, w: o.b - o.a })).concat([{ sec: s, a: pos, w }]).sort((p, q) => p.a - q.a);
       let end = 0;
-      run.forEach(r => { const g = Math.max(0, Math.min(300, Math.round((r.u0 - end) / 5) * 5)); r.sec.gap = g; end += g + r.w; });
-      const ordered = run.map(r => r.sec); if (wall === 'left') ordered.reverse();   // левая стена хранится от дальнего края к углу
+      list.forEach(r => { r.sec.gap = Math.max(0, Math.round((r.a - end) / 5) * 5); end = r.a + r.w; });
+      const ordered = list.map(r => r.sec); if (wall === 'left') ordered.reverse();
       s.wall = wall;
       const g = { left: [], main: [], right: [] };
       secsOf(tier).forEach(x => { if (x !== s && wallOfSecIn(currentType, x) !== wall) g[wallOfSecIn(currentType, x)].push(x); });
@@ -2694,6 +2704,12 @@
       if (low) lowerSections = merged; else upperSections = merged;
       selSec = s;
       plannerChanged();
+      return true;
+    }
+    // перетащили шкаф в 3D: встаёт туда, куда отпустили (шаг 5 см); на другой шкаф не ложится — ищется ближайшее свободное место
+    function k3dMoveTo(sel, wall, u) {
+      const s = secsOf(sel.tier).find(x => x.id === sel.id); if (!s) return;
+      placeFree(s, wall, u - (parseFloat(s.width) || 0) / 2, true);
     }
     function k3dHw(field, v) { const s = selSec; if (!s) return; const o = Object.assign({}, s.hx || {}); if (v) o[field] = v; else delete o[field]; const hx = cleanHx(o); if (hx) s.hx = hx; else delete s.hx; updateCalculator(); }
     function k3dHwRows(s, tier) {
