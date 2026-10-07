@@ -202,12 +202,15 @@ export function createW3D(container, hooks = {}) {
     for (let k = 1; k <= ns; k++) {
       const yy = fb + (ft - fb) * k / (ns + 1);
       box(p, iw - .2, T, front - 4, M.body, ix0 + .1, yy, 1, 60);
+      if (st.m.led) box(p, iw - 2, .6, 1.2, M.led, ix0 + 1, yy - .7, front - 7);   // подсветка под полкой
       const item = (gi + k) % 3;
       if (item === 0) for (let f2 = 0; f2 < 3; f2++) box(p, Math.min(24, iw * .4), 3.2, front * .5, gm(GARM[(gi + k + f2) % GARM.length]), ix0 + 3, yy + T + f2 * 3.3, 4);
       else if (item === 1) box(p, Math.min(28, iw * .45), Math.min(16, (ft - fb) / (ns + 1) - 4), front * .55, gm(['#c7b299', '#b7c4cf', '#d9a5b3'][k % 3]), ix0 + 3, yy + T, 4);
       else box(p, Math.min(20, iw * .35), 12, front * .4, gm(['#8b4a3a', '#2f3b4f', '#b07d12'][k % 3]), ix1 - Math.min(20, iw * .35) - 3, yy + T, 5);
     }
-    if (st.m.led) { box(p, .8, y1 - y0 - 4, 1.2, M.led, ix0 + .2, y0 + 2, front - 6); box(p, .8, y1 - y0 - 4, 1.2, M.led, ix1 - 1, y0 + 2, front - 6); }
+    if (st.m.led) {   // подсветка под верхом секции и под каждой полкой, как на фото
+      box(p, iw - 2, .6, 1.2, M.led, ix0 + 1, y1 - 1.4, front - 7);
+    }
     // невидимый объём для выбора секции
     const hb = new THREE.Mesh(boxGeo(x1 - x0, y1 - y0, D), new THREE.MeshBasicMaterial({ visible: false })); hb.position.set((x0 + x1) / 2, (y0 + y1) / 2, D / 2); hb.userData.sel = { kind: 'sec', i: gi }; p.add(hb); if (gi < 100) pick.push(hb);
   }
@@ -308,10 +311,15 @@ export function createW3D(container, hooks = {}) {
     }
     const hb = new THREE.Mesh(boxGeo(W, H, D), new THREE.MeshBasicMaterial({ visible: false })); hb.position.set(W / 2, H / 2, D / 2); hb.userData.sel = { kind: 'door', key }; g.add(hb); pick.push(hb);
   }
-  function antresol(M, st, g, W, ha, D, y) {
+  function antresol(M, st, g, W, ha, D, y, ws) {
     box(g, T, ha, D, M.body, 0, y, 0, 60); box(g, T, ha, D, M.body, W - T, y, 0, 60); box(g, W, T, D, M.body, 0, y + ha - T, 0, 60); box(g, W, T, D, M.body, 0, y, 0, 60);
-    const dn = Math.max(2, Math.ceil(W / 60)), aw = (W - 2 * T) / dn;
-    for (let k = 0; k < dn; k++) liftDoor(g, M, st, 'ant:' + k, T + k * aw + .15, y + T + .15, aw - .3, ha - 2 * T - .3, D);
+    if (ws && ws.length) {   // двери в линию со шкафами под антресолью
+      let ax = T; const kx = (W - 2 * T) / ws.reduce((a, b) => a + b, 0);
+      ws.forEach((dw, k) => { liftDoor(g, M, st, 'ant:' + k, ax + .15, y + T + .15, dw * kx - .3, ha - 2 * T - .3, D); ax += dw * kx; });
+    } else {
+      const dn = Math.max(2, Math.ceil(W / 60)), aw = (W - 2 * T) / dn;
+      for (let k = 0; k < dn; k++) liftDoor(g, M, st, 'ant:' + k, T + k * aw + .15, y + T + .15, aw - .3, ha - 2 * T - .3, D);
+    }
     const hb = new THREE.Mesh(boxGeo(W, ha, D), new THREE.MeshBasicMaterial({ visible: false })); hb.position.set(W / 2, y + ha / 2, D / 2); hb.userData.sel = { kind: 'ant' }; g.add(hb); pick.push(hb);
   }
   function hangHooks(M, g, x0, w, y, D) { box(g, w - 8, 4, 1.4, M.body, x0 + 4, y - 4, 0, 60); for (let hx = x0 + 10, i = 0; hx < x0 + w - 6; hx += 14, i++) { cyl(g, .4, 5, M.chrome, hx, y - 2, 2.5, 'z'); if (i % 2 === 0) box(g, 14, 58 + (i % 3) * 8, 6, gm(GARM[(i * 3 + 1) % GARM.length]), hx - 7, y - 62 - (i % 3) * 8, 3); } }
@@ -367,7 +375,7 @@ export function createW3D(container, hooks = {}) {
     if (h.hanger.on) hangHooks(M, ng, 2, Wn - 4, Hn - 28, 1.2);
     if (m.mirror.on) { const mw = Math.min(m.mirror.W, Wn - 14), mh = Math.max(30, Math.min(m.mirror.H, Hn - 130)), mx = (Wn - mw) / 2, my = h.bench.on ? 62 : 30; box(ng, mw + 3, mh + 3, 1, M.aluDark, mx - 1.5, my - 1.5, 1.2); box(ng, mw, mh, .5, M.mirror, mx, my, 2.2); }
     if (m.led) box(ng, Wn - 4, .8, 1.4, M.led, 2, Hn - 2, 30);
-    if (ha) { const ag = new THREE.Group(); ag.position.x = U ? 0 : xN; g.add(ag); antresol(M, st, ag, U ? W1 + Wn + W2 : Wn, ha, Math.max(38, D * .85), H - ha); }
+    if (ha) { const ag = new THREE.Group(); ag.position.x = U ? 0 : xN; g.add(ag); antresol(M, st, ag, U ? W1 + Wn + W2 : Wn, ha, Math.max(38, D * .85), H - ha, U ? (st.antWidths || null) : null); }
     const tot = W1 + Wn + W2;
     bounds = { w: tot, d: D, h: H, x0: 0, x1: tot, zMax: 220 };
   }

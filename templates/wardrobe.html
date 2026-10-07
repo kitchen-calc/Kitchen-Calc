@@ -246,7 +246,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="/static/js/shkaf-data.js?v=6"></script>
+<script src="/static/js/shkaf-data.js?v=7"></script>
 <script src="/static/js/kis-data.js?v=3"></script>
 <script src="/static/js/kis-art.js?v=1"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
@@ -331,6 +331,9 @@ function antresolOpen(dn, t) {   // открывание дверок антре
   return dn * 2 * (hc != null ? hc : t.hinge);
 }
 
+// двери антресоли П-образной прихожей — в линию со шкафами: над каждым шкафом столько же дверей, над нишей — по ~60 см
+function antWidths(h) { if (h.shape !== 'U') return null; const a = [], k = Math.max(1, Math.round(h.niche.W / 60)), d1 = Math.max(1, h.wardrobe.doors | 0), d2 = Math.max(1, h.wardrobe2.doors | 0);
+  for (let i = 0; i < d1; i++) a.push(h.wardrobe.W / d1); for (let i = 0; i < k; i++) a.push(h.niche.W / k); for (let i = 0; i < d2; i++) a.push(h.wardrobe2.W / d2); return a; }
 function calc() {
   const t = T(), pm = panelM2(t), L = [];     // L: строки себестоимости {n, q, c}
   const add = (n, q, c, kind) => { if (c > 0) L.push({ n, q, c: Math.round(c), kind: kind || 'mat' }); };
@@ -436,10 +439,11 @@ function calc() {
       if (h.bench.cushion) add('Мягкая подушка скамьи', 1, t.cushion);
     }
     if (h.antresol.on) {
-      const W = frame ? (U ? (h.wardrobe.W + h.niche.W + h.wardrobe2.W) / 100 : Wn) : h.antresol.W / 100, ha = haM, dn = Math.max(2, Math.ceil(W / .6));
+      const W = frame ? (U ? (h.wardrobe.W + h.niche.W + h.wardrobe2.W) / 100 : Wn) : h.antresol.W / 100, ha = haM, dn = U ? antWidths(h).length : Math.max(2, Math.ceil(W / .6));
       add('Антресоль', 1, (W * .38 + 2 * ha * .38 + W * ha) * pm + antresolOpen(dn, t));
     }
     if (frame && h.niche.slats) add('Рейки на задней стенке ниши', 1, Wn * Math.max(.5, Hn) * 250000);
+    if (frame && M.led) add('Подсветка ниши', 1, Wn * t.led + t.ledKit);
   }
   // гардеробные системы Cabio (kis.uz): штучные позиции
   const CABIO_X = ['trouser', 'shoe_rot', 'basket', 'leather', 'access', 'shoe_box'];
@@ -620,6 +624,7 @@ function drawSection(x0, x1, H, sec, seed, led) {
     for (let k = 0; k < ns; k++) {
       const yb = freeBottom + gap * (k + 1), y = -yb, sw = iw;
       b.push(R(ix0, y, iw, 1.8, '#d9cdb8', 'stroke="#a89a82" stroke-width=".3"'));
+      if (led) b.push(R(ix0 + 1, y + 1.8, iw - 2, .9, '#ffe29a') + R(ix0, y + 2.7, iw, Math.min(12, gap * .6), 'url(#gLedD)', 'opacity=".75"'));
       const item = (seed + k) % 4, nfold = Math.min(5, Math.max(2, Math.floor((gap - 4) / 4.4)));
       if (item === 0) b.push(folded(ix0 + 2, y, Math.min(22, sw / 2 - 3), nfold, seed + k) + (sw > 44 ? folded(ix0 + 2 + Math.min(22, sw / 2 - 3) + 3, y, Math.min(22, sw / 2 - 3), Math.max(2, nfold - 1), seed + k + 3) : ''));
       else if (item === 1) b.push(box(ix0 + 3, y, Math.min(26, sw - 6), Math.max(6, Math.min(18, gap - 5)), ['#c7b299', '#b7c4cf', '#d9a5b3'][k % 3]) + (sw > 40 ? box(ix0 + 32, y, Math.min(20, sw - 34), Math.max(5, Math.min(13, gap - 5)), '#e4d8c3') : ''));
@@ -627,7 +632,7 @@ function drawSection(x0, x1, H, sec, seed, led) {
       else b.push(folded(ix0 + 2, y, sw - 4, Math.min(4, nfold), seed + k + 1));
     }
   }
-  if (led) b.push(R(x0 + 1.4, -H, 3.4, H, 'url(#gLed)') + R(x1 - 4.8, -H, 3.4, H, 'url(#gLedR)'));
+  if (led) b.push(R(ix0 + 1, -H + 1.6, iw - 2, .9, '#ffe29a') + R(ix0, -H + 2.5, iw, 14, 'url(#gLedD)', 'opacity=".8"'));
   return b.join('');
 }
 
@@ -912,7 +917,9 @@ function drawHallFrame(m, mode, mini) {
   // антресоль над нишей (Г) или на всю ширину (П)
   if (ha > 0) {
     const bx = U ? x1 : xN, bw = U ? total : Wn, dn = Math.max(2, Math.ceil(bw / 60));
-    for (let i = 0; i < dn; i++) g += R(bx + i * bw / dn, WALL - H, bw / dn - .6, ha, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(bx + i * bw / dn, WALL - H, bw / dn - .6, ha, 'url(#gGloss)', 'opacity=".5"') + R(bx + i * bw / dn + bw / dn / 2 - 5, WALL - H + ha - 6, 10, 1.4, shade(col, -.35), 'rx=".7"') + liftMark(bx + i * bw / dn, WALL - H, bw / dn - .6, ha, m);
+    const ws = U ? antWidths(h) : Array(dn).fill(bw / dn);
+    let ax = bx;
+    ws.forEach(dw => { g += R(ax, WALL - H, dw - .6, ha, col, 'stroke="rgba(0,0,0,.25)" stroke-width=".6"') + R(ax, WALL - H, dw - .6, ha, 'url(#gGloss)', 'opacity=".5"') + R(ax + dw / 2 - 5, WALL - H + ha - 6, 10, 1.4, shade(col, -.35), 'rx=".7"') + liftMark(ax, WALL - H, dw - .6, ha, m); ax += dw; });
   }
   if (m.led) g += R(xN + 2, nTop - 1, Wn - 4, 2, '#ffe29a') + R(xN, nTop, Wn, 46, 'url(#gLedD)', 'opacity=".85"');
   if (dec.lamp) { const lx = xN + Wn / 2; g += LN(lx, 0, lx, nTop + 6, '#2b2f33', 1) + `<path d="M ${f2(lx - 8)} ${f2(nTop + 22)} L ${f2(lx - 5)} ${f2(nTop + 6)} L ${f2(lx + 5)} ${f2(nTop + 6)} L ${f2(lx + 8)} ${f2(nTop + 22)} Z" fill="#f4e4bf" stroke="#c9b27c" stroke-width=".6"/>`; }
@@ -1008,7 +1015,7 @@ function formHall() {
   const hints = { line: 'Шкаф, вешалка со скамьёй и обувница стоят рядом вдоль одной стены.', L: 'Шкаф с одной стороны, рядом ниша (скамья, обувь, зеркало), а над нишей антресоль, как на фото в разделе «Прихожие».', U: 'Шкафы по бокам, посередине ниша (обувь, скамья, зеркало), сверху антресоль на всю ширину, как на втором фото.' };
   const shapeCard = `<div class="card"><h2><span class="n">2</span>Форма прихожей</h2><div class="chips">${chip(!frame, 'data-hshape="line"', 'Вдоль стены')}${chip(h.shape === 'L', 'data-hshape="L"', 'Г-образная')}${chip(U, 'data-hshape="U"', 'П-образная')}</div><div class="hint">${hints[h.shape]}</div>
     ${frame ? `<div class="row3" style="margin-top:12px">${field('Ширина ниши, см', stepper('hall.niche.W', 60, 250, 10))}${U ? field('Ширина второго шкафа, см', stepper('hall.wardrobe2.W', 40, 300, 10)) : field('Шкаф стоит', `<select data-k="hall.side"><option value="right" ${h.side === 'right' ? 'selected' : ''}>справа от ниши</option><option value="left" ${h.side === 'left' ? 'selected' : ''}>слева от ниши</option></select>`)}${U ? field('Дверей во втором шкафу', stepper('hall.wardrobe2.doors', 1, 5, 1)) : '<div></div>'}</div>
-    <div class="chips" style="margin-top:12px">${chip(h.niche.slats, 'data-toggle="hall.niche.slats"', 'Деревянные рейки на стенке ниши')}</div>` : ''}</div>`;
+    <div class="chips" style="margin-top:12px">${chip(h.niche.slats, 'data-toggle="hall.niche.slats"', 'Деревянные рейки на стенке ниши')}${chip(M.led, 'data-toggle="led"', M.led ? 'Подсветка ниши: есть' : 'Подсветка ниши: нет')}</div>` : ''}</div>`;
   return tiersCard() + shapeCard + `<div class="card"><h2><span class="n">3</span>Цвет</h2>${swatches()}</div>` +
     block(frame && U ? 'Шкаф слева (и справа — такой же по высоте)' : 'Шкаф для одежды', 'hall.wardrobe', `<div class="row3">${field(frame && U ? 'Ширина левого шкафа, см' : 'Ширина, см', stepper('hall.wardrobe.W', 50, 400, 10))}${field(frame ? 'Общая высота, см' : 'Высота, см', stepper('hall.wardrobe.H', 150, 290, 5))}${field('Глубина, см', stepper('hall.wardrobe.D', 30, 70, 5))}</div>
       <div class="row" style="margin-top:12px">${field('Двери', `<select data-k="hall.wardrobe.kind"><option value="swing" ${wd.kind === 'swing' ? 'selected' : ''}>Распашные</option><option value="sliding" ${wd.kind === 'sliding' ? 'selected' : ''}>Купе (раздвижные)</option></select>`)}${field('Количество дверей', stepper('hall.wardrobe.doors', 1, 5, 1))}</div>
@@ -1026,6 +1033,7 @@ function presetCards() {
   const list = PRESETS[M.type];
   $('presets').innerHTML = list.map((p, i) => {
     const mm = merge(DEF(), Object.assign({ type: M.type }, deep(p.m)));
+    if (secsValid(mm)) ['rods', 'shelves', 'drawers', 'shoes', 'pant'].forEach(k => { mm[k] = mm.secs.reduce((a, s) => a + (s[k] | 0), 0); });
     const price = calcFor(mm).price;
     const ph = p.photo ? `<img class="pphoto" src="/static/home/${p.photo}-640.webp" alt="${p.name}" loading="lazy" decoding="async"><span class="ptag">Фото интерьера</span><span class="pbtn" role="button" tabindex="0" aria-label="Фото" onclick="presetTogglePhoto(event, this)">📷</span>` : '';
     return `<button type="button" class="pcard ${activePreset === i ? 'on' : ''}" data-preset="${i}"><div class="pic${p.photo ? ' has-photo' : ''}"${p.photo ? ' onmousemove="presetPeek(event, this)"' : ''}>${p.photo ? `<img class="psketch" src="/static/home/${p.photo}-sk.webp" alt="" loading="lazy" decoding="async">` : drawAny(mm, mm.type === 'hall' ? 'out' : 'out', true)}<span class="seg">${p.seg}</span>${ph}</div><div class="tx"><b>${p.name}</b><small>${p.note}</small><em>от ${fmt(price)} сум</em></div></button>`;
@@ -1214,13 +1222,13 @@ function w3State() {
   if (w3Sel && w3Sel.kind === 'sec' && w3Sel.i >= S) w3Sel = null;
   return { type: M.type, m: deep(M), walls, widths: walls.map((_, wi) => secWidths(M, wi)), plan,
     colors: { body: { hex: M.customColor ? M.customColor.hex : PALETTE[M.color][1], img: (M.customColor && M.customColor.img) || '' }, laco: LACO[M.laco || 0][1] },
-    hw: Object.assign({}, M.hw), drawerVis: w3DrawerVis(), dsysDefault: w3DefDsys(), hallItems: hall && M.hall.shape === 'line' ? hallLineItems(M) : null, selected: w3Sel };
+    hw: Object.assign({}, M.hw), drawerVis: w3DrawerVis(), dsysDefault: w3DefDsys(), hallItems: hall && M.hall.shape === 'line' ? hallLineItems(M) : null, antWidths: hall ? antWidths(M.hall) : null, selected: w3Sel };
 }
 function w3Supported() { try { return !!(window.WebGL2RenderingContext && document.createElement('canvas').getContext('webgl2')); } catch (e) { return false; } }
 async function initW3() {
   if (W3 || w3Loading) return; w3Loading = true;
   try {
-    const mod = await import('/static/js/wardrobe3d.js?v=4');
+    const mod = await import('/static/js/wardrobe3d.js?v=5');
     W3 = mod.createW3D($('w3dCanvas'), { onSelect: sel => { w3Sel = sel; W3.select(sel); renderW3Edit(); } });
     $('w3dLoad').style.display = 'none'; renderW3Bar(); W3.update(w3State()); renderW3Edit();
   } catch (e) { console.warn('3D недоступно', e); $('w3dTab').style.display = 'none'; setW3Mode('2d'); }
@@ -1410,7 +1418,7 @@ function buildSpec() {
       if (U) mkw('Ш2', 'Шкаф справа', h.wardrobe2.W, h.wardrobe2.doors, false);
     }
     if (frame) el('Ниша', 'Ниша', h.niche.W * 10, h.wardrobe.H * 10 - ha, 380, (h.niche.slats ? 'рейки на стенке; ' : '') + 'между шкафами');
-    if (h.antresol.on) { const aw = frame ? (U ? h.wardrobe.W + h.niche.W + h.wardrobe2.W : h.niche.W) : Math.min(h.antresol.W, h.wardrobe.W), dn = Math.max(2, Math.ceil(aw * 10 / 600)); el('Ант', 'Антресоль', aw * 10, ha, 380, 'дверей ' + dn); dr('Ант-Д', 'Двери антресоли', 'ЛДСП', (aw * 10 - 2 * (dn + 1)) / dn, ha - 4, dn, 'распашные'); }
+    if (h.antresol.on) { const aw = frame ? (U ? h.wardrobe.W + h.niche.W + h.wardrobe2.W : h.niche.W) : Math.min(h.antresol.W, h.wardrobe.W), dn = U ? antWidths(h).length : Math.max(2, Math.ceil(aw * 10 / 600)); el('Ант', 'Антресоль', aw * 10, ha, 380, 'дверей ' + dn); dr('Ант-Д', 'Двери антресоли', 'ЛДСП', (aw * 10 - 2 * (dn + 1)) / dn, ha - 4, dn, 'распашные'); }
     if (h.shoe.on) el('Об', frame ? 'Открытые полки для обуви' : 'Обувница', (frame ? h.niche.W : h.shoe.W) * 10, frame ? 200 * h.shoe.tiers : 200 * h.shoe.tiers + 100, frame ? 280 : 260, 'полок ' + h.shoe.tiers + (frame ? '' : ', откидные фасады'));
     if (h.hanger.on) el('Веш', 'Вешалка с крючками', (frame ? h.niche.W - 10 : h.hanger.W) * 10, 1180, 250, 'крючков ' + Math.ceil((frame ? h.niche.W - 10 : h.hanger.W) / 12));
     if (h.bench.on) el('Ск', 'Скамья', (frame ? h.niche.W : h.bench.W) * 10, 450, 380, h.bench.cushion ? 'с мягкой подушкой' : '');
