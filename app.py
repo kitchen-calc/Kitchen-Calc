@@ -160,6 +160,32 @@ async def wardrobe_calc_uz():
     return HTMLResponse(render_shkaf("uz"))
 
 
+PRIVACY_HTML = """<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Политика конфиденциальности | Kitchen Calc</title><link rel="canonical" href="https://kitchen-calc.uz/privacy">
+<style>body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;max-width:760px;margin:0 auto;padding:32px 18px 60px;line-height:1.6;color:#1f2937;background:#fbf8f2}
+h1{font-size:1.7rem;color:#2a2013}h2{font-size:1.1rem;margin-top:26px;color:#7a5500}a{color:#9a6e1c}</style></head><body>
+<p><a href="/">← kitchen-calc.uz</a></p>
+<h1>Политика конфиденциальности</h1>
+<p>Kitchen Calc (kitchen-calc.uz) — изготовление мебели на заказ в Ташкенте. Мы уважаем вашу приватность и собираем только те данные, которые нужны, чтобы связаться с вами по заказу.</p>
+<h2>Какие данные мы получаем</h2>
+<p>Имя, номер телефона и, по желанию, комментарий, размеры и параметры мебели — когда вы оставляете заявку на сайте, в форме рекламы Instagram/Facebook или пишете нам в мессенджер.</p>
+<h2>Зачем</h2>
+<p>Чтобы перезвонить, ответить на вопросы, рассчитать стоимость, договориться о замере и выполнить заказ. Мы не отправляем рекламные рассылки без вашего согласия.</p>
+<h2>Кому передаём</h2>
+<p>Никому не продаём и не передаём ваши данные, кроме случаев, предусмотренных законодательством Республики Узбекистан. Для статистики посещений сайта используется Яндекс Метрика (обезличенные данные).</p>
+<h2>Хранение и удаление</h2>
+<p>Данные хранятся столько, сколько нужно для выполнения заказа и гарантийных обязательств. Чтобы удалить свои данные, напишите или позвоните нам — удалим в течение 7 дней.</p>
+<h2>Контакты</h2>
+<p>Телефон: <a href="tel:+998920934510">+998 92 093-45-10</a> · Telegram: <a href="https://t.me/Kitchencalc">@Kitchencalc</a> · Сайт: <a href="https://kitchen-calc.uz">kitchen-calc.uz</a></p>
+</body></html>"""
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy():
+    # Политика конфиденциальности — нужна для моментальных форм рекламы Meta
+    return HTMLResponse(PRIVACY_HTML)
+
+
 @app.get("/calc", response_class=HTMLResponse)
 async def calculator(request: Request):
     file_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
