@@ -26,7 +26,7 @@
   <script src="/static/js/kis-data.js?v=3"></script>
   <script src="/static/js/kis-art.js?v=1"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
-  <script src="/static/js/shkaf-uz.js?v=8"></script>
+  <script src="/static/js/shkaf-uz.js?v=9"></script>
   <style>
     :root {
       --bg-dark: #f7f4ee;
@@ -474,7 +474,17 @@
     .preset-card { background: var(--card-bg); border: 1.5px solid var(--border-dark); border-radius: 14px; overflow: hidden; cursor: pointer; transition: all 0.2s; text-align: left; color: var(--text-main); font-family: inherit; padding: 0; }
     .preset-card:hover { border-color: var(--accent-gold); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(15, 23, 42, 0.10); }
     .preset-card.active { border-color: var(--accent-gold); box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.35); }
-    .preset-render { background: #f3eee7; height: 170px; position: relative; }
+    .preset-render { background: #f3eee7; height: 170px; position: relative; overflow: hidden; --mx: 50%; --my: 50%; }
+    .preset-render .render-svg { transition: transform .7s cubic-bezier(.2,.7,.2,1), filter .7s; }
+    .preset-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; clip-path: circle(0% at var(--mx) var(--my)); transform: scale(1.12); filter: saturate(.7) brightness(1.1);
+      transition: clip-path .85s cubic-bezier(.22,.8,.2,1), transform 1.4s cubic-bezier(.2,.7,.2,1), filter 1s; }
+    .preset-card:hover .has-photo .preset-photo, .has-photo.show-photo .preset-photo { clip-path: circle(150% at var(--mx) var(--my)); transform: scale(1); filter: none; }
+    .preset-card:hover .has-photo .render-svg, .has-photo.show-photo .render-svg { transform: scale(.94); filter: blur(3px); }
+    .preset-ph-tag { position: absolute; left: 10px; bottom: 10px; z-index: 3; background: rgba(20,16,10,.72); color: #f3d58e; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; opacity: 0; transform: translateY(6px); transition: opacity .5s .25s, transform .5s .25s; pointer-events: none; }
+    .preset-card:hover .preset-ph-tag, .show-photo .preset-ph-tag { opacity: 1; transform: none; }
+    .preset-ph-btn { position: absolute; right: 8px; top: 8px; z-index: 4; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.9); display: none; align-items: center; justify-content: center; font-size: .9rem; box-shadow: 0 2px 8px rgba(0,0,0,.2); cursor: pointer; }
+    @media (hover: none) { .preset-ph-btn { display: flex; } .preset-card:hover .has-photo:not(.show-photo) .preset-photo { clip-path: circle(0% at 50% 50%); } .preset-card:hover .has-photo:not(.show-photo) .render-svg { transform: none; filter: none; } }
+    .seg-badge { z-index: 3; }
     .preset-render .render-svg { height: 170px; }
     .preset-body { padding: 12px 14px 14px; }
     .preset-name { font-weight: 800; font-size: 1.05rem; }
@@ -1520,6 +1530,13 @@
         dcLamps: 'Подвесные лампы', dcStools: 'Барные стулья', dcPlant: 'Растение на столешнице', dcFloorPlant: 'Растение в кадке', dcOverIsland: 'над островом', dcOverCounter: 'над столешницей', dcNeedIsland: 'нужен остров',
         ap_fridge: 'холодильник', ap_fridgeBuilt: 'встраиваемый холодильник', ap_oven: 'духовой шкаф', ap_micro: 'микроволновая печь', ap_dishwasher: 'посудомоечная машина', ap_washer: 'стиральная машина', ap_hobpanel: 'варочная панель',
         exDecor: 'интерьер: {x}', exLamps: 'ламп {n}', exStools: 'стульев {n}', exPlant1: 'растение на столешнице', exPlant2: 'растение в кадке', thAppl: 'Техника / примечание',
+        phTag: 'Фото интерьера',
+        p_window: 'Угловая у окна', p_window_d: 'Угловая · мойка под окном · светлый бежевый · камень · посудомойка и холодильник',
+        p_whiteisl: 'Белая с островом', p_whiteisl_d: 'Прямая + остров · пенал с духовкой · встроенный холодильник · кварц · Blum',
+        p_shaker: 'Светлая классика', p_shaker_d: 'Угловая + остров на 3 стула · белые фасады с ручками · кварц · встроенная посудомойка',
+        p_greyclassic: 'Серая классика', p_greyclassic_d: 'Угловая · пенал с духовкой · витрина · искусственный камень · стеклянные лампы',
+        p_graphite: 'Графит и дерево', p_graphite_d: 'Прямая без верхних шкафов + остров · два пенала · гола · TANDEMBOX · подсветка',
+        p_stone: 'Камень и графит', p_stone_d: 'Прямая + большой остров · три пенала · открытые полки · LEGRABOX · подсветка',
         p_compact: 'Компакт с холодильником', p_compact_d: 'Прямая 2,4 м · холодильник · ЛДСП Эконом · фурнитура GTV',
         p_scandi: 'Скандинавия', p_scandi_d: 'Прямая 3,6 м · встроенный холодильник, посудомойка, пенал с микроволновкой · лампы',
         p_loft: 'Лофт', p_loft_d: 'Угловая 3 × 1,8 м · встроенный холодильник, посудомойка, пенал с духовкой · без ручек',
@@ -1644,6 +1661,13 @@
         dcLamps: 'Osma chiroqlar', dcStools: 'Bar stullari', dcPlant: 'Stol ustidagi o‘simlik', dcFloorPlant: 'Qozondagi o‘simlik', dcOverIsland: 'orol ustida', dcOverCounter: 'stol ustida', dcNeedIsland: 'orol kerak',
         ap_fridge: 'muzlatgich', ap_fridgeBuilt: 'o‘rnatma muzlatgich', ap_oven: 'duxovka', ap_micro: 'mikroto‘lqinli pech', ap_dishwasher: 'idish yuvish mashinasi', ap_washer: 'kir yuvish mashinasi', ap_hobpanel: 'plita paneli',
         exDecor: 'interer: {x}', exLamps: 'chiroq {n}', exStools: 'stul {n}', exPlant1: 'stol ustida o‘simlik', exPlant2: 'qozondagi o‘simlik', thAppl: 'Texnika / izoh',
+        phTag: 'Interyer surati',
+        p_window: 'Deraza yonidagi burchakli', p_window_d: 'Burchakli · rakovina deraza ostida · och bej · tosh · idish yuvgich va muzlatgich',
+        p_whiteisl: 'Orolli oq oshxona', p_whiteisl_d: 'Toʻgʻri + orol · duxovkali penal · oʻrnatma muzlatgich · kvars · Blum',
+        p_shaker: 'Yorqin klassika', p_shaker_d: 'Burchakli + 3 stulli orol · dastali oq fasadlar · kvars · oʻrnatma idish yuvgich',
+        p_greyclassic: 'Kulrang klassika', p_greyclassic_d: 'Burchakli · duxovkali penal · vitrina · sunʼiy tosh · shisha chiroqlar',
+        p_graphite: 'Grafit va yogʻoch', p_graphite_d: 'Yuqori shkafsiz toʻgʻri + orol · ikki penal · gola · TANDEMBOX · yoritish',
+        p_stone: 'Tosh va grafit', p_stone_d: 'Toʻgʻri + katta orol · uchta penal · ochiq tokchalar · LEGRABOX · yoritish',
         p_compact: 'Muzlatgichli Kompakt', p_compact_d: 'Toʻgʻri 2,4 m · muzlatgich · LDSP Ekonom · GTV furnitura',
         p_scandi: 'Skandinaviya', p_scandi_d: 'Toʻgʻri 3,6 m · oʻrnatma muzlatgich, idish yuvgich, mikroʻtolqinli penal · chiroqlar',
         p_loft: 'Loft', p_loft_d: 'Burchakli 3 × 1,8 m · oʻrnatma muzlatgich, idish yuvgich, duxovkali penal · dastasiz',
@@ -4006,18 +4030,51 @@
     // seg — сегмент (econ/mid/prem), hw — фурнитура (0 эконом, 1 стандарт, 2 премиум), lg — подсветка [класс, рабочая зона, цоколь, полок], isl — остров [вкл, длина, ширина]
     // 7-й элемент строки — своя фурнитура шкафа: { dsys: системы ящиков, hx: петли/подъёмник }; kh — фурнитура всей кухни
     const PR_LBX = { dsys: ['lbx_m', 'lbx_c', 'lbx_f'] }, PR_HK = { hx: { lift: 'hk_top' } };
+    // photo — настоящее фото похожего интерьера (static/home/*-640.webp): при наведении схема плавно сменяется фото.
+    // fcn / bcn — цвет фасада / корпуса по названию из каталога: [раздел, название] (раздел: econom, silver, premium, color, platinum)
+    // u: 0 — без верхних шкафов. Чтобы добавить вариант: скопируйте запись, поменяйте фото, шкафы и цвета, добавьте p_<id> и p_<id>_d в переводы.
     const PRESETS = [
       // Эконом: недорогие материалы, но фурнитура GTV (не самая дешёвая)
       { id: 'compact', seg: 'econ', t: 'straight', f: 0, b: 0, c: 0, hw: 1, fc: 'ec6', bc: 'ec6', open: 'h', o: [1, 1, 0],
         lo: [['sink', 60, 1, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
         up: [['dryer', 60, 1, 1], ['door', 60, 1, 0], ['hood', 60, 0, 1]] },
+      // Угловая у окна (фото ph-k6): светлая, мойка под окном, верхние шкафы только сбоку
+      { id: 'window', seg: 'mid', photo: 'ph-k6', t: 'l-shape', f: 2, b: 0, c: 2, hw: 1, fcn: ['premium', 'Бежевый'], bc: 'ec6', open: 'p', o: [1, 1, 0], lg: [1, 1, 0, 0], dc: [0, 1, 1, 0],
+        kh: { corner: 'flex' },
+        lo: [['fridge', 60, 0, 0, 'l', 'free'], ['drawers', 60, 0, 3, 'l'], ['corner', 100, 1, 0], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3]],
+        up: [['door', 60, 1, 0, 'l'], ['door', 100, 1, 0], ['glass', 80, 0, 0], ['door', 60, 1, 0], ['hood', 60, 0, 1], ['door', 60, 1, 0]] },
       // Комфорт: основа GTV (~70%), около трети шкафов — на Blum (ящики TANDEMBOX, ящик под мойку, подъёмники AVENTOS)
       { id: 'comfort', seg: 'mid', t: 'l-shape', f: 3, b: 0, c: 1, hw: 1, fc: 'si2', bc: 'ec6', open: 'p', o: [1, 1, 1], lg: [1, 1, 0, 0],
         kh: { sinkbox: 'antaro', corner: 'flex' },
         lo: [['tower', 60, 0, 0, 'l', 'ovenMicro'], ['drawers', 60, 0, 3, 'l', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_b'] }], ['corner', 100, 1, 0], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 60, 1, 0], ['fridge', 60, 0, 0, 'm', 'free']],
         up: [['door', 60, 1, 0, 'l'], ['door', 100, 1, 0], ['dryer', 60, 1, 1, 'm', '', PR_HK], ['door', 60, 1, 0], ['door', 60, 1, 0], ['hood', 60, 0, 1, 'm', '', { hx: { lift: 'hk_s' } }]] },
+      // Белая с островом (фото ph-k2): пенал с духовкой и встроенный холодильник, кварц, остров и три лампы
+      { id: 'whiteisl', seg: 'mid', photo: 'ph-k2', t: 'straight', f: 3, b: 2, c: 3, hw: 2, fcn: ['premium', 'Белый'], bcn: ['premium', 'Белый'], open: 'h', o: [1, 1, 1], lg: [1, 1, 0, 0], isl: [1, 180, 90], dc: [3, 0, 0, 0],
+        kh: { hinge: 'std_soft', sinkbox: 'antaro' },
+        lo: [['tower', 60, 0, 0, 'm', 'ovenMicro'], ['fridge', 60, 0, 0, 'm', 'built'], ['drawers', 60, 0, 3], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 80, 1, 0], ['drawers', 60, 0, 3]],
+        up: [['door', 60, 1, 0], ['dryer', 80, 1, 1], ['door', 60, 1, 0], ['hood', 80, 0, 1], ['door', 60, 1, 0]] },
+      // Светлая классика с островом (фото ph-k4): Г-образная, белые фасады с ручками, барные стулья
+      { id: 'shaker', seg: 'mid', photo: 'ph-k4', t: 'l-shape', f: 3, b: 0, c: 3, hw: 1, fcn: ['premium', 'Белый (Филвуд)'], bc: 'ec6', open: 'h', o: [1, 1, 1], lg: [1, 1, 0, 0], isl: [1, 180, 90], dc: [1, 3, 0, 0],
+        kh: { corner: 'flex' },
+        lo: [['fridge', 80, 0, 0, 'l', 'free'], ['door', 60, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['corner', 100, 1, 0], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['hob', 80, 1, 0], ['door', 60, 1, 0]],
+        up: [['door', 60, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 100, 1, 0], ['dryer', 80, 1, 1], ['door', 60, 1, 0], ['door', 60, 1, 0], ['hood', 80, 0, 1], ['door', 60, 1, 0]] },
+      // Классика серая (фото ph-k5): светло-серая, пенал с духовкой, камень, стеклянные лампы
+      { id: 'greyclassic', seg: 'mid', photo: 'ph-k5', t: 'l-shape', f: 3, b: 0, c: 2, hw: 1, fcn: ['premium', 'Серый Светлый'], bc: 'ec6', open: 'h', o: [1, 1, 1], lg: [1, 1, 0, 0], dc: [3, 0, 1, 0],
+        kh: { corner: 'flex' },
+        lo: [['tower', 60, 0, 0, 'l', 'oven'], ['drawers', 60, 0, 3, 'l'], ['corner', 100, 1, 0], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 80, 1, 0], ['drawers', 60, 0, 3]],
+        up: [['door', 60, 1, 0, 'l'], ['door', 100, 1, 0], ['dryer', 80, 1, 1], ['door', 60, 1, 0], ['hood', 80, 0, 1], ['glass', 60, 0, 0]] },
+      // Графит и дерево (фото ph-k1): без верхних шкафов, два пенала, остров со стульями, гола, Blum
+      { id: 'graphite', seg: 'prem', photo: 'ph-k1', t: 'straight', f: 5, b: 5, c: 1, hw: 2, u: 0, fcn: ['platinum', 'Графит Металик'], bcn: ['platinum', 'Дуб Американский'], open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2], isl: [1, 200, 90], dc: [1, 2, 1, 1],
+        kh: { hinge: 'std_soft', sinkbox: 'antaro' },
+        lo: [['tower', 60, 0, 0, 'm', 'ovenMicro', { dsys: ['tbx_b', 'tbx_b'] }], ['tower', 60, 0, 0, 'm', 'storage'], ['drawers', 80, 0, 3, 'm', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_d'] }], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 80, 1, 0], ['drawers', 80, 0, 3, 'm', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_d'] }]],
+        up: [] },
+      // Камень и графит (фото ph-k3): три пенала, открытые полки, большой остров, LEGRABOX
+      { id: 'stone', seg: 'prem', photo: 'ph-k3', t: 'straight', f: 5, b: 5, c: 2, hw: 4, fcn: ['platinum', 'Камень'], bcn: ['platinum', 'Инокс Серый'], open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 2], isl: [1, 220, 100], dc: [0, 4, 1, 0],
+        kh: { hinge: 'std_soft', sinkbox: 'legrabox' },
+        lo: [['tower', 60, 0, 0, 'm', 'ovenMicro', { dsys: ['lbx_c', 'lbx_c'] }], ['tower', 60, 0, 0, 'm', 'storage'], ['fridge', 60, 0, 0, 'm', 'built'], ['drawers', 80, 0, 3, 'm', '', PR_LBX], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 80, 1, 0], ['drawers', 80, 0, 3, 'm', '', PR_LBX]],
+        up: [['open', 80, 2, 0], ['open', 80, 2, 0], ['hood', 80, 0, 1, 'm', '', { hx: { lift: 'hk_s' } }], ['open', 80, 2, 0]] },
       // Премиум: всё на Blum — петли BLUMOTION, ящики LEGRABOX, AVENTOS на всех верхних, ящик под мойку, SPACE TWIN; гола и подсветка
-      { id: 'prestige', seg: 'prem', t: 'l-shape', f: 7, b: 5, c: 3, hw: 4, fc: 'ac9', bc: 'pl5', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90], dc: [3, 3, 1, 1],
+      { id: 'prestige', seg: 'prem', photo: 'hero', t: 'l-shape', f: 7, b: 5, c: 3, hw: 4, fc: 'ac9', bc: 'pl5', open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 140, 90], dc: [3, 3, 1, 1],
         kh: { hinge: 'std_soft', lift: 'hk_top', sinkbox: 'legrabox', corner: 'space_c', sx: { twin_l: 1 } },
         lo: [['fridge', 60, 0, 0, 'l', 'built'], ['tower', 60, 0, 0, 'l', 'ovenMicro', { dsys: ['lbx_c', 'lbx_c'] }], ['drawers', 60, 0, 3, 'l', '', PR_LBX], ['corner', 100, 1, 0], ['sink', 60, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 60, 1, 0], ['drawers', 60, 0, 3, 'm', '', PR_LBX]],
         up: [['door', 60, 1, 1, 'l', '', PR_HK], ['door', 100, 1, 1, 'm', '', PR_HK], ['dryer', 60, 1, 1, 'm', '', { hx: { lift: 'hf_top' } }], ['door', 60, 1, 1, 'm', '', PR_HK], ['hood', 60, 0, 1, 'm', '', { hx: { lift: 'hk_s' } }], ['glass', 60, 0, 0]] }
@@ -4027,8 +4084,9 @@
       const conv = arr => arr.map(e => { const o = e[6] || {}; return [e[0], '', e[1], e[2], e[3], p.open, e[4] || 'm', e[5] || '', '', 0, '', (o.dsys || []).join(','), o.hx ? HX_FIELDS.map(f => o.hx[f] || '').join('|') : '']; });
       const sumWall = (arr, w) => arr.filter(e => (e[4] || 'm') === w).reduce((a, e) => a + e[1], 0);
       const main = sumWall(p.lo, 'm'), left = sumWall(p.lo, 'l'), right = sumWall(p.lo, 'r');
-      return { v: 5, dc: p.dc || [0, 0, 0, 0], t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: 1, ut: p.ut === 2 ? 2 : 1, uh: p.uh || 72, ud: 35,
-        f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: p.fc, bc: p.bc, lo: conv(p.lo), up: conv(p.up), o: p.o, i: p.isl || [0, 140, 80], kh: p.kh || null };
+      const byName = (a, d) => { if (!a) return d; const sec = colorCatalog.find(c => c.key === a[0]); const it = sec && sec.items.find(i => i.name === a[1]); return it ? it.id : d; };
+      return { v: 5, dc: p.dc || [0, 0, 0, 0], t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: p.u === 0 ? 0 : 1, ut: p.ut === 2 ? 2 : 1, uh: p.uh || 72, ud: 35,
+        f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: byName(p.fcn, p.fc), bc: byName(p.bcn, p.bc), lo: conv(p.lo), up: conv(p.up), o: p.o, i: p.isl || [0, 140, 80], kh: p.kh || null };
     }
 
     function ledFromArr(a) {
@@ -4055,7 +4113,7 @@
       el('presetsGrid').innerHTML = PRESETS.map(p => {
         const price = computePrice(stateToCalc(presetState(p)));
         return `<button type="button" class="preset-card ${activePresetId === p.id ? 'active' : ''}" onclick="applyPreset('${p.id}')">
-          <div class="preset-render"><span class="seg-badge seg-${p.seg}">${esc(t('seg_' + p.seg))}</span><svg class="render-svg" id="pr_${p.id}"></svg></div>
+          <div class="preset-render${p.photo ? ' has-photo' : ''}"${p.photo ? ' onmousemove="presetPeek(event, this)"' : ''}><span class="seg-badge seg-${p.seg}">${esc(t('seg_' + p.seg))}</span><svg class="render-svg" id="pr_${p.id}"></svg>${p.photo ? `<img class="preset-photo" src="/static/home/${p.photo}-640.webp" alt="${esc(t('p_' + p.id))}" loading="lazy" decoding="async"><span class="preset-ph-tag">${esc(t('phTag'))}</span><span class="preset-ph-btn" role="button" tabindex="0" aria-label="${esc(t('phTag'))}" onclick="presetTogglePhoto(event, this)">📷</span>` : ''}</div>
           <div class="preset-body">
             <div class="preset-name">${esc(t('p_' + p.id))}</div>
             <div class="preset-desc">${esc(t('p_' + p.id + '_d'))}</div>
@@ -4066,6 +4124,10 @@
       PRESETS.forEach(p => renderKitchen(el('pr_' + p.id), renderStateFrom(stateToCalc(presetState(p)))));
     }
 
+    // точка, от которой раскрывается фото, — там, где курсор
+    function presetPeek(e, box) { const r = box.getBoundingClientRect(); box.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%'); box.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%'); }
+    // на телефоне наведения нет — фото открывается кнопкой 📷 (без выбора варианта)
+    function presetTogglePhoto(e, btn) { e.stopPropagation(); e.preventDefault(); btn.closest('.preset-render').classList.toggle('show-photo'); }
     function applyPreset(id) {
       const p = PRESETS.find(x => x.id === id);
       if (!p) return;

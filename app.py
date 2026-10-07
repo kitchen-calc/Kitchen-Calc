@@ -137,7 +137,7 @@ def render_shkaf(lang):
         page = page.replace('<html lang="ru">', '<html lang="uz">', 1)
         page = page.replace("<!--LANGHEAD-->", f'<link rel="canonical" href="{SITE_URL}/uz/shkaf">' + hre, 1)
         page = page.replace("<!--LANGLINK-->", '<a class="lk" id="langLink" href="/shkaf">RU</a>', 1)
-        page = page.replace("<!--LANGSCRIPT-->", '<script>window.KC_LANG="uz";</script>\n<script src="/static/js/shkaf-uz.js?v=8"></script>', 1)
+        page = page.replace("<!--LANGSCRIPT-->", '<script>window.KC_LANG="uz";</script>\n<script src="/static/js/shkaf-uz.js?v=9"></script>', 1)
         page = page.replace('href="/">← Главная', 'href="/uz">← Главная', 1)
         page = re.sub(r"<title>.*?</title>", f"<title>{SHKAF_UZ_TITLE}</title>", page, count=1, flags=re.S)
         page = re.sub(r'(<meta name="description" content=")[^"]*(")', lambda m: m.group(1) + SHKAF_UZ_DESC + m.group(2), page, count=1)
