@@ -96,9 +96,19 @@
 
     /* ---------- первый экран ---------- */
     .hero { position: relative; min-height: 100vh; min-height: 100svh; display: flex; align-items: center; overflow: hidden; }
-    .hero-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 72% center; }
+    .hero-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 72% center; animation: heroZoom 20s ease-in-out infinite alternate; }
+    @keyframes heroZoom { from { transform: scale(1); } to { transform: scale(1.07); } }
+    @media (prefers-reduced-motion: reduce) { .hero-photo { animation: none; } }
+    /* премиальные детали первого экрана */
+    .hero .wrap > div { border-left: 1px solid rgba(200,164,107,.35); padding-left: 34px; }
+    .hero-brands { margin-top: 30px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; font-size: .72rem; letter-spacing: .22em; text-transform: uppercase; color: #a89a84; }
+    .hero-brands b { font-family: var(--serif); font-size: 1.05rem; letter-spacing: .14em; color: #e6d3a6; font-weight: 600; }
+    .hero-side { position: absolute; z-index: 2; right: 28px; top: 50%; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-size: .7rem; letter-spacing: .42em; text-transform: uppercase; color: rgba(230,211,166,.55); }
+    .hero-side::before, .hero-side::after { content: ''; display: inline-block; width: 1px; height: 46px; background: rgba(200,164,107,.45); margin: 14px auto; }
+    .hero-cta .btn-gold { box-shadow: 0 14px 34px rgba(200,164,107,.28); }
+    @media (max-width: 900px) { .hero .wrap > div { border-left: 0; padding-left: 0; } .hero-side { display: none; } }
     .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(17,16,14,.92) 0%, rgba(17,16,14,.78) 34%, rgba(17,16,14,.4) 56%, rgba(17,16,14,.08) 78%, rgba(17,16,14,0) 100%), linear-gradient(180deg, rgba(17,16,14,.5) 0%, rgba(17,16,14,0) 26%, rgba(17,16,14,0) 64%, var(--bg) 100%); }
-    .hero .wrap { position: relative; z-index: 2; padding-top: 120px; padding-bottom: 90px; }
+    .hero .wrap { position: relative; z-index: 2; padding-top: 120px; padding-bottom: 90px; width: 100%; }   /* на всю ширину — текст у левого края, а не по центру */
     .hero .wrap > div { max-width: 640px; }
     .eyebrow { font: 700 .76rem var(--sans); letter-spacing: .22em; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 14px; }
     .eyebrow::before { content: ''; width: 40px; height: 1px; background: var(--gold); }
@@ -403,8 +413,10 @@
             <a class="btn btn-line" href="#kitchens" data-t="ctaWorks">Смотреть кухни</a>
           </div>
           <div class="hero-types"><span data-t="typeStraight">Прямые</span><i>|</i><span data-t="typeCorner">Угловые</span><i>|</i><span data-t="typeU">П-образные</span><i>|</i><span data-t="typeIsland">С островом</span></div>
+          <div class="hero-brands"><span data-t="heroBrands">Фурнитура</span><b>Blum</b><b>Hettich</b><b>Vauth-Sagel</b><b>GTV</b></div>
         </div>
       </div>
+      <div class="hero-side" aria-hidden="true">Kitchen Calc · Tashkent</div>
       <div class="scroll-hint" data-t="scroll">Листайте</div>
     </section>
 
@@ -663,7 +675,7 @@
         ctaCalcShort: 'Рассчитать', heroEyebrow: 'На заказ · Ташкент', heroTitle: 'Кухни и корпусная мебель <em>под ключ</em>',
         heroLead: 'Делаем кухни и корпусную мебель под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену кухни можно узнать онлайн за 2 минуты.',
         ctaCalc: 'Рассчитать стоимость', ctaWorks: 'Смотреть кухни',
-        typeStraight: 'Прямые', typeCorner: 'Угловые', typeU: 'П-образные', typeIsland: 'С островом',
+        heroBrands: 'Фурнитура', typeStraight: 'Прямые', typeCorner: 'Угловые', typeU: 'П-образные', typeIsland: 'С островом',
         heroTagSmall: 'Кухня под ключ', heroTag: 'замер · производство · монтаж', scroll: 'Листайте',
         fact1: 'рабочих дней на изготовление', fact2b: '12 мес.', fact2: 'гарантия по договору', fact3b: '0 сум', fact3: 'замер и консультация', fact4: 'декоров ЛДСП, ЛМДФ и акрила',
         segAll: 'Все', segEcon: 'Эконом', segMid: 'Стандарт', segPrem: 'Премиум',
@@ -718,7 +730,7 @@
         ctaCalcShort: 'Hisoblash', heroEyebrow: 'Buyurtma asosida · Toshkent', heroTitle: 'Oshxona va korpusli mebel <em>kalit topshirish</em> asosida',
         heroLead: 'Oshxona va korpusli mebelni oʻlchamlaringiz boʻyicha tayyorlaymiz: bepul oʻlchov, oʻz ishlab chiqarishimiz, yetkazish va oʻrnatish. Oshxona narxini 2 daqiqada onlayn bilib oling.',
         ctaCalc: 'Narxni hisoblash', ctaWorks: 'Oshxonalarni koʻrish',
-        typeStraight: 'Toʻgʻri', typeCorner: 'Burchakli', typeU: 'P-shaklida', typeIsland: 'Orolli',
+        heroBrands: 'Furnitura', typeStraight: 'Toʻgʻri', typeCorner: 'Burchakli', typeU: 'P-shaklida', typeIsland: 'Orolli',
         heroTagSmall: 'Kalit topshirish', heroTag: 'oʻlchov · ishlab chiqarish · oʻrnatish', scroll: 'Pastga',
         fact1: 'ish kunida tayyor', fact2b: '12 oy', fact2: 'shartnoma boʻyicha kafolat', fact3b: '0 soʻm', fact3: 'oʻlchov va maslahat', fact4: 'LDSP, LMDF va akril dekorlari',
         segAll: 'Hammasi', segEcon: 'Ekonom', segMid: 'Standart', segPrem: 'Premium',
