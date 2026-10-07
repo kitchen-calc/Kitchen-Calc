@@ -23,8 +23,8 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script src="/static/js/kis-data.js?v=3"></script>
-  <script src="/static/js/kis-art.js?v=1"></script>
+  <script src="/static/js/kis-data.js?v=4"></script>
+  <script src="/static/js/kis-art.js?v=2"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
   <script src="/static/js/shkaf-uz.js?v=9"></script>
   <style>
@@ -848,6 +848,37 @@
     /* 3D-окно — в золотой раме */
     .k3d-box { border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(184, 134, 43, 0.35); }
     .r3-tab.on { background: linear-gradient(135deg, #f0cf7f, #c8952f) !important; color: #1b1409 !important; }
+    /* --- конструктор: большое 3D и параметры сбоку --- */
+    .studio { padding: 14px !important; margin-bottom: 22px; }
+    .studio-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .studio-body { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 12px; align-items: start; }
+    .studio .k3d-box { height: 640px; border-radius: 14px; }
+    .studio .k3d-edit { display: none !important; }
+    .k3d-side { background: #17130d; color: #f3ead7; border: 1px solid rgba(217,154,28,.45); border-radius: 14px; padding: 12px 12px 14px; height: 640px; overflow: auto; font-size: .82rem; }
+    .k3d-side .k3s-h { font-family: 'Playfair Display', Georgia, serif; color: #f6dc9a; font-size: 1.1rem; margin: 0 0 4px; }
+    .k3d-side .k3s-sub { margin: 14px 0 6px; font-size: .68rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: #e9b44c; }
+    .k3d-side .k3s-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .k3d-side button { background: rgba(255,255,255,.07); color: #fff4dc; border: 1px solid rgba(255,226,154,.28); border-radius: 8px; padding: 6px 8px; font-size: .76rem; cursor: pointer; font-family: inherit; text-align: left; line-height: 1.25; }
+    .k3d-side button.on, .k3d-side button:hover { background: #b07d12; border-color: #e9b44c; color: #fff; }
+    .k3d-side .k3e-r { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin: 6px 0; }
+    .k3d-side .k3e-r > span { color: #bda673; min-width: 86px; }
+    .k3d-side select { background: #1d1912; color: #fff4dc; border: 1px solid rgba(255,226,154,.35); border-radius: 7px; padding: 4px 6px; font-size: .76rem; max-width: 100%; }
+    .k3d-side input[type=number] { width: 64px; background: #1d1912 !important; color: #fff4dc !important; border: 1px solid rgba(255,226,154,.35) !important; border-radius: 7px; padding: 4px 6px; font-size: .78rem; }
+    .k3d-side .k3s-step { display: inline-flex; align-items: center; gap: 4px; }
+    .k3d-side .k3s-step b { min-width: 34px; text-align: center; color: #fff; }
+    .k3d-side .k3s-note { color: #bda673; font-size: .74rem; margin: 4px 0 2px; line-height: 1.35; }
+    .k3d-side .k3e-t { font-weight: 800; color: #f6dc9a; margin-bottom: 4px; }
+    .k3d-side .k3e-sub { color: #e9b44c; }
+    .k3d-bar button.on { background: #b07d12; color: #fff; }
+    .studio.k3d-full { position: fixed !important; inset: 0; z-index: 1200; margin: 0; border-radius: 0 !important; overflow: auto; height: 100vh !important; }
+    .studio.k3d-full .k3d-box, .studio.k3d-full .k3d-side { height: calc(100vh - 92px); }
+    @media (max-width: 960px) {
+      .studio-body { grid-template-columns: minmax(0, 1fr); }
+      .studio .k3d-box { height: 440px !important; display: block !important; }
+      .studio .k3d-canvas { position: absolute !important; inset: 0 !important; height: auto !important; }
+      .k3d-side { height: auto; max-height: none; }
+      .studio.k3d-full .k3d-box { height: 60vh !important; }
+    }
       .k3e-sub { margin: 8px 0 4px; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #e9b44c; }
     .k3e-r select { max-width: min(340px, 100%); }
   </style>
@@ -913,13 +944,14 @@
 
     <!-- КАЛЬКУЛЯТОР -->
     <section class="section" id="calc">
-      <div class="app-layout">
-
-        <!-- ЛЕВАЯ ПАНЕЛЬ: ВИЗУАЛИЗАЦИЯ И ЦЕНА -->
-        <div class="sticky-sidebar">
-          <div class="card render-card">
-            <div class="drawing-title"><span data-i18n="yourKitchen">Ваша кухня</span></div>
-            <div class="r3-tabs" id="r3Tabs"><button type="button" class="r3-tab on" id="k3dTab" onclick="setRenderMode('3d')">3D</button><button type="button" class="r3-tab" onclick="setRenderMode('2d')" data-i18n="r3Scheme">Схема</button></div>
+      <!-- КОНСТРУКТОР: большое 3D + параметры выбранного шкафа сбоку -->
+      <div class="card studio" id="studio">
+        <div class="studio-head">
+          <div class="drawing-title" style="margin:0"><span data-i18n="yourKitchen">Ваша кухня</span></div>
+          <div class="r3-tabs" id="r3Tabs" style="margin:0"><button type="button" class="r3-tab on" id="k3dTab" onclick="setRenderMode('3d')">3D</button><button type="button" class="r3-tab" onclick="setRenderMode('2d')" data-i18n="r3Scheme">Схема</button></div>
+        </div>
+        <div class="studio-body">
+          <div class="studio-view">
             <div class="render-box k3d-box" id="k3dBox">
               <div class="k3d-canvas" id="k3dCanvas"></div>
               <div class="k3d-load" id="k3dLoad" data-i18n="r3Loading">Загрузка 3D…</div>
@@ -927,9 +959,16 @@
               <div class="k3d-edit" id="k3dEdit"></div>
             </div>
             <div class="render-box" id="k2dBox" style="display:none"><svg id="kitchenRender" class="render-svg"></svg></div>
-            <div class="render-note" data-i18n="renderNote">Визуализация условная, точный проект — после замера</div>
           </div>
+          <aside class="k3d-side" id="k3dSide"></aside>
+        </div>
+        <div class="render-note" data-i18n="renderNote">Визуализация условная, точный проект — после замера</div>
+      </div>
 
+      <div class="app-layout">
+
+        <!-- ЛЕВАЯ ПАНЕЛЬ: ВИЗУАЛИЗАЦИЯ И ЦЕНА -->
+        <div class="sticky-sidebar">
           <div class="price-box">
             <div class="price-title" data-i18n="priceTitle">Ориентировочная стоимость</div>
             <div class="price-value"><span id="totalPriceDisplay">0</span> <span class="price-currency" data-i18n="sum">сум</span></div>
@@ -958,40 +997,10 @@
           <!-- 1. ФОРМА -->
           <div class="card">
             <div class="section-title"><span class="step-badge">1</span><span data-i18n="step1">Какая у вас кухня?</span></div>
-            <div class="type-grid">
-              <button type="button" class="type-btn active" data-type="straight" onclick="setKitchenType('straight')">
-                <svg viewBox="0 0 40 28"><rect x="4" y="4" width="32" height="8" rx="1"/></svg>
-                <span data-i18n="typeStraight">Прямая</span>
-              </button>
-              <button type="button" class="type-btn" data-type="l-shape" onclick="setKitchenType('l-shape')">
-                <svg viewBox="0 0 40 28"><path d="M4 4h32v8H12v12H4z"/></svg>
-                <span data-i18n="typeL">Угловая (Г)</span>
-              </button>
-              <button type="button" class="type-btn" data-type="u-shape" onclick="setKitchenType('u-shape')">
-                <svg viewBox="0 0 40 28"><path d="M4 4h32v20h-8V12H12v12H4z"/></svg>
-                <span data-i18n="typeU">П-образная</span>
-              </button>
-              <button type="button" class="type-btn" data-type="parallel" onclick="setKitchenType('parallel')">
-                <svg viewBox="0 0 40 28"><rect x="4" y="3" width="32" height="7" rx="1"/><rect x="4" y="18" width="32" height="7" rx="1"/></svg>
-                <span data-i18n="typeP">Параллельная (I I)</span>
-              </button>
-              <label class="type-btn island-toggle" id="islandToggle">
-                <input type="checkbox" id="hasIsland" onchange="toggleIslandOptions()">
-                <svg viewBox="0 0 40 28"><rect x="10" y="9" width="20" height="10" rx="1"/><path d="M20 3v3M20 22v3" stroke-dasharray="2,2"/></svg>
-                <span><span class="island-check">＋</span> <span data-i18n="typeIsland">Остров</span></span>
-              </label>
-            </div>
-            <div id="islandOptions" class="sub-options island-box" style="display:none;">
-              <div class="inputs-grid">
-                <div class="field-group">
-                  <label data-i18n="islandLength">Длина острова, см</label>
-                  <input type="number" id="islandLength" value="140" min="80" max="300" oninput="updateCalculator()">
-                </div>
-                <div class="field-group">
-                  <label data-i18n="islandWidth">Ширина острова, см</label>
-                  <input type="number" id="islandWidth" value="80" min="50" max="150" oninput="updateCalculator()">
-                </div>
-              </div>
+            <!-- форма кухни и остров теперь задаются в 3D; поля оставлены скрытыми для расчёта -->
+            <div style="display:none">
+              <label class="type-btn island-toggle" id="islandToggle"><input type="checkbox" id="hasIsland" onchange="toggleIslandOptions()"><span class="island-check">＋</span></label>
+              <div id="islandOptions"><input type="number" id="islandLength" value="140" min="80" max="300" oninput="updateCalculator()"><input type="number" id="islandWidth" value="80" min="50" max="150" oninput="updateCalculator()"></div>
             </div>
             <div class="inputs-grid">
               <div class="field-group">
@@ -1002,20 +1011,25 @@
                 <label data-i18n="ceiling">Высота потолка, см</label>
                 <input type="number" id="totalHeight" value="240" min="150" max="320" oninput="updateCalculator()">
               </div>
+              <div class="field-group">
+                <label>Высота столешницы от пола, см</label>
+                <input type="number" id="counterHeight" value="89" min="75" max="105" onchange="this.value = Math.max(75, Math.min(105, parseFloat(this.value) || 89)); updateCalculator()">
+              </div>
+              <input type="hidden" id="upperGap" value="56">
             </div>
             <div class="wall-hint" data-i18n="wallHint">Шкафы по 60 см подставятся сами — ширину любого можно поменять в шаге 3.</div>
             <div class="ms-open-box">
               <button type="button" class="ms-open-btn" onclick="openMeasure()" data-i18n="msOpen">📏 Есть замер? Впишите размеры по листу замера</button>
               <div class="ms-open-hint" data-i18n="msOpenHint">Мастер на объекте или вы сами: размеры подставятся в калькулятор, цена пересчитается.</div>
             </div>
-            <div id="sideWallsContainer" class="inputs-grid" style="display:none;">
+            <div id="sideWallsContainer" class="inputs-grid">
               <div class="field-group" id="groupLeftWall">
                 <label data-i18n="leftWall">Левая стена, см</label>
-                <input type="number" id="leftWall" value="120" min="60" max="600" onchange="onWallInputManual('leftWall')">
+                <input type="number" id="leftWall" value="120" min="0" max="600" onchange="onWallInputManual('leftWall')">
               </div>
               <div class="field-group" id="groupRightWall">
                 <label data-i18n="rightWall">Правая стена, см</label>
-                <input type="number" id="rightWall" value="120" min="60" max="600" onchange="onWallInputManual('rightWall')">
+                <input type="number" id="rightWall" value="120" min="0" max="600" onchange="onWallInputManual('rightWall')">
               </div>
             </div>
           </div>
@@ -1064,8 +1078,8 @@
             <div class="hw-note" data-i18n="logisticsNote">В цену входят ввоз и доставка материалов, доставка готовой кухни по Ташкенту и монтаж.</div>
           </div>
 
-          <!-- 3. ШКАФЫ -->
-          <div class="card">
+          <!-- 3. ШКАФЫ — теперь в 3D-конструкторе (раздел скрыт, нужен для расчёта) -->
+          <div class="card" style="display:none">
             <div class="section-title"><span class="step-badge">3</span><span data-i18n="step3">Шкафы</span></div>
             <div class="pl-hint" data-i18n="plHint">Расставьте кухню сами: нажмите «Добавить» и выберите шкаф или технику, перетащите карточку на другое место или на другую стену. Нажмите на карточку — появятся размеры и настройки.</div>
             <div class="toggle-box" style="margin-top:0;">
@@ -1098,8 +1112,8 @@
             </div>
           </div>
 
-          <!-- 4. ДОПОЛНИТЕЛЬНО -->
-          <div class="card">
+          <!-- 4. ДОПОЛНИТЕЛЬНО — вырезы и установка техники считаются сами, подсветка — в 3D (раздел скрыт) -->
+          <div class="card" style="display:none">
             <div class="section-title"><span class="step-badge">4</span><span data-i18n="step4">Дополнительно</span></div>
             <div class="options-grid">
               <label class="option-chip"><input type="checkbox" id="optSinkCut" onchange="updateCalculator()"><span data-i18n="optSink">Вырез под мойку</span></label>
@@ -1114,7 +1128,7 @@
 
           <!-- 5. КОНТАКТЫ -->
           <div class="card">
-            <div class="section-title"><span class="step-badge">5</span><span data-i18n="step5">Ваши контакты</span></div>
+            <div class="section-title"><span class="step-badge">3</span><span data-i18n="step5">Ваши контакты</span></div>
             <div class="inputs-grid">
               <div class="field-group">
                 <label data-i18n="yourName">Ваше имя</label>
@@ -1457,8 +1471,8 @@
         shareTg: 'Отправить в Telegram', shareCopy: 'Скопировать ссылку', shareCopied: 'Ссылка скопирована!', shareCopyFail: 'Не удалось скопировать — выделите адрес страницы вручную.',
         shareHint: 'Покажите кухню семье — ссылка откроет именно этот расчёт.', shareText: 'Посмотри, какую кухню я собрал(а):',
         techDrawings: 'Технические чертежи',
-        step1: 'Какая у вас кухня?', typeIsland: 'Остров', islandHint: 'Можно добавить к любой форме кухни', typeStraight: 'Прямая', typeL: 'Угловая (Г)', typeU: 'П-образная', typeP: 'Параллельная (I I)',
-        mainWall: 'Длина основной стены, см', wallHint: 'Шкафы по 60 см подставятся сами — ширину любого можно поменять в шаге 3.', ceiling: 'Высота потолка, см', leftWall: 'Левая стена, см', rightWall: 'Правая стена, см',
+        step1: 'Какая у вас кухня — размеры помещения', typeIsland: 'Остров', islandHint: 'Можно добавить к любой форме кухни', typeStraight: 'Прямая', typeL: 'Угловая (Г)', typeU: 'П-образная', typeP: 'Параллельная (I I)',
+        mainWall: 'Длина основной стены, см', wallHint: 'Это границы комнаты: в 3D шкафы за них не выйдут. Боковая стена 0 — стены нет. Шкафы и технику добавляйте и двигайте в 3D выше.', ceiling: 'Высота потолка, см', leftWall: 'Левая стена, см', rightWall: 'Правая стена, см',
         step2: 'Материалы и цвет', tiersTitle: 'Сравните варианты для ваших размеров',
         tier_econ: 'Эконом', tier_std: 'Стандарт', tier_prem: 'Премиум',
         tierDesc_econ: 'ЛДСП Эконом, столешница 28 мм, фурнитура эконом', tierDesc_std: 'ЛМДФ Премиум, корпус ЛДСП Премиум, столешница 38 мм, GTV/Hettich', tierDesc_prem: 'Акрил Турция, корпус ЛМДФ Платинум, искусственный камень, Blum',
@@ -1587,8 +1601,8 @@
         shareTg: 'Telegramda yuborish', shareCopy: 'Havolani nusxalash', shareCopied: 'Havola nusxalandi!', shareCopyFail: 'Nusxalab boʻlmadi — sahifa manzilini qoʻlda belgilang.',
         shareHint: 'Oshxonani oilangizga koʻrsating — havola aynan shu hisobni ochadi.', shareText: 'Qara, qanday oshxona yigʻdim:',
         techDrawings: 'Texnik chizmalar',
-        step1: 'Oshxonangiz qanday?', typeIsland: 'Orol', islandHint: 'Istalgan shakldagi oshxonaga qoʻshish mumkin', typeStraight: 'Toʻgʻri', typeL: 'Burchakli (G)', typeU: 'P-shaklida', typeP: 'Parallel (I I)',
-        mainWall: 'Asosiy devor uzunligi, sm', wallHint: '60 sm lik shkaflar avtomatik qoʻyiladi — istalganining kengligini 3-qadamda oʻzgartirish mumkin.', ceiling: 'Shift balandligi, sm', leftWall: 'Chap devor, sm', rightWall: 'Oʻng devor, sm',
+        step1: 'Oshxonangiz — xona oʻlchamlari', typeIsland: 'Orol', islandHint: 'Istalgan shakldagi oshxonaga qoʻshish mumkin', typeStraight: 'Toʻgʻri', typeL: 'Burchakli (G)', typeU: 'P-shaklida', typeP: 'Parallel (I I)',
+        mainWall: 'Asosiy devor uzunligi, sm', wallHint: 'Bu xona chegaralari: 3D da shkaflar ulardan chiqmaydi. Yon devor 0 — devor yoʻq. Shkaf va texnikani yuqoridagi 3D da qoʻshing va suring.', ceiling: 'Shift balandligi, sm', leftWall: 'Chap devor, sm', rightWall: 'Oʻng devor, sm',
         step2: 'Materiallar va rang', tiersTitle: 'Oʻlchamlaringiz uchun variantlarni solishtiring',
         tier_econ: 'Ekonom', tier_std: 'Standart', tier_prem: 'Premium',
         tierDesc_econ: 'LDSP Ekonom, 28 mm stoleshnitsa, ekonom furnitura', tierDesc_std: 'LMDF Premium, LDSP Premium korpus, 38 mm stoleshnitsa, GTV/Hettich', tierDesc_prem: 'Akril (Turkiya), LMDF Platinum korpus, sunʼiy tosh, Blum',
@@ -1804,8 +1818,9 @@
       if (sec.kind === 'oven') return [{ k: 'oven' }];
       if (sec.kind === 'dishwasher') return [{ k: 'dishwasher' }];
       if (sec.kind === 'washer') return [{ k: 'washer' }];
-      if (sec.kind === 'hob') return [{ k: 'hobpanel' }];
-      return [];
+      const top = sec.mwTop ? [{ k: 'micro', top: true }] : [];
+      if (sec.kind === 'hob') return [{ k: 'hobpanel' }].concat(top);
+      return top;
     }
 
     // Раскладка одной стены в координатах «от угла» (основная стена — слева направо).
@@ -1991,7 +2006,7 @@
         return;
       }
       const hA = tier === 'lower' ? yt + 7 : yb - 20, hB = tier === 'lower' ? yt + 20 : yb - 7;
-      if (w >= 45) {
+      if (twoDoors(sec, w)) {
         L(uc, yt + 0.5, uc, yb - 0.5, edge, 1);
         if (open === 'handles') { L(uc - 3.5, hA, uc - 3.5, hB, handle, hs.w); L(uc + 3.5, hA, uc + 3.5, hB, handle, hs.w); }
       } else if (open === 'handles') {
@@ -2073,8 +2088,8 @@
     function techGeometry() {
       const s = getCalcState();
       const top = CONFIG.countertops[s.top];
-      const CT = top.thick || 3.8;
-      return { s, topCol: top.color, CT, PL: 10, BOX: 85, TOPY: 85 + CT, UB: 145, UH: s.upperH, TIERS: s.upperTiers === 2 ? 2 : 1, UT: 145 + s.upperH * (s.upperTiers === 2 ? 2 : 1), TT: tallTopOf(s.roomH) };
+      const CT = top.thick || 3.8, TOPY = s.counterH, UGAP = s.upperGap, UB = TOPY + UGAP;
+      return { s, topCol: top.color, CT, PL: 10, BOX: TOPY - CT, TOPY, UGAP, UB, UH: s.upperH, TIERS: s.upperTiers === 2 ? 2 : 1, UT: UB + s.upperH * (s.upperTiers === 2 ? 2 : 1), TT: tallTopOf(s.roomH) };
     }
 
     // Подвесной светильник в чертеже (вид спереди), x — центр, yCeil и yBot — см от пола
@@ -2126,8 +2141,9 @@
         let hob = null;
         g.L.upper.forEach(r => {
           const x0 = xOf(g, r), w = r.u1 - r.u0;
-          techFront(b, x0, x0 + w, Y(G.UB + G.UH), Y(G.UB), r.sec, 'upper', facade, fs);
-          if (G.TIERS === 2) techFront(b, x0, x0 + w, Y(G.UT), Y(G.UB + G.UH), { kind: 'door', width: r.sec.width, openType: r.sec.openType, shelves: 1, gasLifts: 0 }, 'upper', facade, fs);
+          const ub = upperBottom(r.sec, G);
+          techFront(b, x0, x0 + w, Y(ub + G.UH), Y(ub), r.sec, 'upper', facade, fs);
+          if (G.TIERS === 2) techFront(b, x0, x0 + w, Y(ub + 2 * G.UH), Y(ub + G.UH), { kind: 'door', width: r.sec.width, openType: r.sec.openType, shelves: 1, gasLifts: 0 }, 'upper', facade, fs);
           if (w >= 14) techLabel(b, x0 + w / 2, Y(G.UT) + 2, `В-${r.sec.id}`, fs, '#38bdf8');
         });
         // нижние шкафы и высокие модули
@@ -2462,7 +2478,7 @@
     }
 
     /* ===================== ФУРНИТУРА НА ВЫБОР (каталог kis.uz) ===================== */
-    const defaultKHW = () => ({ hinge: 'tier', handle: 'tier', tipon: 'tier', lift: 'tier', corner: 'none', sinkbox: 'none',
+    const defaultKHW = () => ({ hinge: 'tier', handle: 'tier', tipon: 'tier', lift: 'tier', corner: 'none', sinkbox: 'none', dryer: 'inoxa_702', tray: 'none', bin: 'none',
       cx: { cromat: 0, sub150: 0, sub200: 0, sub300: 0, quadro: 0 }, sx: { twin_a: 0, twin_l: 0, tower_a: 0, tower_l: 0, bottle: 0 } });
     let KHW = defaultKHW();
     // карго и бутылочница — отдельные узкие шкафы (вид «cargo», наполнение sec.cg)
@@ -2472,13 +2488,15 @@
     function cargoName(k) { const it = cargoItem(k); const n = it ? it.ru : k; return LANG === 'uz' && window.kcTr ? window.kcTr(n) : n; }
     function cargoCounts() { const c = {}; CARGO_KEYS.forEach(k => { c[k] = 0; }); lowerSections.forEach(x => { if (x.kind === 'cargo' && c[x.cg] !== undefined) c[x.cg]++; }); return c; }
     // своя фурнитура у шкафа (sec.hx); чего нет — берётся общая для всей кухни
-    const HX_FIELDS = ['hinge', 'handle', 'tipon', 'lift', 'corner'];
+    const HX_FIELDS = ['hinge', 'handle', 'tipon', 'lift', 'corner', 'dryer', 'tray', 'bin'];
+    const HX_DEF = { corner: 'none', dryer: 'inoxa_702', tray: 'none', bin: 'none' };
     const HANDLE_KEYS = ['tier', 'handle_eco', 'handle_std', 'handle_design'], TIPON_KEYS = ['tier', 'tipon_s', 'tipon_l'];
-    function effHw(x, K) { K = K || KHW; const o = (x && x.hx) || {}, r = {}; HX_FIELDS.forEach(f => { r[f] = o[f] !== undefined ? o[f] : (K[f] || (f === 'corner' ? 'none' : 'tier')); }); return r; }
+    function effHw(x, K) { K = K || KHW; const o = (x && x.hx) || {}, r = {}; HX_FIELDS.forEach(f => { r[f] = o[f] !== undefined ? o[f] : (K[f] || HX_DEF[f] || 'tier'); }); return r; }
     function cleanHx(o) {
       if (!o || typeof o !== 'object') return null;
       const ok = { hinge: v => v === 'tier' || !!KIS.hinges[v], handle: v => HANDLE_KEYS.indexOf(v) >= 0, tipon: v => TIPON_KEYS.indexOf(v) >= 0,
-        lift: v => v === 'tier' || !!KIS.liftsK[v], corner: v => v === 'none' || !!KIS.corner[v] };
+        lift: v => v === 'tier' || !!KIS.liftsK[v], corner: v => v === 'none' || !!KIS.corner[v],
+        dryer: v => !!KIS.dryer[v], tray: v => !!KIS.tray[v], bin: v => !!KIS.bin[v] };
       const r = {}; HX_FIELDS.forEach(f => { if (typeof o[f] === 'string' && ok[f](o[f])) r[f] = o[f]; });
       return Object.keys(r).length ? r : null;
     }
@@ -2497,6 +2515,7 @@
       D.lift = pick('liftsK', o.lift, 'tier');
       D.corner = pick('corner', o.corner, 'none');
       D.sinkbox = pick('sinkbox', o.sinkbox, 'none');
+      D.dryer = pick('dryer', o.dryer, 'inoxa_702'); D.tray = pick('tray', o.tray, 'none'); D.bin = pick('bin', o.bin, 'none');
       [['cx', 'cargo'], ['sx', 'space']].forEach(([f, g]) => Object.keys(D[f]).forEach(k => { const n = o[f] && Number(o[f][k]); D[f][k] = Number.isFinite(n) ? Math.max(0, Math.min(8, n | 0)) : 0; }));
       return D;
     }
@@ -2521,6 +2540,9 @@
         { field: 'lift', grp: 'liftsK', value: KHW.lift, icon: k => k === 'tier' ? 'lift' : (/^hf/.test(k) ? 'lifthf' : 'lift'), per: 'фасад', title: 'Подъёмные механизмы верхних шкафов', hint: 'Для верхних шкафов с подъёмом фасада (сушилка, вытяжка, настройка «газлифты» у шкафа).' },
         (corners || lowerSections.some(x => x.kind === 'corner')) ? { field: 'corner', grp: 'corner', value: KHW.corner, icon: 'corner', per: 'угол', title: 'Угловой механизм', hint: (s.type === 'u-shape' ? 'П-образная кухня: 2 угла.' : 'Г-образная кухня: 1 угол.') } : null,
         hasSink ? { field: 'sinkbox', grp: 'sinkbox', value: KHW.sinkbox, icon: 'sinkbox', per: 'шт.', title: 'Ящик под мойку', hint: 'Вместо дверок под мойкой — глубокий ящик Blum (на чертеже шкаф с мойкой станет с ящиком).' } : null,
+        { field: 'dryer', grp: 'dryer', value: KHW.dryer, icon: 'lift', per: 'шт.', title: 'Сушилки для посуды', hint: 'В шкафы-сушки над мойкой. Отдельному шкафу — в 3D: нажмите на него.' },
+        { field: 'tray', grp: 'tray', value: KHW.tray, icon: 'drawer', per: 'шт.', title: 'Лотки для столовых приборов', hint: 'В верхний ящик каждого шкафа с ящиками.' },
+        hasSink ? { field: 'bin', grp: 'bin', value: KHW.bin, icon: 'sinkbox', per: 'шт.', title: 'Мусорные вёдра под мойку', hint: 'Выдвижные вёдра и сортировка отходов.' } : null,
         { field: 'cx', grp: 'cargo', keys: ['cromat', 'sub150', 'sub200', 'sub300', 'quadro'], counts: cc, icon: 'cargo', title: 'Карго — узкие выдвижные шкафы', hint: '«＋» добавляет в кухню отдельный узкий шкаф с карго (15–30 см) — он появится в 3D и на чертежах, его можно перетащить.' },
         { field: 'sx', grp: 'space', keys: ['twin_a', 'twin_l', 'tower_a', 'tower_l', 'bottle'], counts: Object.assign({}, KHW.sx, { bottle: cc.bottle }), icon: k => k === 'bottle' ? 'drawer' : 'space', title: 'Внутренние конструкции Blum', hint: 'SPACE TWIN и SPACE TOWER — внутрь шкафов. Бутылочница добавляется отдельным шкафом 15 см.' }
       ].filter(Boolean);
@@ -2576,8 +2598,9 @@
       const hasUpper = s.hasUpper && upperSections.length > 0;
       const LAY = layoutAll(lowerSections, hasUpper ? upperSections : [], currentType);
       const def = defaultDsys(s);
-      return { type: currentType, W: Math.max(60, LAY.main.total, currentType === 'parallel' ? LAY.right.total : 0), aisle: PAR_AISLE, hwOf: sec => effHw(sec), LD: 60, UD: s.upperD, UB: 145, UH: s.upperH, tiers: s.upperTiers === 2 ? 2 : 1,
-        TT: G.TT, CT: G.CT, PL: 10, BOX: 85, roomH: Math.max(G.TT + 10, s.roomH || 260), FRIDGE_H, hasUpper, runs: LAY,
+      const room = { main: roomCap('main'), left: parseFloat(el('leftWall').value) || 0, right: parseFloat(el('rightWall').value) || 0 };
+      return { type: currentType, W: Math.max(60, room.main, LAY.main.total), room, aisle: PAR_AISLE, hwOf: sec => effHw(sec), LD: 60, UD: s.upperD, UB: G.UB, UH: s.upperH, tiers: s.upperTiers === 2 ? 2 : 1,
+        TT: G.TT, CT: G.CT, PL: 10, BOX: G.BOX, UGAP: G.UGAP, roomH: Math.max(G.TT + 10, s.roomH || 260), FRIDGE_H, hasUpper, runs: LAY,
         colors: { facade: { hex: selectedFacadeColor.hex, img: selectedFacadeColor.img }, body: { hex: selectedBodyColor.hex, img: selectedBodyColor.img }, top: { hex: CONFIG.countertops[s.top].color } },
         hw: Object.assign({}, KHW), led: Object.assign({}, ledState), decor: decorClean(decorState),
         island: s.island ? { L: s.islL, W: s.islW } : null, selected: k3dSelKey(), drawerVis: drawerVisMap(),
@@ -2588,7 +2611,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=6');
+        const mod = await import('/static/js/kitchen3d.js?v=7');
         K3 = mod.createK3D(el('k3dCanvas'), {
           onSelect: sel => { selSec = sel ? (secsOf(sel.tier).find(x => x.id === sel.id) || null) : null; renderPlanner(); },
           onMove: (sel, wall, u) => k3dMoveTo(sel, wall, u)
@@ -2610,8 +2633,9 @@
     }
     function k3dRefresh() { if (K3 && k3dMode === '3d') { K3.update(k3dState()); renderK3dEdit(); } }
     function renderK3dBar() {
-      const b = (act, txt) => `<button type="button" onclick="k3dAct('${act}')">${txt}</button>`;
-      el('k3dBar').innerHTML = b('v:angle', L3('◩ Угол', '◩ Burchak')) + b('v:front', L3('▭ Спереди', '▭ Old')) + b('v:top', L3('▦ Сверху', '▦ Yuqori')) +
+      const mv = K3 && K3.isMoveMode && K3.isMoveMode();
+      const b = (act, txt, on) => `<button type="button" class="${on ? 'on' : ''}" onclick="k3dAct('${act}')">${txt}</button>`;
+      el('k3dBar').innerHTML = b('move', mv ? L3('✥ Передвигаю — готово', '✥ Surish — tayyor') : L3('✥ Передвинуть', '✥ Surish'), mv) + b('v:top', L3('▦ Сверху', '▦ Yuqori')) + b('v:front', L3('▭ Спереди', '▭ Old')) + b('v:angle', L3('◩ Угол', '◩ Burchak')) +
         b('openAll', L3('↔ Открыть всё', '↔ Hammasini ochish')) + b('closeAll', L3('Закрыть', 'Yopish')) + '<span class="sp"></span>' + b('full', L3('⛶ На весь экран', '⛶ Toʻliq ekran'));
     }
     function k3dRun(sec) {
@@ -2620,9 +2644,11 @@
     }
     function k3dAct(a, v) {
       if (a.startsWith('v:')) { if (K3) K3.setView(a.slice(2)); return; }
+      if (a === 'move') { if (K3) { K3.setMoveMode(!K3.isMoveMode()); renderK3dBar(); renderK3dEdit(); } return; }
+      if (a === 'unsel') { selSec = null; renderPlanner(); return; }
       if (a === 'openAll' || a === 'closeAll') { if (K3) K3.openAll(a === 'openAll'); return; }
       if (a === 'full') {   // во весь экран: окно переносится в body, чтобы быть поверх всей страницы
-        const box = el('k3dBox');
+        const box = el('studio');
         if (!box.classList.contains('k3d-full')) { box._ph = document.createComment('k3d'); box.parentNode.insertBefore(box._ph, box); document.body.appendChild(box); box.classList.add('k3d-full'); document.body.style.overflow = 'hidden'; }
         else { box.classList.remove('k3d-full'); if (box._ph && box._ph.parentNode) { box._ph.parentNode.insertBefore(box, box._ph); box._ph.remove(); } document.body.style.overflow = ''; }
         return;
@@ -2688,7 +2714,7 @@
       if (hasDoors) h += row(L3('Петли', 'Ilmoqlar'), sel('hinge', 'hinges', first('tier', KIS.hinges), G.hinge));
       if (tier === 'upper' && ['door', 'dryer', 'hood', 'side'].indexOf(s.kind) >= 0) {
         const lf = (s.gasLifts | 0) > 0;
-        h += row(L3('Фасад', 'Fasad'), b2(!lf, "selUpdate('gasLifts',0)", L3('Двери на петлях', 'Ilmoqli eshik')) + b2(lf, "selUpdate('gasLifts',1)", L3('Подъёмник', 'Koʻtargich')));
+
         if (lf) h += row(L3('Подъёмник', 'Koʻtargich'), sel('lift', 'liftsK', first('tier', KIS.liftsK), G.lift));
       }
       if (s.kind === 'corner' && hasLeftWall(currentType)) h += row(L3('Угловой механизм', 'Burchak mexanizmi'), sel('corner', 'corner', first('none', KIS.corner), G.corner));
@@ -2697,30 +2723,161 @@
     function k3dDsys(i, k) { const s = selSec; if (!s) return; s.dsys = (s.dsys || []).slice(); while (s.dsys.length <= i) s.dsys.push('tier'); s.dsys[i] = k; updateCalculator(); }
     function k3dDrawerCount(s) { if (s.kind === 'tower') return towerBands(s.tw || 'storage', 250).filter(b => b.ty === 'drawer').length; if (s.kind === 'oven') return 1; return s.drawers | 0; }
     function renderK3dEdit() {
-      const box = el('k3dEdit'); if (!box) return;
-      const s = selSec;
-      if (!s) { box.innerHTML = `<div class="k3e-hint">${esc(L3('Нажмите на шкаф — выберите для него фурнитуру. Выбранный шкаф можно перетащить мышью или пальцем на другое место. Двойной клик — открыть.', 'Shkafni bosing — furniturasini tanlang. Tanlangan shkafni sichqoncha yoki barmoq bilan boshqa joyga suring. Ikki marta bosish — ochish.'))}</div>`; return; }
-      const tier = tierOf(s), code = (tier === 'lower' ? 'Н-' : 'В-') + s.id, wall = wallOfSecIn(currentType, s);
-      const btn = (a, v, txt, on) => `<button type="button" class="${on ? 'on' : ''}" onclick="k3dAct('${a}','${v}')">${txt}</button>`;
-      let h = `<div class="k3e-t">${esc(code)} · ${esc(s.name)} · ${Number(s.width) || 0} ${esc(L3('см', 'sm'))}${(s.gap | 0) ? ' · ' + esc(L3('отступ', 'oraliq')) + ' ' + (s.gap | 0) + ' ' + esc(L3('см', 'sm')) : ''}</div>`;
-      h += `<div class="k3e-r"><span>${esc(L3('Сдвиг', 'Surish'))}</span>${btn('shift', -1, '◀ 5 ' + L3('см', 'sm'))}${btn('shift', 1, '5 ' + L3('см', 'sm') + ' ▶')}${(s.gap | 0) ? btn('gap0', 0, L3('без отступа', 'oraliqsiz')) : ''}${btn('swap', -1, '⇤ ' + L3('местами', 'joyini almashtirish'))}${btn('swap', 1, L3('местами', 'joyini almashtirish') + ' ⇥')}</div>`;
-      if (currentType !== 'straight') h += `<div class="k3e-r"><span>${esc(L3('Стена', 'Devor'))}</span>${wallValid('left') ? btn('wall', 'left', L3('Левая', 'Chap'), wall === 'left') : ''}${btn('wall', 'main', currentType === 'parallel' ? L3('Основной ряд', 'Asosiy qator') : L3('Основная', 'Asosiy'), wall === 'main')}${wallValid('right') ? btn('wall', 'right', currentType === 'parallel' ? L3('Ряд напротив', 'Qarshi qator') : L3('Правая', 'Oʻng'), wall === 'right') : ''}</div>`;
-      const single = (Number(s.width) || 0) < 45 && !(s.drawers | 0) && !(s.gasLifts | 0) && ['oven', 'dishwasher', 'washer', 'open', 'cargo', 'corner'].indexOf(s.kind) < 0;
-      if (single || s.kind === 'tower') h += `<div class="k3e-r"><span>${esc(L3('Петли', 'Ilmoq'))}</span>${btn('hinge', 'L', L3('слева', 'chapda'), s.hinge !== 'R')}${btn('hinge', 'R', L3('справа', 'oʻngda'), s.hinge === 'R')}</div>`;
-      const open = K3 && K3.isOpen(tier + ':' + s.id);
-      h += k3dHwRows(s, tier);
-      h += `<div class="k3e-r">${btn('open', 0, open ? L3('Закрыть', 'Yopish') : L3('▶ Показать, как открывается', '▶ Qanday ochilishini koʻrsatish'))}${btn('dup', 0, L3('Копия', 'Nusxa'))}${btn('del', 0, L3('Удалить', 'Oʻchirish'))}</div>`;
-      const nd = tier === 'lower' ? k3dDrawerCount(s) : 0;
-      for (let i = 0; i < nd; i++) {
-        const cur = (s.dsys && s.dsys[i]) || 'tier';
-        h += `<div class="k3e-r"><span>${esc(L3('Ящик', 'Tortma'))} ${i + 1}</span><select onchange="k3dDsys(${i}, this.value)">${Object.keys(KIS.drawerSys).map(k => `<option value="${k}" ${k === cur ? 'selected' : ''}>${esc(LANG === 'uz' && window.kcTr ? window.kcTr(KIS.drawerSys[k].ru) : KIS.drawerSys[k].ru)}</option>`).join('')}</select></div>`;
-      }
-      box.innerHTML = h;
+      const box = el('k3dSide'); if (!box) return;
+      box.innerHTML = selSec ? k3dSidePart(selSec) : k3dSideKitchen();
     }
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && el('k3dBox') && el('k3dBox').classList.contains('k3d-full')) k3dAct('full'); });
+    const k3B = (on, act, txt) => `<button type="button" class="${on ? 'on' : ''}" onclick="${act}">${esc(txt)}</button>`;
+    const k3Step = (val, dec, inc, unit) => `<span class="k3s-step"><button type="button" onclick="${dec}">−</button><b>${val}${unit ? ' ' + unit : ''}</b><button type="button" onclick="${inc}">+</button></span>`;
+    const k3Row = (lbl, inner) => `<div class="k3e-r"><span>${esc(lbl)}</span>${inner}</div>`;
+    // ничего не выбрано: добавить шкафы и технику, общие настройки кухни
+    function k3dSideKitchen() {
+      const up = chk('hasUpperTier'), dc = decorClean(decorState), isl = chk('hasIsland');
+      const add = (txt, call) => `<button type="button" onclick="${call}">＋ ${esc(txt)}</button>`;
+      let h = `<div class="k3s-h">${esc(L3('Конструктор кухни', 'Oshxona konstruktori'))}</div>
+        <div class="k3s-note">${esc(L3('Нажмите на шкаф — справа появятся его параметры. «✥ Передвинуть» — тащите шкафы и технику по полу (вид сверху или спереди).', 'Shkafni bosing — parametrlari chiqadi. «✥ Surish» — shkaf va texnikani polda suring.'))}</div>
+        <div class="k3s-sub">${esc(L3('Шкафы', 'Shkaflar'))}</div><div class="k3s-grid">
+          ${add(L3('Нижний шкаф', 'Pastki shkaf'), "k3dAdd('lower','door',{dn:2})")}${add(L3('Тумба с ящиками', 'Tortmali tumba'), "k3dAdd('lower','drawers')")}
+          ${add(L3('Пенал до потолка', 'Shiftgacha penal'), "k3dAdd('lower','tower',{tw:'storage'})")}${add(L3('Карго / бутылочница', 'Kargo'), "k3dAdd('lower','cargo')")}
+          ${add(L3('Верхний шкаф', 'Yuqori shkaf'), "k3dAdd('upper','door',{dn:2})")}${add(L3('Сушилка', 'Quritgich'), "k3dAdd('upper','dryer')")}
+          ${add(L3('С подъёмником', 'Koʻtargichli'), "k3dAdd('upper','door',{gasLifts:1})")}${add(L3('Открытые полки', 'Ochiq tokcha'), "k3dAdd('upper','open',{shelves:2})")}
+        </div>
+        <div class="k3s-sub">${esc(L3('Техника', 'Texnika'))}</div><div class="k3s-grid">
+          ${add(L3('Варочная плита', 'Plita'), "k3dAdd('lower','hob',{drawers:3})")}${add(L3('Мойка', 'Rakovina'), "k3dAdd('lower','sink')")}
+          ${add(L3('Холодильник отдельный', 'Muzlatgich (alohida)'), "k3dAdd('lower','fridge',{fr:'free'})")}${add(L3('Холодильник встроенный', 'Oʻrnatma muzlatgich'), "k3dAdd('lower','fridge',{fr:'built'})")}
+          ${add(L3('Духовка под столешницу', 'Duxovka (stol ostida)'), "k3dAdd('lower','oven')")}${add(L3('Духовка в пенале', 'Duxovka penalda'), "k3dAdd('lower','tower',{tw:'oven'})")}
+          ${add(L3('СВЧ на столешнице', 'Mikroto‘lqinli stolda'), 'k3dMicroTop()')}${add(L3('СВЧ встроенная (пенал)', 'Oʻrnatma mikroto‘lqinli'), "k3dAdd('lower','tower',{tw:'micro'})")}
+          ${add(L3('Посудомойка', 'Idish yuvgich'), "k3dAdd('lower','dishwasher')")}${add(L3('Стиральная машина', 'Kir yuvgich'), "k3dAdd('lower','washer')")}
+        </div>
+        <div class="k3s-sub">${esc(L3('Остров', 'Orol'))}</div>
+        ${k3Row(L3('Остров', 'Orol'), k3B(isl, 'k3dIsland(1)', L3('есть', 'bor')) + k3B(!isl, 'k3dIsland(0)', L3('нет', 'yoʻq')))}
+        ${isl ? k3Row(L3('Длина', 'Uzunlik'), k3Step(el('islandLength').value + ' ' + L3('см', 'sm'), "k3dInput('islandLength',-10,80,300)", "k3dInput('islandLength',10,80,300)")) + k3Row(L3('Ширина', 'Kenglik'), k3Step(el('islandWidth').value + ' ' + L3('см', 'sm'), "k3dInput('islandWidth',-5,50,150)", "k3dInput('islandWidth',5,50,150)")) : ''}
+        <div class="k3s-sub">${esc(L3('Верхние шкафы', 'Yuqori shkaflar'))}</div>
+        ${k3Row(L3('Верхний ряд', 'Yuqori qator'), k3B(up, 'k3dUpper(1)', L3('есть', 'bor')) + k3B(!up, 'k3dUpper(0)', L3('нет', 'yoʻq')))}
+        ${up ? k3Row(L3('Высота', 'Balandlik'), k3Step(el('upperHeight').value + ' ' + L3('см', 'sm'), "k3dInput('upperHeight',-2,30,130)", "k3dInput('upperHeight',2,30,130)")) +
+          k3Row(L3('Глубина', 'Chuqurlik'), k3Step(el('upperDepth').value + ' ' + L3('см', 'sm'), "k3dInput('upperDepth',-5,20,65)", "k3dInput('upperDepth',5,20,65)")) +
+          k3Row(L3('От столешницы', 'Stoldan'), k3Step(el('upperGap').value + ' ' + L3('см', 'sm'), "k3dInput('upperGap',-5,30,100)", "k3dInput('upperGap',5,30,100)")) +
+          k3Row(L3('Ярусов', 'Qavatlar'), k3B(!chk('upperTwoTier'), 'k3dTwoTier(0)', '1') + k3B(chk('upperTwoTier'), 'k3dTwoTier(1)', '2')) : ''}
+        <div class="k3s-sub">${esc(L3('Открывание у всех', 'Hammasi uchun ochilish'))}</div>
+        <div class="k3e-r">${k3B(false, "setAllOpen('handles')", L3('Ручки', 'Dastalar'))}${k3B(false, "setAllOpen('push')", 'TIP-ON')}${k3B(false, "setAllOpen('gola')", L3('Гола', 'Gola'))}</div>
+        <div class="k3s-sub">💡 ${esc(L3('Подсветка', 'Yoritish'))}</div>
+        ${k3Row(L3('Класс', 'Sinf'), [0, 1, 2].map(i => k3B(ledState.level === i, 'setLedLevel(' + i + ')', t('led_' + i))).join(''))}
+        ${ledState.level ? k3Row(L3('Зоны', 'Zonalar'), k3B(ledState.work, "toggleLedZone('work')", L3('рабочая зона', 'ish zonasi')) + k3B(ledState.plinth, "toggleLedZone('plinth')", L3('цоколь', 'sokol'))) : ''}
+        <div class="k3s-note">${esc(L3('Подсветку внутри шкафа (верх и полки) включайте у самого шкафа.', 'Shkaf ichidagi yoritish — shkafning oʻzida.'))}</div>
+        <div class="k3s-sub">🪴 ${esc(L3('Интерьер (в цену не входит)', 'Interyer (narxga kirmaydi)'))}</div>
+        ${k3Row(L3('Лампы', 'Chiroqlar'), k3Step(dc.lamps, 'k3dDecor(\'lamps\',-1)', 'k3dDecor(\'lamps\',1)'))}
+        ${k3Row(L3('Стулья', 'Stullar'), k3Step(dc.stools, 'k3dDecor(\'stools\',-1)', 'k3dDecor(\'stools\',1)'))}
+        ${k3Row(L3('Растения', 'Oʻsimliklar'), k3B(dc.plant, "k3dDecor('plant')", L3('на столешнице', 'stolda')) + k3B(dc.fplant, "k3dDecor('fplant')", L3('в кадке', 'tuvakda')))}`;
+      return h;
+    }
+    // выбран шкаф: его тип, размеры, фурнитура, подсветка, перемещение
+    function k3dSidePart(s) {
+      const tier = tierOf(s), code = (tier === 'lower' ? 'Н-' : 'В-') + s.id, wall = wallOfSecIn(currentType, s), w = Number(s.width) || 0;
+      const tall = isTall(s), k = s.kind || 'door';
+      const kb = (on, v, txt) => k3B(on, `k3dType('${v}')`, txt);
+      let h = `<div class="k3s-h">${esc(code)} · ${esc(s.name)}</div><div class="k3s-note">${w} ${esc(L3('см', 'sm'))}${(s.gap | 0) ? ' · ' + esc(L3('отступ', 'oraliq')) + ' ' + (s.gap | 0) + ' ' + esc(L3('см', 'sm')) : ''}</div>`;
+      h += `<div class="k3s-sub">${esc(L3('Тип шкафа', 'Shkaf turi'))}</div><div class="k3e-r">`;
+      if (tier === 'upper') {
+        const lf = (s.gasLifts | 0) > 0 && k === 'door';
+        h += kb(k === 'door' && !lf && !twoDoors(s, w), '1d', L3('1 дверь', '1 eshik')) + kb(k === 'door' && !lf && twoDoors(s, w), '2d', L3('2 двери', '2 eshik')) + kb(lf, 'lift', L3('Подъёмник', 'Koʻtargich')) +
+          kb(k === 'dryer', 'dryer', L3('Сушилка', 'Quritgich')) + kb(k === 'hood', 'hood', L3('Над вытяжкой', 'Soʻrgich ustida')) + kb(k === 'glass', 'glass', L3('Со стеклом', 'Shishali')) + kb(k === 'open', 'open', L3('Открытые полки', 'Ochiq tokcha'));
+      } else if (tall) {
+        h += kb(k === 'tower', 'tower', L3('Пенал', 'Penal')) + kb(k === 'fridge' && s.fr !== 'built', 'fridgeFree', L3('Холодильник отдельный', 'Alohida muzlatgich')) + kb(k === 'fridge' && s.fr === 'built', 'fridgeBuilt', L3('Холодильник встроенный', 'Oʻrnatma muzlatgich'));
+      } else {
+        const plain = k === 'door' || k === 'drawers';
+        h += kb(plain && !(s.drawers | 0) && !twoDoors(s, w), '1d', L3('1 дверь', '1 eshik')) + kb(plain && !(s.drawers | 0) && twoDoors(s, w), '2d', L3('2 двери', '2 eshik')) + kb(plain && (s.drawers | 0) > 0, 'drawers', L3('Ящики', 'Tortmalar')) +
+          kb(k === 'sink', 'sink', L3('Под мойку', 'Rakovina osti')) + kb(k === 'hob', 'hob', L3('Под плиту', 'Plita osti')) + kb(k === 'oven', 'oven', L3('Духовка', 'Duxovka')) +
+          kb(k === 'dishwasher', 'dishwasher', L3('Посудомойка', 'Idish yuvgich')) + kb(k === 'washer', 'washer', L3('Стиральная', 'Kir yuvgich')) + kb(k === 'cargo', 'cargo', L3('Карго', 'Kargo')) + kb(k === 'corner', 'corner', L3('Угловой', 'Burchak'));
+      }
+      h += `</div>`;
+      if (k === 'tower') h += k3Row(L3('Начинка', 'Ichi'), `<select onchange="selUpdate('tw', this.value)">${TOWER_KEYS.map(x => `<option value="${x}" ${(s.tw || 'storage') === x ? 'selected' : ''}>${esc(t('tw_' + x))}</option>`).join('')}</select>`);
+      h += `<div class="k3s-sub">${esc(L3('Размеры', 'Oʻlchamlar'))}</div>`;
+      h += k3Row(L3('Ширина', 'Kenglik'), k3Step(w + ' ' + L3('см', 'sm'), "k3dStep('width',-5)", "k3dStep('width',5)"));
+      if (tier === 'upper') h += k3Row(L3('От столешницы', 'Stoldan'), k3Step((s.ug != null ? s.ug : el('upperGap').value) + ' ' + L3('см', 'sm'), "k3dStep('ug',-5)", "k3dStep('ug',5)") + (s.ug != null ? k3B(false, "k3dStep('ug',0)", L3('как у всех', 'hammadek')) : ''));
+      const hasDr = !tall && ['door', 'drawers', 'sink', 'hob'].indexOf(k) >= 0 && (s.drawers | 0) > 0;
+      if (hasDr) h += k3Row(L3('Ящиков', 'Tortmalar'), k3Step(s.drawers | 0, "k3dStep('drawers',-1)", "k3dStep('drawers',1)"));
+      const canShelves = !tall && !(s.drawers | 0) && ['oven', 'dishwasher', 'washer', 'cargo', 'hood'].indexOf(k) < 0 && !((s.gasLifts | 0) && tier === 'upper' && k !== 'door');
+      if (canShelves) h += k3Row(L3('Полки', 'Tokchalar'), k3Step(s.shelves | 0, "k3dStep('shelves',-1)", "k3dStep('shelves',1)"));
+      if (canShelves || k === 'open') h += k3Row('💡 ' + L3('Подсветка внутри', 'Ichki yoritish'), k3Step((s.led | 0) + ' / ' + ((s.shelves | 0) + 1), "k3dStep('led',-1)", "k3dStep('led',1)")) + `<div class="k3s-note">${esc(L3('Верх шкафа и каждая полка — по точке подсветки', 'Shkaf usti va har bir tokcha — bittadan'))}</div>`;
+      if (tier === 'lower' && !tall && ['sink', 'hob'].indexOf(k) < 0) h += k3Row(L3('СВЧ на столешнице', 'Stoldagi mikroto‘lqinli'), k3B(!!s.mwTop, "k3dToggle('mwTop')", s.mwTop ? L3('стоит', 'bor') : L3('нет', 'yoʻq')));
+      h += `<div class="k3s-sub">${esc(L3('Фурнитура и открывание', 'Furnitura'))}</div>`;
+      h += k3dHwRows(s, tier).replace(/<div class="k3e-sub">[^<]*<\/div>/, '');
+      const ex = effHw(s), selX = (field, grp, lead) => `<select onchange="k3dHw('${field}', this.value)"><option value="">${esc(L3('Как у всей кухни', 'Butun oshxonadagidek'))}: ${esc(hwName(grp, ex[field]))}</option>${[lead].concat(Object.keys(KIS[grp]).filter(x => x !== lead)).map(x => `<option value="${x}" ${(s.hx && s.hx[field]) === x ? 'selected' : ''}>${esc(hwName(grp, x))}</option>`).join('')}</select>`;
+      if (tier === 'upper' && k === 'dryer') h += k3Row(L3('Сушилка', 'Quritgich'), selX('dryer', 'dryer', 'none'));
+      if (hasDr) h += k3Row(L3('Лоток', 'Lotok'), selX('tray', 'tray', 'none'));
+      if (k === 'sink') h += k3Row(L3('Ведро', 'Chelak'), selX('bin', 'bin', 'none'));
+      const nd = tier === 'lower' ? k3dDrawerCount(s) : 0;
+      for (let i = 0; i < nd; i++) { const cur = (s.dsys && s.dsys[i]) || 'tier'; h += k3Row(L3('Ящик', 'Tortma') + ' ' + (i + 1), `<select onchange="k3dDsys(${i}, this.value)">${Object.keys(KIS.drawerSys).map(x => `<option value="${x}" ${x === cur ? 'selected' : ''}>${esc(LANG === 'uz' && window.kcTr ? window.kcTr(KIS.drawerSys[x].ru) : KIS.drawerSys[x].ru)}</option>`).join('')}</select>`); }
+      const single = !twoDoors(s, w) && !(s.drawers | 0) && !(s.gasLifts | 0) && ['oven', 'dishwasher', 'washer', 'open', 'cargo', 'corner'].indexOf(k) < 0;
+      if (single || k === 'tower') h += k3Row(L3('Петли', 'Ilmoq'), k3B(s.hinge !== 'R', "k3dAct('hinge','L')", L3('слева', 'chapda')) + k3B(s.hinge === 'R', "k3dAct('hinge','R')", L3('справа', 'oʻngda')));
+      h += `<div class="k3s-sub">${esc(L3('Место', 'Joy'))}</div>`;
+      h += k3Row(L3('Сдвиг', 'Surish'), k3B(false, "k3dAct('shift',-1)", '◀ 5') + k3B(false, "k3dAct('shift',1)", '5 ▶') + ((s.gap | 0) ? k3B(false, "k3dAct('gap0',0)", L3('без отступа', 'oraliqsiz')) : '') + k3B(false, "k3dAct('swap',-1)", '⇤') + k3B(false, "k3dAct('swap',1)", '⇥'));
+      const walls = ['left', 'main', 'right'].filter(x => x === 'main' || wallValid(x));
+      if (walls.length > 1) h += k3Row(L3('Стена', 'Devor'), walls.map(x => k3B(wall === x, `k3dAct('wall','${x}')`, x === 'left' ? L3('Левая', 'Chap') : (x === 'right' ? L3('Правая', 'Oʻng') : L3('Основная', 'Asosiy')))).join(''));
+      const open = K3 && K3.isOpen(tier + ':' + s.id);
+      h += `<div class="k3e-r" style="margin-top:12px">${k3B(open, "k3dAct('open',0)", open ? L3('Закрыть', 'Yopish') : L3('▶ Как открывается', '▶ Qanday ochiladi'))}${k3B(false, "k3dAct('dup',0)", L3('Копия', 'Nusxa'))}${k3B(false, "k3dAct('del',0)", L3('Удалить', 'Oʻchirish'))}${k3B(false, "k3dAct('unsel',0)", '✕ ' + L3('К кухне', 'Oshxonaga'))}</div>`;
+      return h;
+    }
+    // ---- действия панели ----
+    function k3dAdd(tier, kind, opt) {
+      opt = opt || {};
+      if (tier === 'upper' && !chk('hasUpperTier')) el('hasUpperTier').checked = true;
+      if (secsOf(tier).length >= MAX_SECTIONS) { if (typeof msToast === 'function') msToast(t('plMax')); return; }
+      const sec = newModule(tier, kind, 'main');
+      Object.keys(opt).forEach(key => { sec[key] = opt[key]; });
+      if (kind === 'drawers' && !opt.drawers) sec.drawers = 3;
+      if (opt.gasLifts) sec.shelves = 1;
+      sec.name = defaultModuleName(sec.kind, tier, 0, sec);
+      const order = ['main', 'left', 'right'].filter(w => w === 'main' || wallValid(w));
+      for (const w of order) {   // ставим туда, где есть место: основная стена, потом боковые
+        sec.wall = w; insertModule(tier, sec); autoKitchenType(); syncWallAssignments();
+        if (kitchenFits()) { selSec = sec; addMenuWall = null; plannerChanged(); return; }
+        const a = secsOf(tier); a.splice(a.indexOf(sec), 1); autoKitchenType(); syncWallAssignments();
+      }
+      noRoomToast(); plannerChanged();
+    }
+    function k3dType(v) {
+      const s = selSec; if (!s) return;
+      const tier = tierOf(s);
+      const map = { '1d': 'door', '2d': 'door', lift: 'door', drawers: 'drawers', fridgeFree: 'fridge', fridgeBuilt: 'fridge' };
+      const kind = map[v] || v;
+      if (kind !== s.kind) selUpdate('kind', kind);
+      if (v === '1d' || v === '2d') { s.dn = v === '1d' ? 1 : 2; if (tier === 'lower') s.drawers = 0; else s.gasLifts = 0; if (!s.shelves) s.shelves = 1; }
+      else delete s.dn;
+      if (v === 'lift') { s.gasLifts = 1; }
+      if (v === 'drawers') { s.drawers = (s.drawers | 0) || 3; s.shelves = 0; }
+      if (v === 'fridgeFree') s.fr = 'free';
+      if (v === 'fridgeBuilt') s.fr = 'built';
+      if (s.autoName) s.name = defaultModuleName(s.kind, tier, s.id, s);
+      plannerChanged();
+    }
+    function k3dStep(field, d) {
+      const s = selSec; if (!s) return;
+      if (field === 'width') { selUpdate('width', (parseFloat(s.width) || 0) + d); return; }
+      if (field === 'ug') { if (d === 0) delete s.ug; else s.ug = Math.max(20, Math.min(120, (s.ug != null ? +s.ug : (parseFloat(el('upperGap').value) || 56)) + d)); updateCalculator(); return; }
+      if (field === 'drawers') { s.drawers = Math.max(1, Math.min(5, (s.drawers | 0) + d)); }
+      if (field === 'shelves') { s.shelves = Math.max(0, Math.min(5, (s.shelves | 0) + d)); s.led = Math.min(s.led | 0, s.shelves + 1); }
+      if (field === 'led') { s.led = Math.max(0, Math.min((s.shelves | 0) + 1, (s.led | 0) + d)); }
+      updateCalculator(); renderK3dEdit();
+    }
+    function k3dToggle(f) { const s = selSec; if (!s) return; s[f] = !s[f]; if (!s[f]) delete s[f]; updateCalculator(); }
+    function k3dMicroTop() {
+      let s = selSec && tierOf(selSec) === 'lower' && !isTall(selSec) && ['sink', 'hob'].indexOf(selSec.kind) < 0 ? selSec : null;
+      if (!s) s = lowerSections.find(x => !isTall(x) && !x.mwTop && ['sink', 'hob', 'oven', 'dishwasher', 'washer'].indexOf(x.kind) < 0);
+      if (!s) { noRoomToast(); return; }
+      s.mwTop = true; selSec = s; plannerChanged();
+    }
+    function k3dIsland(on) { el('hasIsland').checked = !!on; toggleIslandOptions(); renderK3dEdit(); }
+    function k3dUpper(on) { el('hasUpperTier').checked = !!on; toggleUpperTierControls(); renderK3dEdit(); }
+    function k3dTwoTier(on) { el('upperTwoTier').checked = !!on; renderPlanner(); updateCalculator(); }
+    function k3dInput(id, d, mn, mx) { const inp = el(id); inp.value = Math.max(mn, Math.min(mx, (parseFloat(inp.value) || 0) + d)); updateCalculator(); renderK3dEdit(); }
+    function k3dDecor(k, d) { if (d == null) decorState[k] = !decorState[k]; else decorState[k] = Math.max(0, (decorState[k] | 0) + d); decorState = decorClean(decorState); updateCalculator(); renderK3dEdit(); }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && el('studio') && el('studio').classList.contains('k3d-full')) k3dAct('full'); });
     // после любой перерисовки планировщика — обновить подсветку и панель 3D
     const _renderPlannerBase = renderPlanner;
     renderPlanner = function () { _renderPlannerBase.apply(this, arguments); if (K3 && k3dMode === '3d') { K3.select(k3dSelKey()); renderK3dEdit(); } };
+
+    addModule = guarded(addModule); placeAt = guarded(placeAt); moveSelected = guarded(moveSelected); duplicateSelected = guarded(duplicateSelected);
+    selUpdate = guarded(selUpdate); k3dAct = guarded(k3dAct); k3dMoveTo = guarded(k3dMoveTo); k3dType = guarded(k3dType);
 
     /* ===================== РАСЧЁТ ЦЕНЫ (формула прежнего калькулятора) ===================== */
     function getCalcState() {
@@ -2733,12 +2890,24 @@
         markup: CONFIG.colorMarkup[selectedFacadeColor.tier || 0] || 0,
         lower: lowerSections, upper: upperSections,
         island: chk('hasIsland'), islL: num('islandLength', 140), islW: num('islandWidth', 80),
-        sink: chk('optSinkCut'), hob: chk('optHobCut'), app: chk('optBuiltInAppliances'),
-        hw: selIdx('hardwareLevel'), khw: JSON.parse(JSON.stringify(KHW)), led: Object.assign({}, ledState), decor: decorClean(decorState),
+        counterH: Math.max(75, Math.min(105, num('counterHeight', 89))), upperGap: Math.max(30, Math.min(100, num('upperGap', 56))),
+        sink: autoOpts(lowerSections).sink, hob: autoOpts(lowerSections).hob, app: autoOpts(lowerSections).app,
+        hw: selIdx('hardwareLevel'), khw: JSON.parse(JSON.stringify(KHW)), led: ledWithCabinets(ledState, lowerSections.concat(upperSections)), decor: decorClean(decorState),
         facadeHex: selectedFacadeColor.hex, bodyHex: selectedBodyColor.hex
       };
     }
 
+    // вырезы под мойку и варочную и установка встроенной техники — сами, по тому, что стоит на кухне
+    function autoOpts(lo) {
+      return { sink: lo.some(x => x.kind === 'sink'), hob: lo.some(x => x.kind === 'hob'),
+        app: lo.some(x => ['oven', 'dishwasher', 'washer'].indexOf(x.kind) >= 0 || (x.kind === 'fridge' && x.fr === 'built') || (x.kind === 'tower' && x.tw && x.tw !== 'storage')) };
+    }
+    // подсветка внутри шкафов (верх + полки) добавляется к подсвеченным полкам; есть точки — значит подсветка нужна
+    function ledWithCabinets(led, secs) {
+      const pts = secs.reduce((a, x) => a + (x.led | 0), 0), r = Object.assign({}, led);
+      r.shelves = (led.shelves | 0) + pts; if (pts && !r.level) r.level = 1;
+      return r;
+    }
     /* Количество дверей шкафа (по ним считаются петли): шкаф с ящиками или подъёмником дверей не имеет, шире 45 см — две двери */
     function doorsOf(sec, tier) {
       if (isTall(sec) || sec.kind === 'oven' || sec.kind === 'washer' || sec.kind === 'open') return 0;
@@ -2746,8 +2915,12 @@
       if (sec.kind === 'cargo') return 0;
       if (sec.kind === 'corner') return ((parseFloat(sec.width) || 0) - 60) >= 45 ? 2 : 1;
       const inner = tier === 'lower' ? (sec.drawers | 0) > 0 : (sec.gasLifts | 0) > 0;
-      return inner ? 0 : ((parseFloat(sec.width) || 0) >= 45 ? 2 : 1);
+      return inner ? 0 : (twoDoors(sec, parseFloat(sec.width) || 0) ? 2 : 1);
     }
+    // 1 или 2 двери: как выбрал клиент (sec.dn), иначе по ширине — от 45 см две
+    function twoDoors(sec, w) { return sec && sec.dn ? sec.dn === 2 : (w >= 45); }
+    // низ верхнего шкафа от пола: столешница + своя высота шкафа (sec.ug) или общая
+    function upperBottom(sec, G) { G = G || techGeometry(); return G.TOPY + (sec && sec.ug != null ? +sec.ug : G.UGAP); }
     function hardwareCost(s) {
       const H = CONFIG.hardware[s.hw] || CONFIG.hardware[CONFIG.defaults.hw];
       const K = s.khw || {};
@@ -2771,11 +2944,14 @@
           towerBands(x.tw || 'storage', 250).forEach(b => { if (b.ty === 'door') { sum += 3 * HG(x); handles(x, 1); } else if (b.ty === 'drawer') { const k = x.dsys && x.dsys[di]; sum += (k && k !== 'tier' && KIS.drawerSys[k]) ? KIS.drawerSys[k].price : (H.drawerTall || H.drawer); di++; handles(x, 1); } });
           return;
         }
-        if (x.kind === 'sink' && SB) { sum += SB; handles(x, 1); return; }   // глубокий ящик Blum вместо дверок под мойкой
+        if (x.kind === 'sink' && SB) { sum += SB; handles(x, 1); const eb = effHw(x, K).bin; if (eb !== 'none' && KIS.bin[eb]) sum += KIS.bin[eb].price; return; }   // глубокий ящик Blum вместо дверок под мойкой
         const doors = doorsOf(x, 'lower'), nd = x.kind === 'oven' ? 1 : (x.drawers | 0);
         sum += doors * 2 * HG(x) + drawersOf(x, nd);
         if (x.openType === 'push') sum += nd > 0 ? nd * (H.pushDrawer || H.push) : PUSH(x) * Math.max(1, doors);
         handles(x, doors + nd);
+        const ex = effHw(x, K);
+        if ((x.drawers | 0) > 0 && ex.tray !== 'none' && KIS.tray[ex.tray]) sum += KIS.tray[ex.tray].price;   // лоток для приборов в верхний ящик
+        if (x.kind === 'sink' && ex.bin !== 'none' && KIS.bin[ex.bin]) sum += KIS.bin[ex.bin].price;            // вёдра под мойкой
         if (x.kind === 'corner' && cornerKit) { const k = effHw(x, K).corner; if (k !== 'none' && KIS.corner[k]) sum += KIS.corner[k].price; }   // механизм в угловом шкафу
       });
       if (s.hasUpper && s.upperTiers === 2) s.upper.forEach(x => {   // второй ярус — обычные двери
@@ -2785,6 +2961,7 @@
         handles(x, doors);
       });
       if (s.hasUpper) s.upper.forEach(x => {
+        if (x.kind === 'dryer') { const k = effHw(x, K).dryer; if (k !== 'none' && KIS.dryer[k]) sum += KIS.dryer[k].price; }   // сушилка для посуды
         const doors = doorsOf(x, 'upper');
         sum += doors * 2 * HG(x) + (x.gasLifts | 0) * LIFT(x);
         if (x.openType === 'push') sum += PUSH(x) * Math.max(1, (x.gasLifts | 0) || doors);
@@ -2821,12 +2998,9 @@
       const topPriceM = CONFIG.countertops[s.top].price;
       const work = CONFIG.baseWork;
 
-      let lowerMeters = s.mainW / 100;
-      if (s.type === 'l-shape') lowerMeters += (s.leftW - 60) / 100;
-      else if (s.type === 'u-shape') lowerMeters += (s.leftW - 60) / 100 + (s.rightW - 60) / 100;
-      else if (s.type === 'parallel') lowerMeters += s.rightW / 100;
-
-      lowerMeters = Math.max(0.3, lowerMeters - s.lower.reduce((a, x) => a + (x.gap | 0), 0) / 100);   // промежутки между шкафами — без мебели
+      // погонные метры — по ширине шкафов (стены из раздела 1 — только границы комнаты)
+      const sumW = arr => arr.reduce((a, x) => a + (parseFloat(x.width) || 0), 0) / 100;
+      let lowerMeters = Math.max(0.3, sumW(s.lower));
       let total = lowerMeters * ((facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + work);
       const AW = CONFIG.applianceWork, TT = tallTopOf(s.roomH), carcass = facadePriceM * 0.55 + bodyPriceM * 0.5;
       let tallWidth = 0;
@@ -2842,17 +3016,14 @@
           else total += w * (x.fr === 'built' ? tall * 0.55 : carcass * 0.25);
         }
         appliancesOf(x).forEach(a => {
+          if (a.top) return;   // микроволновка на столешнице — просто техника, не мебель
           if (a.k === 'oven' || a.k === 'micro' || a.k === 'dishwasher' || a.k === 'washer') total += AW[a.k] || 0;
           else if (a.k === 'fridge') total += a.built ? AW.fridgeBuilt : AW.fridge;
         });
       });
 
       if (s.hasUpper) {
-        let upperMeters = s.mainW / 100;
-        if (s.type === 'l-shape') upperMeters += Math.max(0, s.leftW - 35) / 100;
-        else if (s.type === 'u-shape') upperMeters += (Math.max(0, s.leftW - 35) + Math.max(0, s.rightW - 35)) / 100;
-        else if (s.type === 'parallel' && s.upper.some(x => x.wall === 'right')) upperMeters += s.rightW / 100;
-        upperMeters = Math.max(0, upperMeters - tallWidth - s.upper.reduce((a, x) => a + (x.gap | 0), 0) / 100);   // над высокими модулями верхних шкафов нет
+        const upperMeters = sumW(s.upper);
         total += upperMeters * ((facadePriceM * 0.45) + (bodyPriceM * 0.4)) * (s.upperH / 72) * (s.upperD / 35) * (s.upperTiers === 2 ? 2 : 1);
         s.upper.forEach(x => {
           total += (x.shelves || 0) * 50000;
@@ -2894,6 +3065,7 @@
       drawTopViewPlan('svgTop', s.hasUpper);
       if (k3dMode !== '3d' || !K3) renderKitchen(el('kitchenRender'), renderStateFrom(s));
       k3dRefresh();
+      if (!K3 || k3dMode !== '3d') renderK3dEdit();
       renderTiers(s);
       syncSinkBox();
       updateHwDesc();
@@ -2987,11 +3159,32 @@
       upperSections.forEach((s, i) => { s.id = i + 1; if (s.autoName) s.name = defaultModuleName(s.kind, 'upper', s.id, s); });
     }
     // Стены, допустимые для текущей формы кухни
-    function wallValid(w) { return w === 'main' || (w === 'left' && hasLeftWall(currentType)) || (w === 'right' && hasRightWall(currentType)); }
+    function wallValid(w) { return w === 'main' || (w === 'left' && roomCap('left') >= 15) || (w === 'right' && roomCap('right') >= 15); }
+    // сколько см шкафов помещается вдоль стены (боковые — за вычетом угла 60 см)
+    function roomCap(w) { const v = id => Math.max(0, parseFloat((el(id) || {}).value) || 0); return w === 'main' ? v('mainWall') : Math.max(0, v(w === 'left' ? 'leftWall' : 'rightWall') - 60); }
+    // форма кухни сама: есть шкафы на левой стене — угловая, на обеих боковых — П-образная
+    function autoKitchenType() {
+      const prev = currentType, all = lowerSections.concat(upperSections);
+      const L = all.some(x => x.wall === 'left' && wallValid('left')), R = all.some(x => x.wall === 'right' && wallValid('right'));
+      currentType = L && R ? 'u-shape' : (L ? 'l-shape' : (R ? 'u-shape' : 'straight'));
+      if (prev !== currentType) { if (typeof applyTypeLabels === 'function') applyTypeLabels(); }
+      return prev !== currentType;
+    }
+    // всё ли помещается в комнату
+    function kitchenFits() {
+      const L = layoutAll(lowerSections, upperSections, currentType);
+      return ['main', 'left', 'right'].every(w => { const r = L[w]; if (!r.lower.length && !r.upper.length) return true; const cap = roomCap(w) + .5; return r.totalLower <= cap && (!chk('hasUpperTier') || r.totalUpper <= cap); });
+    }
+    let k3dPendingSnap = null;
+    function k3dSnap() { const all = lowerSections.concat(upperSections); return { lo: lowerSections.slice(), up: upperSections.slice(), sel: selSec, v: all.map(x => [x, x.wall, x.gap, x.width, x.kind, x.drawers, x.gasLifts]) }; }
+    function k3dRestore(sn) { lowerSections = sn.lo; upperSections = sn.up; selSec = sn.sel; sn.v.forEach(([x, wl, g, w, k, d, gl]) => { x.wall = wl; x.gap = g; x.width = w; x.kind = k; x.drawers = d; x.gasLifts = gl; }); }
+    // действие, которое не должно вывести кухню за стены: если не влезло — откатываем и говорим об этом
+    function guarded(fn) { return function () { const outer = !k3dPendingSnap; if (outer) k3dPendingSnap = k3dSnap(); try { return fn.apply(this, arguments); } finally { if (outer) k3dPendingSnap = null; } }; }
+    function noRoomToast() { if (typeof msToast === 'function') msToast(L3('Не помещается: стена короче. Увеличьте размер стены в разделе 1 или сдвиньте другие шкафы.', 'Sigʻmaydi: devor qisqa. 1-boʻlimda devorni kattalashtiring yoki boshqa shkaflarni suring.')); }
     // Порядок в массиве: сначала левая стена, потом основная, потом правая; внутри стены — порядок слева направо
     function syncWallAssignments() {
       [lowerSections, upperSections].forEach((arr, ti) => {
-        arr.forEach(s => { if (currentType === 'straight' || !wallValid(s.wall)) s.wall = 'main'; });
+        arr.forEach(s => { if (!wallValid(s.wall)) s.wall = 'main'; });
         const g = { left: [], main: [], right: [] };
         arr.forEach(s => g[s.wall].push(s));
         const merged = [].concat(g.left, g.main, g.right);
@@ -3007,11 +3200,13 @@
       });
     }
     function syncWallsFromSections() {
-      const sum = w => lowerSections.filter(s => wallOfSecIn(currentType, s) === w).reduce((a, s) => a + (parseFloat(s.width) || 0) + (s.gap | 0), 0);
-      el('mainWall').value = Math.round(sum('main') || 200);
-      if (hasLeftWall(currentType)) el('leftWall').value = Math.round(sum('left') > 0 ? sum('left') + 60 : 120);
-      if (currentType === 'u-shape') el('rightWall').value = Math.round(sum('right') > 0 ? sum('right') + 60 : 120);
-      if (currentType === 'parallel') el('rightWall').value = Math.round(sum('right') || 120);
+      // стены — это комната: только увеличиваем, если шкафы (например, из ссылки) длиннее
+      const sum = (w, tier) => secsOf(tier).filter(s => wallOfSecIn(currentType, s) === w).reduce((a, s) => a + (parseFloat(s.width) || 0) + (s.gap | 0), 0);
+      const need = w => Math.max(sum(w, 'lower'), chk('hasUpperTier') ? sum(w, 'upper') : 0);
+      const grow = (id, v) => { const inp = el(id); if (inp && v > (parseFloat(inp.value) || 0)) inp.value = Math.round(v); };
+      grow('mainWall', need('main'));
+      if (need('left') > 0) grow('leftWall', need('left') + 60);
+      if (need('right') > 0) grow('rightWall', need('right') + 60);
     }
 
     function openDefault() { const f = lowerSections[0]; return (f && f.openType) || 'handles'; }
@@ -3037,7 +3232,10 @@
     }
     function plannerChanged(opts) {
       opts = opts || {};
+      autoKitchenType();
       syncWallAssignments();
+      if (k3dPendingSnap && !kitchenFits()) { k3dRestore(k3dPendingSnap); autoKitchenType(); syncWallAssignments(); noRoomToast(); }
+      ensureCorners();
       if (selSec && lowerSections.indexOf(selSec) < 0 && upperSections.indexOf(selSec) < 0) selSec = null;
       syncWallsFromSections();
       renderPlanner();
@@ -3158,15 +3356,30 @@
       }
     }
     function onWallInputManual(wallId) {
-      const input = el(wallId);
-      let len = parseFloat(input.value) || 0;
-      const isMain = wallId === 'mainWall';
-      const fullRow = isMain || (currentType === 'parallel' && wallId === 'rightWall');   // у ряда напротив нет угла
-      const min = fullRow ? 30 : 75;
-      if (len < min) { len = min; input.value = min; }
-      const wall = isMain ? 'main' : (wallId === 'leftWall' ? 'left' : 'right');
-      fitWallToLength(wall, fullRow ? len : len - 60);
+      const input = el(wallId), wall = wallId === 'mainWall' ? 'main' : (wallId === 'leftWall' ? 'left' : 'right');
+      let len = Math.max(0, Math.round(parseFloat(input.value) || 0));
+      if (wall === 'main') len = Math.max(60, len); else if (len > 0 && len < 75) len = 75;
+      input.value = len;
+      trimToWall(wall);
       plannerChanged();
+    }
+    // стену уменьшили — убираем отступы, ужимаем последний шкаф или убираем лишние с дальнего края
+    function trimToWall(wall) {
+      ['lower', 'upper'].forEach(tier => {
+        for (let guard = 0; guard < 60; guard++) {
+          const cap = roomCap(wall), Lw = layoutAll(lowerSections, upperSections, currentType)[wall];
+          const tot = tier === 'lower' ? Lw.totalLower : Lw.totalUpper;
+          const arr = secsOf(tier).filter(x => x.wall === wall);
+          if (!arr.length || (tot <= cap + .5 && wallValid(wall))) break;
+          if (!wallValid(wall)) { arr.forEach(x => { const a = secsOf(tier); a.splice(a.indexOf(x), 1); if (selSec === x) selSec = null; }); break; }
+          const over = tot - cap, far = wall === 'left' ? arr[0] : arr[arr.length - 1];
+          const gapped = arr.find(x => (x.gap | 0) > 0);
+          if (gapped) { gapped.gap = Math.max(0, (gapped.gap | 0) - Math.ceil(over / 5) * 5); continue; }
+          const w = parseFloat(far.width) || 0, nw = Math.floor((w - over) / 5) * 5;
+          if (!isTall(far) && nw >= 30) { far.width = nw; continue; }
+          const a = secsOf(tier); a.splice(a.indexOf(far), 1); if (selSec === far) selSec = null;
+        }
+      });
     }
 
     function initDefaultSections() {
@@ -3387,15 +3600,9 @@
     })();
 
     function updateTypeUI() {
-      document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === currentType));
-      const box = el('sideWallsContainer');
-      if (currentType === 'straight') {
-        box.style.display = 'none';
-      } else {
-        box.style.display = 'grid';
-        el('groupLeftWall').style.display = hasLeftWall(currentType) ? 'flex' : 'none';
-        el('groupRightWall').style.display = hasRightWall(currentType) ? 'flex' : 'none';
-      }
+      // форма кухни выбирается в 3D: боковые стены в разделе 1 видны всегда
+      const box = el('sideWallsContainer'); if (box) box.style.display = 'grid';
+      ['groupLeftWall', 'groupRightWall'].forEach(id => { const g = el(id); if (g) g.style.display = 'flex'; });
       applyTypeLabels();
     }
     // у параллельной кухни «правая стена» — это ряд напротив
@@ -3410,37 +3617,14 @@
     }
     // угловые шкафы в углах Г- и П-образной кухни; в прямой и параллельной — обычные шкафы
     function ensureCorners() {
-      const unCorner = x => { x.kind = 'door'; x.autoName = true; };   // ширину не трогаем — ряд и верхние шкафы не сдвигаются
-      if (!hasLeftWall(currentType)) { lowerSections.forEach(x => { if (x.kind === 'corner') unCorner(x); }); return; }
-      const mainOf = () => lowerSections.filter(x => x.wall === 'main');
-      const fix = (x, at) => {   // возвращает, на сколько см сдвинулся основной ряд
-        if (x && x.kind === 'corner') return 0;
-        if (x && x.kind === 'door' && !isTall(x)) { const w0 = Number(x.width) || 0; x.kind = 'corner'; x.width = Math.max(90, w0); x.autoName = true; return x.width - w0; }
-        const c = newModule('lower', 'corner', 'main'); lowerSections.splice(at, 0, c); return c.width;
-      };
-      // верхний ряд сдвигаем на столько же, чтобы вытяжка осталась над варочной, а сушка — над мойкой
-      const shiftUpper = d => {
-        if (d < 1) return;
-        const mu = upperSections.filter(x => x.wall === 'main'); if (!mu.length) return;
-        const w0 = Number(mu[0].width) || 0;
-        if (w0 + d <= 120) mu[0].width = w0 + d;
-        else { const u = newModule('upper', 'door', 'main'); u.width = Math.round(d); upperSections.splice(upperSections.indexOf(mu[0]), 0, u); }
-      };
-      let m = mainOf();
-      shiftUpper(fix(m[0], m.length ? lowerSections.indexOf(m[0]) : lowerSections.length));
-      if (currentType === 'u-shape') {
-        m = mainOf(); const last = m[m.length - 1]; if (m.length >= 2) fix(last, lowerSections.indexOf(last) + 1); else fix(null, lowerSections.indexOf(last) + 1);
-        // верхний ряд доводим до правого угла, чтобы он сошёлся с правой стеной
-        const L = layoutAll(lowerSections, upperSections, currentType), ml = L.main.lower, mu = L.main.upper;
-        const gap = L.main.totalLower - L.main.totalUpper;
-        if (mu.length && L.right.upper.length && ml.length && !isTall(ml[ml.length - 1].sec) && gap >= 30) {
-          const u = newModule('upper', 'door', 'main'); u.width = Math.min(100, Math.round(gap));
-          upperSections.splice(upperSections.indexOf(mu[mu.length - 1].sec) + 1, 0, u);
-        }
-      }
-      // угловой шкаф не в углу (остался от другой формы кухни) — обычный шкаф
-      m = mainOf();
-      lowerSections.forEach(x => { if (x.kind === 'corner' && !(x === m[0] || (currentType === 'u-shape' && x === m[m.length - 1]))) unCorner(x); });
+      const L = layoutAll(lowerSections, [], currentType), ml = L.main.lower;
+      const want = new Set();
+      if (L.left.lower.length && ml.length) want.add(ml[0].sec);
+      if (L.right.lower.length && ml.length) want.add(ml[ml.length - 1].sec);
+      lowerSections.forEach(x => {
+        if (want.has(x)) { if ((x.kind === 'door' || x.kind == null) && !isTall(x) && !(x.drawers | 0)) { x.kind = 'corner'; x.autoName = true; } }
+        else if (x.kind === 'corner') { x.kind = 'door'; x.autoName = true; }
+      });
     }
 
     function setKitchenType(type) {
@@ -4082,6 +4266,15 @@
         f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: byName(p.fcn, p.fc), bc: byName(p.bcn, p.bc), lo: conv(p.lo), up: conv(p.up), o: p.o, i: p.isl || [0, 140, 80], kh: p.kh || null };
     }
 
+    // e[13] = «двери|подсветка|высота над столешницей|СВЧ на столешнице»
+    function extra13(e) {
+      const r = {}, q = typeof e[13] === 'string' ? e[13].split('|') : [];
+      if (q[0] === '1' || q[0] === '2') r.dn = +q[0];
+      if (q[1]) r.led = Math.max(0, Math.min(6, q[1] | 0));
+      if (q[2] !== undefined && q[2] !== '') { const v = +q[2]; if (v >= 20 && v <= 120) r.ug = v; }
+      if (q[3] === '1') r.mwTop = true;
+      return r;
+    }
     function ledFromArr(a) {
       a = Array.isArray(a) ? a : [];
       const n = (v, lo, hi, d) => { v = Number(v); return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d; };
@@ -4091,13 +4284,15 @@
       const om = { h: 'handles', p: 'push', g: 'gola' }, wm = { m: 'main', l: 'left', r: 'right' };
       const cfg = e => (e[0] === 'tower' ? { tw: e[7] || 'storage' } : (e[0] === 'fridge' ? { fr: e[7] || 'free' } : {}));
       const own = e => { const r = {}; if (e[11]) r.dsys = String(e[11]).split(','); if (e[12]) { const q = String(e[12]).split('|'), o = {}; HX_FIELDS.forEach((f, i) => { if (q[i]) o[f] = q[i]; }); const hx = cleanHx(o); if (hx) r.hx = hx; } return r; };
-      const lo = st.lo.map(e => Object.assign({ kind: e[0], width: e[2], shelves: e[3], drawers: e[4], openType: om[e[5]] || 'handles', wall: wm[e[6]] || 'main' }, cfg(e), own(e)));
-      const up = st.up.map(e => Object.assign({ kind: e[0], width: e[2], shelves: e[3], gasLifts: e[4], openType: om[e[5]] || 'handles', wall: wm[e[6]] || 'main' }, own(e)));
+      const lo = st.lo.map(e => Object.assign({ kind: e[0], width: e[2], shelves: e[3], drawers: e[4], openType: om[e[5]] || 'handles', wall: wm[e[6]] || 'main' }, cfg(e), own(e), extra13(e)));
+      const up = st.up.map(e => Object.assign({ kind: e[0], width: e[2], shelves: e[3], gasLifts: e[4], openType: om[e[5]] || 'handles', wall: wm[e[6]] || 'main' }, own(e), extra13(e)));
+      const ao = autoOpts(lo);
       const fcol = findColor(st.fc), bcol = findColor(st.bc);
       return { type: st.t, mainW: st.m, leftW: st.l, rightW: st.r, roomH: st.h, hasUpper: !!st.u, upperTiers: st.ut === 2 ? 2 : 1, upperH: st.uh, upperD: st.ud,
         facade: st.f, body: st.b, top: st.c, markup: CONFIG.colorMarkup[fcol ? fcol.tier : 0] || 0, lower: lo, upper: up,
-        island: !!st.i[0], islL: st.i[1], islW: st.i[2], sink: !!st.o[0], hob: !!st.o[1], app: !!st.o[2],
-        hw: st.hw === undefined ? CONFIG.defaults.hw : st.hw, led: ledFromArr(st.lg), khw: sanitizeKHW(st.kh),
+        island: !!st.i[0], islL: st.i[1], islW: st.i[2], sink: ao.sink, hob: ao.hob, app: ao.app,
+        counterH: st.ch || 89, upperGap: st.ug || 56,
+        hw: st.hw === undefined ? CONFIG.defaults.hw : st.hw, led: ledWithCabinets(ledFromArr(st.lg), lo.concat(up)), khw: sanitizeKHW(st.kh),
         decor: decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3] } : null),
         facadeHex: fcol ? fcol.item.hex : '#f8fafc', bodyHex: bcol ? bcol.item.hex : '#ffffff' };
     }
@@ -4133,12 +4328,12 @@
     /* ===================== ССЫЛКА «ПОДЕЛИТЬСЯ» ===================== */
     function serializeState() {
       const s = getCalcState();
-      const enc = (arr, tier) => arr.map(x => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '']);
+      const enc = (arr, tier) => arr.map(x => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : ''].join('|')]);
       const dc = decorClean(decorState);
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
-        o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW], kh: KHW };
+        o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW], kh: KHW, ch: s.counterH, ug: s.upperGap };
     }
     function b64urlEncode(str) {
       const bytes = new TextEncoder().encode(str);
@@ -4196,6 +4391,7 @@
         if (e[10] === 'L' || e[10] === 'R') s.hinge = e[10];
         if (kind === 'cargo') { s.cg = CARGO_W[e[7]] ? e[7] : 'sub200'; s.shelves = 0; }
         if (typeof e[12] === 'string' && e[12]) { const p = e[12].split('|'), o = {}; HX_FIELDS.forEach((f, i) => { if (p[i]) o[f] = p[i]; }); const hx = cleanHx(o); if (hx) s.hx = hx; }
+        Object.assign(s, extra13(e));
         if (typeof e[11] === 'string' && e[11]) s.dsys = e[11].split(',').slice(0, 8).map(k => KIS.drawerSys[k] ? k : 'tier');
         s.name = s.autoName ? defaultModuleName(kind, tier, s.id, s) : String(e[1]).slice(0, 60);
         return s;
@@ -4217,6 +4413,8 @@
       if (st.l !== undefined) el('leftWall').value = clampN(st.l, 60, 600, el('leftWall').value);
       if (st.r !== undefined) el('rightWall').value = clampN(st.r, 60, 600, el('rightWall').value);
       el('totalHeight').value = clampN(st.h, 150, 320, 240);
+      el('counterHeight').value = clampN(st.ch, 75, 105, 89);
+      el('upperGap').value = clampN(st.ug, 30, 100, 56);
       el('hasUpperTier').checked = st.u !== 0;
       el('upperHeight').value = clampN(st.uh, 30, 130, 72);
       el('upperDepth').value = clampN(st.ud, 20, 65, 35);
@@ -4287,6 +4485,10 @@
       const cc = {}; s.lower.forEach(x => { if (x.kind === 'cargo' && cargoItem(x.cg)) cc[x.cg] = (cc[x.cg] || 0) + 1; });
       Object.keys(cc).forEach(k => r.push(cargoItem(k).ru + ' × ' + cc[k] + ' (шкаф ' + CARGO_W[k] + ' см)'));
       const nm = (g, k) => k === 'tier' ? 'по классу комплектации' : (KIS[g][k] ? KIS[g][k].ru : k);
+      const cnt = {}; const addC = (g, k) => { if (k && k !== 'none' && KIS[g][k]) { const id = g + ':' + k; cnt[id] = (cnt[id] || 0) + 1; } };
+      if (s.hasUpper) s.upper.forEach(x => { if (x.kind === 'dryer') addC('dryer', effHw(x, K).dryer); });
+      s.lower.forEach(x => { const ex = effHw(x, K); if ((x.drawers | 0) > 0) addC('tray', ex.tray); if (x.kind === 'sink') addC('bin', ex.bin); });
+      Object.keys(cnt).forEach(id => { const [g, k] = id.split(':'); r.push(KIS[g][k].ru + ' × ' + cnt[id]); });
       const own = (x, code) => { const o = x.hx; if (!o) return; const p = [];
         if (o.hinge) p.push('петли ' + nm('hinges', o.hinge)); if (o.handle) p.push('ручки ' + nm('open', o.handle)); if (o.tipon) p.push(nm('open', o.tipon)); if (o.lift) p.push('подъёмник ' + nm('liftsK', o.lift));
         if (p.length) r.push(code + ': ' + p.join(', ')); };

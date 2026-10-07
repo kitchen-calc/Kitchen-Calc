@@ -163,7 +163,11 @@ export function createK3D(container, hooks = {}) {
 
   /* ---------- корпус (каркас) шкафа ---------- */
   function carcass(g, M, w, h, d, y0, shelves, opts = {}) {
-    const t = 1.6;
+    const t = 1.6, led = opts.led | 0;
+    if (led > 0) {   // подсветка: сначала под крышкой, потом под полками сверху вниз
+      box(g, w - 2 * t - 2, .5, 1, M.led, t + 1, y0 + h - t - .6, d - 7);
+      for (let k = (shelves | 0), n = 1; k >= 1 && n < led; k--, n++) box(g, w - 2 * t - 2, .5, 1, M.led, t + 1, y0 + h * k / ((shelves | 0) + 1) - .6, d - 7);
+    }
     box(g, t, h, d - 2, M.body, 0, y0, 0, 60); box(g, t, h, d - 2, M.body, w - t, y0, 0, 60);
     box(g, w - 2 * t, t, d - 2, M.body, t, y0, 0, 60);
     if (opts.top !== false) box(g, w - 2 * t, t, d - 2, M.body, t, y0 + h - t, 0, 60);
@@ -244,7 +248,8 @@ export function createK3D(container, hooks = {}) {
       const port = mesh(new THREE.CircleGeometry(Math.min(w, H) * .25, 40), M.glassBlack); port.position.set(w / 2, PL + H * .48, D + .3); g.add(port);
       return;
     }
-    carcass(g, M, w, H, D, PL, kind === 'cargo' ? 0 : s.shelves | 0);
+    carcass(g, M, w, H, D, PL, kind === 'cargo' ? 0 : s.shelves | 0, { led: s.led | 0 });
+    if (s.mwTop) microwaveTop(g, M, st, w);
     if (kind === 'cargo') { cargoModule(g, M, st, s, w, key, H, D, PL, zf, open); return; }
     if (kind === 'corner' && s._blind) { cornerModule(g, M, st, s, w, key, H, D, PL, zf, open); if (open === 'gola') box(g, w, 2.6, 2, M.black, 0, PL + H - 3, D - 4.5); return; }
     if (kind === 'oven') {
@@ -258,7 +263,7 @@ export function createK3D(container, hooks = {}) {
     if (nd > 0) {
       const hh = (H - GAP * (nd + 1)) / nd;
       for (let i = 0; i < nd; i++) drawer(g, M, st, key, GAP, PL + GAP + (nd - 1 - i) * (hh + GAP), w - 2 * GAP, hh, zf, D, open, st.dsysOf(s, i), i);
-    } else if (w >= 45) {
+    } else if (twoDoors(s, w)) {
       const dw = (w - 3 * GAP) / 2;
       door(g, M, st, key, GAP, PL + GAP, dw, H - 2 * GAP, zf, 'L', open, 'lower');
       door(g, M, st, key, 2 * GAP + dw, PL + GAP, dw, H - 2 * GAP, zf, 'R', open, 'lower');
@@ -266,6 +271,14 @@ export function createK3D(container, hooks = {}) {
     if (open === 'gola') box(g, w, 2.6, 2, M.black, 0, PL + H - 3, D - 4.5);
   }
 
+  function twoDoors(s, w) { return s.dn ? s.dn === 2 : w >= 45; }
+  // микроволновка на столешнице над шкафом
+  function microwaveTop(g, M, st, w) {
+    const y = st.BOX + st.CT, mw = Math.min(48, w - 6), x = (w - mw) / 2;
+    box(g, mw, 27, 34, new THREE.MeshStandardMaterial({ color: '#2b2e33', roughness: .4, metalness: .3 }), x, y, 8);
+    box(g, mw * .62, 20, .4, M.glassBlack, x + 3, y + 3.5, 42);
+    box(g, mw * .22, 20, .4, new THREE.MeshStandardMaterial({ color: '#3a3f46', roughness: .3, metalness: .5 }), x + mw * .72, y + 3.5, 42);
+  }
   /* ---------- карго / бутылочница: выдвижная корзина во всю высоту ---------- */
   function cargoModule(g, M, st, s, w, key, H, D, PL, zf, open) {
     const grp = new THREE.Group(); g.add(grp);
@@ -309,8 +322,8 @@ export function createK3D(container, hooks = {}) {
   /* ---------- верхний модуль ---------- */
   function upperModule(g, M, st, s, w, key, y0, h) {
     const D = st.UD, open = s.openType || 'handles', zf = D - FT, kind = s.kind || 'door';
-    if (kind === 'open') { carcass(g, M, w, h, D, y0, Math.max(2, s.shelves | 0)); return; }
-    carcass(g, M, w, h, D, y0, s.shelves | 0);
+    if (kind === 'open') { carcass(g, M, w, h, D, y0, Math.max(2, s.shelves | 0), { led: s.led | 0 }); return; }
+    carcass(g, M, w, h, D, y0, s.shelves | 0, { led: s.led | 0 });
     if (kind === 'hood') {   // вытяжка под шкафом
       box(g, w - 4, 7, D + 8, M.steel, 2, y0 - 7, 0); box(g, w - 10, .4, D, M.black, 5, y0 - 7.2, 4);
     }
@@ -320,7 +333,7 @@ export function createK3D(container, hooks = {}) {
       return;
     }
     const glass = kind === 'glass';
-    if (w >= 45) {
+    if (twoDoors(s, w)) {
       const dw = (w - 3 * GAP) / 2;
       door(g, M, st, key, GAP, y0 + GAP, dw, h - 2 * GAP, zf, 'L', open, 'upper', glass);
       door(g, M, st, key, 2 * GAP + dw, y0 + GAP, dw, h - 2 * GAP, zf, 'R', open, 'upper', glass);
@@ -415,13 +428,20 @@ export function createK3D(container, hooks = {}) {
     const fl = mesh(new THREE.PlaneGeometry(x1 - x0, zMax + 40), M.floor, false); fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, 0, zMax / 2 - 20); fl.receiveShadow = true;
     M.floor.map.repeat.set((x1 - x0) / 160, (zMax + 40) / 160); root.add(fl);
     const back = mesh(new THREE.PlaneGeometry(x1 - x0, H), M.wall, false); back.position.set((x0 + x1) / 2, H / 2, -.8); root.add(back);
-    const hasL = st.type === 'l-shape' || st.type === 'u-shape', hasR = st.type === 'u-shape';
+    const rm = st.room || {}, hasL = rm.left != null ? rm.left > 0 : (st.type === 'l-shape' || st.type === 'u-shape'), hasR = rm.right != null ? rm.right > 0 : st.type === 'u-shape';
     if (st.type === 'parallel') {   // стена за противоположным рядом
       const ow = mesh(new THREE.PlaneGeometry(x1 - x0, H), M.wall, false); ow.rotation.y = Math.PI; ow.position.set((x0 + x1) / 2, H / 2, st.ZOPP + .8); root.add(ow);
       box(root, x1 - x0, 7, 1.4, M.inner, x0, 0, st.ZOPP - .8);
     }
-    if (hasL) { const lw = mesh(new THREE.PlaneGeometry(zMax, H), M.wall, false); lw.rotation.y = Math.PI / 2; lw.position.set(-.8, H / 2, zMax / 2); root.add(lw); }
-    if (hasR) { const rw = mesh(new THREE.PlaneGeometry(zMax, H), M.wall, false); rw.rotation.y = -Math.PI / 2; rw.position.set(st.W + .8, H / 2, zMax / 2); root.add(rw); }
+    const lz = hasL && rm.left ? Math.max(rm.left, 80) : zMax, rz = hasR && rm.right ? Math.max(rm.right, 80) : zMax;
+    if (hasL) { const lw = mesh(new THREE.PlaneGeometry(lz, H), M.wall, false); lw.rotation.y = Math.PI / 2; lw.position.set(-.8, H / 2, lz / 2); root.add(lw); }
+    if (hasR) { const rw = mesh(new THREE.PlaneGeometry(rz, H), M.wall, false); rw.rotation.y = -Math.PI / 2; rw.position.set(st.W + .8, H / 2, rz / 2); root.add(rw); }
+    if (st.room) {   // граница комнаты на полу: шкафы за неё не выходят
+      const edge = new THREE.MeshBasicMaterial({ color: '#c8952f', transparent: true, opacity: .55 });
+      box(root, st.W, .3, 1.2, edge, 0, .2, -.2);
+      if (!hasR) box(root, 1.2, 140, 1.2, edge, st.W - .6, 0, -.6);
+      if (!hasL) box(root, 1.2, 140, 1.2, edge, -.6, 0, -.6);
+    }
     // плинтус
     box(root, x1 - x0, 7, 1.4, M.inner, x0, 0, -.6);
   }
@@ -500,12 +520,13 @@ export function createK3D(container, hooks = {}) {
       if (st.hasUpper) run.upper.forEach(r => {
         const w = r.u1 - r.u0, key = 'upper:' + r.sec.id;
         const g = placeGroup(wall, r.u0, r.u1, st);
-        g.userData.mod = { tier: 'upper', id: r.sec.id, w, h: st.UH * st.tiers, d: st.UD, y0: st.UB };
+        const ub = st.BOX + st.CT + (r.sec.ug != null ? +r.sec.ug : st.UGAP);   // низ шкафа: столешница + своя высота
+        g.userData.mod = { tier: 'upper', id: r.sec.id, w, h: st.UH * st.tiers, d: st.UD, y0: ub };
         g.userData.place = { wall, u0: r.u0, u1: r.u1 };
         const sst = stFor(st, r.sec);
-        upperModule(g, M, sst, r.sec, w, key, st.UB, st.UH);
-        if (st.tiers === 2) upperModule(g, M, sst, Object.assign({}, r.sec, { kind: 'door', gasLifts: 0 }), w, key + ':t2', st.UB + st.UH, st.UH);
-        if (st.led && st.led.level && st.led.work) box(g, w - 6, .6, 1.4, M.led, 3, st.UB - .7, st.UD - 6);
+        upperModule(g, M, sst, r.sec, w, key, ub, st.UH);
+        if (st.tiers === 2) upperModule(g, M, sst, Object.assign({}, r.sec, { kind: 'door', gasLifts: 0, dn: 0, led: 0 }), w, key + ':t2', ub + st.UH, st.UH);
+        if (st.led && st.led.level && st.led.work) box(g, w - 6, .6, 1.4, M.led, 3, ub - .7, st.UD - 6);
         root.add(g); pick.push(g);
       });
     });
@@ -566,7 +587,7 @@ export function createK3D(container, hooks = {}) {
     const c = center(), st = state, span = Math.max(st.W, 260);
     const dist = span * 1.25 + (st.island ? 140 : 60);
     if (name === 'front') camera.position.set(c.x, 150, c.z + dist);
-    else if (name === 'top') camera.position.set(c.x, dist * 1.6 + 200, c.z + 1);
+    else if (name === 'top') camera.position.set(c.x, dist * 1.05 + 150, c.z + 1);
     else if (name === 'left') camera.position.set(c.x + dist * .9, 170, c.z + dist * .7);
     else if (st.type === 'parallel') camera.position.set(c.x + dist * 1.05, 330, c.z + dist * .22);   // I I: смотрим вдоль прохода
     else if (st.type === 'l-shape') camera.position.set(c.x + dist * .55, 200, c.z + dist * 1.0);   // Г: смотрим справа, чтобы видеть угол
@@ -604,10 +625,15 @@ export function createK3D(container, hooks = {}) {
     selBox.position.set(m.w / 2, m.y0 + m.h / 2, m.d / 2).applyEuler(g.rotation).add(g.position); selBox.rotation.copy(g.rotation);
     invalidate();
   }
+  let moveMode = false;
+  function setMoveMode(on) { moveMode = !!on; controls.enableRotate = !moveMode; if (moveMode) setView('top'); invalidate(); }
   renderer.domElement.addEventListener('pointerdown', e => {
     downAt = [e.clientX, e.clientY]; drag = null;
-    const sel = state && state.selected; if (!sel || !hooks.onMove) return;
-    const m = hit(e); if (!m || m.tier !== sel.tier || m.id !== sel.id) return;
+    if (!hooks.onMove) return;
+    let sel = state && state.selected;
+    const m = hit(e); if (!m) return;
+    if (moveMode && (!sel || m.tier !== sel.tier || m.id !== sel.id)) { if (hooks.onSelect) hooks.onSelect({ tier: m.tier, id: m.id }); sel = state && state.selected; }
+    if (!sel || m.tier !== sel.tier || m.id !== sel.id) return;
     drag = { m, moved: false, to: null }; controls.enabled = false;
     try { renderer.domElement.setPointerCapture(e.pointerId); } catch (er) {}
   });
@@ -667,7 +693,7 @@ export function createK3D(container, hooks = {}) {
 
   return {
     update(st) { state = st; build(st); },
-    setView, toggle, openAll, isOpen,
+    setView, toggle, openAll, isOpen, setMoveMode, isMoveMode: () => moveMode,
     select(sel) { if (state) { state.selected = sel; highlight(); invalidate(); } },
     snapshot() { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); },
     dispose() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); container.removeChild(renderer.domElement); }

@@ -131,6 +131,29 @@
     if (key === 'bottle') return A(`<path class="a-open" d="M42 8V76M42 8H62M42 76H62"/>` + G('k-sl', '--tx:34px', `<rect x="44" y="12" width="20" height="58" rx="2" class="a-bask"/>` + [0, 1, 2, 3].map(i => `<circle cx="54" cy="${22 + i * 14}" r="5" class="a-glass"/>`).join('') + `<line x1="64" y1="8" x2="64" y2="74" class="a-door"/>`));
     return A(`<path class="a-open" d="M30 6V78M30 6H68M30 78H68"/>` + G('k-sl', '--tx:34px', `<rect x="34" y="8" width="34" height="68" rx="2" class="a-bask"/>` + [0, 1, 2, 3].map(i => `<line x1="34" y1="${22 + i * 14}" x2="68" y2="${22 + i * 14}" class="a-ln"/>`).join('') + `<line x1="68" y1="6" x2="68" y2="78" class="a-door"/>`), 'TOWER');
   }
+  /* сушилка для посуды: вид спереди верхнего шкафа, дверь поднимается, видны тарелки на решётке */
+  function dryer(key) {
+    if (key === 'none') return base();
+    const two = key !== 'inoxa_702', drawer = key === 'inoxa_6703';
+    const plates = (y, n) => Array.from({ length: n }, (_, i) => `<ellipse cx="${38 + i * 9}" cy="${y}" rx="2.4" ry="9" class="a-glass"/>`).join('') + L(32, y + 9, 90, y + 9, 'a-ln');
+    if (drawer) return A(`<path class="a-open" d="M30 30V72H90V30"/>` + G('k-sl', '--ty:-0px;--tx:0px', '') + G('k-sl', '--tx:0px;--ty:-14px', plates(56, 6) + L(30, 72, 90, 72, 'a-door')), 'ящик');
+    const rack = two ? plates(30, 6) + plates(56, 4).replace(/cy="56"/g, 'cy="56"') : plates(46, 6);
+    return A(`<rect class="a-box" x="28" y="10" width="64" height="66"/>` + rack + G('k-sw', O(28, 10, -82), `<rect x="28" y="10" width="64" height="66" class="a-doorf"/>`), two ? '2 уровня' : '1 уровень');
+  }
+  /* лоток для столовых приборов: вид сверху, ящик выдвигается */
+  function tray(key) {
+    if (key === 'none') return A(`<path class="a-open" d="M24 12V62H96V12"/>` + G('k-sl', '--ty:12px', `<rect x="28" y="16" width="64" height="44" class="a-bask"/>` + L(26, 62, 94, 62, 'a-door')));
+    const wood = key === 'ambia', cells = [36, 46, 56, 66, 76].map(x => `<rect x="${x}" y="22" width="8" height="32" rx="2" class="${wood ? 'a-leather' : 'a-bask'}"/>`).join('');
+    return A(`<path class="a-open" d="M24 12V62H96V12"/>` + G('k-sl', '--ty:12px', `<rect x="28" y="16" width="64" height="44" class="a-box"/>` + cells + L(26, 62, 94, 62, 'a-door')), wood ? 'дерево' : '');
+  }
+  /* мусорные вёдра под мойкой: дверь открывается, вёдра выезжают */
+  function bin(key) {
+    if (key === 'none') return A(`<path class="a-open" d="M30 30V72H84V30"/>` + G('k-sw', O(84, 72, -95), L(84, 72, 84, 32, 'a-door')) + `<circle cx="84" cy="72" r="3" class="a-gold"/>`);
+    const n = { union1: 1, door97: 1, union2: 2, union3: 3, union800: 3, envi: 2 }[key] || 1;
+    const bins = Array.from({ length: n }, (_, i) => `<path d="M${36 + i * (40 / n)} 46l3 24h${40 / n - 8}l3-24z" class="a-bask"/>`).join('');
+    if (key === 'door97') return A(`<path class="a-open" d="M30 30V72H84V30"/>` + G('k-sw', O(84, 72, -80), L(84, 72, 84, 32, 'a-door') + `<path d="M70 44l2 20h10l2-20z" class="a-bask"/>`) + `<circle cx="84" cy="72" r="3" class="a-gold"/>`, 'на дверь');
+    return A(`<path class="a-open" d="M30 30V72H84V30"/>` + G('k-sl', '--tx:22px', bins + L(84, 34, 84, 72, 'a-door')), n > 1 ? n + ' ведра' : '');
+  }
   /* «по классу комплектации» и прочее без механизма */
   function base() { return A(`<rect class="a-box" x="22" y="12" width="76" height="38"/>` + L(22, 50, 98, 50, 'a-door') + `<circle cx="22" cy="50" r="3.4" class="a-gold"/>`); }
 
@@ -147,6 +170,9 @@
       if (grp === 'sinkbox') return sinkbox(key);
       if (grp === 'cargo') return cargo(key);
       if (grp === 'space') return space(key);
+      if (grp === 'dryer') return dryer(key);
+      if (grp === 'tray') return tray(key);
+      if (grp === 'bin') return bin(key);
     } catch (e) {}
     return '';
   }

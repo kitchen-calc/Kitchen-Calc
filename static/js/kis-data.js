@@ -124,3 +124,30 @@ KIS.drawerSys = {
 KIS.liftsK = Object.assign({ tier: { ru: 'По классу комплектации (газлифт)' } }, (() => { const o = Object.assign({}, KIS.lifts); delete o.hinge; return o; })());
 /* Короткое имя выбранного варианта для чертежей и спецификации */
 KIS.name = (grp, key) => { const g = KIS[grp]; return g && g[key] ? g[key].ru : ''; };
+
+/* Кухня: сушилки для посуды (в верхний шкаф), лотки для столовых приборов (в верхний ящик), мусорные вёдра (под мойку) — kis.uz, 07.10.2026 */
+KIS.dryer = {
+  none:      { ru: 'Без сушилки (обычные полки)' },
+  inoxa_702: { ru: 'Inoxa 702 одноуровневая сушилка', price: 305900 },
+  inoxa_701: { ru: 'Inoxa 701 двухуровневая сушилка', price: 558600 },
+  inoxa_716: { ru: 'Inoxa ELLITE 716 двухуровневая сушилка', price: 1463000 },
+  cabio:     { ru: 'Cabio сушилка для посуды (премиум)', price: 2500000 },
+  inoxa_6703:{ ru: 'Inoxa 6703 ящик-сушилка (в нижний шкаф)', price: 3360000 }
+};
+KIS.tray = {
+  none:      { ru: 'Без лотка' },
+  vario:     { ru: 'Agoform Vario лоток для приборов', price: 100800 },
+  vario80:   { ru: 'Agoform Vario 500/800 лоток', price: 159600 },
+  combi:     { ru: 'Gollinucci Combi Line лоток', price: 365700 },
+  orga:      { ru: 'Blum ORGA-LINE лоток', price: 665000 },
+  ambia:     { ru: 'Blum AMBIA-LINE лоток из дерева', price: 798000 }
+};
+KIS.bin = {
+  none:      { ru: 'Без ведра' },
+  union1:    { ru: 'Unionplast мусорное ведро', price: 259500 },
+  door97:    { ru: 'Inoxa 97AR ведро на дверцу', price: 312500 },
+  union2:    { ru: 'Unionplast 600 мм, 2 ведра 15+15 л', price: 495700 },
+  union3:    { ru: 'Unionplast 600 мм, 3 ведра 15+7+7 л', price: 547600 },
+  union800:  { ru: 'Unionplast 800 мм, 3 ведра 15+15+15 л', price: 773900 },
+  envi:      { ru: 'Vauth-Sagel ENVI Center сортировка', price: 1130500 }
+};
