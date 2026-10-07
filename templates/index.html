@@ -475,15 +475,16 @@
     .preset-card:hover { border-color: var(--accent-gold); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(15, 23, 42, 0.10); }
     .preset-card.active { border-color: var(--accent-gold); box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.35); }
     .preset-render { background: #f3eee7; height: 170px; position: relative; overflow: hidden; --mx: 50%; --my: 50%; }
-    .preset-render .render-svg { transition: transform .7s cubic-bezier(.2,.7,.2,1), filter .7s; }
-    .preset-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; clip-path: circle(0% at var(--mx) var(--my)); transform: scale(1.12); filter: saturate(.7) brightness(1.1);
-      transition: clip-path .85s cubic-bezier(.22,.8,.2,1), transform 1.4s cubic-bezier(.2,.7,.2,1), filter 1s; }
+    .preset-render .render-svg, .preset-sketch { transition: transform .7s cubic-bezier(.2,.7,.2,1), filter .7s; }
+    .preset-sketch { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .preset-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; clip-path: circle(0% at var(--mx) var(--my)); transform: scale(1.06); filter: saturate(.6) brightness(1.12);
+      transition: clip-path .95s cubic-bezier(.22,.8,.2,1), transform 1.4s cubic-bezier(.2,.7,.2,1), filter 1s; }
     .preset-card:hover .has-photo .preset-photo, .has-photo.show-photo .preset-photo { clip-path: circle(150% at var(--mx) var(--my)); transform: scale(1); filter: none; }
-    .preset-card:hover .has-photo .render-svg, .has-photo.show-photo .render-svg { transform: scale(.94); filter: blur(3px); }
+    .preset-card:hover .has-photo .preset-sketch, .has-photo.show-photo .preset-sketch { transform: scale(1.06); filter: blur(2px); }
     .preset-ph-tag { position: absolute; left: 10px; bottom: 10px; z-index: 3; background: rgba(20,16,10,.72); color: #f3d58e; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; opacity: 0; transform: translateY(6px); transition: opacity .5s .25s, transform .5s .25s; pointer-events: none; }
     .preset-card:hover .preset-ph-tag, .show-photo .preset-ph-tag { opacity: 1; transform: none; }
     .preset-ph-btn { position: absolute; right: 8px; top: 8px; z-index: 4; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.9); display: none; align-items: center; justify-content: center; font-size: .9rem; box-shadow: 0 2px 8px rgba(0,0,0,.2); cursor: pointer; }
-    @media (hover: none) { .preset-ph-btn { display: flex; } .preset-card:hover .has-photo:not(.show-photo) .preset-photo { clip-path: circle(0% at 50% 50%); } .preset-card:hover .has-photo:not(.show-photo) .render-svg { transform: none; filter: none; } }
+    @media (hover: none) { .preset-ph-btn { display: flex; } .preset-card:hover .has-photo:not(.show-photo) .preset-photo { clip-path: circle(0% at 50% 50%); } .preset-card:hover .has-photo:not(.show-photo) .preset-sketch { transform: none; filter: none; } }
     .seg-badge { z-index: 3; }
     .preset-render .render-svg { height: 170px; }
     .preset-body { padding: 12px 14px 14px; }
@@ -4113,7 +4114,7 @@
       el('presetsGrid').innerHTML = PRESETS.map(p => {
         const price = computePrice(stateToCalc(presetState(p)));
         return `<button type="button" class="preset-card ${activePresetId === p.id ? 'active' : ''}" onclick="applyPreset('${p.id}')">
-          <div class="preset-render${p.photo ? ' has-photo' : ''}"${p.photo ? ' onmousemove="presetPeek(event, this)"' : ''}><span class="seg-badge seg-${p.seg}">${esc(t('seg_' + p.seg))}</span><svg class="render-svg" id="pr_${p.id}"></svg>${p.photo ? `<img class="preset-photo" src="/static/home/${p.photo}-640.webp" alt="${esc(t('p_' + p.id))}" loading="lazy" decoding="async"><span class="preset-ph-tag">${esc(t('phTag'))}</span><span class="preset-ph-btn" role="button" tabindex="0" aria-label="${esc(t('phTag'))}" onclick="presetTogglePhoto(event, this)">📷</span>` : ''}</div>
+          <div class="preset-render${p.photo ? ' has-photo' : ''}"${p.photo ? ' onmousemove="presetPeek(event, this)"' : ''}><span class="seg-badge seg-${p.seg}">${esc(t('seg_' + p.seg))}</span>${p.photo ? `<img class="preset-sketch" src="/static/home/${p.photo}-sk.webp" alt="" loading="lazy" decoding="async">` : `<svg class="render-svg" id="pr_${p.id}"></svg>`}${p.photo ? `<img class="preset-photo" src="/static/home/${p.photo}-640.webp" alt="${esc(t('p_' + p.id))}" loading="lazy" decoding="async"><span class="preset-ph-tag">${esc(t('phTag'))}</span><span class="preset-ph-btn" role="button" tabindex="0" aria-label="${esc(t('phTag'))}" onclick="presetTogglePhoto(event, this)">📷</span>` : ''}</div>
           <div class="preset-body">
             <div class="preset-name">${esc(t('p_' + p.id))}</div>
             <div class="preset-desc">${esc(t('p_' + p.id + '_d'))}</div>
@@ -4121,7 +4122,7 @@
           </div>
         </button>`;
       }).join('');
-      PRESETS.forEach(p => renderKitchen(el('pr_' + p.id), renderStateFrom(stateToCalc(presetState(p)))));
+      PRESETS.forEach(p => { if (!p.photo) renderKitchen(el('pr_' + p.id), renderStateFrom(stateToCalc(presetState(p)))); });
     }
 
     // точка, от которой раскрывается фото, — там, где курсор
