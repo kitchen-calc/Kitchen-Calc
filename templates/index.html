@@ -2426,7 +2426,13 @@
     }
     function fmt(n) { return Math.round(n || 0).toLocaleString('ru-RU').replace(/[  ]/g, ' '); }
     // цены для клиента — в долларах по курсу; расчёт ведётся в сумах (договор и спецификация — в сумах)
-    const USD_RATE = 11770;
+    let USD_RATE = 11770;   // запасной курс; актуальный подгружается с bank.uz (через /api/usd)
+    fetch('/api/usd').then(r => r.json()).then(d => {
+      if (!(d && d.rate > 5000)) return;
+      USD_RATE = d.rate;
+      const go = () => { try { updateCalculator(); renderPresetCards(); const hero = PRESETS.find(p => p.id === 'prestige'); if (hero && el('heroPhotoPrice')) el('heroPhotoPrice').textContent = t('fromUsd', { x: usd(computePrice(stateToCalc(presetState(hero)))) }); } catch (e) {} };
+      if (typeof appReady !== 'undefined' && appReady) go(); else window.addEventListener('load', () => setTimeout(go, 0));
+    }).catch(() => {});
     function usd(n) { return '$' + fmt((n || 0) / USD_RATE); }
     function sumNote(n) { return '≈ ' + fmt(n) + ' ' + t('sum') + ' · 1$ = ' + fmt(USD_RATE) + ' ' + t('sum'); }
     function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }

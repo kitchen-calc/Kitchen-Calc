@@ -160,6 +160,48 @@ async def wardrobe_calc_uz():
     return HTMLResponse(render_shkaf("uz"))
 
 
+USD_FALLBACK = 11770.0
+_usd_cache = {"rate": None, "src": "", "ts": 0.0}
+
+
+def _fetch_usd():
+    """Курс доллара: сначала с bank.uz (первый курс USD на странице валют), если не вышло — ЦБ РУз (cbu.uz)."""
+    try:
+        req = urllib.request.Request("https://bank.uz/currency", headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            page = resp.read().decode("utf-8", "ignore")
+        m = re.search(r'>USD</span>.{0,400}?<span class="medium-text">\s*([\d\s ]+[.,]\d+)\s*</span>', page, re.S)
+        if m:
+            v = float(re.sub(r"[\s ]", "", m.group(1)).replace(",", "."))
+            if 5000 < v < 50000:
+                return v, "bank.uz"
+    except Exception:
+        pass
+    try:
+        req = urllib.request.Request("https://cbu.uz/ru/arkhiv-kursov-valyut/json/USD/", headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        v = float(str(data[0]["Rate"]).replace(",", "."))
+        if 5000 < v < 50000:
+            return v, "cbu.uz"
+    except Exception:
+        pass
+    return None, ""
+
+
+@app.get("/api/usd")
+async def usd_rate():
+    # курс обновляется не чаще раза в 2 часа; если источники недоступны — последний известный или запасной
+    now = time.time()
+    if not _usd_cache["rate"] or now - _usd_cache["ts"] > 7200:
+        rate, src = await asyncio.to_thread(_fetch_usd)
+        if rate:
+            _usd_cache.update(rate=rate, src=src, ts=now)
+        elif not _usd_cache["rate"]:
+            _usd_cache.update(rate=USD_FALLBACK, src="fallback", ts=now - 6600)   # повторим попытку через 10 минут
+    return JSONResponse({"rate": round(_usd_cache["rate"]), "source": _usd_cache["src"]}, headers={"Cache-Control": "public, max-age=600"})
+
+
 PRIVACY_HTML = """<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Политика конфиденциальности | Kitchen Calc</title><link rel="canonical" href="https://kitchen-calc.uz/privacy">
 <style>body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;max-width:760px;margin:0 auto;padding:32px 18px 60px;line-height:1.6;color:#1f2937;background:#fbf8f2}

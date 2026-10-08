@@ -303,7 +303,8 @@ let activePreset = -1;
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/[  ]/g, ' ');
 // цены для клиента — в долларах по курсу (договор и спецификация — в сумах)
-const USD_RATE = 11770;
+let USD_RATE = 11770;   // запасной курс; актуальный подгружается с bank.uz (через /api/usd)
+fetch('/api/usd').then(r => r.json()).then(d => { if (d && d.rate > 5000) { USD_RATE = d.rate; try { refresh(); presetCards(); } catch (e) {} } }).catch(() => {});
 const usd = n => '$' + fmt((n || 0) / USD_RATE);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, Number(v) || 0));
