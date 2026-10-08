@@ -60,6 +60,7 @@
     .hdr.solid { background: rgba(17, 16, 14, 0.92); backdrop-filter: blur(10px); border-color: var(--line); }
     .hdr .wrap { display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 84px; }
     .logo { display: flex; align-items: center; gap: 14px; cursor: pointer; user-select: none; }
+    .logo-icon { height: 40px; width: auto; display: block; flex: none; }
     .logo-mark { font-family: var(--script); font-size: 2.3rem; line-height: 1; color: #f6efe3; letter-spacing: .5px; }
     .logo-sub { font-family: var(--serif); font-style: italic; font-size: .95rem; line-height: 1.15; color: var(--muted); max-width: 150px; border-left: 1px solid var(--line); padding-left: 14px; }
     .logo-sub b { display: block; font-style: normal; font-family: var(--sans); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
@@ -83,7 +84,7 @@
     .partner-band p { color: #cfc5b6; max-width: 640px; margin: 0 auto 28px; }
     .partner-band .hero-cta { justify-content: center; }
     .hdr-right { display: flex; align-items: center; gap: 14px; }
-    @media (max-width: 1620px) { .logo-sub { display: none; } .nav { gap: 18px; } .hdr-right { flex-wrap: nowrap; gap: 10px; } }
+    @media (max-width: 1620px) { .logo-sub { display: none; } .logo { gap: 10px; } .logo-icon { height: 32px; } .nav { gap: 18px; } .hdr-right { flex-wrap: nowrap; gap: 10px; } }
     .lang { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
     .lang button { background: none; border: 0; color: var(--muted); font: 600 .78rem var(--sans); padding: 6px 11px; cursor: pointer; }
     .lang button.on { background: var(--gold); color: #1b1408; }
@@ -327,6 +328,7 @@
       .hdr .wrap { height: 70px; }
       .hdr.open .nav { top: 70px; padding: 8px 16px 18px; }
       .logo-mark { font-size: 1.85rem; }
+      .logo-icon { height: 34px; }
       .logo-sub { display: none; }
       .hdr-right .btn, .hdr-right .pill { display: none; }
       .hero .wrap { padding-top: 108px; padding-bottom: 80px; }
@@ -369,6 +371,7 @@
   <header class="hdr" id="hdr">
     <div class="wrap">
       <div class="logo" id="logo" title="Kitchen Calc">
+        <img class="logo-icon" src="/static/home/kc-mark.png" alt="" width="48" height="40">
         <span class="logo-mark">Kitchen Calc</span>
         <span class="logo-sub"><b data-t="city">Ташкент</b><span data-t="tagline">кухни и мебель на заказ</span></span>
       </div>
@@ -598,7 +601,7 @@
     <div class="wrap">
       <div class="foot">
         <div>
-          <div class="logo-mark" style="margin-bottom:12px">Kitchen Calc</div>
+          <div class="logo" style="margin-bottom:12px"><img class="logo-icon" src="/static/home/kc-mark.png" alt="" width="48" height="40"><span class="logo-mark">Kitchen Calc</span></div>
           <p data-t="fAbout">Кухни и мебель на заказ в Ташкенте. Замер, производство, доставка и монтаж. Гарантия 12 месяцев по договору.</p>
         </div>
         <div>
