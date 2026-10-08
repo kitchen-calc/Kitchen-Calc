@@ -280,7 +280,6 @@ img { display:block; max-width:100%; }
 .hdr.solid { background:rgba(17,16,14,.92); backdrop-filter:blur(10px); border-color:var(--line); }
 .hdr .wrap { display:flex; align-items:center; justify-content:space-between; gap:20px; height:84px; }
 .logo { display:flex; align-items:center; gap:14px; }
-.logo-icon { height:40px; width:auto; display:block; flex:none; }
 .logo-mark { font-family:var(--script); font-size:2.3rem; line-height:1; color:#f6efe3; letter-spacing:.5px; white-space:nowrap; }
 .logo-sub { font-family:var(--serif); font-style:italic; font-size:.95rem; line-height:1.15; color:var(--muted); max-width:150px; border-left:1px solid var(--line); padding-left:14px; }
 .logo-sub b { display:block; font-style:normal; font-family:var(--sans); font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); font-weight:700; }
@@ -560,8 +559,6 @@ def render_landing(slug):
 <link rel="canonical" href="{url}">
 <link rel="icon" type="image/svg+xml" href="/static/home/favicon.svg">
 <link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="/static/home/apple-touch-icon.png">
-<link rel="manifest" href="/manifest.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Kitchen Calc">
 <meta property="og:title" content="{_e(p['title'])}">
@@ -577,7 +574,7 @@ def render_landing(slug):
 </head>
 <body>
 <header class="hdr" id="hdr"><div class="wrap">
-<a class="logo" href="/"><img class="logo-icon" src="/static/home/kc-mark.png" alt="" width="48" height="40"><span class="logo-mark">Kitchen Calc</span><span class="logo-sub"><b>Ташкент</b><span>кухни и мебель на заказ</span></span></a>
+<a class="logo" href="/"><span class="logo-mark">Kitchen Calc</span><span class="logo-sub"><b>Ташкент</b><span>кухни и мебель на заказ</span></span></a>
 {_nav(slug)}
 <div class="hdr-right"><a class="pill" href="/partners">Партнёрам</a><a class="btn btn-gold btn-sm" href="/calc">Рассчитать</a><button class="burger" id="burger" aria-label="Меню">☰</button></div>
 </div></header>
@@ -603,7 +600,7 @@ def render_landing(slug):
 </div></section>
 </main>
 <footer><div class="wrap"><div class="foot">
-<div><div class="logo" style="margin-bottom:12px"><img class="logo-icon" src="/static/home/kc-mark.png" alt="" width="48" height="40"><span class="logo-mark">Kitchen Calc</span></div><p>Кухни и мебель на заказ в Ташкенте. Замер, производство, доставка и монтаж. Гарантия 12 месяцев по договору.</p></div>
+<div><div class="logo-mark" style="margin-bottom:12px">Kitchen Calc</div><p>Кухни и мебель на заказ в Ташкенте. Замер, производство, доставка и монтаж. Гарантия 12 месяцев по договору.</p></div>
 <div><h4>Разделы</h4><ul><li><a href="/">Главная</a></li><li><a href="/calc">Калькулятор</a></li><li><a href="/partners">Для дизайнеров и строителей</a></li><li><a href="/#contract">Договор</a></li></ul></div>
 <div><h4>Контакты</h4><ul><li><a href="tel:{PHONE_TEL}">{PHONE}</a></li><li><a href="{TG_URL}" target="_blank" rel="noopener">Telegram: @{TG}</a></li><li><p>Ташкент</p></li></ul></div>
 </div><div class="social">© Kitchen Calc · кухни и мебель на заказ в Ташкенте</div></div></footer>

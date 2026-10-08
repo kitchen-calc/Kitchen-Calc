@@ -91,33 +91,6 @@ async def favicon_ico():
     return FileResponse(os.path.join(HOME_DIR, "favicon.ico"), media_type="image/x-icon", headers={"Cache-Control": "public, max-age=86400"})
 
 
-MANIFEST = {
-    "name": "Kitchen Calc — кухни и шкафы на заказ",
-    "short_name": "Kitchen Calc",
-    "description": "Расчёт кухни и шкафа онлайн: цена за 2 минуты, договор, замер.",
-    "lang": "ru",
-    "start_url": "/",
-    "scope": "/",
-    "display": "standalone",
-    "background_color": "#11100e",
-    "theme_color": "#11100e",
-    "icons": [
-        {"src": "/static/home/icon-192.png", "sizes": "192x192", "type": "image/png"},
-        {"src": "/static/home/icon-512.png", "sizes": "512x512", "type": "image/png"},
-    ],
-    "shortcuts": [
-        {"name": "Калькулятор кухни", "url": "/calc"},
-        {"name": "Калькулятор шкафа", "url": "/shkaf"},
-    ],
-}
-
-
-@app.get("/manifest.webmanifest")
-async def manifest():
-    # Манифест приложения: по нему Chrome/Edge/Android предлагают «Установить приложение»
-    return JSONResponse(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control": "public, max-age=86400"})
-
-
 @app.get("/yandex_c4a2d69f3e5cf5ea.html", response_class=HTMLResponse)
 async def yandex_verification():
     # Подтверждение прав на сайт в Яндекс.Вебмастере
