@@ -302,6 +302,9 @@ let viewMode = 'out';          // out / in
 let activePreset = -1;
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/[  ]/g, ' ');
+// цены для клиента — в долларах по курсу (договор и спецификация — в сумах)
+const USD_RATE = 11770;
+const usd = n => '$' + fmt((n || 0) / USD_RATE);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, Number(v) || 0));
 const T = () => P.tiers[M.tier];
@@ -1036,7 +1039,7 @@ function presetCards() {
     if (secsValid(mm)) ['rods', 'shelves', 'drawers', 'shoes', 'pant'].forEach(k => { mm[k] = mm.secs.reduce((a, s) => a + (s[k] | 0), 0); });
     const price = calcFor(mm).price;
     const ph = p.photo ? `<img class="pphoto" src="/static/home/${p.photo}-640.webp" alt="${p.name}" loading="lazy" decoding="async"><span class="ptag">Фото интерьера</span><span class="pbtn" role="button" tabindex="0" aria-label="Фото" onclick="presetTogglePhoto(event, this)">📷</span>` : '';
-    return `<button type="button" class="pcard ${activePreset === i ? 'on' : ''}" data-preset="${i}"><div class="pic${p.photo ? ' has-photo' : ''}"${p.photo ? ' onmousemove="presetPeek(event, this)"' : ''}>${p.photo ? `<img class="psketch" src="/static/home/${p.photo}-sk.webp" alt="" loading="lazy" decoding="async">` : drawAny(mm, mm.type === 'hall' ? 'out' : 'out', true)}<span class="seg">${p.seg}</span>${ph}</div><div class="tx"><b>${p.name}</b><small>${p.note}</small><em>от ${fmt(price)} сум</em></div></button>`;
+    return `<button type="button" class="pcard ${activePreset === i ? 'on' : ''}" data-preset="${i}"><div class="pic${p.photo ? ' has-photo' : ''}"${p.photo ? ' onmousemove="presetPeek(event, this)"' : ''}>${p.photo ? `<img class="psketch" src="/static/home/${p.photo}-sk.webp" alt="" loading="lazy" decoding="async">` : drawAny(mm, mm.type === 'hall' ? 'out' : 'out', true)}<span class="seg">${p.seg}</span>${ph}</div><div class="tx"><b>${p.name}</b><small>${p.note}</small><em>от ${usd(price)}</em></div></button>`;
   }).join('');
 }
 // фото раскрывается кругом от курсора; на телефоне — кнопкой 📷
@@ -1102,7 +1105,7 @@ function labelControls() {
 let LAST = null;
 function refresh() {
   const r = calc(); LAST = r;
-  $('priceTxt').textContent = fmt(r.price) + ' сум';
+  $('priceTxt').innerHTML = usd(r.price) + `<span style="display:block;font-size:.8rem;font-weight:600;opacity:.75">≈ ${fmt(r.price)} сум · 1$ = ${fmt(USD_RATE)} сум</span>`;
   const hasToggle = M.type !== 'wardrobe';
   $('vt').innerHTML = hasToggle ? `<button type="button" class="chip ${viewMode === 'out' ? 'on' : ''}" data-view="out">Снаружи (дверь открыта)</button><button type="button" class="chip ${viewMode === 'in' ? 'on' : ''}" data-view="in">Все секции внутри</button>` : '';
   $('view').innerHTML = drawAny(M, viewMode, false);

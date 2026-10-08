@@ -105,6 +105,7 @@
     .price-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); }
     .price-value { font-size: 2.2rem; font-weight: 800; color: var(--accent-gold); margin: 6px 0; }
     .price-currency { color: #111827; font-size: 0.95rem; }
+    .price-sum { font-size: .8rem; color: #8a6a2d; margin-top: -2px; }
 
     .drawing-title { font-size: 0.95rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     .svg-container { width: 100%; height: 250px; background: #eef2f6; border: 1px solid var(--border-gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -983,7 +984,7 @@
         <div class="sticky-sidebar">
           <div class="price-box">
             <div class="price-title" data-i18n="priceTitle">Ориентировочная стоимость</div>
-            <div class="price-value"><span id="totalPriceDisplay">0</span> <span class="price-currency" data-i18n="sum">сум</span></div>
+            <div class="price-value"><span id="totalPriceDisplay">0</span></div><div class="price-sum" id="totalPriceSum"></div>
             <div class="installment-line" id="installmentLine" style="display:none;"></div>
             <div class="price-note" data-i18n="priceNote">Итоговую стоимость уточняет мастер после замера.</div>
             <div class="share-row">
@@ -1253,7 +1254,7 @@
 
       <div class="price-box" style="margin-top:15px; padding:14px;">
         <div class="price-title" data-i18n="priceTitle">Ориентировочная стоимость</div>
-        <div class="price-value" style="font-size:1.7rem;"><span id="resTotalPrice">0</span> <span class="price-currency" data-i18n="sum">сум</span></div>
+        <div class="price-value" style="font-size:1.7rem;"><span id="resTotalPrice">0</span></div><div class="price-sum" id="resTotalSum"></div>
         <div class="price-note" data-i18n="priceNote">Итоговую стоимость уточняет мастер после замера.</div>
       </div>
     </div>
@@ -1343,7 +1344,7 @@
          «ЛДСП Эконом» — опорная точка (2,5 млн/п.м. фасада, как в прежнем прайсе); всё остальное считается от неё.
          Доставка материалов не внесена в лист: она есть ниже, в logistics (4% + фиксированная сумма). */
       mat: {
-        usdRate: 11800,        // курс, сум за $ (ЦБ РУз 04.10.2026: 11 773; банки продают ≈ 11 800–11 850) — для акрила, он в долларах
+        usdRate: 11770,        // курс, сум за $ (ЦБ РУз 04.10.2026: 11 773; банки продают ≈ 11 800–11 850) — для акрила, он в долларах
         retailK: 2.5,          // во сколько раз цена для клиента выше себестоимости (материалы ≈ 40% цены кухни)
         facadeArea: 1.4,       // м² фасадов на 1 п.м. кухни (нижний + верхний ряд)
         bodyArea: 4.7,         // м² корпуса (стенки, дно, полки) на 1 п.м. кухни
@@ -1476,7 +1477,7 @@
         badgeMeasure: 'Бесплатный замер', badgeDays: 'Изготовление {days} раб. дней', badgeWarranty: 'Гарантия {m} мес.', badgeDelivery: 'Доставка и монтаж',
         ctaPick: 'Подобрать кухню', ctaCall: 'Позвонить',
         presetsTitle: 'Готовые варианты', presetsSub: 'Нажмите на понравившийся — дальше можно поменять размеры, цвет и материалы.',
-        from: 'от {x} сум', sum: 'сум',
+        from: 'от {x} сум', fromUsd: 'от {x}', sum: 'сум',
         yourKitchen: 'Ваша кухня', r3Scheme: 'Схема', r3Loading: 'Загрузка 3D…', renderNote: 'Визуализация условная, точный проект — после замера',
         priceTitle: 'Ориентировочная стоимость', priceNote: 'Итоговую стоимость уточняет мастер после замера.',
         installment: 'или от {x} сум/мес в рассрочку на {n} мес.',
@@ -1606,7 +1607,7 @@
         badgeMeasure: 'Bepul oʻlchov', badgeDays: 'Tayyorlash {days} ish kuni', badgeWarranty: 'Kafolat {m} oy', badgeDelivery: 'Yetkazish va oʻrnatish',
         ctaPick: 'Oshxona tanlash', ctaCall: 'Qoʻngʻiroq qilish',
         presetsTitle: 'Tayyor variantlar', presetsSub: 'Yoqqanini bosing — keyin oʻlcham, rang va materiallarni oʻzgartirish mumkin.',
-        from: '{x} soʻmdan', sum: 'soʻm',
+        from: '{x} soʻmdan', fromUsd: '{x} dan', sum: 'soʻm',
         yourKitchen: 'Sizning oshxonangiz', r3Scheme: 'Sxema', r3Loading: '3D yuklanmoqda…', renderNote: 'Vizualizatsiya taxminiy, aniq loyiha — oʻlchovdan keyin',
         priceTitle: 'Taxminiy narx', priceNote: 'Yakuniy narxni usta oʻlchovdan keyin aniqlaydi.',
         installment: 'yoki {n} oyga muddatli toʻlov: oyiga {x} soʻmdan',
@@ -2411,6 +2412,10 @@
       return s;
     }
     function fmt(n) { return Math.round(n || 0).toLocaleString('ru-RU').replace(/[  ]/g, ' '); }
+    // цены для клиента — в долларах по курсу; расчёт ведётся в сумах (договор и спецификация — в сумах)
+    const USD_RATE = 11770;
+    function usd(n) { return '$' + fmt((n || 0) / USD_RATE); }
+    function sumNote(n) { return '≈ ' + fmt(n) + ' ' + t('sum') + ' · 1$ = ' + fmt(USD_RATE) + ' ' + t('sum'); }
     function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
     function mat(m) { return m[LANG] || m.ru; }
     function el(id) { return document.getElementById(id); }
@@ -3099,12 +3104,13 @@
       const s = getCalcState();
       const total = computePrice(s);
       calculatedTotalPriceNumber = total;
-      el('totalPriceDisplay').textContent = fmt(total);
+      el('totalPriceDisplay').textContent = usd(total);
+      el('totalPriceSum').textContent = sumNote(total);
 
       const inst = el('installmentLine');
       if (CONFIG.installmentMonths > 0) {
         inst.style.display = 'block';
-        inst.textContent = t('installment', { x: fmt(total / CONFIG.installmentMonths), n: CONFIG.installmentMonths });
+        inst.textContent = t('installment', { x: usd(total / CONFIG.installmentMonths), n: CONFIG.installmentMonths });
       } else {
         inst.style.display = 'none';
       }
@@ -3130,7 +3136,7 @@
         return `<button type="button" class="tier-card ${active ? 'active' : ''}" onclick="applyTier(${i})">
           <div class="tier-name">${esc(t('tier_' + tr.key))}</div>
           <div class="tier-desc">${esc(t('tierDesc_' + tr.key))}</div>
-          <div class="tier-price">${fmt(price)} <small>${esc(t('sum'))}</small></div>
+          <div class="tier-price">${usd(price)}</div>
           <div class="tier-pick">${esc(active ? t('tierPicked') : t('tierPick'))}</div>
         </button>`;
       }).join('');
@@ -4353,7 +4359,7 @@
           <div class="preset-body">
             <div class="preset-name">${esc(t('p_' + p.id))}</div>
             <div class="preset-desc">${esc(t('p_' + p.id + '_d'))}</div>
-            <div class="preset-price">${esc(t('from', { x: fmt(price) }))}</div>
+            <div class="preset-price">${esc(t('fromUsd', { x: usd(price) }))}</div>
           </div>
         </button>`;
       }).join('');
@@ -4614,7 +4620,8 @@
       lowerSections.forEach((sec, idx) => drawSectionCadScheme('resMini_lower_' + idx, 'lower', sec));
       if (s.hasUpper) upperSections.forEach((sec, idx) => drawSectionCadScheme('resMini_upper_' + idx, 'upper', sec));
 
-      el('resTotalPrice').textContent = fmt(calculatedTotalPriceNumber);
+      el('resTotalPrice').textContent = usd(calculatedTotalPriceNumber);
+      el('resTotalSum').textContent = sumNote(calculatedTotalPriceNumber);
       el('leadPhone').value = el('clientPhone').value;
       resetLeadUI();
       el('summaryModal').style.display = 'block';
@@ -4975,7 +4982,7 @@ ${body}
       renderPresetCards();
       setRenderMode((() => { try { return localStorage.getItem('kc_r3'); } catch (e) { return null; } })() || '3d');
       const hero = PRESETS.find(p => p.id === 'prestige');
-      if (hero && el('heroPhotoPrice')) el('heroPhotoPrice').textContent = t('from', { x: fmt(computePrice(stateToCalc(presetState(hero)))) });
+      if (hero && el('heroPhotoPrice')) el('heroPhotoPrice').textContent = t('fromUsd', { x: usd(computePrice(stateToCalc(presetState(hero)))) });
       if (typeof msInit === 'function') msInit();
       appReady = true;
       // ссылка с главной: /calc?preset=loft — сразу открыть готовый вариант
