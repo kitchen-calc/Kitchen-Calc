@@ -465,7 +465,6 @@
     @media (prefers-reduced-motion: reduce) { .hero-full .hero-bg { animation: none; } }
     .hero-photo-tag { position: absolute; right: 22px; bottom: 22px; z-index: 2; text-decoration: none; display: flex; flex-direction: column; gap: 2px; background: rgba(18,14,9,.78); border: 1px solid rgba(227,179,84,.55); border-radius: 12px; padding: 10px 14px; color: #f3e6c8; backdrop-filter: blur(4px); }
     .hero-photo-tag b { font-family: 'Playfair Display', Georgia, serif; font-size: 1.05rem; color: #f6dc9a; }
-    .hero-photo-tag em { font-style: normal; font-weight: 800; color: #fff; font-size: .9rem; }
     .hero-photo-tag i { font-style: normal; font-size: .78rem; color: #e9b44c; }
     @media (max-width: 900px) { .hero-full { min-height: 0; padding-bottom: 110px !important; } .hero-full::after { background: linear-gradient(0deg, rgba(14,10,6,.92) 30%, rgba(14,10,6,.55) 100%); } .hero-photo-tag { left: 16px; right: auto; bottom: 16px; } }
 
@@ -941,7 +940,7 @@
             <a class="btn-ghost" id="heroCall" href="tel:+998920934510" data-i18n="ctaCall">Позвонить</a>
           </div>
         </div>
-        <a class="hero-photo-tag" href="#presets" onclick="applyPreset('prestige'); return false;"><b>Престиж с островом</b><em id="heroPhotoPrice"></em><i>Собрать такую →</i></a>
+        <a class="hero-photo-tag" href="#presets" onclick="applyPreset('prestige'); return false;"><b>Престиж с островом</b><i>Собрать такую →</i></a>
       </div>
     </section>
 
@@ -2429,7 +2428,7 @@
     fetch('/api/usd').then(r => r.json()).then(d => {
       if (!(d && d.rate > 5000)) return;
       USD_RATE = d.rate;
-      const go = () => { try { updateCalculator(); renderPresetCards(); const hero = PRESETS.find(p => p.id === 'prestige'); if (hero && el('heroPhotoPrice')) el('heroPhotoPrice').textContent = t('fromUsd', { x: usd(computePrice(stateToCalc(presetState(hero)))) }); } catch (e) {} };
+      const go = () => { try { updateCalculator(); renderPresetCards(); } catch (e) {} };
       if (typeof appReady !== 'undefined' && appReady) go(); else window.addEventListener('load', () => setTimeout(go, 0));
     }).catch(() => {});
     function usd(n) { return '$' + fmt((n || 0) / USD_RATE); }
@@ -4998,8 +4997,6 @@ ${body}
       }
       renderPresetCards();
       setRenderMode((() => { try { return localStorage.getItem('kc_r3'); } catch (e) { return null; } })() || '3d');
-      const hero = PRESETS.find(p => p.id === 'prestige');
-      if (hero && el('heroPhotoPrice')) el('heroPhotoPrice').textContent = t('fromUsd', { x: usd(computePrice(stateToCalc(presetState(hero)))) });
       if (typeof msInit === 'function') msInit();
       appReady = true;
       // ссылка с главной: /calc?preset=loft — сразу открыть готовый вариант
