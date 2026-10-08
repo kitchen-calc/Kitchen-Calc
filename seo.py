@@ -28,8 +28,8 @@ SEO = {
         "catalog": "Мебель на заказ",
         "faq": [
             ("Сколько стоит кухня на заказ в Ташкенте?",
-             "Цена зависит от размеров, материалов (ЛДСП, ЛМДФ, акрил), столешницы и фурнитуры. Готовые варианты стартуют примерно "
-             "от 7 млн сум за прямую кухню 1,8 м. Точную стоимость вашей кухни посчитает онлайн-калькулятор за 2 минуты, "
+             "Цена зависит от размеров, материалов (ЛДСП, ЛМДФ, акрил), столешницы и фурнитуры. "
+             "Точную стоимость вашей кухни посчитает онлайн-калькулятор за 2 минуты, "
              "а окончательную цену мастер фиксирует в договоре после замера."),
             ("Сколько времени делается кухня?",
              "Изготовление занимает от 3 до 30 рабочих дней в зависимости от сложности, материалов и загрузки производства. "
@@ -68,8 +68,8 @@ SEO = {
         "catalog": "Buyurtma mebel",
         "faq": [
             ("Toshkentda buyurtma asosida oshxona narxi qancha?",
-             "Narx oʻlcham, material (LDSP, LMDF, akril), stoleshnitsa va furniturasiga bogʻliq. Tayyor variantlar toʻgʻri 1,8 m "
-             "oshxona uchun taxminan 7 mln soʻmdan boshlanadi. Aniq narxni onlayn kalkulyator 2 daqiqada hisoblab beradi, "
+             "Narx oʻlcham, material (LDSP, LMDF, akril), stoleshnitsa va furniturasiga bogʻliq. "
+             "Aniq narxni onlayn kalkulyator 2 daqiqada hisoblab beradi, "
              "yakuniy narxni usta oʻlchovdan keyin shartnomada belgilaydi."),
             ("Oshxona necha kunda tayyor boʻladi?",
              "Tayyorlash murakkablik, material va ishlab chiqarish bandligiga qarab 3 dan 30 ish kunigacha davom etadi. "
