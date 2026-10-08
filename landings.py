@@ -558,10 +558,10 @@ def render_landing(slug):
 <meta name="description" content="{_e(p['description'])}">
 <meta name="theme-color" content="#11100e">
 <link rel="canonical" href="{url}">
-<link rel="icon" type="image/svg+xml" href="/static/home/favicon.svg">
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="/static/home/apple-touch-icon.png">
-<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/static/home/favicon.svg?v=2">
+<link rel="icon" href="/favicon.ico?v=2" sizes="any">
+<link rel="apple-touch-icon" href="/static/home/apple-touch-icon.png?v=2">
+<link rel="manifest" href="/manifest.webmanifest?v=2">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Kitchen Calc">
 <meta property="og:title" content="{_e(p['title'])}">
@@ -577,7 +577,7 @@ def render_landing(slug):
 </head>
 <body>
 <header class="hdr" id="hdr"><div class="wrap">
-<a class="logo" href="/"><img class="logo-icon" src="/static/home/kc-mark.png" alt="" width="48" height="40"><span class="logo-mark">Kitchen Calc</span><span class="logo-sub"><b>Ташкент</b><span>кухни и мебель на заказ</span></span></a>
+<a class="logo" href="/"><img class="logo-icon" src="/static/home/kc-mark.png?v=2" alt="" width="48" height="40"><span class="logo-mark">Kitchen Calc</span><span class="logo-sub"><b>Ташкент</b><span>кухни и мебель на заказ</span></span></a>
 {_nav(slug)}
 <div class="hdr-right"><a class="pill" href="/partners">Партнёрам</a><a class="btn btn-gold btn-sm" href="/calc">Рассчитать</a><button class="burger" id="burger" aria-label="Меню">☰</button></div>
 </div></header>
@@ -603,7 +603,7 @@ def render_landing(slug):
 </div></section>
 </main>
 <footer><div class="wrap"><div class="foot">
-<div><div class="logo" style="margin-bottom:12px"><img class="logo-icon" src="/static/home/kc-mark.png" alt="" width="48" height="40"><span class="logo-mark">Kitchen Calc</span></div><p>Кухни и мебель на заказ в Ташкенте. Замер, производство, доставка и монтаж. Гарантия 12 месяцев по договору.</p></div>
+<div><div class="logo" style="margin-bottom:12px"><img class="logo-icon" src="/static/home/kc-mark.png?v=2" alt="" width="48" height="40"><span class="logo-mark">Kitchen Calc</span></div><p>Кухни и мебель на заказ в Ташкенте. Замер, производство, доставка и монтаж. Гарантия 12 месяцев по договору.</p></div>
 <div><h4>Разделы</h4><ul><li><a href="/">Главная</a></li><li><a href="/calc">Калькулятор</a></li><li><a href="/partners">Для дизайнеров и строителей</a></li><li><a href="/#contract">Договор</a></li></ul></div>
 <div><h4>Контакты</h4><ul><li><a href="tel:{PHONE_TEL}">{PHONE}</a></li><li><a href="{TG_URL}" target="_blank" rel="noopener">Telegram: @{TG}</a></li><li><p>Ташкент</p></li></ul></div>
 </div><div class="social">© Kitchen Calc · кухни и мебель на заказ в Ташкенте</div></div></footer>
