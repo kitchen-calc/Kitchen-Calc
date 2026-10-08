@@ -1424,6 +1424,19 @@
       ],
       // Логистика: ввоз и доставка материалов в цех (pct от стоимости изделия) и доставка готовой кухни по Ташкенту (fixed, сум)
       logistics: { pct: 0.04, fixed: 300000 },
+      /* ПРАЙС МАСТЕРА (октябрь 2026). Погонный метр кухни (низ + верх) = себестоимость листов × 2 (столько же — работа) + доставка.
+         Эконом: 1,5 листа на п.м. (фасад и корпус из одного листа) → себестоимость 1 250 000, цена 2 500 000.
+         Стандарт: 3 листа (фасадный лист отдельно) → 1 950 000 → 3 900 000.  Премиум (акрил): 3 листа → 4 050 000 → 8 100 000.
+         В цену метра входят корпус, фасады, двери на петлях класса и столешница ЛДСП 28 мм. Отдельно: полки, ящики, подъёмники,
+         фурнитура на выбор, техника, подсветка, остров, дорогие столешницы (разница с ЛДСП 28 мм). */
+      ppm: {
+        cost: [1250000, 1850000, 1950000, 2000000, 2100000, 2150000, 3500000, 4050000],   // по фасадам: ЛДСП Эк, ЛМДФ Эк, ЛДСП Прем, ЛМДФ Прем, ЛДСП Плат, ЛМДФ Плат, Акрил Китай, Акрил Турция
+        sheets: [1.5, 3, 3, 3, 3, 3, 3, 3],          // листов на п.м. (для доставки)
+        workK: 1,                                     // работа = себестоимость × workK
+        delivery: { small: 300000, big: 500000, limit: 4 },   // по Ташкенту: до 4 листов включительно — 300 000, больше — 500 000
+        shelf: [50000, 70000, 110000],                // полка: эконом / стандарт / премиум
+        lowerShare: 0.6, upperShare: 0.4             // доля нижнего и верхнего ряда в цене метра
+      },
       baseWork: 300000,                 // работа, сборка, расходники — сум на погонный метр
       applianceWork: { oven: 120000, micro: 100000, dishwasher: 150000, washer: 150000, fridge: 60000, fridgeBuilt: 200000, glass: 40000 },   // подключение и врезка техники (сама техника в цену не входит)
       // Сравнение «Эконом / Стандарт / Премиум»: номера материалов из списков выше (с нуля)
@@ -2978,7 +2991,7 @@
       const H = CONFIG.hardware[s.hw] || CONFIG.hardware[CONFIG.defaults.hw];
       const K = s.khw || {};
       // фурнитура считается по каждому шкафу: своя (x.hx) или общая для кухни
-      const HG = x => { const k = effHw(x, K).hinge; return (k !== 'tier' && KIS.hinges[k]) ? KIS.hinges[k].price + KIS.plate : H.hinge; };   // одна петля
+      const HG = x => { const k = effHw(x, K).hinge; return (k !== 'tier' && KIS.hinges[k]) ? Math.max(0, KIS.hinges[k].price + KIS.plate - H.hinge) : 0; };   // петли класса уже в цене метра — доплата только за выбранные
       const HDL = x => { const k = effHw(x, K).handle; return (k !== 'tier' && KIS.open[k]) ? KIS.open[k].price : 0; };                          // одна ручка
       const PUSH = x => { const k = effHw(x, K).tipon; return (k !== 'tier' && KIS.open[k]) ? KIS.open[k].price : H.push; };                    // TIP-ON на фасад
       const LIFT = x => { const k = effHw(x, K).lift; return (k !== 'tier' && KIS.liftsK[k]) ? KIS.liftsK[k].price : H.lift; };                // подъёмник
@@ -3045,53 +3058,52 @@
       return meters * L.perM + shelves * L.shelf + L.kit;
     }
 
+    // класс по фасаду: 0 эконом (ЛДСП Эконом), 1 стандарт (ЛДСП/ЛМДФ), 2 премиум (акрил)
+    function priceClass(facade) { return facade === 0 ? 0 : (CONFIG.facades[facade] && CONFIG.facades[facade].kind === 'acr' ? 2 : 1); }
     function computePrice(s) {
-      const facadePriceM = CONFIG.facades[s.facade].price * (1 + (s.markup || 0));
-      const bodyPriceM = CONFIG.bodies[s.body].price;
-      const topPriceM = CONFIG.countertops[s.top].price;
-      const work = CONFIG.baseWork;
-
-      // погонные метры — по ширине шкафов (стены из раздела 1 — только границы комнаты)
+      const PP = CONFIG.ppm, fi = Math.max(0, Math.min(PP.cost.length - 1, s.facade | 0));
+      const rate = PP.cost[fi] * (1 + PP.workK);                 // цена погонного метра (низ + верх) с работой
+      const cls = priceClass(fi), shelfP = PP.shelf[cls];
+      const topExtra = Math.max(0, CONFIG.countertops[s.top].price - CONFIG.countertops[0].price);   // столешница дороже базовой ЛДСП 28 мм
+      const AW = CONFIG.applianceWork, TT = tallTopOf(s.roomH);
       const sumW = arr => arr.reduce((a, x) => a + (parseFloat(x.width) || 0), 0) / 100;
-      let lowerMeters = Math.max(0.3, sumW(s.lower));
-      let total = lowerMeters * ((facadePriceM * 0.55) + (bodyPriceM * 0.5) + topPriceM + work);
-      const AW = CONFIG.applianceWork, TT = tallTopOf(s.roomH), carcass = facadePriceM * 0.55 + bodyPriceM * 0.5;
-      let tallWidth = 0;
+      // погонные метры: сумма ширин шкафов — угол считается один раз (240 + 120 − 60 = 300)
+      let lowM = 0, tallM = 0, total = 0;
       s.lower.forEach(x => {
-        total += (x.shelves || 0) * 50000;
-        if (x.openType === 'gola') total += 95000;
         const w = (parseFloat(x.width) || 0) / 100;
-        if (isTall(x)) {   // высокий модуль: вместо стандартной тумбы с столешницей — корпус до потолка
-          tallWidth += w;
-          const base = carcass + topPriceM + work, tall = carcass * (TT / 85) + work;
-          total -= w * base;
-          if (x.kind === 'tower') total += w * tall;
-          else total += w * (x.fr === 'built' ? tall * 0.55 : carcass * 0.25);
-        }
+        total += (x.shelves || 0) * shelfP;
+        if (x.openType === 'gola') total += 95000;
+        if (isTall(x)) {
+          tallM += w;
+          if (x.kind === 'tower') total += w * rate * (TT / 160);                 // пенал до потолка: как низ + верх по высоте
+          else total += w * rate * (x.fr === 'built' ? TT / 160 : 0.15);         // встроенный холодильник — пенал, отдельный — только ниша
+        } else { lowM += w; total += w * (rate * PP.lowerShare + topExtra); }
         appliancesOf(x).forEach(a => {
-          if (a.top) return;   // микроволновка на столешнице — просто техника, не мебель
+          if (a.top) return;
           if (a.k === 'oven' || a.k === 'micro' || a.k === 'dishwasher' || a.k === 'washer') total += AW[a.k] || 0;
           else if (a.k === 'fridge') total += a.built ? AW.fridgeBuilt : AW.fridge;
         });
       });
-
+      let upM = 0;
       if (s.hasUpper) {
-        const upperMeters = sumW(s.upper);
-        total += upperMeters * ((facadePriceM * 0.45) + (bodyPriceM * 0.4)) * (s.upperH / 72) * (s.upperD / 35) * (s.upperTiers === 2 ? 2 : 1);
+        upM = sumW(s.upper);
+        total += upM * rate * PP.upperShare * (s.upperH / 72) * (s.upperTiers === 2 ? 2 : 1);
         s.upper.forEach(x => {
-          total += (x.shelves || 0) * 50000;
+          total += (x.shelves || 0) * shelfP;
           if (x.openType === 'gola') total += 95000;
           if (x.kind === 'glass') total += AW.glass * Math.max(1, Math.round((parseFloat(x.width) || 0) / 45));
         });
       }
-
-      if (s.island) total += (s.islL / 100) * (facadePriceM + topPriceM + work);
+      const islM = s.island ? s.islL / 100 : 0;
+      if (islM) total += islM * (rate * PP.lowerShare * 1.5 + topExtra * (s.islW / 60));   // остров: тумбы с двух сторон, столешница шире
       total += hardwareCost(s);
       if (s.sink) total += 150000;
       if (s.hob) total += 150000;
       if (s.app) total += 400000;
       total += ledCost(s);
-      total = total * (1 + CONFIG.logistics.pct) + CONFIG.logistics.fixed;   // ввоз и доставка материалов, доставка кухни
+      // доставка по Ташкенту: по числу листов
+      const sheets = (Math.max(lowM, upM) + tallM * 1.5 + islM) * PP.sheets[fi];
+      total += sheets > PP.delivery.limit ? PP.delivery.big : PP.delivery.small;
       return Math.round(total / 10000) * 10000; // круглая цена: до 10 000 сум
     }
 
