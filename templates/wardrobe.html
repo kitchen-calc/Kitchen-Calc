@@ -254,7 +254,7 @@
 <script src="/static/js/kis-art.js?v=2"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
 <!--LANGSCRIPT-->
-<script src="/static/js/contract-data.js?v=1"></script>
+<script src="/static/js/contract-data.js?v=2"></script>
 <script>
 /* =====================================================================
    ЦЕНЫ. Всё, что влияет на стоимость, — в этом блоке; меняйте цифры здесь.
@@ -1766,7 +1766,7 @@ function openContractPage() {
 </style></head><body>
 <div class="toolbar"><button onclick="window.print()">🖨 Печать / сохранить в PDF</button><span>Поля с жёлтым фоном можно заполнить прямо здесь перед печатью.</span></div>
 <div class="note">Образец договора. Перед подписанием проверьте текст, заполните паспортные данные сторон и, при необходимости, покажите его юристу.</div>
-<div class="doc">${body}</div></body></html>`;
+<div class="doc" data-total="${total}" data-date="${yyyy}-${mm}-${dd}">${body}</div><script src="${location.origin}/static/js/installment.js?v=1"><\/script></body></html>`;
   const w = window.open('', '_blank'); if (!w) { toast('Разрешите всплывающие окна для сайта'); return; }
   w.document.open(); w.document.write(html); w.document.close();
 }
