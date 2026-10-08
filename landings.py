@@ -559,6 +559,8 @@ def render_landing(slug):
 <link rel="canonical" href="{url}">
 <link rel="icon" type="image/svg+xml" href="/static/home/favicon.svg">
 <link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/static/home/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Kitchen Calc">
 <meta property="og:title" content="{_e(p['title'])}">
