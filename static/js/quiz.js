@@ -25,6 +25,9 @@
     { id: 'level', q: T('Какой уровень отделки ближе?', 'Qaysi daraja yaqinroq?'), opts: [
       ['econ', T('Эконом — ЛДСП, практично', 'Ekonom — LDSP, amaliy')], ['std', T('Стандарт — МДФ, хорошая фурнитура', 'Standart — MDF, yaxshi furnitura')],
       ['prem', T('Премиум — акрил, Blum, подсветка', 'Premium — akril, Blum, yoritish')], ['help', T('Посоветуйте, что лучше', 'Maslahat bering')]] },
+    { id: 'budget', q: T('На какую сумму рассматриваете?', 'Qancha summaga moʻljallayapsiz?'), opts: [
+      ['1k', T('До $1 000', '$1 000 gacha')], ['3k', T('До $3 000', '$3 000 gacha')], ['5k', T('До $5 000', '$5 000 gacha')],
+      ['more', T('Выше $5 000', '$5 000 dan yuqori')], ['help', T('Пока не знаю — подскажите', 'Hali bilmayman — maslahat bering')]] },
     { id: 'when', q: T('Когда нужна мебель?', 'Mebel qachon kerak?'), opts: [
       ['asap', T('Как можно скорее', 'Imkon qadar tez')], ['1m', T('В течение месяца', 'Bir oy ichida')],
       ['3m', T('Через 1–3 месяца', '1–3 oydan keyin')], ['later', T('Идёт ремонт, пока выбираю', 'Taʼmir ketyapti, tanlayapman')]] },
@@ -44,7 +47,7 @@
       root.innerHTML = '<div class="kq-intro"><img class="kq-bg" src="' + IMG('hero') + '" alt="" loading="lazy">' +
         '<div class="kq-in"><div class="eyebrow">' + T('Расчёт за 1 минуту', '1 daqiqada hisob') + '</div>' +
         '<h2>' + T('Подберём мебель под ваш бюджет и сроки', 'Byudjet va muddatingizga mos mebel tanlaymiz') + '</h2>' +
-        '<p>' + T('Ответьте на 6 коротких вопросов — мастер подготовит расчёт и предложит варианты под вашу квартиру.', '6 ta qisqa savolga javob bering — usta hisob tayyorlaydi va kvartirangizga variantlar taklif qiladi.') + '</p>' +
+        '<p>' + T('Ответьте на 7 коротких вопросов — мастер подготовит расчёт и предложит варианты под вашу квартиру.', '7 ta qisqa savolga javob bering — usta hisob tayyorlaydi va kvartirangizga variantlar taklif qiladi.') + '</p>' +
         '<button type="button" class="btn btn-gold kq-start">' + T('Пройти опрос', 'Soʻrovnomadan oʻtish') + ' →</button>' +
         '<div class="kq-bonus"><span>' + T('После опроса', 'Soʻrovnomadan keyin') + '</span>' +
         '<b>📐 ' + T('Бесплатный замер', 'Bepul oʻlchov') + '</b><b>💳 ' + T('Рассрочка 0%', '0% boʻlib toʻlash') + '</b><b>🧾 ' + T('Расчёт стоимости', 'Narx hisobi') + '</b></div></div></div>';
