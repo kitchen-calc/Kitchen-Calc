@@ -883,6 +883,12 @@
     .k3d-side .k3s-note { color: #bda673; font-size: .74rem; margin: 4px 0 2px; line-height: 1.35; }
     .k3d-side .k3e-t { font-weight: 800; color: #f6dc9a; margin-bottom: 4px; }
     .k3d-side .k3e-sub { color: #e9b44c; }
+    /* размеры комнаты — над 3D */
+    .room-top { margin-bottom: 12px; padding-bottom: 12px; }
+    .room-top .inputs-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .room-top .section-title { margin-bottom: 8px; }
+    .room-top .wall-hint, .room-top .ms-open-hint { display: none; }
+    .room-top .ms-open-box { margin: 8px 0; }
     /* свободная расстановка, запас, режим просмотра */
     .k3d-tray { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border: 1.5px dashed rgba(176,125,18,.55); border-radius: 12px; background: rgba(23,19,13,.04); min-height: 46px; }
     .k3d-tray.has { background: rgba(233,180,76,.14); }
@@ -993,6 +999,46 @@
     <!-- КАЛЬКУЛЯТОР -->
     <section class="section" id="calc">
       <!-- КОНСТРУКТОР: большое 3D + параметры выбранного шкафа сбоку -->
+      <!-- 1. ФОРМА -->
+          <div class="card room-top" id="roomTop">
+            <div class="section-title"><span class="step-badge">1</span><span data-i18n="step1">Какая у вас кухня?</span></div>
+            <!-- форма кухни и остров теперь задаются в 3D; поля оставлены скрытыми для расчёта -->
+            <div style="display:none">
+              <label class="type-btn island-toggle" id="islandToggle"><input type="checkbox" id="hasIsland" onchange="toggleIslandOptions()"><span class="island-check">＋</span></label>
+              <div id="islandOptions"><input type="number" id="islandLength" value="140" min="80" max="300" oninput="updateCalculator()"><input type="number" id="islandWidth" value="80" min="50" max="150" oninput="updateCalculator()"></div>
+            </div>
+            <div class="inputs-grid">
+              <div class="field-group">
+                <label id="lblMainWall" data-i18n="mainWall">Длина основной стены, см</label>
+                <input type="number" id="mainWall" value="240" min="60" max="1000" onchange="onWallInputManual('mainWall')">
+              </div>
+              <div class="field-group">
+                <label data-i18n="ceiling">Высота потолка, см</label>
+                <input type="number" id="totalHeight" value="240" min="150" max="320" oninput="updateCalculator()">
+              </div>
+              <div class="field-group">
+                <label>Высота столешницы от пола, см</label>
+                <input type="number" id="counterHeight" value="89" min="75" max="105" onchange="this.value = Math.max(75, Math.min(105, parseFloat(this.value) || 89)); updateCalculator()">
+              </div>
+              <input type="hidden" id="upperGap" value="56">
+            </div>
+            <div class="wall-hint" data-i18n="wallHint">Шкафы по 60 см подставятся сами — ширину любого можно поменять в шаге 3.</div>
+            <div class="ms-open-box">
+              <button type="button" class="ms-open-btn" onclick="openMeasure()" data-i18n="msOpen">📏 Есть замер? Впишите размеры по листу замера</button>
+              <div class="ms-open-hint" data-i18n="msOpenHint">Мастер на объекте или вы сами: размеры подставятся в калькулятор, цена пересчитается.</div>
+            </div>
+            <div id="sideWallsContainer" class="inputs-grid">
+              <div class="field-group" id="groupLeftWall">
+                <label data-i18n="leftWall">Левая стена, см</label>
+                <input type="number" id="leftWall" value="120" min="0" max="600" onchange="onWallInputManual('leftWall')">
+              </div>
+              <div class="field-group" id="groupRightWall">
+                <label data-i18n="rightWall">Правая стена, см</label>
+                <input type="number" id="rightWall" value="120" min="0" max="600" onchange="onWallInputManual('rightWall')">
+              </div>
+            </div>
+          </div>
+
       <div class="card studio" id="studio">
         <div class="studio-head">
           <div class="drawing-title" style="margin:0"><span data-i18n="yourKitchen">Ваша кухня</span></div>
@@ -1049,46 +1095,6 @@
 
         <!-- ПРАВАЯ ПАНЕЛЬ: ШАГИ -->
         <div class="steps">
-
-          <!-- 1. ФОРМА -->
-          <div class="card">
-            <div class="section-title"><span class="step-badge">1</span><span data-i18n="step1">Какая у вас кухня?</span></div>
-            <!-- форма кухни и остров теперь задаются в 3D; поля оставлены скрытыми для расчёта -->
-            <div style="display:none">
-              <label class="type-btn island-toggle" id="islandToggle"><input type="checkbox" id="hasIsland" onchange="toggleIslandOptions()"><span class="island-check">＋</span></label>
-              <div id="islandOptions"><input type="number" id="islandLength" value="140" min="80" max="300" oninput="updateCalculator()"><input type="number" id="islandWidth" value="80" min="50" max="150" oninput="updateCalculator()"></div>
-            </div>
-            <div class="inputs-grid">
-              <div class="field-group">
-                <label id="lblMainWall" data-i18n="mainWall">Длина основной стены, см</label>
-                <input type="number" id="mainWall" value="240" min="60" max="1000" onchange="onWallInputManual('mainWall')">
-              </div>
-              <div class="field-group">
-                <label data-i18n="ceiling">Высота потолка, см</label>
-                <input type="number" id="totalHeight" value="240" min="150" max="320" oninput="updateCalculator()">
-              </div>
-              <div class="field-group">
-                <label>Высота столешницы от пола, см</label>
-                <input type="number" id="counterHeight" value="89" min="75" max="105" onchange="this.value = Math.max(75, Math.min(105, parseFloat(this.value) || 89)); updateCalculator()">
-              </div>
-              <input type="hidden" id="upperGap" value="56">
-            </div>
-            <div class="wall-hint" data-i18n="wallHint">Шкафы по 60 см подставятся сами — ширину любого можно поменять в шаге 3.</div>
-            <div class="ms-open-box">
-              <button type="button" class="ms-open-btn" onclick="openMeasure()" data-i18n="msOpen">📏 Есть замер? Впишите размеры по листу замера</button>
-              <div class="ms-open-hint" data-i18n="msOpenHint">Мастер на объекте или вы сами: размеры подставятся в калькулятор, цена пересчитается.</div>
-            </div>
-            <div id="sideWallsContainer" class="inputs-grid">
-              <div class="field-group" id="groupLeftWall">
-                <label data-i18n="leftWall">Левая стена, см</label>
-                <input type="number" id="leftWall" value="120" min="0" max="600" onchange="onWallInputManual('leftWall')">
-              </div>
-              <div class="field-group" id="groupRightWall">
-                <label data-i18n="rightWall">Правая стена, см</label>
-                <input type="number" id="rightWall" value="120" min="0" max="600" onchange="onWallInputManual('rightWall')">
-              </div>
-            </div>
-          </div>
 
           <!-- 2. МАТЕРИАЛЫ И ЦВЕТ -->
           <div class="card">
@@ -1859,7 +1865,7 @@
     const TALL_KINDS = ['fridge', 'tower'];
     const isTall = s => !!s && TALL_KINDS.indexOf(s.kind) >= 0;
     const KIND_LOWER = ['door', 'drawers', 'sink', 'hob', 'corner', 'cargo', 'oven', 'dishwasher', 'washer'];
-    const KIND_UPPER = ['door', 'dryer', 'hood', 'side', 'glass', 'open'];
+    const KIND_UPPER = ['door', 'dryer', 'hood', 'side', 'glass', 'open', 'corner'];
     const KIND_TALL = ['fridge', 'tower'];
     const FRIDGE_H = 185;         // высота холодильника в нише, см
     // Ярусы пеналов, см от пола: [тип, от, до]. Типы: door | drawer | oven | micro
@@ -2692,7 +2698,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=9');
+        const mod = await import('/static/js/kitchen3d.js?v=10');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -2811,6 +2817,30 @@
       if (s.kind === 'corner' && hasLeftWall(currentType)) h += row(L3('Угловой механизм', 'Burchak mexanizmi'), sel('corner', 'corner', first('none', KIS.corner), G.corner));
       return h;
     }
+    // размеры отдельного шкафа: глубина (вылет), высота, столешница (толщина, ширина; длина — по корпусу)
+    function k3dSizeRows(s, tier, tall) {
+      const geo = k3dGeo(), c = cmU(), up = tier === 'upper';
+      const dDef = up ? geo.UD : 60, hDef = up ? geo.UH * geo.tiers : (tall ? geo.G.TT : geo.G.BOX);
+      const cur = (f, def) => s[f] != null ? +s[f] : def;
+      const row = (lbl, f, def, step, mn, mx) => k3Row(lbl, k3Step(fpN(cur(f, def)) + ' ' + c, `k3dDim('${f}',${-step},${fpN(def)},${mn},${mx})`, `k3dDim('${f}',${step},${fpN(def)},${mn},${mx})`) + (s[f] != null ? k3B(false, `k3dDim('${f}',0,${fpN(def)},${mn},${mx})`, L3('как у всех', 'hammadek')) : ''));
+      let h = row(L3('Глубина (вылет)', 'Chuqurlik'), 'dp', dDef, 5, up ? 15 : 30, up ? 70 : 100);
+      h += row(!up && !tall ? L3('Высота корпуса', 'Korpus balandligi') : L3('Высота', 'Balandlik'), 'ht', hDef, up ? 2 : 5, up ? 20 : (tall ? 100 : 30), up ? 140 : (tall ? geo.roomH : 150));
+      if (!up && !tall) {
+        h += `<div class="k3s-sub">${esc(L3('Столешница этого шкафа', 'Shu shkaf stol usti'))}</div>`;
+        h += row(L3('Толщина', 'Qalinlik'), 'ctt', geo.G.CT, .2, 1.8, 8);
+        h += row(L3('Ширина (вылет)', 'Kenglik'), 'ctd', cur('dp', 60) + 2, 1, 30, 120);
+        h += `<div class="k3s-note">${esc(L3('Длина столешницы — по ширине корпуса.', 'Stol usti uzunligi — korpus kengligi boʻyicha.'))}</div>`;
+      }
+      return h;
+    }
+    function k3dDim(f, d, def, mn, mx) {
+      const s = selSec; if (!s) return;
+      const old = s[f], n0 = collisionCount();
+      if (d === 0) { delete s[f]; if (f === 'dp') delete s.depth; }
+      else { const cur = s[f] != null ? +s[f] : def; const v = Math.max(mn, Math.min(mx, Math.round((cur + d) * 10) / 10)); s[f] = v; if (f === 'dp') s.depth = v; }
+      if (collisionCount() > n0) { if (old == null) delete s[f]; else s[f] = old; if (f === 'dp') { if (old == null) delete s.depth; else s.depth = old; } if (typeof msToast === 'function') msToast(L3('Не помещается: упирается в другой шкаф или стену', 'Sigʻmaydi: boshqa shkaf yoki devorga tegadi')); renderK3dEdit(); return; }
+      plannerChanged();
+    }
     function k3dDsys(i, k) { const s = selSec; if (!s) return; s.dsys = (s.dsys || []).slice(); while (s.dsys.length <= i) s.dsys.push('tier'); s.dsys[i] = k; updateCalculator(); }
     function k3dDrawerCount(s) { if (s.kind === 'tower') return towerBands(s.tw || 'storage', 250).filter(b => b.ty === 'drawer').length; if (s.kind === 'oven') return 1; return s.drawers | 0; }
     function renderK3dEdit() {
@@ -2857,6 +2887,7 @@
           ${add(L3('Верхний шкаф', 'Yuqori shkaf'), "k3dAdd('upper','door',{dn:2})")}${add(L3('Сушилка', 'Quritgich'), "k3dAdd('upper','dryer')")}
           ${add(L3('С подъёмником', 'Koʻtargichli'), "k3dAdd('upper','door',{gasLifts:1})")}${add(L3('Открытые полки', 'Ochiq tokcha'), "k3dAdd('upper','open',{shelves:2})")}
           ${add(L3('Угловой — слева', 'Burchak — chap'), "k3dAddCorner('L')")}${add(L3('Угловой — справа', 'Burchak — oʻng'), "k3dAddCorner('R')")}
+          ${add(L3('Верхний угловой — слева', 'Yuqori burchak — chap'), "k3dAddCorner('L','upper')")}${add(L3('Верхний угловой — справа', 'Yuqori burchak — oʻng'), "k3dAddCorner('R','upper')")}
         </div>
         <div class="k3s-sub">${esc(L3('Техника', 'Texnika'))}</div><div class="k3s-grid">
           ${add(L3('Варочная плита', 'Plita'), "k3dAdd('lower','hob',{drawers:3})")}${add(L3('Мойка', 'Rakovina'), "k3dAdd('lower','sink')")}
@@ -2893,7 +2924,7 @@
       if (tier === 'upper') {
         const lf = (s.gasLifts | 0) > 0 && k === 'door';
         h += kb(k === 'door' && !lf && !twoDoors(s, w), '1d', L3('1 дверь', '1 eshik')) + kb(k === 'door' && !lf && twoDoors(s, w), '2d', L3('2 двери', '2 eshik')) + kb(lf, 'lift', L3('Подъёмник', 'Koʻtargich')) +
-          kb(k === 'dryer', 'dryer', L3('Сушилка', 'Quritgich')) + kb(k === 'hood', 'hood', L3('Над вытяжкой', 'Soʻrgich ustida')) + kb(k === 'glass', 'glass', L3('Со стеклом', 'Shishali')) + kb(k === 'open', 'open', L3('Открытые полки', 'Ochiq tokcha'));
+          kb(k === 'dryer', 'dryer', L3('Сушилка', 'Quritgich')) + kb(k === 'hood', 'hood', L3('Над вытяжкой', 'Soʻrgich ustida')) + kb(k === 'glass', 'glass', L3('Со стеклом', 'Shishali')) + kb(k === 'open', 'open', L3('Открытые полки', 'Ochiq tokcha')) + kb(k === 'corner', 'corner', L3('Угловой', 'Burchak'));
       } else if (tall) {
         h += kb(k === 'tower', 'tower', L3('Пенал', 'Penal')) + kb(k === 'fridge' && s.fr !== 'built', 'fridgeFree', L3('Холодильник отдельный', 'Alohida muzlatgich')) + kb(k === 'fridge' && s.fr === 'built', 'fridgeBuilt', L3('Холодильник встроенный', 'Oʻrnatma muzlatgich'));
       } else {
@@ -2907,6 +2938,7 @@
       if (k === 'corner') h += k3Row(L3('Слепая сторона', 'Koʻr tomon'), k3B(s.cs !== 'R', "k3dCornerSide('L')", L3('слева', 'chapda')) + k3B(s.cs === 'R', "k3dCornerSide('R')", L3('справа', 'oʻngda'))) + k3Row(L3('Припарковать', 'Qoʻyish'), k3B(false, "k3dParkCorner('L')", L3('в левый угол', 'chap burchak')) + k3B(false, "k3dParkCorner('R')", L3('в правый угол', 'oʻng burchak')));
       h += `<div class="k3s-sub">${esc(L3('Размеры', 'Oʻlchamlar'))}</div>`;
       h += k3Row(L3('Ширина', 'Kenglik'), k3Step(w + ' ' + L3('см', 'sm'), "k3dStep('width',-5)", "k3dStep('width',5)"));
+      h += k3dSizeRows(s, tier, tall);
       if (tier === 'upper') h += k3Row(L3('От столешницы', 'Stoldan'), k3Step((s.ug != null ? s.ug : el('upperGap').value) + ' ' + L3('см', 'sm'), "k3dStep('ug',-5)", "k3dStep('ug',5)") + (s.ug != null ? k3B(false, "k3dStep('ug',0)", L3('как у всех', 'hammadek')) : ''));
       const hasDr = !tall && ['door', 'drawers', 'sink', 'hob'].indexOf(k) >= 0 && (s.drawers | 0) > 0;
       if (hasDr) h += k3Row(L3('Ящиков', 'Tortmalar'), k3Step(s.drawers | 0, "k3dStep('drawers',-1)", "k3dStep('drawers',1)"));
@@ -3004,8 +3036,9 @@
     function defaultY(s, tier, geo) { return tier === 'upper' ? geo.G.BOX + geo.G.CT + (s.ug != null ? +s.ug : geo.G.UGAP) : 0; }
     function secDims(s, tier, geo) {
       const w = parseFloat(s.width) || 0;
-      if (tier === 'upper') return { w, d: geo.UD, h: geo.UH * geo.tiers };
-      return { w, d: 60, h: isTall(s) ? geo.G.TT : geo.G.BOX + geo.G.CT };
+      if (tier === 'upper') return { w, d: s.dp ? +s.dp : geo.UD, h: s.ht ? +s.ht : geo.UH * geo.tiers };
+      const tall = isTall(s), d = s.dp ? +s.dp : 60;
+      return { w, d, h: tall ? (s.ht ? +s.ht : geo.G.TT) : (s.ht ? +s.ht : geo.G.BOX) + (s.ctt ? +s.ctt : geo.G.CT) };
     }
     function runBase(s, tier, geo) {
       const wall = wallOfSecIn(currentType, s), list = (geo.LAY[wall] && geo.LAY[wall][tier === 'lower' ? 'lower' : 'upper']) || [];
@@ -3291,22 +3324,23 @@
       window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
     }
     // ---- угловой шкаф: слева или справа ----
-    function k3dAddCorner(side) {
-      if (secsOf('lower').length >= MAX_SECTIONS) { if (typeof msToast === 'function') msToast(t('plMax')); return; }
-      const sec = newModule('lower', 'corner', 'main'); sec.width = 100; sec.cs = side; sec.csFixed = true; sec.name = defaultModuleName('corner', 'lower', 0, sec);
-      const geo = k3dGeo(), dd = secDims(sec, 'lower', geo);
-      const p = { cx: side === 'L' ? dd.w / 2 : geo.W - dd.w / 2, cz: dd.d / 2, r: 0, y: 0, w: dd.w, d: dd.d, h: dd.h }, tg = { tier: 'lower', sec };
-      sec.fp = { x: p.cx, z: p.cz, y: 0, r: 0 };
-      if (!checkOk(tg, p, geo)) { delete sec.fp; const sp = findSpot(sec, 'lower', geo); if (sp) sec.fp = { x: sp.cx, z: sp.cz, y: 0, r: sp.r }; else { parkedSections.push({ sec, tier: 'lower' }); plannerChanged(); if (typeof msToast === 'function') msToast(L3('Не поместилось — угловой шкаф ушёл в запас внизу', 'Sigʻmadi — burchak shkaf zaxiraga tushdi')); return; } }
-      lowerSections.push(sec); selSec = sec; selIsland = false; plannerChanged();
+    function k3dAddCorner(side, tier) {
+      tier = tier || 'lower';
+      if (tier === 'upper' && !chk('hasUpperTier')) el('hasUpperTier').checked = true;
+      if (secsOf(tier).length >= MAX_SECTIONS) { if (typeof msToast === 'function') msToast(t('plMax')); return; }
+      const sec = newModule(tier, 'corner', 'main'); sec.cs = side; sec.csFixed = true; sec.name = defaultModuleName('corner', tier, 0, sec);
+      const geo = k3dGeo(), dd = secDims(sec, tier, geo), y = defaultY(sec, tier, geo);
+      const p = { cx: side === 'L' ? dd.w / 2 : geo.W - dd.w / 2, cz: dd.d / 2, r: 0, y, w: dd.w, d: dd.d, h: dd.h }, tg = { tier, sec };
+      sec.fp = { x: p.cx, z: p.cz, y, r: 0 };
+      if (!checkOk(tg, p, geo)) { delete sec.fp; const sp = findSpot(sec, tier, geo); if (sp) sec.fp = { x: sp.cx, z: sp.cz, y, r: sp.r }; else { parkedSections.push({ sec, tier }); plannerChanged(); if (typeof msToast === 'function') msToast(L3('Не поместилось — угловой шкаф ушёл в запас внизу', 'Sigʻmadi — burchak shkaf zaxiraga tushdi')); return; } }
+      secsOf(tier).push(sec); selSec = sec; selIsland = false; plannerChanged();
     }
     function k3dParkCorner(side) {
       const s = selSec; if (!s || s.kind !== 'corner') return;
-      s.cs = side; s.csFixed = true;
-      const geo = k3dGeo(), dd = secDims(s, 'lower', geo), tg = { tier: 'lower', sec: s };
-      const p = { cx: side === 'L' ? dd.w / 2 : geo.W - dd.w / 2, cz: dd.d / 2, r: 0, y: 0, w: dd.w, d: dd.d, h: dd.h };
-      if (!setPlacement(tg, p)) { s.fp = s.fp; plannerChanged(); }
-      else { s.cs = side; plannerChanged(); }
+      const tier = tierOf(s); s.cs = side; s.csFixed = true;
+      const geo = k3dGeo(), dd = secDims(s, tier, geo), tg = { tier, sec: s }, cur = getTarget(tg, geo);
+      const p = { cx: side === 'L' ? dd.w / 2 : geo.W - dd.w / 2, cz: dd.d / 2, r: 0, y: cur.y, w: dd.w, d: dd.d, h: dd.h };
+      setPlacement(tg, p); s.cs = side; plannerChanged();
     }
     function k3dCornerSide(side) { const s = selSec; if (!s) return; s.cs = side; s.csFixed = true; plannerChanged(); }
     // ---- остров ----
@@ -3475,15 +3509,15 @@
     // детали шкафа: панели фасада, ниши, полки (мм, от низа шкафа)
     function odModel(s, tier, geo) {
       const dd = secDims(s, tier, geo), W = Math.round(dd.w * 10), H = Math.round(dd.h * 10), G3 = 3, k = s.kind || 'door', tallK = tier === 'lower' && isTall(s);
-      const CT = tier === 'lower' && !tallK ? Math.round(geo.G.CT * 10) : 0, hb = H - CT, PL = tier === 'lower' && !(k === 'fridge' && s.fr !== 'built') ? 100 : 0;
+      const CT = tier === 'lower' && !tallK ? Math.round((s.ctt ? +s.ctt : geo.G.CT) * 10) : 0, hb = H - CT, PL = tier === 'lower' && !(k === 'fridge' && s.fr !== 'built') ? 100 : 0;
       const m = { W, H, D: Math.round(dd.d * 10), hb, CT, PL, panels: [], niche: [], shelves: [], open: false, labels: [] };
       const P = (x, y, w, h, ty, hinge) => m.panels.push({ x, y, w, h, ty, hinge });
       const hing = s.hinge === 'R' ? 'R' : 'L';
       const doorsRow = (y, h, forceTwo) => { if (forceTwo != null ? forceTwo : twoDoors(s, dd.w)) { const dw = (W - 3 * G3) / 2; P(G3, y, dw, h, 'door', 'L'); P(2 * G3 + dw, y, dw, h, 'door', 'R'); } else P(G3, y, W - 2 * G3, h, 'door', hing); };
       const drawersRow = (y0, y1, n) => { const ph = (y1 - y0 - G3 * (n + 1)) / n; for (let i = 0; i < n; i++) P(G3, y1 - G3 - (i + 1) * ph - i * G3, W - 2 * G3, ph, 'drawer'); };
       if (tier === 'upper') {
-        const hh = geo.UH * 10;
-        for (let t = 0; t < geo.tiers; t++) {
+        const hh = (s.ht ? +s.ht : geo.UH) * 10, tiersN = s.ht ? 1 : geo.tiers;
+        for (let t = 0; t < tiersN; t++) {
           const b = t * hh;
           if (k === 'open' && t === 0) { m.open = true; continue; }
           if (t === 0 && (s.gasLifts | 0) > 0) { const n = Math.min(2, s.gasLifts | 0), ph = (hh - G3 * (n + 1)) / n; for (let i = 0; i < n; i++) P(G3, b + G3 + i * (ph + G3), W - 2 * G3, ph, 'lift'); }
@@ -3528,7 +3562,8 @@
       }
       return '';
     }
-    function odFront(s, tier, geo, m, x0, y0, sc) {
+    function odFront(s, tier, geo, m, x0, y0, sc, opt) {
+      opt = opt || {};
       const X = v => x0 + v * sc, Y = v => y0 + (m.H - v) * sc, out = [], ot = s.openType || 'handles';
       if (m.CT) out.push(odRect(X(0), Y(m.H), m.W * sc, m.CT * sc, 'o', 'url(#odHatch2)'));
       out.push(odRect(X(0), Y(m.hb), m.W * sc, m.hb * sc, 'o'));
@@ -3550,7 +3585,9 @@
         out.push(odHandle(p, X, Y, sc, ot, tier === 'upper'));
       });
       if (ot === 'gola') out.push(odLine(X(0), Y(m.hb) + 2, X(m.W), Y(m.hb) + 2, 'c'));
-      m.labels.forEach((lb, i) => out.push(odText(X(m.W / 2), Y(m.H) - 8 - i * 11, lb, 9, 'middle', 'font-style="italic"')));
+      if (!opt.noDim) m.labels.forEach((lb, i) => out.push(odText(X(m.W / 2), Y(m.H) - 8 - i * 11, lb, 9, 'middle', 'font-style="italic"')));
+      if (opt.code) out.push(odText(X(m.W / 2), Y(m.hb / 2 + 40), opt.code, Math.max(7, Math.min(11, m.W * sc * .4)), 'middle', 'font-weight="700" fill="#b3261e"'));
+      if (opt.noDim) return out.join('');
       out.push(odDimH(X(0), X(m.W), Y(m.H), Y(m.H) - 26 - (m.labels.length * 11), m.W));
       out.push(odDimV(Y(m.H), Y(0), X(m.W), X(m.W) + 30, m.H));
       if (m.PL && tier === 'lower') out.push(odDimV(Y(m.PL), Y(0), X(0), X(0) - 24, m.PL));
@@ -3559,7 +3596,7 @@
     }
     function odSide(s, tier, geo, m, x0, y0, sc) {
       const X = v => x0 + v * sc, Y = v => y0 + (m.H - v) * sc, out = [], D = m.D, F = 18, B = 16;
-      if (m.CT) out.push(odRect(X(0), Y(m.H), (D + 20) * sc, m.CT * sc, 'o', 'url(#odHatch2)'));
+      if (m.CT) out.push(odRect(X(0), Y(m.H), (s.ctd ? s.ctd * 10 : D + 20) * sc, m.CT * sc, 'o', 'url(#odHatch2)'));
       out.push(odRect(X(0), Y(m.hb), D * sc, m.hb * sc, 'o'));
       out.push(odRect(X(0), Y(m.hb), 4 * sc, (m.hb - m.PL) * sc, 'o', 'url(#odHatch)'));                      // задняя стенка 4 мм
       out.push(odRect(X(4), Y(m.PL + B), (D - F - 4) * sc, B * sc, 'o', 'url(#odHatch)'));                     // дно
@@ -3569,7 +3606,7 @@
       if (m.PL) { out.push(odRect(X(D - 70 - B), Y(m.PL), B * sc, (m.PL - 0) * sc, 'o', 'url(#odHatch)')); out.push(odRect(X(0), Y(m.PL), 4 * sc, m.PL * sc, 't')); }
       if (m.open) out.push(odText(X(D / 2), Y(m.hb / 2), 'открытые полки', 9));
       out.push(odDimH(X(0), X(D), Y(m.H), Y(m.H) - 26, D));
-      out.push(odDimV(Y(m.H), Y(0), X(D + 20), X(D + 20) + 28, m.H));
+      out.push(odDimV(Y(m.H), Y(0), X(Math.max(D, s.ctd ? s.ctd * 10 : D + 20)), X(Math.max(D, s.ctd ? s.ctd * 10 : D + 20)) + 28, m.H));
       if (m.PL) out.push(odDimH(X(D - 70), X(D), Y(0), Y(0) + 18, 70));
       out.push(odText(X(D / 2), Y(0) + 38, 'РАЗРЕЗ (ВИД СБОКУ)', 11, 'middle', 'font-weight="700"'));
       out.push(odText(X(D) + 3, Y(m.hb) + 12, 'фасад', 8, 'start'));
@@ -3644,13 +3681,41 @@
       const rows = [['Проект', 'Кухня на заказ'], ['Помещение', `${Math.round(geo.W)} × ${Math.round(geo.roomD)} см (ширина × глубина)`], ['Шкафов', String(items.length) + (parkedSections.length ? ` (в запасе: ${parkedSections.length})` : '')], ['Дата', new Date().toLocaleDateString('ru-RU')]];
       return odSheet(out, rows, no, total);
     }
+    // готовый чертёж стены: все шкафы ряда вместе, вид спереди, с цепочкой размеров
+    function odWallSheet(geo, wall, no, total) {
+      const run = geo.LAY[wall]; if (!run) return null;
+      const lows = run.lower || [], ups = geo.hasUp ? (run.upper || []) : [];
+      if (!lows.length && !ups.length) return null;
+      const ext = Math.max.apply(null, lows.map(r => r.u1).concat(ups.map(r => r.u1), [10])) * 10;
+      const roomHmm = Math.max(geo.roomH, geo.G.TT + 10) * 10;
+      const sc = Math.min(1000 / ext, 520 / roomHmm, .6), x0 = 100, floorY = 600, X = v => x0 + v * sc, Y = v => floorY - v * sc;
+      let out = odLine(x0 - 40, floorY, x0 + ext * sc + 60, floorY, 'o') + odLine(x0 - 40, floorY + 1.5, x0 + ext * sc + 60, floorY + 1.5, 't');
+      out += odRect(X(0), Y(roomHmm), ext * sc, roomHmm * sc, 't');   // стена
+      const lowCode = r => 'Н-' + r.sec.id, upCode = r => 'В-' + r.sec.id;
+      lows.forEach(r => { const m = odModel(r.sec, 'lower', geo); out += odFront(r.sec, 'lower', geo, m, X(r.u0 * 10), Y(m.H), sc, { noDim: true, code: lowCode(r) }); });
+      ups.forEach(r => { const m = odModel(r.sec, 'upper', geo), yb = defaultY(r.sec, 'upper', geo) * 10; out += odFront(r.sec, 'upper', geo, m, X(r.u0 * 10), Y(yb + m.H), sc, { noDim: true, code: upCode(r) }); });
+      // размеры: ширина каждого шкафа и общая
+      lows.forEach(r => { out += odDimH(X(r.u0 * 10), X(r.u1 * 10), floorY, floorY + 22, Math.round((r.u1 - r.u0) * 10)); });
+      const lo0 = lows.length ? Math.min.apply(null, lows.map(r => r.u0)) : 0, lo1 = lows.length ? Math.max.apply(null, lows.map(r => r.u1)) : ext / 10;
+      out += odDimH(X(lo0 * 10), X(lo1 * 10), floorY, floorY + 50, Math.round((lo1 - lo0) * 10));
+      const cnt = lows.length ? odModel(lows.find(r => !isTall(r.sec)) ? lows.find(r => !isTall(r.sec)).sec : lows[0].sec, 'lower', geo).H : 0;
+      if (cnt) out += odDimV(Y(cnt), floorY, X(0), X(0) - 28, cnt);
+      if (ups.length) { const u = ups[0], m = odModel(u.sec, 'upper', geo), yb = defaultY(u.sec, 'upper', geo) * 10; out += odDimV(Y(yb), Y(yb + m.H), X(0), X(0) - 56, m.H) + odDimV(floorY, Y(yb), X(0), X(0) - 84, Math.round(yb)); }
+      const tall = lows.find(r => isTall(r.sec)); if (tall) { const m = odModel(tall.sec, 'lower', geo); out += odDimV(Y(m.H), floorY, X(ext) , X(ext) + 30, m.H); }
+      const nm = { main: 'основная стена', left: 'левая стена', right: geo.s.type === 'parallel' ? 'противоположный ряд' : 'правая стена' }[wall];
+      out += odText(x0 + ext * sc / 2, floorY + 84, 'ГОТОВЫЙ ЧЕРТЁЖ · ВИД СПЕРЕДИ · ' + nm.toUpperCase(), 12, 'middle', 'font-weight="700"');
+      out += odText(1100, 60, `М 1:${odNiceScale(sc)}`, 12, 'end', 'font-weight="700"');
+      const rows = [['Стена', nm], ['Длина ряда', Math.round(ext) + ' мм'], ['Шкафов', lows.length + ' нижних, ' + ups.length + ' верхних'], ['Высота стола', cnt ? cnt + ' мм' : '—'], ['Дата', new Date().toLocaleDateString('ru-RU')]];
+      return odSheet(out, rows, no, total);
+    }
     function renderOwnerDraw() {
       const box = el('ownerDrawBody'); if (!box || !OWNER_ON) return;
       const geo = k3dGeo(), groups = new Map();
       const add = (s, tier) => { const sig = [tier, s.kind, s.width, s.shelves | 0, s.drawers | 0, s.gasLifts | 0, s.dn || '', s.tw || '', s.cg || '', s.fr || '', s.openType || '', s.hinge || '', s.cs || '', s.ug != null ? s.ug : '', s.pc ? JSON.stringify(s.pc) : ''].join('|'); const code = (tier === 'lower' ? 'Н-' : 'В-') + s.id; if (!groups.has(sig)) groups.set(sig, { s, tier, codes: [] }); groups.get(sig).codes.push(code); };
       lowerSections.forEach(s => add(s, 'lower')); if (geo.hasUp) upperSections.forEach(s => add(s, 'upper'));
-      const list = Array.from(groups.values()), total = list.length + 1;
-      const sheets = [odRoomSheet(geo, list, 1, total)].concat(list.map((g, i) => odCabSheet(g, geo, i + 2, total)));
+      const list = Array.from(groups.values()), walls = ['main', 'left', 'right'].filter(w => { const r = geo.LAY[w]; return r && (r.lower.length || (geo.hasUp && r.upper.length)); });
+      const total = list.length + 1 + walls.length;
+      const sheets = [odRoomSheet(geo, list, 1, total)].concat(walls.map((w, i) => odWallSheet(geo, w, i + 2, total))).concat(list.map((g, i) => odCabSheet(g, geo, i + 2 + walls.length, total)));
       box.innerHTML = sheets.map(sv => `<div class="od-sheet">${sv}</div>`).join('');
       box._sheets = sheets;
     }
@@ -3790,7 +3855,7 @@
       const rate = PP.cost[fi] * (1 + PP.workK);                 // цена погонного метра (низ + верх) с работой
       const cls = priceClass(fi), shelfP = PP.shelf[cls];
       const topExtra = Math.max(0, CONFIG.countertops[s.top].price - CONFIG.countertops[0].price);   // столешница дороже базовой ЛДСП 28 мм
-      const AW = CONFIG.applianceWork, TT = tallTopOf(s.roomH);
+      const AW = CONFIG.applianceWork, TT = tallTopOf(s.roomH), boxDef = Math.max(30, s.counterH - (CONFIG.countertops[s.top].thick || 3.8));
       const sumW = arr => arr.reduce((a, x) => a + (parseFloat(x.width) || 0), 0) / 100;
       // погонные метры: сумма ширин шкафов — угол считается один раз (240 + 120 − 60 = 300)
       let lowM = 0, tallM = 0, total = 0;
@@ -3800,9 +3865,9 @@
         if (x.openType === 'gola') total += 95000;
         if (isTall(x)) {
           tallM += w;
-          if (x.kind === 'tower') total += w * rate * (TT / 160);                 // пенал до потолка: как низ + верх по высоте
+          if (x.kind === 'tower') total += w * rate * (TT / 160) * (1 + 0.6 * ((x.dp ? x.dp / 60 : 1) * (x.ht ? x.ht / TT : 1) - 1));                 // пенал до потолка: как низ + верх по высоте
           else total += w * rate * (x.fr === 'built' ? TT / 160 : 0.15);         // встроенный холодильник — пенал, отдельный — только ниша
-        } else { lowM += w; total += w * (rate * PP.lowerShare + topExtra); }
+        } else { lowM += w; const szL = 1 + 0.6 * (((x.dp ? +x.dp : 60) / 60) * ((x.ht ? +x.ht : boxDef) / boxDef) - 1), ctK = x.ctd ? +x.ctd / 62 : 1; total += w * (rate * PP.lowerShare * szL + topExtra * ctK); }
         appliancesOf(x).forEach(a => {
           if (a.top) return;
           if (a.k === 'oven' || a.k === 'micro' || a.k === 'dishwasher' || a.k === 'washer') total += AW[a.k] || 0;
@@ -3814,6 +3879,7 @@
         upM = sumW(s.upper);
         total += upM * rate * PP.upperShare * (s.upperH / 72) * (s.upperTiers === 2 ? 2 : 1);
         s.upper.forEach(x => {
+          if (x.dp || x.ht) { const wm = (parseFloat(x.width) || 0) / 100, base = wm * rate * PP.upperShare * (s.upperH / 72) * (s.upperTiers === 2 ? 2 : 1), nu = wm * rate * PP.upperShare * ((x.ht ? +x.ht : s.upperH) / 72) * (x.ht ? 1 : (s.upperTiers === 2 ? 2 : 1)) * (x.dp ? x.dp / s.upperD : 1); total += 0.6 * (nu - base); }
           total += (x.shelves || 0) * shelfP;
           if (x.openType === 'gola') total += 95000;
           if (x.kind === 'glass') total += AW.glass * Math.max(1, Math.round((parseFloat(x.width) || 0) / 45));
@@ -4009,7 +4075,7 @@
       if (kind === 'tower') sec.tw = 'storage';
       if (kind === 'fridge') sec.fr = 'free';
       if (kind === 'cargo') { sec.cg = 'sub200'; sec.width = CARGO_W.sub200; sec.shelves = 0; }
-      if (kind === 'corner') sec.width = 100;
+      if (kind === 'corner') sec.width = tier === 'lower' ? 100 : 65;
       sec.name = defaultModuleName(kind, tier, 0, sec);
       return sec;
     }
@@ -5120,7 +5186,7 @@
     /* ===================== ССЫЛКА «ПОДЕЛИТЬСЯ» ===================== */
     function serializeState() {
       const s = getCalcState();
-      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : ''];
+      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || ''].join('|')];
       const enc = (arr, tier) => arr.map(x => encOne(x, tier));
       const dc = decorClean(decorState);
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
@@ -5189,6 +5255,7 @@
         if (typeof e[14] === 'string' && e[14]) { const p = e[14].split('|').map(Number); if (p.length >= 4 && p.every(v => isFinite(v))) s.fp = { x: p[0], z: p[1], y: p[2], r: ((p[3] % 360) + 360) % 360 }; }
         if (e[15] === 'L' || e[15] === 'R') { s.cs = e[15]; s.csFixed = true; }
         if (typeof e[16] === 'string' && e[16]) { const p = e[16].split('|'), o = {}; if (p[0]) o.f = p[0]; if (p[1]) o.b = p[1]; if (p[2]) o.f2 = p[2]; if (Object.keys(o).length) s.pc = o; }
+        if (typeof e[17] === 'string' && e[17]) { const p = e[17].split('|').map(Number); if (p[0] > 0) s.dp = clampN(p[0], 10, 120, 60); if (p[1] > 0) s.ht = clampN(p[1], 10, 320, 85); if (p[2] > 0) s.ctt = clampN(p[2], 1, 10, 3.8); if (p[3] > 0) s.ctd = clampN(p[3], 20, 150, 62); if (s.dp) s.depth = s.dp; }
         if (typeof e[11] === 'string' && e[11]) s.dsys = e[11].split(',').slice(0, 8).map(k => KIS.drawerSys[k] ? k : 'tier');
         s.name = s.autoName ? defaultModuleName(kind, tier, s.id, s) : String(e[1]).slice(0, 60);
         return s;

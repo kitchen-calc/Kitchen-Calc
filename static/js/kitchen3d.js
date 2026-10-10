@@ -343,6 +343,13 @@ export function createK3D(container, hooks = {}, opts = {}) {
       for (let i = 0; i < n; i++) lift(g, M, st, n > 1 ? key + ':l' + i : key, GAP, y0 + GAP + (n - 1 - i) * (hh + GAP), w - 2 * GAP, hh, zf, open, st.hw.lift || 'tier');
       return;
     }
+    if (kind === 'corner') {   // угловой навесной: глухая часть у угла, дверь — на свободной части
+      const blindL = s._blind !== 'R', bl = Math.min(D, w - 20), dw = w - bl, x0 = blindL ? bl : 0;
+      box(g, bl - GAP, h - 2 * GAP, FT, M.facade, blindL ? GAP : dw + GAP, y0 + GAP, zf, 60);
+      if (dw >= 45) { const d2 = (dw - 3 * GAP) / 2; door(g, M, st, key, x0 + GAP, y0 + GAP, d2, h - 2 * GAP, zf, 'L', open, 'upper'); door(g, M, st, key, x0 + 2 * GAP + d2, y0 + GAP, d2, h - 2 * GAP, zf, 'R', open, 'upper'); }
+      else door(g, M, st, key, x0 + GAP, y0 + GAP, dw - 2 * GAP, h - 2 * GAP, zf, blindL ? 'R' : 'L', open, 'upper');
+      return;
+    }
     const glass = kind === 'glass';
     if (twoDoors(s, w)) {
       const dw = (w - 3 * GAP) / 2;
@@ -397,9 +404,9 @@ export function createK3D(container, hooks = {}, opts = {}) {
 
   /* столешница длиной L в локальных координатах модуля (g); items — мойка/плита с отступом u0..u1 */
   function slabInto(g, M, st, L, items, apron) {
-    const CT = st.CT, D = st.LD + 2;
+    const CT = st.CT, D = st.CTD || st.LD + 2;
     box(g, L, CT, D, M.top, 0, st.BOX, 0, 80);
-    if (apron) box(g, L, st.UB - st.BOX - CT, .6, M.tile, 0, st.BOX + CT, -.6, 30);
+    if (apron && st.UB - st.BOX - CT > 1) box(g, L, st.UB - st.BOX - CT, .6, M.tile, 0, st.BOX + CT, -.6, 30);
     items.forEach(r => {
       const cx = (r.u0 + r.u1) / 2, w = r.u1 - r.u0;
       if (r.sec.kind === 'hob') {
@@ -419,20 +426,20 @@ export function createK3D(container, hooks = {}, opts = {}) {
   }
 
   function countertops(M, st) {
-    const CT = st.CT, D = st.LD + 2;
     ['main', 'left', 'right'].forEach(wall => {
       const run = st.runs[wall]; if (!run || !run.lower.length) return;
       let seg = null; const segs = [];
+      const pk = sec => [sec.ctt || '', sec.ctd || '', sec.ht || '', sec.dp || ''].join('|');
       run.lower.forEach(r => {
         const tall = r.sec.kind === 'fridge' || r.sec.kind === 'tower';
         if (tall) { if (seg) segs.push(seg); seg = null; return; }
-        if (seg && Math.abs(seg.u1 - r.u0) < .5) seg.u1 = r.u1; else { if (seg) segs.push(seg); seg = { u0: r.u0, u1: r.u1, items: [] }; }
+        if (seg && Math.abs(seg.u1 - r.u0) < .5 && seg.key === pk(r.sec)) seg.u1 = r.u1; else { if (seg) segs.push(seg); seg = { u0: r.u0, u1: r.u1, items: [], key: pk(r.sec), sec: r.sec }; }
         if (r.sec.kind === 'sink' || r.sec.kind === 'hob') seg.items.push(r);
       });
       if (seg) segs.push(seg);
       segs.forEach(sg => {
         const g = placeGroup(wall, sg.u0, sg.u1, st);
-        slabInto(g, M, st, sg.u1 - sg.u0, sg.items.map(r => ({ u0: r.u0 - sg.u0, u1: r.u1 - sg.u0, sec: r.sec })), true);
+        slabInto(g, M, stFor(st, sg.sec, false), sg.u1 - sg.u0, sg.items.map(r => ({ u0: r.u0 - sg.u0, u1: r.u1 - sg.u0, sec: r.sec })), true);
         root.add(g);
       });
     });
@@ -526,7 +533,18 @@ export function createK3D(container, hooks = {}, opts = {}) {
     return o;
   }
   // фурнитура конкретного шкафа поверх общей
-  function stFor(st, s) { if (!st.hwOf) return st; return Object.assign({}, st, { hw: Object.assign({}, st.hw, st.hwOf(s)) }); }
+  function stFor(st, s, up) {
+    const o = {};
+    if (up) { if (s.dp) o.UD = +s.dp; if (s.ht) { o.UH = +s.ht; o.tiers = 1; } }
+    else {
+      if (s.dp) o.LD = +s.dp;
+      if (s.ht) { if (s.kind === 'fridge' || s.kind === 'tower') o.TT = +s.ht; else o.BOX = +s.ht; }
+      if (s.ctt) o.CT = +s.ctt;
+      if (s.ctd) o.CTD = +s.ctd;
+    }
+    if (st.hwOf) o.hw = Object.assign({}, st.hw, st.hwOf(s));
+    return Object.keys(o).length ? Object.assign({}, st, o) : st;
+  }
 
   /* ---------- сборка сцены ---------- */
   function build(st) {
@@ -540,7 +558,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     if (st.type === 'parallel') depthMax = st.ZOPP;
     else ['left', 'right'].forEach(w => { const r = st.runs[w]; if (r && r.lower.length) depthMax = Math.max(depthMax, st.LD + r.totalLower); });
     const runDepth = depthMax;
-    (st.free || []).forEach(f => { const w = +f.sec.width || 50, D = f.tier === 'upper' ? st.UD : st.LD, rot = ((f.r % 180) + 180) % 180 === 90; depthMax = Math.max(depthMax, f.cz + (rot ? w : D) / 2); });
+    (st.free || []).forEach(f => { const w = +f.sec.width || 50, D = f.sec.dp ? +f.sec.dp : (f.tier === 'upper' ? st.UD : st.LD), rot = ((f.r % 180) + 180) % 180 === 90; depthMax = Math.max(depthMax, f.cz + (rot ? w : D) / 2); });
     const isl = islandPos(st, runDepth);
     let zMax = depthMax + 60; if (isl) zMax = Math.max(zMax, isl.cz + isl.ext + 60);
     if (st.roomD) zMax = Math.max(zMax, st.roomD);
@@ -556,8 +574,8 @@ export function createK3D(container, hooks = {}, opts = {}) {
     ['main', 'left', 'right'].forEach(wall => {
       const run = st.runs[wall]; if (!run) return;
       run.lower.forEach(r => {
-        const g = placeGroup(wall, r.u0, r.u1, st), w = r.u1 - r.u0, key = 'lower:' + r.sec.id, sst = stFor(st, r.sec);
-        g.userData.mod = { tier: 'lower', id: r.sec.id, w, h: (r.sec.kind === 'fridge' || r.sec.kind === 'tower') ? st.TT : st.BOX, d: st.LD, y0: 0 };
+        const g = placeGroup(wall, r.u0, r.u1, st), w = r.u1 - r.u0, key = 'lower:' + r.sec.id, sst = stFor(st, r.sec, false);
+        g.userData.mod = { tier: 'lower', id: r.sec.id, w, h: (r.sec.kind === 'fridge' || r.sec.kind === 'tower') ? sst.TT : sst.BOX + sst.CT, d: sst.LD, y0: 0 };
         g.userData.place = { wall, u0: r.u0, u1: r.u1 };
         const bl = blindOf(wall, r);
         if (r.sec.kind === 'fridge' || r.sec.kind === 'tower') tallModule(g, Mfor(M, st, r.sec), sst, r.sec, w, key); else lowerModule(g, Mfor(M, st, r.sec), sst, bl ? Object.assign({}, r.sec, { _blind: bl }) : r.sec, w, key);
@@ -569,25 +587,26 @@ export function createK3D(container, hooks = {}, opts = {}) {
         const ub = st.BOX + st.CT + (r.sec.ug != null ? +r.sec.ug : st.UGAP);   // низ шкафа: столешница + своя высота
         g.userData.mod = { tier: 'upper', id: r.sec.id, w, h: st.UH * st.tiers, d: st.UD, y0: ub };
         g.userData.place = { wall, u0: r.u0, u1: r.u1 };
-        const sst = stFor(st, r.sec);
-        upperModule(g, Mfor(M, st, r.sec), sst, r.sec, w, key, ub, st.UH);
-        if (st.tiers === 2) upperModule(g, Mfor(M, st, r.sec), sst, Object.assign({}, r.sec, { kind: 'door', gasLifts: 0, dn: 0, led: 0 }), w, key + ':t2', ub + st.UH, st.UH);
-        if (st.led && st.led.level && st.led.work) box(g, w - 6, .6, 1.4, M.led, 3, ub - .7, st.UD - 6);
+        const sst = stFor(st, r.sec, true);
+        g.userData.mod.h = sst.UH * sst.tiers; g.userData.mod.d = sst.UD;
+        upperModule(g, Mfor(M, st, r.sec), sst, r.sec.kind === 'corner' ? Object.assign({}, r.sec, { _blind: r.sec.cs === 'R' ? 'R' : 'L' }) : r.sec, w, key, ub, sst.UH);
+        if (sst.tiers === 2) upperModule(g, Mfor(M, st, r.sec), sst, Object.assign({}, r.sec, { kind: 'door', gasLifts: 0, dn: 0, led: 0 }), w, key + ':t2', ub + sst.UH, sst.UH);
+        if (st.led && st.led.level && st.led.work) box(g, w - 6, .6, 1.4, M.led, 3, ub - .7, sst.UD - 6);
         root.add(g); pick.push(g);
       });
     });
     (st.free || []).forEach(f => {
-      const s = f.sec, up = f.tier === 'upper', w = +s.width || 50, D = up ? st.UD : st.LD, key = f.tier + ':' + s.id, sst = stFor(st, s);
+      const s = f.sec, up = f.tier === 'upper', w = +s.width || 50, key = f.tier + ':' + s.id, sst = stFor(st, s, up), D = up ? sst.UD : sst.LD;
       const g = new THREE.Group(); placeAt(g, w, D, f.cx, f.cz, f.r, f.y || 0);
       const tall = !up && (s.kind === 'fridge' || s.kind === 'tower');
-      g.userData.mod = { tier: f.tier, id: s.id, w, h: up ? st.UH * st.tiers : (tall ? st.TT : st.BOX), d: D, y0: 0, free: true };
+      g.userData.mod = { tier: f.tier, id: s.id, w, h: up ? sst.UH * sst.tiers : (tall ? sst.TT : sst.BOX + sst.CT), d: D, y0: 0, free: true };
       if (up) {
-        upperModule(g, Mfor(M, st, s), sst, s, w, key, 0, st.UH);
-        if (st.tiers === 2) upperModule(g, Mfor(M, st, s), sst, Object.assign({}, s, { kind: 'door', gasLifts: 0, dn: 0, led: 0 }), w, key + ':t2', st.UH, st.UH);
+        upperModule(g, Mfor(M, st, s), sst, s.kind === 'corner' ? Object.assign({}, s, { _blind: s.cs === 'R' ? 'R' : 'L' }) : s, w, key, 0, sst.UH);
+        if (sst.tiers === 2) upperModule(g, Mfor(M, st, s), sst, Object.assign({}, s, { kind: 'door', gasLifts: 0, dn: 0, led: 0 }), w, key + ':t2', sst.UH, sst.UH);
       } else if (tall) tallModule(g, Mfor(M, st, s), sst, s, w, key);
       else {
         lowerModule(g, Mfor(M, st, s), sst, s.kind === 'corner' ? Object.assign({}, s, { _blind: s.cs === 'R' ? 'R' : 'L' }) : s, w, key);
-        slabInto(g, M, st, w, (s.kind === 'sink' || s.kind === 'hob') ? [{ u0: 0, u1: w, sec: s }] : [], false);
+        slabInto(g, M, sst, w, (s.kind === 'sink' || s.kind === 'hob') ? [{ u0: 0, u1: w, sec: s }] : [], false);
       }
       root.add(g); pick.push(g);
     });
