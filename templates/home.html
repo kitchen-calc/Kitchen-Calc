@@ -212,6 +212,16 @@
     .also { color: var(--muted); max-width: 760px; margin-top: 10px; padding-top: 26px; border-top: 1px solid var(--line); }
 
     /* ---------- договор ---------- */
+    .inst-band { background: var(--bg-2); border-bottom: 1px solid var(--line); }
+    .inst-band .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .inst-band h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.1rem, 4vw, 3.2rem); line-height: 1.08; margin: 16px 0 18px; color: #f4ecdf; }
+    .inst-band p { color: #cfc5b6; max-width: 520px; margin-bottom: 26px; }
+    .inst-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid rgba(200,164,107,.35); }
+    .inst-grid div { padding: 26px 24px; border: 1px solid var(--line); }
+    .inst-grid b { display: block; font-family: var(--serif); font-size: 2rem; font-weight: 600; color: var(--gold-2); line-height: 1.1; }
+    .inst-grid span { display: block; margin-top: 6px; color: var(--muted); font-size: .9rem; }
+    @media (max-width: 900px) { .inst-band .wrap { grid-template-columns: 1fr; gap: 34px; } }
+    @media (max-width: 480px) { .inst-grid div { padding: 18px 14px; } .inst-grid b { font-size: 1.5rem; } }
     .contract-band { background: var(--bg-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
     .contract-band .wrap { display: grid; grid-template-columns: 1.15fr 1fr; gap: 70px; align-items: start; }
     .contract-band h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.1rem, 4vw, 3.2rem); line-height: 1.08; margin: 16px 0 18px; color: #f4ecdf; }
@@ -414,7 +424,7 @@
           <p class="lead" data-t="heroLead">Делаем кухни и корпусную мебель под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену кухни можно узнать онлайн за 2 минуты.</p>
           <div class="hero-cta">
             <a class="btn btn-gold" href="/calc" data-t="ctaCalc">Рассчитать стоимость</a>
-            <a class="btn btn-line" href="#kitchens" data-t="ctaWorks">Смотреть кухни</a>
+            <a class="btn btn-line" href="#installment" data-t="ctaInstallment">Рассрочка без %</a>
           </div>
           <div class="hero-types"><span data-t="typeStraight">Прямые</span><i>|</i><span data-t="typeCorner">Угловые</span><i>|</i><span data-t="typeU">П-образные</span><i>|</i><span data-t="typeIsland">С островом</span></div>
           <div class="hero-brands"><span data-t="heroBrands">Фурнитура</span><b>Blum</b><b>Hettich</b><b>Vauth-Sagel</b><b>GTV</b></div>
@@ -432,6 +442,26 @@
         <div class="fact rv"><b>190+</b><span data-t="fact4">декоров ЛДСП, ЛМДФ и акрила</span></div>
       </div>
     </div>
+
+    <section class="block inst-band" id="installment">
+      <div class="wrap">
+        <div class="rv">
+          <div class="eyebrow" data-t="iEyebrow">Оплата частями</div>
+          <h2 data-t="iTitle">Рассрочка без процентов</h2>
+          <p data-t="iLead">Платите частями напрямую нам — без банков, справок и переплаты. График платежей фиксируется в договоре.</p>
+          <div class="hero-cta">
+            <a class="btn btn-gold" href="/calc" data-t="iCta">Рассчитать кухню</a>
+            <a class="btn btn-line js-phone" href="tel:+998920934510" data-t="iCall">Узнать условия</a>
+          </div>
+        </div>
+        <div class="inst-grid rv" style="transition-delay:.15s">
+          <div><b data-t="i1t">0 %</b><span data-t="i1">без процентов и переплаты</span></div>
+          <div><b data-t="i2t">до 12 мес.</b><span data-t="i2">срок выбираете сами</span></div>
+          <div><b data-t="i3t">без банка</b><span data-t="i3">без справок и кредитной истории</span></div>
+          <div><b data-t="i4t">по договору</b><span data-t="i4">график платежей в договоре</span></div>
+        </div>
+      </div>
+    </section>
 
     <section class="block" id="kitchens">
       <div class="wrap">
@@ -678,7 +708,10 @@
         navKitchens: 'Кухни', navFurniture: 'Мебель', navFaq: 'Вопросы и ответы', navMaterials: 'Материалы', navProcess: 'Как мы работаем', navContacts: 'Контакты', navCalc: 'Калькулятор',
         ctaCalcShort: 'Рассчитать', heroEyebrow: 'На заказ · Ташкент', heroTitle: 'Кухни и корпусная мебель <em>под ключ</em>',
         heroLead: 'Делаем кухни и корпусную мебель под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену кухни можно узнать онлайн за 2 минуты.',
-        ctaCalc: 'Рассчитать стоимость', ctaWorks: 'Смотреть кухни',
+        ctaCalc: 'Рассчитать стоимость', ctaWorks: 'Смотреть кухни', ctaInstallment: 'Рассрочка без %',
+        iEyebrow: 'Оплата частями', iTitle: 'Рассрочка без процентов', iLead: 'Платите частями напрямую нам — без банков, справок и переплаты. График платежей фиксируется в договоре.',
+        i1t: '0 %', i1: 'без процентов и переплаты', i2t: 'до 12 мес.', i2: 'срок выбираете сами', i3t: 'без банка', i3: 'без справок и кредитной истории', i4t: 'по договору', i4: 'график платежей в договоре',
+        iCta: 'Рассчитать кухню', iCall: 'Узнать условия',
         heroBrands: 'Фурнитура', typeStraight: 'Прямые', typeCorner: 'Угловые', typeU: 'П-образные', typeIsland: 'С островом',
         heroTagSmall: 'Кухня под ключ', heroTag: 'замер · производство · монтаж', scroll: 'Листайте',
         fact1b: 'от 5', fact1: 'рабочих дней на изготовление', fact2b: '12 мес.', fact2: 'гарантия по договору', fact3b: '0 сум', fact3: 'замер и консультация', fact4: 'декоров ЛДСП, ЛМДФ и акрила',
@@ -733,7 +766,10 @@
         navKitchens: 'Oshxonalar', navFurniture: 'Mebel', navFaq: 'Savol-javob', navMaterials: 'Materiallar', navProcess: 'Qanday ishlaymiz', navContacts: 'Aloqa', navCalc: 'Kalkulyator',
         ctaCalcShort: 'Hisoblash', heroEyebrow: 'Buyurtma asosida · Toshkent', heroTitle: 'Oshxona va korpusli mebel <em>kalit topshirish</em> asosida',
         heroLead: 'Oshxona va korpusli mebelni oʻlchamlaringiz boʻyicha tayyorlaymiz: bepul oʻlchov, oʻz ishlab chiqarishimiz, yetkazish va oʻrnatish. Oshxona narxini 2 daqiqada onlayn bilib oling.',
-        ctaCalc: 'Narxni hisoblash', ctaWorks: 'Oshxonalarni koʻrish',
+        ctaCalc: 'Narxni hisoblash', ctaWorks: 'Oshxonalarni koʻrish', ctaInstallment: 'Foizsiz muddatli toʻlov',
+        iEyebrow: 'Qismlarga boʻlib toʻlash', iTitle: 'Foizsiz muddatli toʻlov', iLead: 'Toʻgʻridan-toʻgʻri bizga qismlarga boʻlib toʻlaysiz — banksiz, maʼlumotnomasiz va ortiqcha toʻlovsiz. Toʻlov jadvali shartnomada belgilanadi.',
+        i1t: '0 %', i1: 'foizsiz va ortiqcha toʻlovsiz', i2t: '12 oygacha', i2: 'muddatni oʻzingiz tanlaysiz', i3t: 'banksiz', i3: 'maʼlumotnoma va kredit tarixisiz', i4t: 'shartnoma asosida', i4: 'toʻlov jadvali shartnomada',
+        iCta: 'Oshxonani hisoblash', iCall: 'Shartlarni bilish',
         heroBrands: 'Furnitura', typeStraight: 'Toʻgʻri', typeCorner: 'Burchakli', typeU: 'P-shaklida', typeIsland: 'Orolli',
         heroTagSmall: 'Kalit topshirish', heroTag: 'oʻlchov · ishlab chiqarish · oʻrnatish', scroll: 'Pastga',
         fact1b: '5 kundan', fact1: 'tayyorlash muddati (ish kuni)', fact2b: '12 oy', fact2: 'shartnoma boʻyicha kafolat', fact3b: '0 soʻm', fact3: 'oʻlchov va maslahat', fact4: 'LDSP, LMDF va akril dekorlari',
