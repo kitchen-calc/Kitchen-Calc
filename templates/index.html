@@ -3676,7 +3676,7 @@
       renderK3dEdit();
     }
     // вход: Ctrl+Shift+K или три быстрых нажатия на логотип
-    document.addEventListener('keydown', e => { if (e.ctrlKey && e.shiftKey && (e.key === 'K' || e.key === 'k')) { e.preventDefault(); ownerUnlock(); } });
+    document.addEventListener('keydown', e => { if ((e.ctrlKey && e.shiftKey && (e.code === 'KeyK' || e.key === 'K' || e.key === 'k')) || (e.altKey && e.shiftKey && e.code === 'KeyM')) { e.preventDefault(); ownerUnlock(); } });
     (function () { let n = 0, tm = null; document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('.brand-mark')) return; n++; clearTimeout(tm); tm = setTimeout(() => { n = 0; }, 900); if (n >= 3) { n = 0; e.preventDefault(); ownerUnlock(); } }, true); })();
 
     // покраска отдельного шкафа (корпус / фасад / второй цвет для ящиков)
@@ -6023,6 +6023,7 @@ ${body}
       setRenderMode(VIEW_ONLY ? '3d' : ((() => { try { return localStorage.getItem('kc_r3'); } catch (e) { return null; } })() || '3d'));
       renderRoomChips();
       ownerBoot();
+      if (/[?&]master/.test(location.search) && !VIEW_ONLY) setTimeout(() => { if (!OWNER_ON) ownerUnlock(); }, 600);
       if (typeof msInit === 'function') msInit();
       appReady = true;
       // ссылка с главной: /calc?preset=loft — сразу открыть готовый вариант
