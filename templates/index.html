@@ -930,10 +930,10 @@
           <h1 data-i18n="heroTitle">Соберите кухню онлайн и узнайте цену за 2 минуты</h1>
           <p class="hero-lead" data-i18n="heroLead">Выберите готовый вариант или настройте под свои размеры. Замер и консультация бесплатно.</p>
           <ul class="hero-badges">
-            <li>📏 <span data-i18n="badgeMeasure">Бесплатный замер</span></li>
-            <li>⏱ <span data-i18n="badgeDays">Изготовление {days} раб. дней</span></li>
-            <li>🛡 <span data-i18n="badgeWarranty">Гарантия {m} мес.</span></li>
-            <li>🚚 <span data-i18n="badgeDelivery">Доставка и монтаж</span></li>
+            <li><span data-i18n="badgeMeasure">Бесплатный замер</span></li>
+            <li><span data-i18n="badgeDays">Изготовление от {days} раб. дней</span></li>
+            <li><span data-i18n="badgeWarranty">Гарантия {m} мес.</span></li>
+            <li><span data-i18n="badgeInstallment">Рассрочка</span></li>
           </ul>
           <div class="hero-cta">
             <a class="btn-primary" href="#presets" data-i18n="ctaPick">Подобрать кухню</a>
@@ -1169,7 +1169,7 @@
         <div class="how-step"><div class="how-num">1</div><h3 data-i18n="how1t">Расчёт онлайн</h3><p data-i18n="how1d">Вы собираете кухню здесь и отправляете заявку</p></div>
         <div class="how-step"><div class="how-num">2</div><h3 data-i18n="how2t">Бесплатный замер</h3><p data-i18n="how2d">Мастер приезжает, уточняет размеры и материалы</p></div>
         <div class="how-step"><div class="how-num">3</div><h3 data-i18n="how3t">Договор</h3><p data-i18n="how3d">Фиксируем цену, сроки и гарантию в договоре</p></div>
-        <div class="how-step"><div class="how-num">4</div><h3 data-i18n="how4t">Изготовление</h3><p data-i18n="how4d">{days} рабочих дней на проверенном производстве в Ташкенте</p></div>
+        <div class="how-step"><div class="how-num">4</div><h3 data-i18n="how4t">Изготовление</h3><p data-i18n="how4d">От {days} рабочих дней на проверенном производстве в Ташкенте</p></div>
         <div class="how-step"><div class="how-num">5</div><h3 data-i18n="how5t">Доставка и монтаж</h3><p data-i18n="how5d">Привозим, собираем, устанавливаем</p></div>
       </div>
       <div class="how-warranty">🛡 <span data-i18n="howWarranty">Гарантия {m} месяцев по договору</span></div>
@@ -1327,7 +1327,7 @@
       phone: '+998920934510',          // для кнопки «Позвонить» (без пробелов)
       phoneDisplay: '+998 92 093-45-10',
       telegram: 'Kitchencalc',          // без @
-      productionDays: '3–30',           // срок изготовления, рабочих дней
+      productionDays: 5,               // срок изготовления, от скольки рабочих дней
       warrantyMonths: 12,               // гарантия, месяцев
       advancePercent: 70,               // аванс по договору, % (в спецификации клиенту не показывается)
       installmentMonths: 0,             // рассрочка: 0 = не показывать; например 6 = «или от X сум/мес»
@@ -1485,7 +1485,7 @@
         heroLead: 'Кухня под ключ: замер, изготовление, доставка и монтаж. Выберите готовый вариант или настройте под свои размеры. Замер и консультация бесплатно.',
         drawFront: 'Чертёж: вид спереди (размеры в мм)', drawTop: 'Чертёж: вид сверху (размеры в мм)',
         techCorner: 'угол', techPlusCorner: '+ угол 600', techCeiling: 'потолок {x}', techDepth: 'Глубина: нижние шкафы {l}, верхние {u} (пунктир)', techDepthShort: 'глубина {x}', techAisle: 'проход', techIsland: 'Остров',
-        badgeMeasure: 'Бесплатный замер', badgeDays: 'Изготовление {days} раб. дней', badgeWarranty: 'Гарантия {m} мес.', badgeDelivery: 'Доставка и монтаж',
+        badgeMeasure: 'Бесплатный замер', badgeDays: 'Изготовление от {days} раб. дней', badgeWarranty: 'Гарантия {m} мес.', badgeInstallment: 'Рассрочка',
         ctaPick: 'Подобрать кухню', ctaCall: 'Позвонить',
         presetsTitle: 'Готовые варианты', presetsSub: 'Нажмите на понравившийся — дальше можно поменять размеры, цвет и материалы.',
         from: 'от {x} сум', fromUsd: 'от {x}', sum: 'сум',
@@ -1517,7 +1517,7 @@
         how1t: 'Расчёт онлайн', how1d: 'Вы собираете кухню здесь и отправляете заявку',
         how2t: 'Бесплатный замер', how2d: 'Мастер приезжает, уточняет размеры и материалы',
         how3t: 'Договор', how3d: 'Фиксируем цену, сроки и гарантию в договоре',
-        how4t: 'Изготовление', how4d: '{days} рабочих дней на проверенном производстве в Ташкенте',
+        how4t: 'Изготовление', how4d: 'От {days} рабочих дней на проверенном производстве в Ташкенте',
         how5t: 'Доставка и монтаж', how5d: 'Привозим, собираем, устанавливаем',
         howWarranty: 'Гарантия {m} месяцев по договору',
         howTurnkey: 'Под ключ — это замер, изготовление, доставка, монтаж и подсветка. Подключение техники, мойки, воды и электричества 220 В не входит в цену — подскажем проверенных мастеров.',
@@ -1615,7 +1615,7 @@
         heroLead: 'Oshxona kalit topshirilguncha: oʻlchov, tayyorlash, yetkazish va oʻrnatish. Tayyor variantni tanlang yoki oʻz oʻlchamlaringizga moslang. Oʻlchov va maslahat bepul.',
         drawFront: 'Chizma: old koʻrinish (oʻlchamlar mm)', drawTop: 'Chizma: yuqoridan koʻrinish (oʻlchamlar mm)',
         techCorner: 'burchak', techPlusCorner: '+ burchak 600', techCeiling: 'shift {x}', techDepth: 'Chuqurlik: pastki shkaflar {l}, yuqori {u} (punktir)', techDepthShort: 'chuqurlik {x}', techAisle: 'yoʻlak', techIsland: 'Orol',
-        badgeMeasure: 'Bepul oʻlchov', badgeDays: 'Tayyorlash {days} ish kuni', badgeWarranty: 'Kafolat {m} oy', badgeDelivery: 'Yetkazish va oʻrnatish',
+        badgeMeasure: 'Bepul oʻlchov', badgeDays: 'Tayyorlash {days} ish kunidan', badgeWarranty: 'Kafolat {m} oy', badgeInstallment: 'Muddatli toʻlov',
         ctaPick: 'Oshxona tanlash', ctaCall: 'Qoʻngʻiroq qilish',
         presetsTitle: 'Tayyor variantlar', presetsSub: 'Yoqqanini bosing — keyin oʻlcham, rang va materiallarni oʻzgartirish mumkin.',
         from: '{x} soʻmdan', fromUsd: '{x} dan', sum: 'soʻm',
@@ -1647,7 +1647,7 @@
         how1t: 'Onlayn hisob', how1d: 'Siz bu yerda oshxonani yigʻib, ariza yuborasiz',
         how2t: 'Bepul oʻlchov', how2d: 'Usta kelib, oʻlcham va materiallarni aniqlaydi',
         how3t: 'Shartnoma', how3d: 'Narx, muddat va kafolatni shartnomada belgilaymiz',
-        how4t: 'Tayyorlash', how4d: 'Toshkentdagi ishonchli ishlab chiqarishda {days} ish kuni',
+        how4t: 'Tayyorlash', how4d: 'Toshkentdagi ishonchli ishlab chiqarishda {days} ish kunidan',
         how5t: 'Yetkazish va oʻrnatish', how5d: 'Olib kelamiz, yigʻamiz, oʻrnatamiz',
         howWarranty: 'Shartnoma boʻyicha {m} oy kafolat',
         howTurnkey: 'Kalit topshirish: oʻlchov, tayyorlash, yetkazish, oʻrnatish va yoritish. Texnika, kranlar, suv va 220 V elektr ulanishi narxga kirmaydi — ishonchli ustalarni tavsiya qilamiz.',
