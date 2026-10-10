@@ -53,6 +53,8 @@ export function createW3D(container, hooks = {}) {
   const camera = new THREE.PerspectiveCamera(38, 1, 2, 6000);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; controls.dampingFactor = .08; controls.maxPolarAngle = 88 * DEG; controls.minDistance = 80; controls.maxDistance = 1400; controls.screenSpacePanning = true;
+  let rotateMode = true;
+  function setRotate(on) { rotateMode = !!on; controls.mouseButtons = { LEFT: on ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: on ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE }; controls.touches = { ONE: on ? THREE.TOUCH.ROTATE : THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN }; }
   scene.add(new THREE.HemisphereLight('#fff8ee', '#b9a07a', .55));
   const sun = new THREE.DirectionalLight('#fff3df', 2.1); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -.0004; sun.shadow.normalBias = .6; sun.shadow.radius = 5; scene.add(sun); scene.add(sun.target);
   const tex = { floor: FLOOR_TEX(), slat: SLAT_TEX() };
@@ -79,6 +81,7 @@ export function createW3D(container, hooks = {}) {
       mirror: new THREE.MeshStandardMaterial({ color: '#dfe8ec', roughness: .04, metalness: 1, envMapIntensity: 1.15 }),
       sand: new THREE.MeshStandardMaterial({ color: '#dfe6e9', roughness: .35, metalness: .7 }),
       laco: new THREE.MeshPhysicalMaterial({ color: st.colors.laco || '#2a2d31', roughness: .08, clearcoat: 1, clearcoatRoughness: .05 }),
+      glassClear: new THREE.MeshPhysicalMaterial({ color: '#cfe6f2', roughness: .04, transparent: true, opacity: .32, depthWrite: false }),
       alu: new THREE.MeshStandardMaterial({ color: '#b9bec2', roughness: .3, metalness: .9 }),
       aluDark: new THREE.MeshStandardMaterial({ color: '#3a3d41', roughness: .35, metalness: .8 }),
       chrome: new THREE.MeshStandardMaterial({ color: '#e8ecef', roughness: .12, metalness: 1 }),
@@ -218,8 +221,8 @@ export function createW3D(container, hooks = {}) {
   /* ---------- раздвижные двери ---------- */
   function slideDoor(p, M, st, key, x, y, w, h, z, fill, dir) {
     const g = new THREE.Group(); p.add(g);
-    const thin = st.hw.sys === 'ps40', fr = thin ? 1 : 2.4, frameM = thin ? M.aluDark : M.alu;
-    const panel = f => f === 'laco' ? M.laco : (f === 'dsp' ? M.body : (f === 'sand' ? M.sand : M.mirror));
+    const thin = st.hw.sys === 'ps40', fr = fill === 'glass' ? Math.max(1.2, Math.min(w / 2 - 1, h / 2 - 1, (st.m && st.m.gf) || 4)) : (thin ? 1 : 2.4), frameM = thin ? M.aluDark : M.alu;
+    const panel = f => f === 'glass' ? M.glassClear : f === 'laco' ? M.laco : (f === 'dsp' ? M.body : (f === 'sand' ? M.sand : M.mirror));
     if (fill === 'combo') { box(g, w / 2 - fr, h - 2 * fr, 1, M.body, x + fr, y + fr, z + .4, 60); box(g, w / 2 - fr, h - 2 * fr, 1, M.mirror, x + w / 2, y + fr, z + .4); box(g, .8, h, 1.6, frameM, x + w / 2 - .4, y, z); }
     else box(g, w - 2 * fr, h - 2 * fr, 1, panel(fill), x + fr, y + fr, z + .4, 60);
     if (fill === 'sand') for (let k = 0; k < 7; k++) { const lf = mesh(new THREE.CircleGeometry(w * .07, 18), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .6, transparent: true, opacity: .55 })); lf.scale.set(1, .35, 1); lf.position.set(x + w * .5 + Math.sin(k) * w * .12, y + h * (.15 + k * .11), z + 1.5); lf.rotation.z = (k % 2 ? 1 : -1) * .5; g.add(lf); }
@@ -463,7 +466,7 @@ export function createW3D(container, hooks = {}) {
   let lastType = null;
   return {
     update(st) { if (st.type !== lastType) { first = true; lastType = st.type; } state = st; build(st); },
-    setView, toggle, openAll, isOpen, keyOf,
+    setView, toggle, openAll, isOpen, keyOf, setRotate, isRotate: () => rotateMode,
     select(sel) { if (state) { state.selected = sel; highlight(); invalidate(); } },
     dispose() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); container.removeChild(renderer.domElement); }
   };

@@ -1,5 +1,5 @@
 /* Общие данные калькулятора шкафов (/shkaf) и страницы раскроя (/raskroy): готовые варианты, палитры, значения по умолчанию. */
-const FILLS = { dsp: 'ЛДСП', mirror: 'Зеркало', film: 'Зеркало с плёнкой', laco: 'Лакобель (цветное стекло)', combo: 'ЛДСП + зеркало', sand: 'Зеркало с рисунком' };
+const FILLS = { dsp: 'ЛДСП', glass: 'Стекло в алюминиевой раме', mirror: 'Зеркало', film: 'Зеркало с плёнкой', laco: 'Лакобель (цветное стекло)', combo: 'ЛДСП + зеркало', sand: 'Зеркало с рисунком' };
 const MIRRORS = { plain: 'Обычное', film: 'С плёнкой безопасности', led: 'С подсветкой', sand: 'С пескоструйным рисунком' };
 const PALETTE = [
   ['Белый', '#f2f1ee'], ['Светлый дуб', '#d8bd91'], ['Бежевый', '#cdbba0'], ['Серый', '#a9adb0'],
@@ -12,7 +12,7 @@ function merge(t, s) { Object.keys(s).forEach(k => { if (s[k] && typeof s[k] ===
 
 const DEF = () => ({
   type: 'kupe', tier: 1, color: 0, laco: 0, customColor: null,
-  W: 240, H: 240, D: 60, doors: 3, fills: ['dsp', 'mirror', 'dsp'], antresol: 0,
+  W: 240, H: 240, D: 60, doors: 3, fills: ['dsp', 'mirror', 'dsp'], antresol: 0, gf: 4,
   shelves: 6, rods: 2, drawers: 3, drawerSys: 'tier', pant: 0, shoes: 2, led: false,
   shape: 'line', A: 300, B: 200, C: 200,
   mirror: { on: false, type: 'plain', W: 60, H: 180 },

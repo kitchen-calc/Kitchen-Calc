@@ -29,6 +29,7 @@ h1{font-family:'Playfair Display',Georgia,serif;margin:6px 0 4px;font-size:1.6re
 .bar{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;z-index:3;pointer-events:none}
 .bar button{pointer-events:auto;background:rgba(20,17,12,.8);color:#f6dc9a;border:1px solid rgba(217,154,28,.55);border-radius:8px;padding:6px 10px;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit}
 .bar .sp{flex:1}
+.bar label.rot{pointer-events:auto;background:rgba(20,17,12,.8);color:#f6dc9a;border:1px solid rgba(217,154,28,.55);border-radius:8px;padding:6px 10px;font-size:.76rem;font-weight:700;cursor:pointer;display:flex;gap:6px;align-items:center}.bar label.rot input{accent-color:#b07d12;width:15px;height:15px;margin:0}
 .price{margin-top:12px;background:#17130d;color:#f6dc9a;border-radius:14px;padding:14px 16px}
 .price small{display:block;opacity:.8}.price b{font-size:2rem;font-family:'Playfair Display',Georgia,serif}.price .sum{opacity:.7;font-size:.8rem}
 .warn{margin-top:10px;font-size:.82rem;color:#8a3b12}.warn .ok{color:#2f6b3a}
@@ -69,7 +70,7 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
   <span class="sp"></span>
   <button class="lk edit" type="button" onclick="PRO.undo()">↶ Отменить</button><button class="lk edit" type="button" onclick="PRO.redo()">↷</button>
   <button class="lk edit" type="button" onclick="PRO.share()">🔗 Ссылка</button>
-  <button class="lk edit" id="clientBtn" type="button" style="display:none" onclick="PRO.client()">👁 Клиенту</button>
+  <button class="lk edit" id="clientBtn" type="button" style="display:none" onclick="PRO.client()">👁 Клиенту</button><button class="lk edit" id="clientTg" type="button" style="display:none" onclick="PRO.client('tg')">✈ Клиенту в Telegram</button>
   <button class="lk edit" type="button" onclick="PRO.reset()">Сбросить</button>
 </div></div>
 <main>
@@ -79,7 +80,7 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
     <div>
       <div class="box3" id="p3dBox">
         <div id="p3d"></div><div class="load" id="p3dLoad">Загрузка 3D…</div>
-        <div class="bar"><button type="button" onclick="PRO.toggleDoors()">↔ Двери</button><span class="sp"></span><button type="button" onclick="PRO.full()">⛶ На весь экран</button></div>
+        <div class="bar"><label class="rot"><input type="checkbox" checked onchange="PRO.rot(this.checked); this.nextSibling.textContent = this.checked ? ' 🔄 Вращать' : ' ✋ Двигать картинку'"> 🔄 Вращать</label><button type="button" onclick="PRO.openAll(true)">↔ Открыть всё</button><button type="button" onclick="PRO.openAll(false)">Закрыть</button><span class="sp"></span><button type="button" onclick="PRO.full()">⛶ На весь экран</button></div>
       </div>
       <div class="price" id="price"></div>
       <div class="warn" id="warn"></div>

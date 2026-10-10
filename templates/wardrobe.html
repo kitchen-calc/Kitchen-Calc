@@ -100,6 +100,8 @@
     .k3d-bar button { pointer-events:auto; background:rgba(20,17,12,.78); color:#f6dc9a; border:1px solid rgba(217,154,28,.55); border-radius:8px; padding:5px 9px; font-size:.74rem; font-weight:700; cursor:pointer; font-family:inherit; }
     .k3d-bar button:hover { background:#b07d12; color:#fff; }
     .k3d-bar .sp { flex:1; }
+    .k3d-bar label.rot { pointer-events: auto; background: rgba(20,17,12,.78); color: #f6dc9a; border: 1px solid rgba(217,154,28,.55); border-radius: 8px; padding: 5px 9px; font-size: .74rem; font-weight: 700; cursor: pointer; display: flex; gap: 6px; align-items: center; }
+    .k3d-bar label.rot input { accent-color: #b07d12; width: 15px; height: 15px; margin: 0; }
     .k3d-edit { position:absolute; left:8px; right:8px; bottom:8px; max-width:440px; z-index:3; background:rgba(20,17,12,.88); color:#f3ead7; border:1px solid rgba(217,154,28,.55); border-radius:12px; padding:8px 10px; font-size:.78rem; max-height:56%; overflow:auto; }
     .k3d-edit .k3e-t { font-weight:800; color:#f6dc9a; margin-bottom:6px; }
     .k3d-edit .k3e-r { display:flex; flex-wrap:wrap; gap:5px; align-items:center; margin:4px 0; }
@@ -249,7 +251,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="/static/js/shkaf-data.js?v=7"></script>
+<script src="/static/js/shkaf-data.js?v=8"></script>
 <script src="/static/js/kis-data.js?v=4"></script>
 <script src="/static/js/kis-art.js?v=2"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
@@ -280,7 +282,8 @@ const P = {
       sheet: 560000, doorKit: 1350000, rail: 170000, soft: 0,     rod: 120000, shoe: 320000, pant: 900000, drawer: 537055, hinge: 41900, hook: 90000, led: 320000, ledKit: 500000, cushion: 350000, flap: 95000 }
   ],
   // стекло и зеркало, сум за м² (с обработкой кромки)
-  glass: { mirror: 190000, film: 235000, laco: 420000, sand: 140 /* тыс.: доплата за пескоструйный рисунок, см. sandExtra */ },
+  frameM: 70000,   // алюминиевая рамка стеклянной двери, сум за метр периметра
+  glass: { glass: 260000, mirror: 190000, film: 235000, laco: 420000, sand: 140 /* тыс.: доплата за пескоструйный рисунок, см. sandExtra */ },
   sandExtra: 140000,
   ledMirrorFrame: 350000, ledMirrorKit: 150000   // подсветка зеркала: сум за метр периметра + блок
 };
@@ -371,6 +374,7 @@ function calc() {
       const a = dw * dh, per = 2 * (dw + dh);
       let c;
       if (f === 'dsp') c = a * pm + per * P.edgeDoorM;
+      else if (f === 'glass') { const fr = (M.gf || 4) / 100, ga = Math.max(0, (dw - 2 * fr) * (dh - 2 * fr)); c = ga * P.glass.glass + per * P.frameM; }
       else if (f === 'combo') c = a * .5 * pm + a * .5 * glassM2('mirror') + per * P.edgeDoorM * .5;
       else c = a * glassM2(f);
       doorsCost += c;
@@ -653,6 +657,7 @@ function doorFace(x, y, w, h, fill, m, idx) {
   const dsp = (xx, ww) => R(xx, y, ww, h, col) + (() => { let g = ''; for (let gx = xx + 6; gx < xx + ww - 2; gx += 9) g += LN(gx, y + 2, gx, y + h - 2, shade(col, lum(col) > .5 ? -.08 : .08), .5, 'opacity=".6"'); return g; })() + R(xx, y, ww, h, 'url(#gGloss)', 'opacity=".5"');
   if (fill === 'dsp') s = dsp(x, w);
   else if (fill === 'laco') s = R(x, y, w, h, lac) + R(x, y, w, h, 'url(#gGloss)') + `<polygon points="${f2(x + w * .1)},${f2(y + h)} ${f2(x + w * .32)},${f2(y)} ${f2(x + w * .4)},${f2(y)} ${f2(x + w * .18)},${f2(y + h)}" fill="#fff" opacity=".13"/>`;
+  else if (fill === 'glass') { const fr = Math.min(w * .45, w * (m.gf || 4) / Math.max(1, (m.W + ((m.doors || 1) - 1) * 3) / (m.doors || 1))); s = R(x, y, w, h, '#b9bec3') + R(x + fr, y + fr, w - 2 * fr, h - 2 * fr, '#d9ecf4') + R(x + fr, y + fr, w - 2 * fr, h - 2 * fr, 'url(#gGloss)') + `<polygon points="${f2(x + w * .18)},${f2(y + h - fr)} ${f2(x + w * .4)},${f2(y + fr)} ${f2(x + w * .5)},${f2(y + fr)} ${f2(x + w * .28)},${f2(y + h - fr)}" fill="#fff" opacity=".35"/>`; }
   else if (fill === 'combo') s = dsp(x, w / 2) + `<g>${(() => { const hw = w / 2; return R(x + hw, y, hw, h, 'url(#gMirror)') + `<polygon points="${f2(x + hw + hw * .1)},${f2(y + h)} ${f2(x + hw + hw * .45)},${f2(y)} ${f2(x + hw + hw * .6)},${f2(y)} ${f2(x + hw + hw * .25)},${f2(y + h)}" fill="url(#gShine)"/>`; })()}</g>` + LN(x + w / 2, y, x + w / 2, y + h, '#c4c7c9', 1.2);
   else {
     s = mirror();
@@ -1003,10 +1008,11 @@ function formKupe() {
   const dw = Math.round((M.W + (M.doors - 1) * 3) / M.doors);
   let fills = '';
   for (let i = 0; i < M.doors; i++) fills += `<div class="door"><b>Дверь ${i + 1}</b><select data-fill="${i}">${Object.keys(FILLS).map(k => `<option value="${k}" ${M.fills[i] === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select></div>`;
-  const hasLaco = M.fills.slice(0, M.doors).includes('laco');
+  const hasLaco = M.fills.slice(0, M.doors).includes('laco'), hasGlass = M.fills.slice(0, M.doors).includes('glass');
   return tiersCard() + `<div class="card"><h2><span class="n">2</span>Размеры</h2><div class="row3">${field('Ширина, см', stepper('W', 80, 600, 10))}${field('Высота, см', stepper('H', 190, 290, 5))}${field('Глубина, см', stepper('D', 35, 90, 5))}</div>
     <div class="row" style="margin-top:12px">${field('Количество дверей', stepper('doors', 2, 6, 1), 'Ширина одной двери ≈ ' + dw + ' см')}${field('Антресоль сверху', `<select data-k="antresol">${[0, 40, 50, 60].map(v => `<option value="${v}" ${M.antresol === v ? 'selected' : ''}>${v ? 'Да, ' + v + ' см' : 'Нет'}</option>`).join('')}</select>`)}</div></div>` +
     `<div class="card"><h2><span class="n">3</span>Двери и цвет</h2>${fills}<label class="f" style="margin-top:12px">Цвет корпуса и ЛДСП</label>${swatches()}
+    ${hasGlass ? `<div style="margin-top:12px">${field('Рамка вокруг стекла, см', stepper('gf', 2, 15, 1), 'Меньше рамка — больше стекло. Стекло одной двери ≈ ' + Math.max(0, Math.round(dw - 2 * (M.gf || 4))) + ' см шириной')}</div>` : ''}
     ${hasLaco ? `<label class="f" style="margin-top:12px">Цвет лакобеля</label><div class="sw">${LACO.map((c, i) => `<button type="button" title="${c[0]}" data-laco="${i}" class="${(M.laco || 0) === i ? 'on' : ''}" style="background:${c[1]}"></button>`).join('')}</div>` : ''}</div>` +
     interiorCard(4) + hwPanel() + decorCard(5);
 }
@@ -1235,7 +1241,7 @@ function w3Supported() { try { return !!(window.WebGL2RenderingContext && docume
 async function initW3() {
   if (W3 || w3Loading) return; w3Loading = true;
   try {
-    const mod = await import('/static/js/wardrobe3d.js?v=5');
+    const mod = await import('/static/js/wardrobe3d.js?v=7');
     W3 = mod.createW3D($('w3dCanvas'), { onSelect: sel => { w3Sel = sel; W3.select(sel); renderW3Edit(); } });
     $('w3dLoad').style.display = 'none'; renderW3Bar(); W3.update(w3State()); renderW3Edit();
   } catch (e) { console.warn('3D недоступно', e); $('w3dTab').style.display = 'none'; setW3Mode('2d'); }
@@ -1251,7 +1257,8 @@ function setW3Mode(m) {
 function w3Refresh() { if (W3 && w3Mode === '3d') { W3.update(w3State()); renderW3Edit(); } }
 function renderW3Bar() {
   const b = (a, t) => `<button type="button" onclick="w3Act('${a}')">${t}</button>`;
-  $('w3dBar').innerHTML = b('v:angle', '◩ Угол') + b('v:front', '▭ Спереди') + b('v:top', '▦ Сверху') + b('openAll', '↔ Открыть всё') + b('closeAll', 'Закрыть') + '<span class="sp"></span>' + b('full', '⛶ На весь экран');
+  const rot = W3 ? W3.isRotate() : true;
+  $('w3dBar').innerHTML = `<label class="rot" title="Галочка: тянете — вращаете. Без галочки: тянете — двигаете картинку. Колесо мыши — приблизить."><input type="checkbox" ${rot ? 'checked' : ''} onchange="if (W3) W3.setRotate(this.checked); renderW3Bar()"> ${rot ? '🔄 Вращать' : '✋ Двигать картинку'}</label>` + b('v:angle', '◩ Угол') + b('v:front', '▭ Спереди') + b('v:top', '▦ Сверху') + b('openAll', '↔ Открыть всё') + b('closeAll', 'Закрыть') + '<span class="sp"></span>' + b('full', '⛶ На весь экран');
 }
 function w3AfterEdit() { activePreset = -1; norm(); renderForm(); refresh(); presetCards(); }
 function w3Ensure() { if (!secsValid(M)) M.secs = makeSecs(M); }
@@ -1771,6 +1778,22 @@ function openContractPage() {
   w.document.open(); w.document.write(html); w.document.close();
 }
 
+</script>
+<script>
+/* секретный вход мастера: три быстрых нажатия на логотип (или Ctrl+Shift+K) → ключ → конструктор шкафа PRO */
+(function () {
+  async function go() {
+    var key = prompt('Ключ мастера'); if (!key) return;
+    try {
+      var r = await fetch('/api/owner', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: key }) });
+      if (r.ok) { location.href = '/shkaf/pro'; return; }
+    } catch (e) {}
+    alert('Неверный ключ');
+  }
+  var n = 0, tm = null;
+  document.addEventListener('click', function (e) { if (!e.target.closest || !e.target.closest('.brand')) return; n++; clearTimeout(tm); tm = setTimeout(function () { n = 0; }, 900); if (n >= 3) { n = 0; e.preventDefault(); go(); } }, true);
+  document.addEventListener('keydown', function (e) { if ((e.ctrlKey && e.shiftKey && (e.code === 'KeyK')) || (e.altKey && e.shiftKey && e.code === 'KeyM')) { e.preventDefault(); go(); } });
+})();
 </script>
 </body>
 </html>

@@ -89,6 +89,8 @@ export function createK3D(container, hooks = {}, opts = {}) {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; controls.dampingFactor = 0.08; controls.maxPolarAngle = 88 * DEG; controls.minDistance = 90; controls.maxDistance = 1400;
   controls.screenSpacePanning = true;
+  let rotateMode = true;
+  function setRotate(on) { rotateMode = !!on; controls.mouseButtons = { LEFT: on ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: on ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE }; controls.touches = { ONE: on ? THREE.TOUCH.ROTATE : THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN }; }
 
   const hemi = new THREE.HemisphereLight('#fff8ee', '#b9a07a', 0.55); scene.add(hemi);
   const sun = new THREE.DirectionalLight('#fff3df', 2.2); sun.castShadow = true;
@@ -142,7 +144,9 @@ export function createK3D(container, hooks = {}, opts = {}) {
       inner: new THREE.MeshStandardMaterial({ color: '#efefec', roughness: .7 }),
       led: new THREE.MeshStandardMaterial({ color: '#fff3c4', emissive: '#ffe29a', emissiveIntensity: 2.2 }),
       fridge: new THREE.MeshStandardMaterial({ color: '#d9dde0', roughness: .3, metalness: .6 }),
-      gola: new THREE.MeshStandardMaterial({ color: '#b9bfc5', roughness: .3, metalness: .85 })
+      gola: new THREE.MeshStandardMaterial({ color: '#b9bfc5', roughness: .3, metalness: .85 }),
+      glassMatte: new THREE.MeshPhysicalMaterial({ color: '#e9f1f4', roughness: .65, transparent: true, opacity: .7, depthWrite: false }),
+      glassTint: new THREE.MeshPhysicalMaterial({ color: '#566870', roughness: .1, transparent: true, opacity: .6, depthWrite: false })
     };
   }
 
@@ -196,11 +200,11 @@ export function createK3D(container, hooks = {}, opts = {}) {
     // pivot на ребре петли; дверь — внутри
     const pv = new THREE.Group(); pv.position.set(hingeSide === 'L' ? x : x + w, y, z); g.add(pv);
     const dx = hingeSide === 'L' ? 0 : -w;
-    if (glass) {
-      const fr = 2.2;
+    if (glass || st.GLASS) {
+      const fr = Math.max(.8, Math.min(st.GF || 2.2, w / 2 - .6, h / 2 - .6)), gm = st.GT === 'matte' ? M.glassMatte : (st.GT === 'tint' ? M.glassTint : M.glass);
       box(pv, w, fr, FT, M.facade, dx, 0, 0); box(pv, w, fr, FT, M.facade, dx, h - fr, 0);
       box(pv, fr, h - 2 * fr, FT, M.facade, dx, fr, 0); box(pv, fr, h - 2 * fr, FT, M.facade, dx + w - fr, fr, 0);
-      box(pv, w - 2 * fr, h - 2 * fr, .5, M.glass, dx + fr, fr, .6);
+      box(pv, w - 2 * fr, h - 2 * fr, .5, gm, dx + fr, fr, .6);
     } else box(pv, w, h, FT, M.facade, dx, 0, 0, 60);
     const hx = hingeSide === 'L' ? dx + w - 3.2 : dx + 3.2, hy = tier === 'lower' ? h - 7 - handleSpec(st).len / 2 : 7 + handleSpec(st).len / 2;
     addHandle(pv, M, st, hx, Math.max(handleSpec(st).len / 2 + 2, Math.min(h - handleSpec(st).len / 2 - 2, hy)), FT, true, open, { x: dx, w, y: tier === 'lower' ? h : 0, top: tier === 'lower' });
@@ -556,6 +560,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   // фурнитура конкретного шкафа поверх общей
   function stFor(st, s, up) {
     const o = {};
+    if (s.glass || s.kind === 'glass') { o.GLASS = true; o.GF = s.gf ? +s.gf : 2.2; o.GT = s.gt || 'clear'; }
     if (up) { if (s.dp) o.UD = +s.dp; if (s.ht) { o.UH = +s.ht; o.tiers = 1; } }
     else {
       if (s.dp) o.LD = +s.dp;
@@ -802,7 +807,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
 
   return {
     update(st) { state = st; build(st); },
-    setView, toggle, openAll, isOpen, floorAt, setHud,
+    setView, toggle, openAll, isOpen, floorAt, setHud, setRotate, isRotate: () => rotateMode,
     select(sel) { if (state) { state.selected = sel; highlight(); invalidate(); } },
     snapshot() { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); },
     dispose() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); container.removeChild(renderer.domElement); }

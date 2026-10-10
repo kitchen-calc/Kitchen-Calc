@@ -25,12 +25,14 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   const camera = new THREE.PerspectiveCamera(36, 1, 2, 6000);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; controls.dampingFactor = .08; controls.maxPolarAngle = 89 * DEG; controls.minDistance = 80; controls.maxDistance = 1500; controls.screenSpacePanning = true;
+  let rotateMode = true;
+  function setRotate(on) { rotateMode = !!on; controls.mouseButtons = { LEFT: on ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: on ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE }; controls.touches = { ONE: on ? THREE.TOUCH.ROTATE : THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN }; }
   scene.add(new THREE.HemisphereLight('#fff8ee', '#b9a07a', .6));
   const sun = new THREE.DirectionalLight('#fff3df', 2.1); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -.0004; sun.shadow.normalBias = .6; scene.add(sun); scene.add(sun.target);
 
   let needs = true; const invalidate = () => { needs = true; };
   let root = new THREE.Group(); scene.add(root);
-  let state = null, sel = null, picks = [], doorsAnim = [], openTarget = 0, openAmt = 0, selBox = null, first = true;
+  let state = null, sel = null, picks = [], doorsAnim = [], openTarget = new Map(), openAmt = new Map(), selBox = null, first = true;
 
   const mats = {};
   const stdMat = (hex, o) => new THREE.MeshStandardMaterial(Object.assign({ color: hex, roughness: .55, metalness: 0, envMapIntensity: .6 }, o || {}));
@@ -44,7 +46,9 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       body: stdMat(hex), bodyDark: stdMat(new THREE.Color(hex).multiplyScalar(.82).getStyle()), back: stdMat(new THREE.Color(hex).multiplyScalar(.9).getStyle(), { roughness: .8 }),
       plinth: stdMat('#2d2b29', { roughness: .7 }), chrome: stdMat('#e8ecef', { roughness: .15, metalness: 1 }), steel: stdMat('#9aa0a6', { roughness: .35, metalness: .7 }),
       led: new THREE.MeshStandardMaterial({ color: '#fff3c4', emissive: '#ffe29a', emissiveIntensity: 2 }), inner: stdMat('#efefec', { roughness: .8 }), black: stdMat('#1a1b1d', { roughness: .3, metalness: .4 }),
-      mirror: new THREE.MeshStandardMaterial({ color: '#dfe8ee', roughness: .04, metalness: 1, envMapIntensity: 1.2 }),
+      mirror: new THREE.MeshStandardMaterial({ color: '#eef5f9', roughness: .06, metalness: .8, envMapIntensity: 2.4 }),
+      glassClear: new THREE.MeshPhysicalMaterial({ color: '#cfe6f2', roughness: .04, metalness: 0, transparent: true, opacity: .32, envMapIntensity: 1, depthWrite: false }),
+      alu: stdMat('#b8bec4', { roughness: .3, metalness: .85 }),
       glass: n => new THREE.MeshStandardMaterial({ color: (LACO[n] || LACO[0])[1], roughness: .12, metalness: .1, envMapIntensity: .9 })
     };
     const edgeMat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: .22 });
@@ -64,24 +68,29 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     // стены и пол помещения
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(W + 400, D + 400), stdMat('#cdb48e', { roughness: .7 })); floor.rotation.x = -Math.PI / 2; floor.position.set(W / 2, 0, D / 2 + 100); floor.receiveShadow = true; root.add(floor);
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(W + 400, 360), stdMat('#efe8dc', { roughness: .95 })); wall.position.set(W / 2, 180, -.4); root.add(wall);
-    // корпус
-    const selK = { k: 'global' };
-    box(t, H - ph, bd, M.body, 0, ph, z0, selK); box(t, H - ph, bd, M.body, W - t, ph, z0, selK);
-    box(W - 2 * t, t, bd, M.body, t, H - t, z0, selK); box(W - 2 * t, t, bd, M.body, t, ph, z0, selK);
-    box(W, H - ph, .3, M.back, 0, ph, 0);
-    box(W - 2 * t, ph - .2, t, M.plinth, t, 0, D - 6);
+    // корпус: секции (между проёмами), перегородки, антресоли — каждая отдельным блоком
+    const selK = { k: 'global' }, n = g.cols.length;
+    g.runs.forEach(r => {
+      const rw = r.x1 - r.x0;
+      box(t, H - ph, bd, M.body, r.x0, ph, z0, selK); box(t, H - ph, bd, M.body, r.x1 - t, ph, z0, selK);
+      box(rw - 2 * t, t, bd, M.body, r.x0 + t, H - t, z0, selK); box(rw - 2 * t, t, bd, M.body, r.x0 + t, ph, z0, selK);
+      box(rw, H - ph, .3, M.back, r.x0, ph, 0);
+      box(rw - 2 * t, ph - .2, t, M.plinth, r.x0 + t, 0, D - 6);
+    });
+    g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === n) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap) return; box(t, g.y1 - g.y0, bd, M.body, b.x, g.y0, z0, { k: 'col', i: k - 1 }); });
     g.cols.forEach((c, i) => {
-      if (i < g.cols.length - 1) { box(t, g.y1 - g.y0, bd, M.body, c.xb, g.y0, z0, { k: 'col', i: i }); if (S.mezz.on) box(t, g.my1 - g.my0, bd, M.body, c.xb, g.my0, z0, { k: 'mezz' }); }
-      // невидимая плоскость для выбора пустого отсека
       const pl = new THREE.Mesh(new THREE.PlaneGeometry(c.w, g.y1 - g.y0), new THREE.MeshBasicMaterial({ visible: false })); pl.position.set(c.xa + c.w / 2, (g.y0 + g.y1) / 2, 1); pl.userData.sel = { k: 'col', i }; picks.push(pl); root.add(pl);
     });
-    if (S.mezz.on) {
-      box(W - 2 * t, t, bd, M.body, t, g.yMF, z0, { k: 'mezz' });
-      g.cols.forEach(c => { for (let k = 1; k <= (S.mezz.shelves | 0); k++) box(c.w - .2, t, D - 2.5, M.body, c.xa + .1, g.my0 + (g.my1 - g.my0) * k / ((S.mezz.shelves | 0) + 1), z0, { k: 'mezz' }); });
-    }
+    g.mz.forEach(m => {
+      const meta = { k: 'mezz', i: m.mi }, mbd = bd;
+      box(t, m.h, mbd, M.body, m.x0, m.yb, z0, meta); box(t, m.h, mbd, M.body, m.x1 - t, m.yb, z0, meta);
+      box(m.w - 2 * t, t, mbd, M.body, m.x0 + t, m.yt - t, z0, meta); box(m.w - 2 * t, t, mbd, M.body, m.x0 + t, m.yb, z0, meta);
+      box(m.w, m.h, .3, M.back, m.x0, m.yb, 0, meta);
+      for (let k = 1; k <= (m.shelves | 0); k++) box(m.w - 2 * t - .2, t, D - 2.5, M.body, m.x0 + t + .1, m.iy0 + (m.iy1 - m.iy0) * k / ((m.shelves | 0) + 1), z0, meta);
+    });
     // наполнение
     S.cols.forEach((col, ci) => {
-      const c = g.cols[ci];
+      const c = g.cols[ci]; if (col.gap) return;
       col.items.forEach(it => {
         const meta = { k: 'item', id: it.id, col: ci };
         if (it.type === 'shelf') box(c.w - .2, t, it.d || D - 2.5, M.body, c.xa + .1, it.y, z0, meta);
@@ -124,44 +133,51 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         else if (it.type === 'vpanel') { const x = Math.max(c.xa + 1, Math.min(c.xb - t - 1, c.xa + it.x)); box(t, it.y1 - it.y, D - 2.5, M.body, x, it.y, z0, meta); }
       });
     });
-    // двери
-    const dl = doorList(S), sliding = S.doors.kind === 'sliding';
-    const n = S.doors.n;
+    // отдельные панели: зеркало / стекло на стене или на фасаде
+    (S.panels || []).forEach((p, pi) => {
+      const meta = { k: 'panel', i: pi }, z = p.mount === 'front' ? D + 3.8 : .5, th = p.kind === 'dsp' ? 1.6 : .7;
+      const mat = p.kind === 'dsp' ? M.body : (p.kind === 'glass' ? M.glassClear : (p.kind === 'laco' ? M.glass(S.doors.laco) : M.mirror));
+      if (p.frame) { const f = Math.min(p.fw || 3, p.w / 2 - .5, p.h / 2 - .5); box(p.w - 2 * f, p.h - 2 * f, th, mat, p.x + f, p.y + f, z, meta); box(p.w, f, th + 1, M.alu, p.x, p.y, z, meta); box(p.w, f, th + 1, M.alu, p.x, p.y + p.h - f, z, meta); box(f, p.h - 2 * f, th + 1, M.alu, p.x, p.y + f, z, meta); box(f, p.h - 2 * f, th + 1, M.alu, p.x + p.w - f, p.y + f, z, meta); }
+      else box(p.w, p.h, th, mat, p.x, p.y, z, meta);
+    });
+    // двери: основные (по секциям) и антресолей (каждая своими)
+    const dl = doorList(S);
     dl.forEach(d => {
-      const mz = d.zone === 'mezz', mat = d.fill === 'dsp' ? M.body : (d.fill === 'laco' ? M.glass(S.doors.laco) : M.mirror), th = d.fill === 'dsp' ? 1.6 : .8;
-      const meta = { k: mz ? 'mezz' : 'doors' };
-      if (!mz && sliding) {
-        const layer = d.i % 2, z = D + .4 + layer * 3.4, grp = new THREE.Group(); grp.position.set(d.x, 0, z); root.add(grp);
-        box(d.w, d.h, th, mat, 0, d.y, 0, meta, grp);
-        if (d.fill !== 'dsp') { box(d.w, 2.2, th + .4, M.steel, 0, d.y, -.2, null, grp); box(d.w, 2.2, th + .4, M.steel, 0, d.y + d.h - 2.2, -.2, null, grp); }
-        doorsAnim.push({ apply: f => { grp.position.x = d.x + (layer === 1 ? (d.w - 2.5) * f * (d.i < n / 2 ? -1 : 1) : 0); } });
+      const mz = d.zone === 'mezz', gl = d.fill === 'glass', mat = d.fill === 'dsp' ? M.body : (d.fill === 'laco' ? M.glass(S.doors.laco) : (gl ? M.glassClear : M.mirror)), th = d.fill === 'dsp' ? 1.6 : .8;
+      const face = (par, dx, dy) => { if (!gl) { box(d.w, d.h, th, mat, dx, dy, 0, meta, par); return; } const f = Math.min(Math.max(1, S.doors.gf || 4), d.w / 2 - .6, d.h / 2 - .6); box(d.w - 2 * f, d.h - 2 * f, .5, M.glassClear, dx + f, dy + f, .5, meta, par); box(d.w, f, 1.8, M.alu, dx, dy, 0, meta, par); box(d.w, f, 1.8, M.alu, dx, dy + d.h - f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx, dy + f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx + d.w - f, dy + f, 0, meta, par); };
+      const key = mz ? 'm' + d.mi + '.' + d.i : 'd' + d.i, meta = mz ? { k: 'mezz', i: d.mi, key } : { k: 'doors', key };
+      if (d.sliding) {
+        const layer = d.ri % 2, z = D + .4 + layer * 3.4, grp = new THREE.Group(); grp.position.set(d.x, 0, z); root.add(grp);
+        face(grp, 0, d.y);
+        if (d.fill !== 'dsp' && !gl) { box(d.w, 2.2, th + .4, M.steel, 0, d.y, -.2, null, grp); box(d.w, 2.2, th + .4, M.steel, 0, d.y + d.h - 2.2, -.2, null, grp); }
+        doorsAnim.push({ key, apply: f => { grp.position.x = d.x + (layer === 1 ? (d.w - 2.5) * f * (d.left ? -1 : 1) : 0); } });
       } else {
-        const left = d.i < (mz ? S.mezz.n : n) / 2, pv = new THREE.Group(); pv.position.set(left ? d.x : d.x + d.w, d.y, D + .3); root.add(pv);
+        const left = d.left, pv = new THREE.Group(); pv.position.set(left ? d.x : d.x + d.w, d.y, D + .3); root.add(pv);
         const dx = left ? 0 : -d.w;
-        box(d.w, d.h, th, mat, dx, 0, 0, meta, pv);
-        if (S.doors.handles !== false && d.fill !== 'mirror') box(.9, Math.min(24, d.h * .3), 1.6, M.chrome, left ? dx + d.w - 4 : dx + 3, mz ? 4 : d.h / 2 - 12, th, meta, pv);
-        else if (S.doors.handles !== false) box(.9, Math.min(24, d.h * .3), 1.6, M.chrome, left ? dx + d.w - 4 : dx + 3, mz ? 4 : d.h / 2 - 12, th, meta, pv);
-        doorsAnim.push({ apply: f => { pv.rotation.y = (left ? -1 : 1) * 105 * DEG * f; } });
+        face(pv, dx, 0);
+        if (S.doors.handles !== false) box(.9, Math.min(24, d.h * .3), 1.6, M.chrome, left ? dx + d.w - 4 : dx + 3, mz ? Math.min(6, d.h / 3) : d.h / 2 - 12, th, meta, pv);
+        doorsAnim.push({ key, apply: f => { pv.rotation.y = (left ? -1 : 1) * 105 * DEG * f; } });
       }
     });
-    if (S.led && !S.cols.some(c => c.items.some(i => i.type === 'led'))) g.cols.forEach(c => box(c.w - 1, .6, 1.4, M.led, c.xa + .5, g.y1 - t - .8, D - 6));
+    if (S.led && !S.cols.some(c => c.items.some(i => i.type === 'led'))) g.cols.forEach(c => { if (!c.gap) box(c.w - 1, .6, 1.4, M.led, c.xa + .5, g.y1 - t - .8, D - 6); });
     // свет
-    sun.position.set(W / 2 - 220, H + 260, D + 340); sun.target.position.set(W / 2, H / 3, D / 2);
-    const sc = sun.shadow.camera, sp = Math.max(W, H) * 1.1; sc.left = -sp; sc.right = sp; sc.top = sp; sc.bottom = -sp; sc.near = 10; sc.far = 1400; sc.updateProjectionMatrix();
+    sun.position.set(W / 2 - 220, g.totalH + 260, D + 340); sun.target.position.set(W / 2, H / 3, D / 2);
+    const sc = sun.shadow.camera, sp = Math.max(W, g.totalH) * 1.1; sc.left = -sp; sc.right = sp; sc.top = sp; sc.bottom = -sp; sc.near = 10; sc.far = 1400; sc.updateProjectionMatrix();
     applyDoors(); highlight();
     if (first) { frame(); first = false; }
     invalidate();
   }
-  function applyDoors() { doorsAnim.forEach(a => a.apply(ease(openAmt))); }
+  function applyDoors() { doorsAnim.forEach(a => a.apply(ease(openAmt.get(a.key) || 0))); }
   function frame() {
-    if (!state) return; const g = geom(state), W = g.W, H = state.H, dist = Math.max(W * 1.55, H * 1.75, 330);
+    if (!state) return; const g = geom(state), W = g.W, H = g.totalH, dist = Math.max(W * 1.55, H * 1.75, 330);
     controls.target.set(W / 2, H * .46, state.D / 2); camera.position.set(W / 2 + dist * .28, H * .6, state.D / 2 + dist); controls.update(); invalidate();
   }
   function highlight() {
     if (selBox) { root.remove(selBox); selBox = null; }
     if (!sel || sel.k === 'global') return;
+    root.updateMatrixWorld(true);
     const bb = new THREE.Box3(); let any = false;
-    picks.forEach(m => { const s = m.userData.sel; if (!s || !m.geometry || m.geometry.type === 'PlaneGeometry') return; if ((sel.k === 'item' && s.k === 'item' && s.id === sel.id) || (sel.k === 'col' && s.k === 'col' && s.i === sel.i && false) || ((sel.k === 'mezz' || sel.k === 'doors') && s.k === sel.k)) { bb.expandByObject(m); any = true; } });
+    picks.forEach(m => { const s = m.userData.sel; if (!s || !m.geometry || m.geometry.type === 'PlaneGeometry') return; if ((sel.k === 'item' && s.k === 'item' && s.id === sel.id) || (sel.k === 'col' && s.k === 'col' && s.i === sel.i && false) || (sel.k === 'mezz' && s.k === 'mezz' && s.i === sel.i) || (sel.k === 'panel' && s.k === 'panel' && s.i === sel.i) || (sel.k === 'doors' && s.k === 'doors')) { bb.expandByObject(m); any = true; } });
     if (sel.k === 'col' && state) { const g = geom(state), c = g.cols[sel.i]; if (c) { bb.set(new THREE.Vector3(c.xa, g.y0, 0), new THREE.Vector3(c.xb, g.y1, state.D)); any = true; } }
     if (!any) return;
     const sz = bb.getSize(new THREE.Vector3()), ct = bb.getCenter(new THREE.Vector3()), geo = new THREE.EdgesGeometry(new THREE.BoxGeometry(sz.x + 1, sz.y + 1, sz.z + 1));
@@ -176,7 +192,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   renderer.domElement.addEventListener('pointerdown', e => {
     downAt = [e.clientX, e.clientY]; drag = null; if (viewOnly) return;
     const h = hit(e); if (!h) return;
-    if (h.sel.k === 'item') {
+    if (h.sel.k === 'item' || h.sel.k === 'mezz' || h.sel.k === 'panel') {
       if (hooks.onSelect) hooks.onSelect(h.sel);
       drag = { sel: h.sel, p0: h.p, moved: false }; controls.enabled = false; try { renderer.domElement.setPointerCapture(e.pointerId); } catch (er) {}
     }
@@ -186,7 +202,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     if (!drag.moved && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) return;
     drag.moved = true; rayFrom(e);
     plane.set(new THREE.Vector3(0, 0, 1), -drag.p0.z); if (!ray.ray.intersectPlane(plane, hitP)) return;
-    const txt = hooks.onDrag && hooks.onDrag(drag.sel, hitP.y - drag.p0.y, hitP.x); setHud(txt || ''); invalidate();
+    const txt = hooks.onDrag && hooks.onDrag(drag.sel, hitP.y - drag.p0.y, hitP.x, hitP.x - drag.p0.x); setHud(txt || ''); invalidate();
   });
   const endDrag = () => { const d = drag; drag = null; controls.enabled = true; setHud(''); if (d && d.moved && hooks.onDragEnd) hooks.onDragEnd(); return !!(d && d.moved); };
   renderer.domElement.addEventListener('pointercancel', endDrag);
@@ -194,17 +210,19 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     if (endDrag()) return;
     if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
     const h = hit(e);
-    if (viewOnly) { if (h && (h.sel.k === 'doors' || h.sel.k === 'mezz')) toggleDoors(); return; }
+    if (viewOnly) { if (h && h.sel.key) toggleDoor(h.sel.key); return; }
     if (hooks.onSelect) hooks.onSelect(h ? h.sel : null);
   });
-  renderer.domElement.addEventListener('dblclick', e => { const h = hit(e); if (h && (h.sel.k === 'doors' || h.sel.k === 'mezz')) toggleDoors(); });
-  function toggleDoors(on) { openTarget = on === undefined ? (openTarget > .5 ? 0 : 1) : (on ? 1 : 0); invalidate(); }
+  renderer.domElement.addEventListener('dblclick', e => { const h = hit(e); if (h && h.sel.key) toggleDoor(h.sel.key); });
+  function toggleDoor(key) { openTarget.set(key, (openTarget.get(key) || 0) > .5 ? 0 : 1); invalidate(); }
+  function toggleDoors(on) { const keys = [...new Set(doorsAnim.map(a => a.key))]; if (on === undefined) on = !keys.some(k => (openTarget.get(k) || 0) > .5); keys.forEach(k => openTarget.set(k, on ? 1 : 0)); invalidate(); }
 
   let last = performance.now(), raf = 0, alive = true;
   function loop(now) {
     if (!alive) return; raf = requestAnimationFrame(loop);
     const dt = Math.min(.05, (now - last) / 1000); last = now; let moving = false;
-    if (Math.abs(openAmt - openTarget) > .001) { openAmt += Math.sign(openTarget - openAmt) * Math.min(Math.abs(openTarget - openAmt), dt / .8); applyDoors(); moving = true; }
+    openTarget.forEach((tg, k) => { const cur = openAmt.get(k) || 0; if (Math.abs(cur - tg) > .001) { openAmt.set(k, cur + Math.sign(tg - cur) * Math.min(Math.abs(tg - cur), dt / .8)); moving = true; } });
+    if (moving) applyDoors();
     const damp = controls.update();
     if (moving || needs || damp) { renderer.render(scene, camera); needs = false; }
   }
@@ -215,7 +233,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   return {
     update(S) { state = S; build(S); },
     select(s) { sel = s; highlight(); invalidate(); },
-    toggleDoors, isOpen: () => openTarget > .5, frame, setHud,
+    setRotate, isRotate: () => rotateMode, toggleDoors, toggleDoor, isOpen: () => [...openTarget.values()].some(v => v > .5), frame, setHud,
     snapshot() { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); },
     dispose() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); container.removeChild(renderer.domElement); }
   };

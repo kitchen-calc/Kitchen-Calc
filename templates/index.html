@@ -521,6 +521,8 @@
     .k3d-bar button { pointer-events: auto; background: rgba(20,17,12,.78); color: #f6dc9a; border: 1px solid rgba(217,154,28,.55); border-radius: 8px; padding: 5px 9px; font-size: .74rem; font-weight: 700; cursor: pointer; backdrop-filter: blur(4px); }
     .k3d-bar button:hover { background: #b07d12; color: #fff; }
     .k3d-bar .sp { flex: 1; }
+    .k3d-bar label.rot { pointer-events: auto; background: rgba(20,17,12,.78); color: #f6dc9a; border: 1px solid rgba(217,154,28,.55); border-radius: 8px; padding: 5px 9px; font-size: .74rem; font-weight: 700; cursor: pointer; display: flex; gap: 6px; align-items: center; backdrop-filter: blur(4px); }
+    .k3d-bar label.rot input { accent-color: #b07d12; width: 15px; height: 15px; margin: 0; }
     .k3d-edit { position: absolute; left: 8px; right: 8px; bottom: 8px; max-width: 440px; z-index: 3; background: rgba(20,17,12,.88); color: #f3ead7; border: 1px solid rgba(217,154,28,.55); border-radius: 12px; padding: 8px 10px; font-size: .78rem; max-height: 55%; overflow: auto; backdrop-filter: blur(6px); }
     .k3d-edit .k3e-t { font-weight: 800; color: #f6dc9a; margin-bottom: 6px; }
     .k3d-edit .k3e-r { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin: 4px 0; }
@@ -2739,12 +2741,13 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=14');
+        const mod = await import('/static/js/kitchen3d.js?v=15');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
           onMove: (sel, res, c0) => k3dDropHook(sel, res, c0)
         }, { viewOnly: VIEW_ONLY });
+        K3.setRotate(k3dRotate);
         el('k3dLoad').style.display = 'none';
         renderK3dBar(); K3.update(k3dState()); renderK3dEdit();
       } catch (e) {
@@ -2761,10 +2764,13 @@
       if (k3dMode === '3d') { if (!K3) initK3D(); else K3.update(k3dState()); }
     }
     function k3dRefresh() { if (K3 && k3dMode === '3d') { K3.update(k3dState()); if (!k3dKeepPanel) renderK3dEdit(); else k3dPosUpdate(); } }
+    let k3dRotate = true;
+    function k3dRotMode(on) { k3dRotate = !!on; if (K3) K3.setRotate(k3dRotate); renderK3dBar(); }
     function renderK3dBar() {
       const b = (act, txt, on) => `<button type="button" class="${on ? 'on' : ''}" onclick="k3dAct('${act}')">${txt}</button>`;
       const st = el('studio'), isFull = st.classList.contains('k3d-full');
-      el('k3dBar').innerHTML = b('openAll', L3('↔ Открыть всё', '↔ Hammasini ochish')) + b('closeAll', L3('Закрыть', 'Yopish')) + '<span class="sp"></span>' +
+      const rotLbl = `<label class="rot" title="${esc(L3('Галочка: тянете — вращаете. Без галочки: тянете — двигаете картинку. Колесо мыши — приблизить.', 'Belgi bor — aylantirish, yoʻq — suratni surish. Gʻildirak — yaqinlashtirish.'))}"><input type="checkbox" ${k3dRotate ? 'checked' : ''} onchange="k3dRotMode(this.checked)"> ${k3dRotate ? esc(L3('🔄 Вращать', '🔄 Aylantirish')) : esc(L3('✋ Двигать картинку', '✋ Suratni surish'))}</label>`;
+      el('k3dBar').innerHTML = rotLbl + b('openAll', L3('↔ Открыть всё', '↔ Hammasini ochish')) + b('closeAll', L3('Закрыть', 'Yopish')) + '<span class="sp"></span>' +
         ((VIEW_ONLY || !OWNER_ON) ? '' : b('client', L3('👁 Клиенту', '👁 Mijozga'))) +
         (isFull ? b('side', st.classList.contains('side-off') ? L3('⚙ Параметры', '⚙ Parametrlar') : L3('⚙ Скрыть панель', '⚙ Panelni yashirish')) : '') +
         b('full', isFull ? L3('✕ Свернуть', '✕ Yopish') : L3('⛶ На весь экран', '⛶ Toʻliq ekran'));
@@ -2887,6 +2893,27 @@
       if (collisionCount() > n0) { if (old == null) delete s[f]; else s[f] = old; if (f === 'dp') { if (old == null) delete s.depth; else s.depth = old; } if (typeof msToast === 'function') msToast(L3('Не помещается: упирается в другой шкаф или стену', 'Sigʻmaydi: boshqa shkaf yoki devorga tegadi')); renderK3dEdit(); return; }
       plannerChanged();
     }
+    // стеклянные двери: рамка вокруг стекла (меньше рамка — больше стекло), вид стекла
+    function k3dGlassHtml(s, tier) {
+      const on = !!(s.glass || s.kind === 'glass'), gf = s.gf ? +s.gf : 2.2, w = parseFloat(s.width) || 0, G = techGeometry();
+      const dw = twoDoors(s, w) ? (w - .9) / 2 : w - .6, dh = tier === 'upper' ? G.UH - .6 : G.BOX - 10.6, gw = Math.max(0, dw - 2 * gf), gh = Math.max(0, dh - 2 * gf);
+      let h = `<div class="k3s-sub">🪟 ${esc(L3('Стеклянная дверь', 'Shisha eshik'))}</div>` + k3Row(L3('Двери', 'Eshiklar'), k3B(!on, "k3dGlass('off')", L3('обычные', 'oddiy')) + k3B(on, "k3dGlass('on')", L3('стекло в раме', 'ramali shisha')));
+      if (on) {
+        h += k3Row(L3('Рамка вокруг стекла', 'Shisha atrofi rama'), k3Step(fpN(gf) + ' ' + cmU(), "k3dGlass('gf',-0.5)", "k3dGlass('gf',0.5)"));
+        h += `<div class="k3s-note">${esc(L3('Стекло одной двери', 'Bitta eshik oynasi'))}: <b style="color:#fff">${Math.round(gw * 10)} × ${Math.round(gh * 10)} ${esc(L3('мм', 'mm'))}</b>. ${esc(L3('Меньше рамка — больше стекло.', 'Rama kichik — oyna katta.'))}</div>`;
+        const gt = s.gt || 'clear';
+        h += k3Row(L3('Стекло', 'Oyna'), k3B(gt === 'clear', "k3dGlass('gt','clear')", L3('прозрачное', 'shaffof')) + k3B(gt === 'matte', "k3dGlass('gt','matte')", L3('матовое', 'xira')) + k3B(gt === 'tint', "k3dGlass('gt','tint')", L3('тонированное', 'tusli')));
+      }
+      return h;
+    }
+    function k3dGlass(what, v) {
+      const s = selSec; if (!s) return;
+      if (what === 'on') { s.glass = true; if (s.kind === 'glass') s.kind = 'door'; }
+      else if (what === 'off') { delete s.glass; if (s.kind === 'glass') s.kind = 'door'; delete s.gf; delete s.gt; }
+      else if (what === 'gf') s.gf = Math.max(1, Math.min(15, Math.round(((s.gf ? +s.gf : 2.2) + v) * 10) / 10));
+      else if (what === 'gt') s.gt = v;
+      updateCalculator(); renderK3dEdit();
+    }
     function k3dDsys(i, k) { const s = selSec; if (!s) return; s.dsys = (s.dsys || []).slice(); while (s.dsys.length <= i) s.dsys.push('tier'); s.dsys[i] = k; updateCalculator(); }
     function k3dDrawerCount(s) { if (s.kind === 'tower') return towerBands(s.tw || 'storage', 250).filter(b => b.ty === 'drawer').length; if (s.kind === 'oven') return 1; return s.drawers | 0; }
     function renderK3dEdit() {
@@ -2931,7 +2958,7 @@
       const up = chk('hasUpperTier'), dc = decorClean(decorState), isl = chk('hasIsland');
       const add = (txt, call) => `<button type="button" onclick="${call}">＋ ${esc(txt)}</button>`;
       let h = `<div class="k3s-h">${esc(L3('Конструктор кухни', 'Oshxona konstruktori'))}</div>
-        <div class="k3s-note">${esc(L3('Нажмите на шкаф — справа его параметры. Любой шкаф, технику и остров можно тащить по полу мышью или пальцем (как в Sims) — камера крутится, когда тянете за пустое место.', 'Shkafni bosing — parametrlari chiqadi. Istalgan shkaf, texnika va orolni polda torting.'))}</div>
+        <div class="k3s-note">${esc(L3('Нажмите на шкаф — справа его параметры. Любой шкаф, технику и остров можно тащить по полу мышью или пальцем (как в Sims). Камера: тяните за пустое место; галочка «Вращать» вверху — вращать, без галочки — двигать картинку (на мыши также правая кнопка или Shift+ЛКМ — двигать, колесо — приблизить).', 'Shkafni bosing — parametrlari chiqadi. Istalgan shkaf, texnika va orolni polda torting.'))}</div>
         ${OWNER_ON ? `        <div class="k3s-sub">👁 ${esc(L3('Показать клиенту', 'Mijozga koʻrsatish'))}</div>
         <div class="k3s-note">${esc(L3('Ссылка откроет только 3D: камеру крутить и дверцы открывать можно, редактировать — нельзя.', 'Havola faqat 3D ni ochadi: kamerani aylantirish va eshiklarni ochish mumkin, tahrirlash — yoʻq.'))}</div>
         <div class="k3e-r">${k3B(false, 'k3dClientLink()', '🔗 ' + L3('Копировать ссылку', 'Havolani nusxalash'))}${k3B(false, "k3dClientLink('tg')", '✈ Telegram')}</div>` : ''}
@@ -3010,6 +3037,7 @@
       if (lm) h += k3Row('💡 ' + L3('Подсветка внутри', 'Ichki yoritish'), k3Step((s.led | 0) + ' / ' + lm, "k3dStep('led',-1)", "k3dStep('led',1)") + k3B((s.led | 0) === lm, "k3dStep('led',99)", L3('везде', 'hammasi'))) +
         `<div class="k3s-note">${esc((s.drawers | 0) > 0 ? L3('Подсветка в каждом ящике', 'Har bir tortmada yoritish') : (k === 'tower' ? L3('Подсветка по полкам пенала', 'Penal tokchalari boʻyicha') : L3('Верх шкафа и каждая полка — по точке подсветки', 'Shkaf usti va har bir tokcha — bittadan')))}</div>`;
       if (tier === 'lower' && !tall && ['sink', 'hob'].indexOf(k) < 0) h += k3Row(L3('СВЧ на столешнице', 'Stoldagi mikroto‘lqinli'), k3B(!!s.mwTop, "k3dToggle('mwTop')", s.mwTop ? L3('стоит', 'bor') : L3('нет', 'yoʻq')));
+      { const dr = tier === 'upper' ? (!(s.gasLifts | 0) && s.kind !== 'open') : (doorsOf(s, 'lower') > 0 || (s.kind === 'fridge' && s.fr === 'built')); if (dr && ['oven', 'dishwasher', 'washer', 'corner'].indexOf(k) < 0) h += k3dGlassHtml(s, tier); }
       h += `<div class="k3s-sub">${esc(L3('Фурнитура и открывание', 'Furnitura'))}</div>`;
       h += k3dHwRows(s, tier).replace(/<div class="k3e-sub">[^<]*<\/div>/, '');
       const ex = effHw(s), selX = (field, grp, lead) => `<select onchange="k3dHw('${field}', this.value)"><option value="">${esc(L3('Как у всей кухни', 'Butun oshxonadagidek'))}: ${esc(hwName(grp, ex[field]))}</option>${[lead].concat(Object.keys(KIS[grp]).filter(x => x !== lead)).map(x => `<option value="${x}" ${(s.hx && s.hx[field]) === x ? 'selected' : ''}>${esc(hwName(grp, x))}</option>`).join('')}</select>`;
@@ -4147,6 +4175,7 @@
           if (x.kind === 'tower') total += w * rate * (TT / 160) * (1 + 0.6 * ((x.dp ? x.dp / 60 : 1) * (x.ht ? x.ht / TT : 1) - 1));                 // пенал до потолка: как низ + верх по высоте
           else total += w * rate * (x.fr === 'built' ? TT / 160 : 0.15);         // встроенный холодильник — пенал, отдельный — только ниша
         } else { lowM += w; const szL = 1 + 0.6 * (((x.dp ? +x.dp : 60) / 60) * ((x.ht ? +x.ht : boxDef) / boxDef) - 1), ctK = x.ctd ? +x.ctd / 62 : 1; total += w * (rate * PP.lowerShare * szL + topExtra * ctK); }
+        if (x.glass) total += AW.glass * Math.max(1, Math.round((parseFloat(x.width) || 0) / 45)) * Math.max(.5, Math.min(2, 2.2 / Math.max(1, +x.gf || 2.2)));
         appliancesOf(x).forEach(a => {
           if (a.top) return;
           if (a.k === 'oven' || a.k === 'micro' || a.k === 'dishwasher' || a.k === 'washer') total += AW[a.k] || 0;
@@ -4161,7 +4190,7 @@
           if (x.dp || x.ht) { const wm = (parseFloat(x.width) || 0) / 100, base = wm * rate * PP.upperShare * (s.upperH / 72) * (s.upperTiers === 2 ? 2 : 1), nu = wm * rate * PP.upperShare * ((x.ht ? +x.ht : s.upperH) / 72) * (x.ht ? 1 : (s.upperTiers === 2 ? 2 : 1)) * (x.dp ? x.dp / s.upperD : 1); total += 0.6 * (nu - base); }
           total += (x.shelves || 0) * shelfP;
           if (x.openType === 'gola') total += 95000;
-          if (x.kind === 'glass') total += AW.glass * Math.max(1, Math.round((parseFloat(x.width) || 0) / 45));
+          if (x.kind === 'glass' || x.glass) total += AW.glass * Math.max(1, Math.round((parseFloat(x.width) || 0) / 45)) * Math.max(.5, Math.min(2, 2.2 / Math.max(1, +x.gf || 2.2)));
         });
       }
       const islM = s.island ? s.islL / 100 : 0;
@@ -5465,7 +5494,7 @@
     /* ===================== ССЫЛКА «ПОДЕЛИТЬСЯ» ===================== */
     function serializeState() {
       const s = getCalcState();
-      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || ''].join('|'), x.ctc || '', x.bw || ''];
+      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || ''].join('|'), x.ctc || '', x.bw || '', (x.glass || x.kind === 'glass') ? [1, x.gf || '', x.gt || ''].join('|') : ''];
       const enc = (arr, tier) => arr.map(x => encOne(x, tier));
       const dc = decorClean(decorState);
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
@@ -5537,6 +5566,7 @@
         if (typeof e[17] === 'string' && e[17]) { const p = e[17].split('|').map(Number); if (p[0] > 0) s.dp = clampN(p[0], 10, 120, 60); if (p[1] > 0) s.ht = clampN(p[1], 10, 320, 85); if (p[2] > 0) s.ctt = clampN(p[2], 1, 10, 3.8); if (p[3] > 0) s.ctd = clampN(p[3], 20, 150, 62); if (s.dp) s.depth = s.dp; }
         if (typeof e[18] === 'string' && /^#[0-9a-f]{6}$/i.test(e[18])) s.ctc = e[18].toLowerCase();
         if (e[19] > 0) s.bw = clampN(e[19], 10, 300, 60);
+        if (typeof e[20] === 'string' && e[20]) { const p = e[20].split('|'); if (p[0] === '1') { s.glass = true; if (p[1] > 0) s.gf = clampN(p[1], 1, 15, 2.2); if (['matte', 'tint'].indexOf(p[2]) >= 0) s.gt = p[2]; } }
         if (typeof e[11] === 'string' && e[11]) s.dsys = e[11].split(',').slice(0, 8).map(k => KIS.drawerSys[k] ? k : 'tier');
         s.name = s.autoName ? defaultModuleName(kind, tier, s.id, s) : String(e[1]).slice(0, 60);
         return s;
