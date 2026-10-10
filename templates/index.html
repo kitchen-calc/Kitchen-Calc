@@ -889,6 +889,10 @@
     .room-top .section-title { margin-bottom: 8px; }
     .room-top .wall-hint, .room-top .ms-open-hint { display: none; }
     .room-top .ms-open-box { margin: 8px 0; }
+    .k3sw-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
+    .k3d-side button.k3sw { width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); }
+    .k3d-side button.k3sw.on { border-color: #fff; box-shadow: 0 0 0 2px #e9b44c; }
+    .k3sw-pick { width: 34px; height: 30px; padding: 0; border: 0; background: none; cursor: pointer; }
     /* рисуем комнату */
     .room-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 10px; }
     .rc-btn { background: #b07d12; color: #fff; border: 0; border-radius: 9px; padding: 8px 12px; font-weight: 700; cursor: pointer; font-size: .85rem; }
@@ -2712,7 +2716,7 @@
       const room = { main: roomCap('main'), left: parseFloat(el('leftWall').value) || 0, right: parseFloat(el('rightWall').value) || 0 };
       return { type: currentType, W: Math.max(60, room.main, LAY.main.total), room, aisle: PAR_AISLE, hwOf: sec => effHw(sec), LD: 60, UD: s.upperD, UB: G.UB, UH: s.upperH, tiers: s.upperTiers === 2 ? 2 : 1,
         TT: G.TT, CT: G.CT, PL: 10, BOX: G.BOX, UGAP: G.UGAP, roomH: Math.max(G.TT + 10, s.roomH || 260), FRIDGE_H, hasUpper, runs: LAY,
-        colors: { facade: { hex: selectedFacadeColor.hex, img: selectedFacadeColor.img }, body: { hex: selectedBodyColor.hex, img: selectedBodyColor.img }, top: { hex: CONFIG.countertops[s.top].color } },
+        colors: { facade: { hex: selectedFacadeColor.hex, img: selectedFacadeColor.img }, body: { hex: selectedBodyColor.hex, img: selectedBodyColor.img }, top: { hex: topColorHex || CONFIG.countertops[s.top].color } },
         hw: Object.assign({}, KHW), led: Object.assign({}, ledState), decor: decorClean(decorState),
         island: s.island ? { L: s.islL, W: s.islW, cx: islandPos ? islandPos.cx : null, cz: islandPos ? islandPos.cz : null, r: islandPos ? islandPos.r : 0 } : null,
         free: k3dFreeList(hasUpper), paintOf, poly: roomPoly, roomD: roomPoly ? rpBBox().z1 : Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0),
@@ -2724,7 +2728,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=11');
+        const mod = await import('/static/js/kitchen3d.js?v=12');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -2855,6 +2859,7 @@
         h += `<div class="k3s-sub">${esc(L3('Столешница этого шкафа', 'Shu shkaf stol usti'))}</div>`;
         h += row(L3('Толщина', 'Qalinlik'), 'ctt', geo.G.CT, .2, 1.8, 8);
         h += row(L3('Ширина (вылет)', 'Kenglik'), 'ctd', cur('dp', 60) + 2, 1, 30, 120);
+        h += k3Row(L3('Цвет', 'Rang'), '') + topSwatches(s.ctc || '', 'k3dCabTop', L3('как у всех', 'hammadek'));
         h += `<div class="k3s-note">${esc(L3('Длина столешницы — по ширине корпуса.', 'Stol usti uzunligi — korpus kengligi boʻyicha.'))}</div>`;
       }
       return h;
@@ -2902,6 +2907,8 @@
         ${OWNER_ON ? `        <div class="k3s-sub">👁 ${esc(L3('Показать клиенту', 'Mijozga koʻrsatish'))}</div>
         <div class="k3s-note">${esc(L3('Ссылка откроет только 3D: камеру крутить и дверцы открывать можно, редактировать — нельзя.', 'Havola faqat 3D ni ochadi: kamerani aylantirish va eshiklarni ochish mumkin, tahrirlash — yoʻq.'))}</div>
         <div class="k3e-r">${k3B(false, 'k3dClientLink()', '🔗 ' + L3('Копировать ссылку', 'Havolani nusxalash'))}${k3B(false, "k3dClientLink('tg')", '✈ Telegram')}</div>` : ''}
+        <div class="k3s-sub">🎨 ${esc(L3('Цвет столешницы', 'Stol usti rangi'))}</div>
+        ${topSwatches(topColorHex, 'k3dTopColor', L3('по материалу', 'material boʻyicha'))}
         <div class="k3s-sub">💡 ${esc(L3('Подсветка', 'Yoritish'))}</div>
         ${k3Row(L3('Класс', 'Sinf'), [0, 1, 2].map(i => k3B(ledState.level === i, 'setLedLevel(' + i + ')', t('led_' + i))).join(''))}
         ${k3Row(L3('Под шкафами', 'Shkaflar ostida'), k3B(ledState.level && ledState.work, "k3dLedZone('work')", L3('рабочая зона', 'ish zonasi')) + k3B(ledState.level && ledState.plinth, "k3dLedZone('plinth')", L3('цоколь', 'sokol')))}
@@ -3049,6 +3056,11 @@
     /* ===================== СВОБОДНАЯ РАССТАНОВКА (как в The Sims) =====================
        Шкаф можно поставить куда угодно: sec.fp = {x, z, y, r} — центр на полу (см от левой и задней стены), низ от пола, поворот (0/90/180/270).
        Шкаф, прижатый к стене на стандартной высоте, остаётся в ряду (цена, чертежи, стыки считаются как раньше). */
+    let topColorHex = '';
+    const TOP_PALETTE = [['#e9e6e0', 'Белый мрамор'], ['#d8c7a6', 'Бежевый'], ['#c9a273', 'Светлый дуб'], ['#8a5a3a', 'Орех'], ['#b06a4f', 'Терракота'], ['#9a9c9e', 'Серый бетон'], ['#6b6f73', 'Графит'], ['#2b2d30', 'Чёрный камень'], ['#5f7a63', 'Зелёный'], ['#3f5873', 'Синий']];
+    const topSwatches = (cur, fn, resetTxt) => `<div class="k3sw-row">${TOP_PALETTE.map(c => `<button type="button" class="k3sw ${cur === c[0] ? 'on' : ''}" style="background:${c[0]}" title="${c[1]}" onclick="${fn}('${c[0]}')"></button>`).join('')}<input type="color" class="k3sw-pick" value="${/^#[0-9a-f]{6}$/i.test(cur) ? cur : '#c9a273'}" title="свой цвет" onchange="${fn}(this.value)">${cur ? k3B(false, fn + "('')", resetTxt) : ''}</div>`;
+    function k3dTopColor(h) { topColorHex = /^#[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : ''; updateCalculator(); renderK3dEdit(); updateShareLinks(); }
+    function k3dCabTop(h) { const s = selSec; if (!s) return; if (/^#[0-9a-f]{6}$/i.test(h)) s.ctc = h.toLowerCase(); else delete s.ctc; updateCalculator(); renderK3dEdit(); updateShareLinks(); }
     let selIsland = false, islandPos = null, parkedSections = [], swapFrom = null, moveStep = 1, magnetOn = true, moveBase = null, k3dKeepPanel = false;
     const fpN = v => Math.round(v * 10) / 10;
     const cmU = () => L3('см', 'sm');
@@ -5408,13 +5420,13 @@
     /* ===================== ССЫЛКА «ПОДЕЛИТЬСЯ» ===================== */
     function serializeState() {
       const s = getCalcState();
-      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || ''].join('|')];
+      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || ''].join('|'), x.ctc || ''];
       const enc = (arr, tier) => arr.map(x => encOne(x, tier));
       const dc = decorClean(decorState);
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
-        rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
+        tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW], kh: KHW, ch: s.counterH, ug: s.upperGap };
     }
     function b64urlEncode(str) {
@@ -5478,6 +5490,7 @@
         if (e[15] === 'L' || e[15] === 'R') { s.cs = e[15]; s.csFixed = true; }
         if (typeof e[16] === 'string' && e[16]) { const p = e[16].split('|'), o = {}; if (p[0]) o.f = p[0]; if (p[1]) o.b = p[1]; if (p[2]) o.f2 = p[2]; if (Object.keys(o).length) s.pc = o; }
         if (typeof e[17] === 'string' && e[17]) { const p = e[17].split('|').map(Number); if (p[0] > 0) s.dp = clampN(p[0], 10, 120, 60); if (p[1] > 0) s.ht = clampN(p[1], 10, 320, 85); if (p[2] > 0) s.ctt = clampN(p[2], 1, 10, 3.8); if (p[3] > 0) s.ctd = clampN(p[3], 20, 150, 62); if (s.dp) s.depth = s.dp; }
+        if (typeof e[18] === 'string' && /^#[0-9a-f]{6}$/i.test(e[18])) s.ctc = e[18].toLowerCase();
         if (typeof e[11] === 'string' && e[11]) s.dsys = e[11].split(',').slice(0, 8).map(k => KIS.drawerSys[k] ? k : 'tier');
         s.name = s.autoName ? defaultModuleName(kind, tier, s.id, s) : String(e[1]).slice(0, 60);
         return s;
@@ -5490,6 +5503,7 @@
       parkedSections = (Array.isArray(st.pk) ? st.pk.slice(0, 20) : []).map(x => { const tier = x && x[0] ? 'upper' : 'lower', sec = build([x && x[1]], tier)[0]; return sec ? { sec, tier } : null; }).filter(Boolean);
       islandPos = Array.isArray(st.ip) && st.ip.length >= 3 && st.ip.every(v => isFinite(v)) ? { cx: +st.ip[0], cz: +st.ip[1], r: +st.ip[2] } : null;
       selIsland = false; swapFrom = null; moveBase = null;
+      topColorHex = typeof st.tc === 'string' && /^#[0-9a-f]{6}$/i.test(st.tc) ? st.tc.toLowerCase() : '';
       roomPoly = null;
       if (Array.isArray(st.rp) && st.rp.length >= 8 && st.rp.length % 2 === 0 && st.rp.every(v => isFinite(v))) { const Q = []; for (let i = 0; i < st.rp.length; i += 2) Q.push([+st.rp[i], +st.rp[i + 1]]); if (rpValid(Q)) roomPoly = Q; }
       selSec = null;

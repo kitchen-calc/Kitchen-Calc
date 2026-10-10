@@ -429,7 +429,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     ['main', 'left', 'right'].forEach(wall => {
       const run = st.runs[wall]; if (!run || !run.lower.length) return;
       let seg = null; const segs = [];
-      const pk = sec => [sec.ctt || '', sec.ctd || '', sec.ht || '', sec.dp || ''].join('|');
+      const pk = sec => [sec.ctt || '', sec.ctd || '', sec.ht || '', sec.dp || '', sec.ctc || ''].join('|');
       run.lower.forEach(r => {
         const tall = r.sec.kind === 'fridge' || r.sec.kind === 'tower';
         if (tall) { if (seg) segs.push(seg); seg = null; return; }
@@ -439,7 +439,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
       if (seg) segs.push(seg);
       segs.forEach(sg => {
         const g = placeGroup(wall, sg.u0, sg.u1, st);
-        slabInto(g, M, stFor(st, sg.sec, false), sg.u1 - sg.u0, sg.items.map(r => ({ u0: r.u0 - sg.u0, u1: r.u1 - sg.u0, sec: r.sec })), true);
+        slabInto(g, Mfor(M, st, sg.sec), stFor(st, sg.sec, false), sg.u1 - sg.u0, sg.items.map(r => ({ u0: r.u0 - sg.u0, u1: r.u1 - sg.u0, sec: r.sec })), true);
         root.add(g);
       });
     });
@@ -538,12 +538,13 @@ export function createK3D(container, hooks = {}, opts = {}) {
 
   // покраска отдельного шкафа: корпус, фасад, второй цвет фасада (ящики)
   function Mfor(M, st, s) {
-    const p = st.paintOf && st.paintOf(s); if (!p) return M;
+    const p = st.paintOf && st.paintOf(s); if (!p && !s.ctc) return M;
     const mk = (c, rough) => { const t = loadTex(c && c.img); return new THREE.MeshStandardMaterial({ color: t ? '#ffffff' : (c && c.hex) || '#f2f2f2', map: t || null, roughness: rough, metalness: 0, envMapIntensity: .7 }); };
     const o = Object.assign({}, M);
-    if (p.f) o.facade = mk(p.f, .42);
-    if (p.b) o.body = mk(p.b, .6);
-    if (p.f2) o.facade2 = mk(p.f2, .42);
+    if (p && p.f) o.facade = mk(p.f, .42);
+    if (p && p.b) o.body = mk(p.b, .6);
+    if (p && p.f2) o.facade2 = mk(p.f2, .42);
+    if (s.ctc) o.top = new THREE.MeshStandardMaterial({ map: NOISE_TEX(s.ctc), roughness: .32, metalness: 0, envMapIntensity: .9 });
     return o;
   }
   // фурнитура конкретного шкафа поверх общей
@@ -620,7 +621,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
       } else if (tall) tallModule(g, Mfor(M, st, s), sst, s, w, key);
       else {
         lowerModule(g, Mfor(M, st, s), sst, s.kind === 'corner' ? Object.assign({}, s, { _blind: s.cs === 'R' ? 'R' : 'L' }) : s, w, key);
-        slabInto(g, M, sst, w, (s.kind === 'sink' || s.kind === 'hob') ? [{ u0: 0, u1: w, sec: s }] : [], false);
+        slabInto(g, Mfor(M, st, s), sst, w, (s.kind === 'sink' || s.kind === 'hob') ? [{ u0: 0, u1: w, sec: s }] : [], false);
       }
       root.add(g); pick.push(g);
     });
