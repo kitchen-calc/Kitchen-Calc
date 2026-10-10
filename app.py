@@ -31,7 +31,7 @@ async def redirect_old_host(request: Request, call_next):
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
 async def robots():
-    return "User-agent: *\nDisallow: /raskroy\nSitemap: " + SITE_URL + "/sitemap.xml\n"
+    return "User-agent: *\nDisallow: /raskroy\nDisallow: /view\nSitemap: " + SITE_URL + "/sitemap.xml\n"
 
 
 @app.get("/sitemap.xml")
@@ -259,6 +259,29 @@ async def privacy():
 async def calculator(request: Request):
     file_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
     return FileResponse(file_path)
+
+
+# Ссылка для клиента: 3D кухни только для просмотра (камера и дверцы), без редактирования. Не индексируется.
+@app.get("/view", response_class=HTMLResponse)
+async def calculator_view(request: Request):
+    file_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
+    return FileResponse(file_path, headers={"X-Robots-Tag": "noindex, nofollow"})
+
+
+# Секретный режим мастера (чертежи, покраска по деталям): ключ в переменной окружения OWNER_KEY на Render
+OWNER_KEY = os.environ.get("OWNER_KEY", "master-kitchen-2026")
+
+
+@app.post("/api/owner")
+async def owner_check(request: Request):
+    import hmac
+    try:
+        data = await request.json()
+        key = str(data.get("key", ""))
+    except Exception:
+        key = ""
+    ok = bool(key) and hmac.compare_digest(key.encode("utf-8"), OWNER_KEY.encode("utf-8"))
+    return JSONResponse({"ok": ok}, status_code=200 if ok else 403)
 
 
 HOME_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "home")

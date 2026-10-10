@@ -65,13 +65,19 @@ function cyl(parent, r, len, mat, x, y, z, axis) {
   m.position.set(x, y, z); parent.add(m); return m;
 }
 
-export function createK3D(container, hooks = {}) {
+export function createK3D(container, hooks = {}, opts = {}) {
+  const viewOnly = !!opts.viewOnly;
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
+  try { if (getComputedStyle(container).position === 'static') container.style.position = 'relative'; } catch (e) {}
+  const hudEl = document.createElement('div');
+  hudEl.style.cssText = 'position:absolute;left:12px;bottom:12px;max-width:calc(100% - 24px);padding:7px 11px;border-radius:10px;background:rgba(18,22,28,.82);color:#fff;font:600 12px/1.45 system-ui,sans-serif;pointer-events:none;display:none;white-space:pre-line;z-index:3;box-shadow:0 4px 14px rgba(0,0,0,.3)';
+  container.appendChild(hudEl);
+  function setHud(t) { if (t) { hudEl.textContent = t; hudEl.style.display = 'block'; } else hudEl.style.display = 'none'; }
   renderer.domElement.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;border-radius:inherit';
 
   const scene = new THREE.Scene();
@@ -197,7 +203,7 @@ export function createK3D(container, hooks = {}) {
   }
   function drawer(g, M, st, key, x, y, w, h, z, d, open, sysKey, idx) {
     const grp = new THREE.Group(); g.add(grp);
-    box(grp, w, h, FT, M.facade, x, y, z, 60);
+    box(grp, w, h, FT, M.facade2 || M.facade, x, y, z, 60);
     addHandle(grp, M, st, x + w / 2, y + h - Math.min(5, h / 3), z + FT, false, open);
     // короб ящика: боковины по системе
     const vis = (st.drawerVis && st.drawerVis[sysKey]) || { h: 9, col: '#9aa0a6' };
@@ -389,6 +395,29 @@ export function createK3D(container, hooks = {}) {
     return g;
   }
 
+  /* столешница длиной L в локальных координатах модуля (g); items — мойка/плита с отступом u0..u1 */
+  function slabInto(g, M, st, L, items, apron) {
+    const CT = st.CT, D = st.LD + 2;
+    box(g, L, CT, D, M.top, 0, st.BOX, 0, 80);
+    if (apron) box(g, L, st.UB - st.BOX - CT, .6, M.tile, 0, st.BOX + CT, -.6, 30);
+    items.forEach(r => {
+      const cx = (r.u0 + r.u1) / 2, w = r.u1 - r.u0;
+      if (r.sec.kind === 'hob') {
+        const hw = Math.min(58, w - 4);
+        box(g, hw, .5, 51, M.glassBlack, cx - hw / 2, st.BOX + CT, 6);
+        [[-.25, -.22], [.25, -.22], [-.25, .22], [.25, .22]].forEach(([a, b], i) => { const ring = mesh(new THREE.TorusGeometry(i % 3 ? 7 : 9, .25, 6, 40), new THREE.MeshStandardMaterial({ color: '#5a5f66', roughness: .4 })); ring.rotation.x = Math.PI / 2; ring.position.set(cx + a * hw, st.BOX + CT + .55, 31.5 + b * 51); g.add(ring); });
+      } else if (r.sec.kind === 'sink') {
+        const sw = Math.min(50, w - 8);
+        box(g, sw, .35, 42, M.steel, cx - sw / 2, st.BOX + CT, 9);
+        box(g, sw - 6, .4, 36, new THREE.MeshStandardMaterial({ color: '#8e959b', roughness: .3, metalness: .8 }), cx - sw / 2 + 3, st.BOX + CT + .05, 12);
+        const fx = cx, fz = 6;
+        cyl(g, 1.3, 2, M.chrome, fx, st.BOX + CT + 1, fz, null);
+        cyl(g, .9, 26, M.chrome, fx, st.BOX + CT + 14, fz, null);
+        const arc = mesh(new THREE.TorusGeometry(7, .9, 10, 24, Math.PI), M.chrome); arc.rotation.y = Math.PI / 2; arc.position.set(fx, st.BOX + CT + 27, fz + 7); g.add(arc);
+      }
+    });
+  }
+
   function countertops(M, st) {
     const CT = st.CT, D = st.LD + 2;
     ['main', 'left', 'right'].forEach(wall => {
@@ -403,27 +432,7 @@ export function createK3D(container, hooks = {}) {
       if (seg) segs.push(seg);
       segs.forEach(sg => {
         const g = placeGroup(wall, sg.u0, sg.u1, st);
-        const L = sg.u1 - sg.u0;
-        box(g, L, CT, D, M.top, 0, st.BOX, 0, 80);
-        // фартук-плитка на стене
-        if (wall === 'main' || true) box(g, L, st.UB - st.BOX - CT, .6, M.tile, 0, st.BOX + CT, -.6, 30);
-        sg.items.forEach(r => {
-          const cx = (r.u0 + r.u1) / 2 - sg.u0, w = r.u1 - r.u0;
-          if (r.sec.kind === 'hob') {
-            const hw = Math.min(58, w - 4);
-            box(g, hw, .5, 51, M.glassBlack, cx - hw / 2, st.BOX + CT, 6);
-            [[-.25, -.22], [.25, -.22], [-.25, .22], [.25, .22]].forEach(([a, b], i) => { const ring = mesh(new THREE.TorusGeometry(i % 3 ? 7 : 9, .25, 6, 40), new THREE.MeshStandardMaterial({ color: '#5a5f66', roughness: .4 })); ring.rotation.x = Math.PI / 2; ring.position.set(cx + a * hw, st.BOX + CT + .55, 31.5 + b * 51); g.add(ring); });
-          } else {
-            const sw = Math.min(50, w - 8);
-            box(g, sw, .35, 42, M.steel, cx - sw / 2, st.BOX + CT, 9);
-            box(g, sw - 6, .4, 36, new THREE.MeshStandardMaterial({ color: '#8e959b', roughness: .3, metalness: .8 }), cx - sw / 2 + 3, st.BOX + CT + .05, 12);
-            // смеситель
-            const fx = cx, fz = 6;
-            cyl(g, 1.3, 2, M.chrome, fx, st.BOX + CT + 1, fz, null);
-            cyl(g, .9, 26, M.chrome, fx, st.BOX + CT + 14, fz, null);
-            const arc = mesh(new THREE.TorusGeometry(7, .9, 10, 24, Math.PI), M.chrome); arc.rotation.y = Math.PI / 2; arc.position.set(fx, st.BOX + CT + 27, fz + 7); g.add(arc);
-          }
-        });
+        slabInto(g, M, st, sg.u1 - sg.u0, sg.items.map(r => ({ u0: r.u0 - sg.u0, u1: r.u1 - sg.u0, sec: r.sec })), true);
         root.add(g);
       });
     });
@@ -452,10 +461,22 @@ export function createK3D(container, hooks = {}) {
     box(root, x1 - x0, 7, 1.4, M.inner, x0, 0, -.6);
   }
 
-  function island(M, st, bounds) {
+  function islandPos(st, runDepth) {
     if (!st.island) return null;
-    const L = st.island.L, Wd = st.island.W, z0 = bounds.depthMax + 100, x0 = st.W / 2 - L / 2;
-    const g = new THREE.Group(); g.position.set(x0, 0, z0); root.add(g);
+    const L = st.island.L, Wd = st.island.W, r = ((st.island.r || 0) % 360 + 360) % 360;
+    return { L, Wd, r, cx: st.island.cx != null ? st.island.cx : st.W / 2, cz: st.island.cz != null ? st.island.cz : runDepth + 100 + Wd / 2, ext: (r % 180 ? L : Wd) / 2 };
+  }
+  /* группа, у которой локальный центр основания (w/2, d/2) стоит в (cx, cz), повёрнута на r градусов */
+  function placeAt(g, w, d, cx, cz, r, y) {
+    const th = r * DEG; g.rotation.y = th;
+    g.position.set(cx - (w / 2 * Math.cos(th) + d / 2 * Math.sin(th)), y == null ? g.position.y : y, cz - (-w / 2 * Math.sin(th) + d / 2 * Math.cos(th)));
+  }
+  function island(M, st, bounds) {
+    const I = bounds.isl; if (!I) return null;
+    const L = I.L, Wd = I.Wd;
+    const g = new THREE.Group(); placeAt(g, L, Wd, I.cx, I.cz, I.r, 0); root.add(g);
+    g.userData.mod = { tier: 'island', id: 0, w: L, h: st.BOX + st.CT, d: Wd, y0: 0 };
+    pick.push(g);
     box(g, L - 4, st.PL, Wd - 8, M.plinth, 2, 0, 4);
     box(g, L, st.BOX - st.PL, Wd - 4, M.facade, 0, st.PL, 2, 60);
     box(g, L + 4, st.CT, Wd + 4, M.top, -2, st.BOX, 0, 80);
@@ -469,14 +490,18 @@ export function createK3D(container, hooks = {}) {
       cyl(g, 1.4, 70, M.black, sx, 36, Wd + 30, null);
       const ring = mesh(new THREE.TorusGeometry(12, .9, 8, 30), M.black); ring.rotation.x = Math.PI / 2; ring.position.set(sx, 30, Wd + 30); g.add(ring);
     }
-    return { z1: z0 + Wd };
+    return { z1: I.cz + I.ext };
   }
 
   function lamps(M, st, bounds) {
     const n = st.decor.lamps || 0; if (!n) return;
-    const isl = st.island ? { x0: st.W / 2 - st.island.L / 2, L: st.island.L, z: bounds.depthMax + 100 + st.island.W / 2 } : null;
+    const I = bounds.isl;
     for (let i = 0; i < n; i++) {
-      const x = isl ? isl.x0 + (i + .5) * isl.L / n : (i + .5) * st.W / n, z = isl ? isl.z : 85, y = isl ? 165 : 185;
+      let x = (i + .5) * st.W / n, z = 85, y = 185;
+      if (I) {
+        const t = (i + .5) / n - .5, ax = I.r % 180 === 0;
+        x = I.cx + (ax ? t * I.L : 0); z = I.cz + (ax ? 0 : t * I.L); y = 165;
+      }
       cyl(root, .3, st.roomH - y - 20, M.black, x, (st.roomH + y + 20) / 2, z, null);
       const shade = mesh(new THREE.CylinderGeometry(5, 9, 22, 24, 1, true), M.black); shade.position.set(x, y + 11, z); root.add(shade);
       const bulb = mesh(new THREE.SphereGeometry(3, 16, 12), M.led, false); bulb.position.set(x, y + 2, z); root.add(bulb);
@@ -490,6 +515,16 @@ export function createK3D(container, hooks = {}) {
     for (let i = 0; i < 9; i++) { const l = mesh(new THREE.SphereGeometry(7 * s, 10, 8), leafM); l.scale.set(.5, 1.6, .25); l.position.set(x + Math.cos(i * 1.3) * 5 * s, 26 * s + (i % 3) * 5 * s, z + Math.sin(i * 1.3) * 5 * s); l.rotation.set(Math.cos(i) * .5, i, Math.sin(i) * .5); root.add(l); }
   }
 
+  // покраска отдельного шкафа: корпус, фасад, второй цвет фасада (ящики)
+  function Mfor(M, st, s) {
+    const p = st.paintOf && st.paintOf(s); if (!p) return M;
+    const mk = (c, rough) => { const t = loadTex(c && c.img); return new THREE.MeshStandardMaterial({ color: t ? '#ffffff' : (c && c.hex) || '#f2f2f2', map: t || null, roughness: rough, metalness: 0, envMapIntensity: .7 }); };
+    const o = Object.assign({}, M);
+    if (p.f) o.facade = mk(p.f, .42);
+    if (p.b) o.body = mk(p.b, .6);
+    if (p.f2) o.facade2 = mk(p.f2, .42);
+    return o;
+  }
   // фурнитура конкретного шкафа поверх общей
   function stFor(st, s) { if (!st.hwOf) return st; return Object.assign({}, st, { hw: Object.assign({}, st.hw, st.hwOf(s)) }); }
 
@@ -504,7 +539,12 @@ export function createK3D(container, hooks = {}) {
     let depthMax = st.LD;
     if (st.type === 'parallel') depthMax = st.ZOPP;
     else ['left', 'right'].forEach(w => { const r = st.runs[w]; if (r && r.lower.length) depthMax = Math.max(depthMax, st.LD + r.totalLower); });
-    const bounds = { depthMax, zMax: depthMax + (st.island ? 100 + st.island.W + 60 : 60) };
+    const runDepth = depthMax;
+    (st.free || []).forEach(f => { const w = +f.sec.width || 50, D = f.tier === 'upper' ? st.UD : st.LD, rot = ((f.r % 180) + 180) % 180 === 90; depthMax = Math.max(depthMax, f.cz + (rot ? w : D) / 2); });
+    const isl = islandPos(st, runDepth);
+    let zMax = depthMax + 60; if (isl) zMax = Math.max(zMax, isl.cz + isl.ext + 60);
+    if (st.roomD) zMax = Math.max(zMax, st.roomD);
+    const bounds = { depthMax, zMax, isl };
 
     const lowMain = st.runs.main.lower, cornerKit = st.type === 'l-shape' || st.type === 'u-shape';
     const blindOf = (wall, r) => {
@@ -520,7 +560,7 @@ export function createK3D(container, hooks = {}) {
         g.userData.mod = { tier: 'lower', id: r.sec.id, w, h: (r.sec.kind === 'fridge' || r.sec.kind === 'tower') ? st.TT : st.BOX, d: st.LD, y0: 0 };
         g.userData.place = { wall, u0: r.u0, u1: r.u1 };
         const bl = blindOf(wall, r);
-        if (r.sec.kind === 'fridge' || r.sec.kind === 'tower') tallModule(g, M, sst, r.sec, w, key); else lowerModule(g, M, sst, bl ? Object.assign({}, r.sec, { _blind: bl }) : r.sec, w, key);
+        if (r.sec.kind === 'fridge' || r.sec.kind === 'tower') tallModule(g, Mfor(M, st, r.sec), sst, r.sec, w, key); else lowerModule(g, Mfor(M, st, r.sec), sst, bl ? Object.assign({}, r.sec, { _blind: bl }) : r.sec, w, key);
         root.add(g); pick.push(g);
       });
       if (st.hasUpper) run.upper.forEach(r => {
@@ -530,11 +570,26 @@ export function createK3D(container, hooks = {}) {
         g.userData.mod = { tier: 'upper', id: r.sec.id, w, h: st.UH * st.tiers, d: st.UD, y0: ub };
         g.userData.place = { wall, u0: r.u0, u1: r.u1 };
         const sst = stFor(st, r.sec);
-        upperModule(g, M, sst, r.sec, w, key, ub, st.UH);
-        if (st.tiers === 2) upperModule(g, M, sst, Object.assign({}, r.sec, { kind: 'door', gasLifts: 0, dn: 0, led: 0 }), w, key + ':t2', ub + st.UH, st.UH);
+        upperModule(g, Mfor(M, st, r.sec), sst, r.sec, w, key, ub, st.UH);
+        if (st.tiers === 2) upperModule(g, Mfor(M, st, r.sec), sst, Object.assign({}, r.sec, { kind: 'door', gasLifts: 0, dn: 0, led: 0 }), w, key + ':t2', ub + st.UH, st.UH);
         if (st.led && st.led.level && st.led.work) box(g, w - 6, .6, 1.4, M.led, 3, ub - .7, st.UD - 6);
         root.add(g); pick.push(g);
       });
+    });
+    (st.free || []).forEach(f => {
+      const s = f.sec, up = f.tier === 'upper', w = +s.width || 50, D = up ? st.UD : st.LD, key = f.tier + ':' + s.id, sst = stFor(st, s);
+      const g = new THREE.Group(); placeAt(g, w, D, f.cx, f.cz, f.r, f.y || 0);
+      const tall = !up && (s.kind === 'fridge' || s.kind === 'tower');
+      g.userData.mod = { tier: f.tier, id: s.id, w, h: up ? st.UH * st.tiers : (tall ? st.TT : st.BOX), d: D, y0: 0, free: true };
+      if (up) {
+        upperModule(g, Mfor(M, st, s), sst, s, w, key, 0, st.UH);
+        if (st.tiers === 2) upperModule(g, Mfor(M, st, s), sst, Object.assign({}, s, { kind: 'door', gasLifts: 0, dn: 0, led: 0 }), w, key + ':t2', st.UH, st.UH);
+      } else if (tall) tallModule(g, Mfor(M, st, s), sst, s, w, key);
+      else {
+        lowerModule(g, Mfor(M, st, s), sst, s.kind === 'corner' ? Object.assign({}, s, { _blind: s.cs === 'R' ? 'R' : 'L' }) : s, w, key);
+        slabInto(g, M, st, w, (s.kind === 'sink' || s.kind === 'hob') ? [{ u0: 0, u1: w, sec: s }] : [], false);
+      }
+      root.add(g); pick.push(g);
     });
     // угловое соединение верхних шкафов: вставка-корпус закрывает дыру между рядами (верх мельче низа), фасад — в линию с боковым рядом
     if (st.hasUpper && cornerKit) {
@@ -551,6 +606,7 @@ export function createK3D(container, hooks = {}) {
       };
       join(false); if (st.type === 'u-shape') join(true);
     }
+    pick.forEach(g => { const m = g.userData.mod; if (!m) return; const c = new THREE.Vector3(m.w / 2, 0, m.d / 2).applyEuler(g.rotation).add(g.position); m.cx = c.x; m.cz = c.z; m.r = ((Math.round(g.rotation.y / DEG) % 360) + 360) % 360; m.y = g.position.y; });
     countertops(M, st);
     room(M, st, bounds);
     island(M, st, bounds);
@@ -569,13 +625,14 @@ export function createK3D(container, hooks = {}) {
   }
 
   /* ---------- выделение ---------- */
+  let dragBad = false;
   function highlight() {
     if (selBox) { root.remove(selBox); selBox = null; }
-    const sel = state && state.selected; if (!sel) return;
+    const sel = !viewOnly && state && state.selected; if (!sel) return;
     const g = pick.find(p => p.userData.mod.tier === sel.tier && p.userData.mod.id === sel.id); if (!g) return;
     const m = g.userData.mod;
     const geo = new THREE.EdgesGeometry(new THREE.BoxGeometry(m.w + 1.2, m.h + 1.2, m.d + 1.2));
-    selBox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: '#e9b44c' }));
+    selBox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: dragBad ? '#e5484d' : '#e9b44c' }));
     selBox.position.set(m.w / 2, m.y0 + m.h / 2, m.d / 2);
     selBox.position.applyEuler(g.rotation); selBox.position.add(g.position); selBox.rotation.copy(g.rotation);
     root.add(selBox);
@@ -605,65 +662,70 @@ export function createK3D(container, hooks = {}) {
   /* ---------- взаимодействие ---------- */
   const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
   let downAt = null;
-  function hit(ev) {
+  function rayFrom(ev) {
     const r = renderer.domElement.getBoundingClientRect();
     ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ptr, camera);
+  }
+  function hit(ev) {
+    rayFrom(ev);
     const hits = ray.intersectObjects(pick, true);
-    for (const h of hits) { let o = h.object; while (o && !o.userData.mod) o = o.parent; if (o) return o.userData.mod; }
+    for (const h of hits) { let o = h.object; while (o && !o.userData.mod) o = o.parent; if (o) return { m: o.userData.mod, g: o, p: h.point.clone() }; }
     return null;
   }
-  // перетаскивание: выбранный шкаф тянется мышью/пальцем по полу, место показывает золотая рамка
+  const findG = (tier, id) => pick.find(p => p.userData.mod.tier === tier && p.userData.mod.id === id);
+  // Как в The Sims: берёшь любой предмет и тащишь по полу; камера в это время не крутится
   let drag = null;
   const plane = new THREE.Plane(), hitP = new THREE.Vector3();
-  function wallU(p) {
-    const st = state, LD = st.LD;
-    if (st.type === 'parallel') return { wall: p.z > st.ZOPP / 2 ? 'right' : 'main', u: p.x };
-    if (st.type === 'l-shape' || st.type === 'u-shape') {
-      if (p.x < LD + 25 && p.z > LD + 5) return { wall: 'left', u: p.z - LD };
-      if (st.type === 'u-shape' && p.x > st.W - LD - 25 && p.z > LD + 5) return { wall: 'right', u: p.z - LD };
-    }
-    return { wall: 'main', u: p.x };
-  }
-  function ghostAt(m, wall, u) {
-    if (!selBox) return;
-    const g = placeGroup(wall, u - m.w / 2, u + m.w / 2, state);
-    selBox.position.set(m.w / 2, m.y0 + m.h / 2, m.d / 2).applyEuler(g.rotation).add(g.position); selBox.rotation.copy(g.rotation);
-    invalidate();
-  }
-  let moveMode = false;
-  function setMoveMode(on) { moveMode = !!on; controls.enableRotate = !moveMode; if (moveMode) setView('top'); invalidate(); }
+  const fmt = n => (Math.round(n * 10) / 10).toString().replace('.', ',');
   renderer.domElement.addEventListener('pointerdown', e => {
     downAt = [e.clientX, e.clientY]; drag = null;
-    if (!hooks.onMove) return;
-    let sel = state && state.selected;
-    const m = hit(e); if (!m) return;
-    if (moveMode && (!sel || m.tier !== sel.tier || m.id !== sel.id)) { if (hooks.onSelect) hooks.onSelect({ tier: m.tier, id: m.id }); sel = state && state.selected; }
-    if (!sel || m.tier !== sel.tier || m.id !== sel.id) return;
-    drag = { m, moved: false, to: null }; controls.enabled = false;
+    if (viewOnly || !hooks.onDrag) return;
+    const h = hit(e); if (!h) return;
+    const m = h.m, sel = state && state.selected;
+    if (!sel || sel.tier !== m.tier || sel.id !== m.id) { if (hooks.onSelect) hooks.onSelect({ tier: m.tier, id: m.id }); }
+    drag = { tier: m.tier, id: m.id, p0: h.p, c0: { cx: m.cx, cz: m.cz, r: m.r }, moved: false, res: null };
+    controls.enabled = false;
     try { renderer.domElement.setPointerCapture(e.pointerId); } catch (er) {}
   });
   renderer.domElement.addEventListener('pointermove', e => {
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) return;
     drag.moved = true;
-    const r = renderer.domElement.getBoundingClientRect();
-    ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-    ray.setFromCamera(ptr, camera);
-    plane.set(new THREE.Vector3(0, 1, 0), -(drag.m.tier === 'upper' ? state.UB : 0));
+    rayFrom(e);
+    plane.set(new THREE.Vector3(0, 1, 0), -drag.p0.y);
     if (!ray.ray.intersectPlane(plane, hitP)) return;
-    drag.to = wallU(hitP); ghostAt(drag.m, drag.to.wall, drag.to.u);
+    const g = findG(drag.tier, drag.id); if (!g) return;
+    const m = g.userData.mod;
+    let res = { cx: drag.c0.cx + (hitP.x - drag.p0.x), cz: drag.c0.cz + (hitP.z - drag.p0.z), r: drag.c0.r, ok: true };
+    const r2 = hooks.onDrag({ tier: drag.tier, id: drag.id }, res, drag.c0); if (r2) res = Object.assign(res, r2);
+    drag.res = res;
+    placeAt(g, m.w, m.d, res.cx, res.cz, res.r);
+    dragBad = res.ok === false; highlight();
+    setHud(res.hud || ('Δ ' + fmt(res.cx - drag.c0.cx) + ' / ' + fmt(res.cz - drag.c0.cz)));
+    invalidate();
   });
+  function endDrag(e, cancel) {
+    const d = drag; drag = null; controls.enabled = true; setHud('');
+    if (!d) return false;
+    dragBad = false;
+    if (d.moved) { if (!cancel && d.res && hooks.onMove) hooks.onMove({ tier: d.tier, id: d.id }, d.res, d.c0); else { highlight(); invalidate(); } return true; }
+    return false;
+  }
+  renderer.domElement.addEventListener('pointercancel', e => endDrag(e, true));
   renderer.domElement.addEventListener('pointerup', e => {
-    if (drag) {
-      const d = drag; drag = null; controls.enabled = true;
-      if (d.moved) { if (d.to) hooks.onMove({ tier: d.m.tier, id: d.m.id }, d.to.wall, d.to.u); else highlight(); return; }
-    }
+    if (endDrag(e, false)) return;
     if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6) return;
-    const m = hit(e);
-    if (hooks.onSelect) hooks.onSelect(m ? { tier: m.tier, id: m.id } : null);
+    const h = hit(e);
+    if (viewOnly) { if (h) toggle(h.m.tier + ':' + h.m.id); return; }
+    if (hooks.onSelect) hooks.onSelect(h ? { tier: h.m.tier, id: h.m.id } : null);
   });
-  renderer.domElement.addEventListener('dblclick', e => { const m = hit(e); if (m) toggle(m.tier + ':' + m.id); });
+  renderer.domElement.addEventListener('dblclick', e => { const h = hit(e); if (h && h.m.tier !== 'island') toggle(h.m.tier + ':' + h.m.id); });
+  function floorAt(cx, cy) {
+    rayFrom({ clientX: cx, clientY: cy });
+    const pl = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p = new THREE.Vector3();
+    return ray.ray.intersectPlane(pl, p) ? { x: p.x, z: p.z } : null;
+  }
 
   function keysOf(key) { return anims.filter(a => a.key === key || a.key.startsWith(key + ':')).map(a => a.key); }
   function toggle(key) {
@@ -699,7 +761,7 @@ export function createK3D(container, hooks = {}) {
 
   return {
     update(st) { state = st; build(st); },
-    setView, toggle, openAll, isOpen, setMoveMode, isMoveMode: () => moveMode,
+    setView, toggle, openAll, isOpen, floorAt, setHud,
     select(sel) { if (state) { state.selected = sel; highlight(); invalidate(); } },
     snapshot() { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); },
     dispose() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); container.removeChild(renderer.domElement); }
