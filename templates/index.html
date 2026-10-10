@@ -889,6 +889,30 @@
     .room-top .section-title { margin-bottom: 8px; }
     .room-top .wall-hint, .room-top .ms-open-hint { display: none; }
     .room-top .ms-open-box { margin: 8px 0; }
+    /* рисуем комнату */
+    .room-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 10px; }
+    .rc-btn { background: #b07d12; color: #fff; border: 0; border-radius: 9px; padding: 8px 12px; font-weight: 700; cursor: pointer; font-size: .85rem; }
+    .rc-chip { background: #f3ecd9; border: 1px solid #e0d2ab; border-radius: 9px; padding: 6px 10px; cursor: pointer; font-size: .8rem; color: #2b2f33; }
+    .rc-hint { color: #8a7a55; font-size: .78rem; }
+    .re-ov { display: none; position: fixed; inset: 0; z-index: 1500; background: rgba(15,12,8,.62); align-items: center; justify-content: center; padding: 14px; }
+    .re-ov.on { display: flex; }
+    .re-box { background: #fff; border-radius: 16px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+    .re-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e6e6e6; font-size: 1.05rem; }
+    .re-head button { border: 0; background: #f1f1f1; border-radius: 8px; width: 34px; height: 34px; cursor: pointer; font-size: 1rem; }
+    .re-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 14px; padding: 14px 16px; overflow: auto; }
+    #reSvg { width: 100%; height: 440px; background: #fff; border: 1px solid #d3dbe2; border-radius: 10px; touch-action: none; cursor: crosshair; }
+    .re-note { color: #6b7280; font-size: .78rem; margin: 6px 0; line-height: 1.4; }
+    .re-h { font-weight: 800; margin-bottom: 4px; }
+    .re-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; max-height: 300px; overflow: auto; }
+    .re-w { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .88rem; }
+    .re-w input, .re-step input { width: 86px; padding: 6px 8px; border: 1px solid #cbd2d9; border-radius: 8px; }
+    .re-step { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+    .re-dirs { display: flex; gap: 5px; }
+    .re-dirs button, .re-btns button { border: 1px solid #cbd2d9; background: #fff; border-radius: 9px; padding: 8px 12px; cursor: pointer; font-size: .85rem; }
+    .re-dirs button { width: 42px; font-size: 1.1rem; }
+    .re-btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .re-btns button.pri { background: #b07d12; color: #fff; border-color: #b07d12; font-weight: 700; }
+    @media (max-width: 760px) { .re-body { grid-template-columns: 1fr; } #reSvg { height: 300px; } }
     /* свободная расстановка, запас, режим просмотра */
     .k3d-tray { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border: 1.5px dashed rgba(176,125,18,.55); border-radius: 12px; background: rgba(23,19,13,.04); min-height: 46px; }
     .k3d-tray.has { background: rgba(233,180,76,.14); }
@@ -916,7 +940,7 @@
     .od-head button { border: 1px solid #cbd2d9; background: #fff; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .8rem; }
     .od-sheet { margin: 0 0 14px; border: 1px solid #cfd4d8; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); background: #fff; }
     body.view-only .header, body.view-only .hero, body.view-only #presets, body.view-only #how, body.view-only .footer, body.view-only .render-note,
-    body.view-only #calc > :not(#studio), body.view-only .studio-head .r3-tabs, body.view-only .k3d-tray, body.view-only #ownerDraw { display: none !important; }
+    body.view-only #calc > :not(#studio), body.view-only #roomEd, body.view-only .studio-head .r3-tabs, body.view-only .k3d-tray, body.view-only #ownerDraw { display: none !important; }
     body.view-only .contact-bar { display: none !important; }
     body.view-only .studio { margin-top: 0; }
     @media (max-width: 760px) {
@@ -1002,6 +1026,7 @@
       <!-- 1. ФОРМА -->
           <div class="card room-top" id="roomTop">
             <div class="section-title"><span class="step-badge">1</span><span data-i18n="step1">Какая у вас кухня?</span></div>
+            <div class="room-chips" id="roomChips"></div>
             <!-- форма кухни и остров теперь задаются в 3D; поля оставлены скрытыми для расчёта -->
             <div style="display:none">
               <label class="type-btn island-toggle" id="islandToggle"><input type="checkbox" id="hasIsland" onchange="toggleIslandOptions()"><span class="island-check">＋</span></label>
@@ -2679,6 +2704,7 @@
     function defaultDsys(s) { const h = CONFIG.hardware[s.hw] || CONFIG.hardware[CONFIG.defaults.hw]; return HW_DRAWER_VIS[h.key] || 'ball'; }
     function k3dSelKey() { if (selIsland && chk('hasIsland')) return { tier: 'island', id: 0 }; return selSec ? { tier: tierOf(selSec), id: selSec.id } : null; }
     function k3dState() {
+      rpAutoRect();
       const s = getCalcState(), G = techGeometry();
       const hasUpper = s.hasUpper && upperSections.length > 0;
       const LAY = layoutAll(lowerSections, hasUpper ? upperSections : [], currentType);
@@ -2689,7 +2715,7 @@
         colors: { facade: { hex: selectedFacadeColor.hex, img: selectedFacadeColor.img }, body: { hex: selectedBodyColor.hex, img: selectedBodyColor.img }, top: { hex: CONFIG.countertops[s.top].color } },
         hw: Object.assign({}, KHW), led: Object.assign({}, ledState), decor: decorClean(decorState),
         island: s.island ? { L: s.islL, W: s.islW, cx: islandPos ? islandPos.cx : null, cz: islandPos ? islandPos.cz : null, r: islandPos ? islandPos.r : 0 } : null,
-        free: k3dFreeList(hasUpper), paintOf, roomD: Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0),
+        free: k3dFreeList(hasUpper), paintOf, poly: roomPoly, roomD: roomPoly ? rpBBox().z1 : Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0),
         selected: VIEW_ONLY ? null : k3dSelKey(), drawerVis: drawerVisMap(),
         dsysOf: (sec, i) => { const k = sec.dsys && sec.dsys[i]; return (k && k !== 'tier' && KIS.drawerSys[k]) ? k : def; }, towerBands };
     }
@@ -2698,7 +2724,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=10');
+        const mod = await import('/static/js/kitchen3d.js?v=11');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3030,7 +3056,7 @@
       const s = getCalcState(), G = techGeometry(), hasUp = s.hasUpper && upperSections.length > 0;
       const LAY = layoutAll(lowerSections, hasUp ? upperSections : [], currentType);
       const W = Math.max(60, roomCap('main'), LAY.main.total);
-      const roomD = Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0);
+      const roomD = roomPoly ? rpBBox().z1 : Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0);
       return { s, G, LAY, W, roomD, hasUp, UD: s.upperD, UH: s.upperH, tiers: s.upperTiers === 2 ? 2 : 1, ZOPP: 2 * 60 + PAR_AISLE, roomH: Math.max(G.TT + 10, s.roomH || 260) };
     }
     function defaultY(s, tier, geo) { return tier === 'upper' ? geo.G.BOX + geo.G.CT + (s.ug != null ? +s.ug : geo.G.UGAP) : 0; }
@@ -3082,7 +3108,7 @@
       return out;
     }
     const ovl = (a, b) => a.x0 < b.x1 - .4 && b.x0 < a.x1 - .4 && a.z0 < b.z1 - .4 && b.z0 < a.z1 - .4 && a.y0 < b.y1 - .4 && b.y0 < a.y1 - .4;
-    function inRoom(f, geo) { return f.x0 >= -.4 && f.x1 <= geo.W + .4 && f.z0 >= -.4 && f.z1 <= geo.roomD + .4 && f.y0 >= -.01 && f.y1 <= geo.roomH + .4; }
+    function inRoom(f, geo) { if (roomPoly) return rpRectIn(f) && f.y0 >= -.01 && f.y1 <= geo.roomH + .4; return f.x0 >= -.4 && f.x1 <= geo.W + .4 && f.z0 >= -.4 && f.z1 <= geo.roomD + .4 && f.y0 >= -.01 && f.y1 <= geo.roomH + .4; }
     function checkOk(tg, p, geo) {
       const f = footprint(p); if (!inRoom(f, geo)) return false;
       const ex = tg.tier === 'island' ? 'island' : tg.sec;
@@ -3399,6 +3425,199 @@
       return out;
     }
 
+    /* ===================== РИСУЕМ КОМНАТУ ===================== */
+    // roomPoly — углы комнаты [[x, z], ...] в см по часовой стрелке. Первая стена — основная (вдоль неё ставятся шкафы): от (0,0) вправо.
+    // null — обычная прямоугольная комната по полям «стена / потолок».
+    let roomPoly = null, reDraw = null, reTmp = [], reCursor = null;
+    const rpRect = (W, D) => [[0, 0], [W, 0], [W, D], [0, D]];
+    const rpEdgeLen = (P, i) => { const a = P[i], b = P[(i + 1) % P.length]; return Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]); };
+    function rpArea(P) { let a = 0; P.forEach((p, i) => { const q = P[(i + 1) % P.length]; a += p[0] * q[1] - q[0] * p[1]; }); return a / 2; }
+    function rpBBox(P) { P = P || roomPoly; if (!P) return null; return { x0: Math.min.apply(null, P.map(p => p[0])), x1: Math.max.apply(null, P.map(p => p[0])), z0: Math.min.apply(null, P.map(p => p[1])), z1: Math.max.apply(null, P.map(p => p[1])) }; }
+    function rpClean(P) {   // убрать повторы и точки на прямой
+      let q = P.filter((p, i) => { const n = P[(i + 1) % P.length]; return !(p[0] === n[0] && p[1] === n[1]); });
+      let ch = true;
+      while (ch && q.length > 3) { ch = false; for (let i = 0; i < q.length; i++) { const a = q[(i + q.length - 1) % q.length], b = q[i], c = q[(i + 1) % q.length]; if ((a[0] === b[0] && b[0] === c[0]) || (a[1] === b[1] && b[1] === c[1])) { q.splice(i, 1); ch = true; break; } } }
+      return q;
+    }
+    function rpSegCross(a, b, c, d) {   // пересечение осевых отрезков (касание тоже)
+      const ov = (p, q, r, s) => Math.max(Math.min(p, q), Math.min(r, s)) <= Math.min(Math.max(p, q), Math.max(r, s)) + 1e-9;
+      return ov(a[0], b[0], c[0], d[0]) && ov(a[1], b[1], c[1], d[1]);
+    }
+    function rpValid(P) {
+      if (!P || P.length < 4 || P.length > 24) return false;
+      const n = P.length;
+      for (let i = 0; i < n; i++) { const a = P[i], b = P[(i + 1) % n]; if (!(a[0] === b[0] || a[1] === b[1]) || rpEdgeLen(P, i) < 10) return false; }
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { if (j === i + 1 || (i === 0 && j === n - 1)) continue; if (rpSegCross(P[i], P[(i + 1) % n], P[j], P[(j + 1) % n])) return false; }
+      return Math.abs(rpArea(P)) > 1000;
+    }
+    function rpNormalize(P) {   // первая стена — вправо от (0,0), комната под ней
+      P = rpClean(P.map(p => [Math.round(p[0]), Math.round(p[1])])); if (P.length < 4) return null;
+      const dx = Math.sign(P[1][0] - P[0][0]), dz = Math.sign(P[1][1] - P[0][1]);
+      let f = p => p;
+      if (dx === 0 && dz > 0) f = p => [p[1], -p[0]]; else if (dx < 0) f = p => [-p[0], -p[1]]; else if (dx === 0 && dz < 0) f = p => [-p[1], p[0]];
+      P = P.map(f);
+      if (rpArea(P) < 0) P = P.map(p => [p[0], -p[1]]);
+      const o = P[0]; return P.map(p => [p[0] - o[0], p[1] - o[1]]);
+    }
+    function rpPointIn(P, x, z) {
+      let c = false;
+      for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const a = P[i], b = P[j]; if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) c = !c; }
+      return c;
+    }
+    // помещается ли прямоугольник f в комнату (стены — граница, касаться можно)
+    function rpRectIn(f) {
+      const e = .3, r = { x0: f.x0 + e, x1: f.x1 - e, z0: f.z0 + e, z1: f.z1 - e }, P = roomPoly;
+      if (![[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]].every(c => rpPointIn(P, c[0], c[1]))) return false;
+      for (let i = 0; i < P.length; i++) {
+        const a = P[i], b = P[(i + 1) % P.length];
+        if (a[1] === b[1]) { if (a[1] > r.z0 && a[1] < r.z1 && Math.max(Math.min(a[0], b[0]), r.x0) < Math.min(Math.max(a[0], b[0]), r.x1)) return false; }
+        else if (a[0] > r.x0 && a[0] < r.x1 && Math.max(Math.min(a[1], b[1]), r.z0) < Math.min(Math.max(a[1], b[1]), r.z1)) return false;
+      }
+      return true;
+    }
+    // поля «стена / левая / правая» берутся из чертежа комнаты
+    function rpSyncInputs() {
+      if (!roomPoly) return;
+      const P = roomPoly, n = P.length, W = rpEdgeLen(P, 0);
+      el('mainWall').value = Math.round(W);
+      const last = P[n - 1], e1a = P[1], e1b = P[2];
+      el('leftWall').value = (last[0] === 0 && last[1] > 0) ? Math.round(last[1]) : 0;
+      el('rightWall').value = (e1a[0] === W && e1b[0] === W && e1b[1] > e1a[1]) ? Math.round(e1b[1] - e1a[1]) : 0;
+      const custom = P.length !== 4;
+      ['mainWall', 'leftWall', 'rightWall'].forEach(id => { const i = el(id); if (i) { i.readOnly = custom; i.title = custom ? L3('Размеры стен меняются в чертеже комнаты ✏', 'Devor oʻlchamlari xona chizmasida') : ''; } });
+    }
+    function rpAutoRect() {   // прямоугольная комната следует за полями
+      if (!roomPoly || roomPoly.length !== 4) return;
+      const W = Math.max(60, parseFloat(el('mainWall').value) || 240), D = roomPoly[2][1];
+      if (roomPoly[1][0] !== W) roomPoly = rpRect(W, D);
+    }
+    function rpApply(P) {
+      roomPoly = P; rpSyncInputs();
+      if (!P) ['mainWall', 'leftWall', 'rightWall'].forEach(id => { const i = el(id); if (i) i.readOnly = false; });
+      renderRoomChips(); autoKitchenType(); syncWallAssignments(); updateCalculator(); renderPlanner();
+    }
+    function rpEditLen(i, v) {
+      const P = roomPoly.map(p => p.slice()), n = P.length, a = P[i], b = P[(i + 1) % n], horiz = a[1] === b[1];
+      v = Math.round(parseFloat(String(v).replace(',', '.')) || 0); if (v < 10) return false;
+      const dir = horiz ? Math.sign(b[0] - a[0]) : Math.sign(b[1] - a[1]), delta = (v - rpEdgeLen(P, i)) * dir;
+      [(i + 1) % n, (i + 2) % n].forEach(j => { if (horiz) P[j][0] += delta; else P[j][1] += delta; });
+      const o = P[0]; const Q = P.map(p => [p[0] - o[0], p[1] - o[1]]);
+      if (!rpValid(Q)) { if (typeof msToast === 'function') msToast(L3('Так стена не получается: стены пересекаются или слишком короткие', 'Bunday boʻlmaydi: devorlar kesishadi yoki juda qisqa')); return false; }
+      roomPoly = Q; return true;
+    }
+    function rpPreset(kind) {
+      const W = Math.max(150, parseFloat(el('mainWall').value) || 300), D = 320;
+      let P;
+      if (kind === 'L') P = [[0, 0], [W, 0], [W, D * .55], [W * .55, D * .55], [W * .55, D], [0, D]];
+      else if (kind === 'U') P = [[0, 0], [W, 0], [W, D], [W * .7, D], [W * .7, D * .45], [W * .3, D * .45], [W * .3, D], [0, D]];
+      else P = rpRect(W, D);
+      roomPoly = P.map(p => [Math.round(p[0] / 5) * 5, Math.round(p[1] / 5) * 5]); reDraw = null; reTmp = []; renderRoomEd();
+    }
+    function renderRoomChips() {
+      const box = el('roomChips'); if (!box) return;
+      const P = roomPoly;
+      box.innerHTML = `<button type="button" class="rc-btn" onclick="rpOpen()">✏️ ${esc(L3('Нарисовать комнату', 'Xonani chizish'))}</button>` +
+        (P ? P.map((p, i) => `<button type="button" class="rc-chip" onclick="rpOpen()">${esc(L3('Стена', 'Devor'))} ${i + 1}: <b>${Math.round(rpEdgeLen(P, i))}</b> ${esc(cmU())}</button>`).join('') : `<span class="rc-hint">${esc(L3('Комната — прямоугольник. Нужна Г-образная или своя форма? Нарисуйте её.', 'Xona — toʻgʻri toʻrtburchak. Oʻz shaklingizni chizing.'))}</span>`);
+    }
+    function rpOpen() {
+      if (!el('roomEd')) {
+        const d = document.createElement('div'); d.id = 'roomEd'; d.className = 're-ov';
+        d.innerHTML = '<div class="re-box"><div class="re-head"><b></b><button type="button" onclick="rpClose()" aria-label="x">✕</button></div><div class="re-body"><div class="re-left"><svg id="reSvg" xmlns="http://www.w3.org/2000/svg"></svg><div class="re-note" id="reNote"></div></div><div class="re-right" id="reRight"></div></div></div>';
+        document.body.appendChild(d);
+        const svg = d.querySelector('#reSvg');
+        svg.addEventListener('pointerdown', reClick); svg.addEventListener('pointermove', reMove);
+      }
+      reDraw = null; reTmp = []; el('roomEd').classList.add('on'); document.body.style.overflow = 'hidden';
+      if (!roomPoly) roomPoly = rpRect(Math.max(60, parseFloat(el('mainWall').value) || 240), Math.max(300, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0));
+      renderRoomEd();
+    }
+    function rpClose() { const d = el('roomEd'); if (d) d.classList.remove('on'); document.body.style.overflow = ''; reDraw = null; reTmp = []; }
+    function rpDone() {
+      let P = roomPoly; if (reDraw) { reFinish(); P = roomPoly; }
+      const N = P && rpNormalize(P); if (!N || !rpValid(N)) { if (typeof msToast === 'function') msToast(L3('Комната не замкнута или стены пересекаются', 'Xona yopilmagan yoki devorlar kesishadi')); return; }
+      rpClose(); rpApply(N);
+    }
+    function rpReset() { rpClose(); rpApply(null); }
+    // ---- рисование: клики по сетке 10 см, стены только по осям ----
+    function reSvgPt(ev) {
+      const svg = el('reSvg'), pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+      const m = svg.getScreenCTM(); if (!m) return null; const p = pt.matrixTransform(m.inverse());
+      return [Math.round(p.x / 10) * 10, Math.round(p.y / 10) * 10];
+    }
+    function reAxis(last, p) { return Math.abs(p[0] - last[0]) >= Math.abs(p[1] - last[1]) ? [p[0], last[1]] : [last[0], p[1]]; }
+    function reClick(ev) {
+      if (!reDraw) return;
+      const p = reSvgPt(ev); if (!p) return;
+      if (!reTmp.length) reTmp.push(p); else { const q = reAxis(reTmp[reTmp.length - 1], p); if (q[0] !== reTmp[reTmp.length - 1][0] || q[1] !== reTmp[reTmp.length - 1][1]) reTmp.push(q); }
+      renderRoomEd();
+    }
+    function reMove(ev) { if (!reDraw || !reTmp.length) return; const p = reSvgPt(ev); if (!p) return; reCursor = reAxis(reTmp[reTmp.length - 1], p); renderRoomEd(true); }
+    function reStart() { reDraw = true; reTmp = []; reCursor = null; renderRoomEd(); }
+    function reStep(dir) {   // точная стена: направление + длина из поля
+      const len = Math.round(parseFloat((el('reLen') || {}).value) || 0); if (len < 10) return;
+      if (!reTmp.length) reTmp.push([0, 0]);
+      const l = reTmp[reTmp.length - 1], v = { E: [len, 0], W: [-len, 0], N: [0, -len], S: [0, len] }[dir];
+      reTmp.push([l[0] + v[0], l[1] + v[1]]); renderRoomEd();
+    }
+    function reUndo() { reTmp.pop(); renderRoomEd(); }
+    function reFinish() {
+      if (reTmp.length < 2) { reDraw = null; reTmp = []; renderRoomEd(); return; }
+      const S = reTmp[0], P = reTmp.map(p => p.slice()), L = P[P.length - 1];
+      if (L[0] !== S[0] || L[1] !== S[1]) {
+        if (L[0] !== S[0] && L[1] !== S[1]) { const prevH = P.length >= 2 && P[P.length - 2][1] === L[1]; P.push(prevH ? [L[0], S[1]] : [S[0], L[1]]); }
+        const L2 = P[P.length - 1]; if (L2[0] !== S[0] && L2[1] !== S[1]) P.push([S[0], L2[1]]);
+      } else P.pop();
+      const N = rpNormalize(P);
+      reDraw = null; reTmp = [];
+      if (N && rpValid(N)) roomPoly = N; else if (typeof msToast === 'function') msToast(L3('Не получилась замкнутая комната — попробуйте ещё раз', 'Yopiq xona chiqmadi — qayta urinib koʻring'));
+      renderRoomEd();
+    }
+    function reWallSet(i, v) { if (rpEditLen(i, v)) renderRoomEd(); else renderRoomEd(); }
+    function renderRoomEd() {
+      const d = el('roomEd'); if (!d) return;
+      d.querySelector('.re-head b').textContent = '✏️ ' + L3('Рисуем комнату', 'Xonani chizamiz');
+      const svg = el('reSvg'), pts = reDraw ? reTmp.concat(reCursor && reTmp.length ? [reCursor] : []) : roomPoly;
+      let bb = pts && pts.length ? { x0: Math.min.apply(null, pts.map(p => p[0])), x1: Math.max.apply(null, pts.map(p => p[0])), z0: Math.min.apply(null, pts.map(p => p[1])), z1: Math.max.apply(null, pts.map(p => p[1])) } : { x0: 0, x1: 400, z0: 0, z1: 300 };
+      if (reDraw) { bb.x0 = Math.min(bb.x0, 0); bb.z0 = Math.min(bb.z0, 0); bb.x1 = Math.max(bb.x1, 500); bb.z1 = Math.max(bb.z1, 400); }
+      const pad = Math.max(60, (bb.x1 - bb.x0) * .12), x0 = bb.x0 - pad, z0 = bb.z0 - pad, w = bb.x1 - bb.x0 + 2 * pad, h = bb.z1 - bb.z0 + 2 * pad, fs = Math.max(w, h) / 34;
+      svg.setAttribute('viewBox', `${x0} ${z0} ${w} ${h}`);
+      let g = '';
+      const gs = 50; for (let x = Math.ceil(x0 / gs) * gs; x < x0 + w; x += gs) g += `<line x1="${x}" y1="${z0}" x2="${x}" y2="${z0 + h}" stroke="${x % 100 ? '#e7ecf0' : '#d3dbe2'}" stroke-width="${fs / 25}"/>`;
+      for (let z = Math.ceil(z0 / gs) * gs; z < z0 + h; z += gs) g += `<line x1="${x0}" y1="${z}" x2="${x0 + w}" y2="${z}" stroke="${z % 100 ? '#e7ecf0' : '#d3dbe2'}" stroke-width="${fs / 25}"/>`;
+      const label = (a, b, txt, n, col) => { const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2, hz = a[1] === b[1]; return `<text x="${mx}" y="${mz + (hz ? -fs * .55 : 0)}" dx="${hz ? 0 : fs * .6}" font-size="${fs}" text-anchor="${hz ? 'middle' : 'start'}" fill="${col}" font-weight="700" font-family="Arial">${n ? n + ': ' : ''}${txt}</text>`; };
+      if (reDraw) {
+        const T = reTmp.concat(reCursor && reTmp.length ? [reCursor] : []);
+        if (T.length) g += `<polyline points="${T.map(p => p.join(',')).join(' ')}" fill="none" stroke="#0b6e8f" stroke-width="${fs / 6}" stroke-linejoin="round"/>`;
+        T.forEach((p, i) => { g += `<circle cx="${p[0]}" cy="${p[1]}" r="${fs / 3}" fill="${i ? '#0b6e8f' : '#b3261e'}"/>`; if (i) g += label(T[i - 1], p, Math.round(Math.abs(p[0] - T[i - 1][0]) + Math.abs(p[1] - T[i - 1][1])) + ' ' + cmU(), i, '#0b6e8f'); });
+      } else if (roomPoly) {
+        const P = roomPoly;
+        g += `<polygon points="${P.map(p => p.join(',')).join(' ')}" fill="#f3ecd9" stroke="#2b2f33" stroke-width="${fs / 4}" stroke-linejoin="round"/>`;
+        g += `<line x1="${P[0][0]}" y1="${P[0][1]}" x2="${P[1][0]}" y2="${P[1][1]}" stroke="#b07d12" stroke-width="${fs / 2.2}"/>`;
+        P.forEach((p, i) => { g += `<circle cx="${p[0]}" cy="${p[1]}" r="${fs / 3.2}" fill="#2b2f33"/>` + label(p, P[(i + 1) % P.length], Math.round(rpEdgeLen(P, i)) + ' ' + cmU(), i + 1, '#1f2933'); });
+      }
+      svg.innerHTML = g;
+      const R = el('reRight'), dirB = (dir, ch) => `<button type="button" onclick="reStep('${dir}')">${ch}</button>`;
+      let h2 = '';
+      if (reDraw) {
+        h2 = `<div class="re-h">${esc(L3('Рисуем по линиям', 'Chiziqlar bilan chizamiz'))}</div>
+          <div class="re-note">${esc(L3('Нажимайте на сетку — каждая точка это угол комнаты. Линии идут только вдоль осей. Первая линия — основная стена. Или задайте стену числом:', 'Setkani bosing — har nuqta xona burchagi. Birinchi chiziq — asosiy devor. Yoki son bilan kiriting:'))}</div>
+          <div class="re-step"><input id="reLen" type="number" value="300" min="10" step="10"> ${esc(cmU())}<div class="re-dirs">${dirB('N', '↑')}${dirB('W', '←')}${dirB('E', '→')}${dirB('S', '↓')}</div></div>
+          <div class="re-list">${reTmp.slice(1).map((p, i) => `<div class="re-w"><span>${esc(L3('Стена', 'Devor'))} ${i + 1}</span><b>${Math.round(Math.abs(p[0] - reTmp[i][0]) + Math.abs(p[1] - reTmp[i][1]))} ${esc(cmU())}</b></div>`).join('')}</div>
+          <div class="re-btns"><button type="button" class="pri" onclick="reFinish()">✓ ${esc(L3('Замкнуть комнату', 'Xonani yopish'))}</button><button type="button" onclick="reUndo()">↶ ${esc(L3('Отменить точку', 'Nuqtani bekor qilish'))}</button><button type="button" onclick="reDraw=null;reTmp=[];renderRoomEd()">${esc(L3('Выйти из рисования', 'Chizishdan chiqish'))}</button></div>`;
+      } else {
+        const P = roomPoly || [];
+        h2 = `<div class="re-h">${esc(L3('Стены комнаты', 'Xona devorlari'))}</div>
+          <div class="re-note">${esc(L3('Измените длину любой стены — соседняя сдвинется, комната останется ровной. Стена 1 (золотая) — основная.', 'Istalgan devor uzunligini oʻzgartiring. 1-devor (oltin) — asosiy.'))}</div>
+          <div class="re-list">${P.map((p, i) => `<div class="re-w"><span>${esc(L3('Стена', 'Devor'))} ${i + 1}${i === 0 ? ' ★' : ''} ${['→', '↓', '←', '↑'][(() => { const q = P[(i + 1) % P.length]; return q[0] > p[0] ? 0 : (q[1] > p[1] ? 1 : (q[0] < p[0] ? 2 : 3)); })()]}</span><input type="number" min="10" step="1" value="${Math.round(rpEdgeLen(P, i))}" onchange="reWallSet(${i}, this.value)"> ${esc(cmU())}</div>`).join('')}</div>
+          <div class="re-h" style="margin-top:12px">${esc(L3('Быстрая форма', 'Tezkor shakl'))}</div>
+          <div class="re-btns"><button type="button" onclick="rpPreset('R')">▭ ${esc(L3('Прямая', 'Toʻgʻri'))}</button><button type="button" onclick="rpPreset('L')">⌐ ${esc(L3('Г-образная', 'G-shakl'))}</button><button type="button" onclick="rpPreset('U')">⊓ ${esc(L3('П-образная', 'P-shakl'))}</button></div>
+          <div class="re-btns"><button type="button" onclick="reStart()">✏️ ${esc(L3('Нарисовать самому', 'Oʻzim chizaman'))}</button></div>
+          <div class="re-btns"><button type="button" class="pri" onclick="rpDone()">✓ ${esc(L3('Применить', 'Qoʻllash'))}</button><button type="button" onclick="rpReset()">${esc(L3('Сбросить (обычная комната)', 'Tashlash'))}</button></div>`;
+      }
+      R.innerHTML = h2;
+      const note = el('reNote'); if (note) note.textContent = reDraw ? L3('Первая точка — красная. Длина стены подписана у линии.', 'Birinchi nuqta — qizil.') : L3('Размеры в сантиметрах. Золотая линия — основная стена, вдоль неё ставятся шкафы.', 'Oʻlchamlar santimetrda. Oltin chiziq — asosiy devor.');
+    }
+
     /* ===================== ССЫЛКА ДЛЯ КЛИЕНТА: 3D только для просмотра ===================== */
     function viewUrl() { return location.origin + '/view#k=' + b64urlEncode(JSON.stringify(serializeState())); }
     function k3dClientLink(mode) {
@@ -3572,7 +3791,8 @@
         if (n.ty === 'washer') { out.push(`<circle cx="${odN(X(n.x + n.w / 2))}" cy="${odN(Y(n.y + n.h / 2))}" r="${odN(n.w / 2 * sc)}" ${OD.o}/><circle cx="${odN(X(n.x + n.w / 2))}" cy="${odN(Y(n.y + n.h / 2))}" r="${odN(n.w / 2 * sc * .72)}" ${OD.t}/>`); return; }
         out.push(odRect(X(n.x), Y(n.y + n.h), n.w * sc, n.h * sc, n.ty === 'fridge' ? 'o' : 't', '#f6f6f6'));
         if (n.ty === 'fridge') out.push(odLine(X(0), Y(n.y + n.h * .34), X(n.w), Y(n.y + n.h * .34), 't'));
-        out.push(odText(X(n.x + n.w / 2), Y(n.y + n.h / 2), n.ty === 'oven' ? 'ДУХОВКА' : (n.ty === 'micro' ? 'СВЧ' : 'ХОЛОДИЛЬНИК'), 9));
+        out.push(odText(X(n.x + n.w / 2), Y(n.y + n.h / 2), n.ty === 'oven' ? 'ДУХОВКА' : (n.ty === 'micro' ? 'СВЧ' : 'ХОЛОДИЛЬНИК'), opt.noDim ? 6.5 : 9));
+        if (opt.panelDims) out.push(odText(X(n.x + n.w / 2), Y(n.y + n.h / 2) + (opt.noDim ? 8 : 11), Math.round(n.w) + '×' + Math.round(n.h), opt.pdSize || 7, 'middle', 'fill="#0b6e8f"'));
       });
       m.shelves.forEach(yy => out.push(odLine(X(16), Y(yy), X(m.W - 16), Y(yy), 'h')));
       if (!m.open) { out.push(odRect(X(16), Y(m.hb - 16), (m.W - 32) * sc, (m.hb - 16 - m.PL - (m.PL ? 16 : 16)) * sc, 'h')); }
@@ -3583,6 +3803,7 @@
           else out.push(odLine(X(p.x), Y(p.y + p.h), X(p.x + p.w / 2), Y(p.y + 2), 'h') + odLine(X(p.x + p.w), Y(p.y + p.h), X(p.x + p.w / 2), Y(p.y + 2), 'h'));
         }
         out.push(odHandle(p, X, Y, sc, ot, tier === 'upper'));
+        if (opt.panelDims && p.ty !== 'solid') out.push(odText(X(p.x + p.w / 2), Y(p.y) - 5, Math.round(p.w) + '×' + Math.round(p.h), opt.pdSize || 7, 'middle', 'fill="#0b6e8f"'));
       });
       if (ot === 'gola') out.push(odLine(X(0), Y(m.hb) + 2, X(m.W), Y(m.hb) + 2, 'c'));
       if (!opt.noDim) m.labels.forEach((lb, i) => out.push(odText(X(m.W / 2), Y(m.H) - 8 - i * 11, lb, 9, 'middle', 'font-style="italic"')));
@@ -3646,7 +3867,7 @@
       const availW = 1110 - 2 * 90 - 120, availH = 800 - 60 - 130 - 190;
       let sc = Math.min(availW / (m.W + m.D + (tier === 'lower' ? 0 : 0)), (availH) / (m.H + m.D), 0.55); sc = Math.max(.05, sc);
       const fx = 120, fy = 100, sx = fx + m.W * sc + 140, py = fy + m.H * sc + 110;
-      const inner = odFront(s, tier, geo, m, fx, fy, sc) + odSide(s, tier, geo, m, sx, fy, sc) + odPlan(s, tier, geo, m, fx, py, sc) +
+      const inner = odFront(s, tier, geo, m, fx, fy, sc, { panelDims: true, pdSize: 8 }) + odSide(s, tier, geo, m, sx, fy, sc) + odPlan(s, tier, geo, m, fx, py, sc) +
         odText(1100, 60, `М 1:${odNiceScale(sc)}`, 12, 'end', 'font-weight="700"');
       const hwv = effHw(s), cat = (k, grp) => hwName(grp, hwv[k]);
       const p = paintOf(s) ? s.pc : null, fc = (id, def) => { const f = id && findColor(id); return f ? f.item.name : def; };
@@ -3692,8 +3913,8 @@
       let out = odLine(x0 - 40, floorY, x0 + ext * sc + 60, floorY, 'o') + odLine(x0 - 40, floorY + 1.5, x0 + ext * sc + 60, floorY + 1.5, 't');
       out += odRect(X(0), Y(roomHmm), ext * sc, roomHmm * sc, 't');   // стена
       const lowCode = r => 'Н-' + r.sec.id, upCode = r => 'В-' + r.sec.id;
-      lows.forEach(r => { const m = odModel(r.sec, 'lower', geo); out += odFront(r.sec, 'lower', geo, m, X(r.u0 * 10), Y(m.H), sc, { noDim: true, code: lowCode(r) }); });
-      ups.forEach(r => { const m = odModel(r.sec, 'upper', geo), yb = defaultY(r.sec, 'upper', geo) * 10; out += odFront(r.sec, 'upper', geo, m, X(r.u0 * 10), Y(yb + m.H), sc, { noDim: true, code: upCode(r) }); });
+      lows.forEach(r => { const m = odModel(r.sec, 'lower', geo); out += odFront(r.sec, 'lower', geo, m, X(r.u0 * 10), Y(m.H), sc, { noDim: true, code: lowCode(r), panelDims: true, pdSize: 6.5 }); out += odDimH(X(r.u0 * 10), X(r.u1 * 10), Y(m.H), Y(m.H) - 14, Math.round((r.u1 - r.u0) * 10)); });
+      ups.forEach(r => { const m = odModel(r.sec, 'upper', geo), yb = defaultY(r.sec, 'upper', geo) * 10; out += odFront(r.sec, 'upper', geo, m, X(r.u0 * 10), Y(yb + m.H), sc, { noDim: true, code: upCode(r), panelDims: true, pdSize: 6.5 }); out += odDimH(X(r.u0 * 10), X(r.u1 * 10), Y(yb + m.H), Y(yb + m.H) - 14, Math.round((r.u1 - r.u0) * 10)); });
       // размеры: ширина каждого шкафа и общая
       lows.forEach(r => { out += odDimH(X(r.u0 * 10), X(r.u1 * 10), floorY, floorY + 22, Math.round((r.u1 - r.u0) * 10)); });
       const lo0 = lows.length ? Math.min.apply(null, lows.map(r => r.u0)) : 0, lo1 = lows.length ? Math.max.apply(null, lows.map(r => r.u1)) : ext / 10;
@@ -5192,7 +5413,7 @@
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
-        pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
+        rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW], kh: KHW, ch: s.counterH, ug: s.upperGap };
     }
     function b64urlEncode(str) {
@@ -5268,6 +5489,8 @@
       parkedSections = (Array.isArray(st.pk) ? st.pk.slice(0, 20) : []).map(x => { const tier = x && x[0] ? 'upper' : 'lower', sec = build([x && x[1]], tier)[0]; return sec ? { sec, tier } : null; }).filter(Boolean);
       islandPos = Array.isArray(st.ip) && st.ip.length >= 3 && st.ip.every(v => isFinite(v)) ? { cx: +st.ip[0], cz: +st.ip[1], r: +st.ip[2] } : null;
       selIsland = false; swapFrom = null; moveBase = null;
+      roomPoly = null;
+      if (Array.isArray(st.rp) && st.rp.length >= 8 && st.rp.length % 2 === 0 && st.rp.every(v => isFinite(v))) { const Q = []; for (let i = 0; i < st.rp.length; i += 2) Q.push([+st.rp[i], +st.rp[i + 1]]); if (rpValid(Q)) roomPoly = Q; }
       selSec = null;
       addMenuWall = null;
       decorState = decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3] } : null);
@@ -5312,6 +5535,8 @@
       el('hasIsland').checked = !!isl[0];
       el('islandLength').value = clampN(isl[1], 80, 300, 140);
       el('islandWidth').value = clampN(isl[2], 50, 150, 80);
+      if (roomPoly) rpSyncInputs(); else ['mainWall', 'leftWall', 'rightWall'].forEach(id => { const i = el(id); if (i) i.readOnly = false; });
+      renderRoomChips();
       updateIslandUI();
       renderPlanner();
       updateColorUIBadges();
@@ -5795,6 +6020,7 @@ ${body}
       }
       renderPresetCards();
       setRenderMode(VIEW_ONLY ? '3d' : ((() => { try { return localStorage.getItem('kc_r3'); } catch (e) { return null; } })() || '3d'));
+      renderRoomChips();
       ownerBoot();
       if (typeof msInit === 'function') msInit();
       appReady = true;

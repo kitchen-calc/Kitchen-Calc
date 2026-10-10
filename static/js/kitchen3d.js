@@ -445,7 +445,21 @@ export function createK3D(container, hooks = {}, opts = {}) {
     });
   }
 
+  /* комната произвольной формы: пол и стены по углам st.poly [[x, z], ...] */
+  function roomByPoly(M, st) {
+    const P = st.poly, H = st.roomH, n = P.length;
+    const inside = (x, z) => { let c = false; for (let i = 0, j = n - 1; i < n; j = i++) { const a = P[i], b = P[j]; if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; };
+    const fl = mesh(new THREE.ShapeGeometry(new THREE.Shape(P.map(p => new THREE.Vector2(p[0], -p[1])))), M.floor, false);
+    fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; M.floor.map.repeat.set(1 / 160, 1 / 160); root.add(fl);
+    for (let i = 0; i < n; i++) {
+      const a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+      let nx = -dz / len, nz = dx / len; if (!inside(mx + nx * 2, mz + nz * 2)) { nx = -nx; nz = -nz; }
+      const w = mesh(new THREE.PlaneGeometry(len, H), M.wall, false); w.rotation.y = Math.atan2(nx, nz); w.position.set(mx - nx * .8, H / 2, mz - nz * .8); root.add(w);
+      const sk = mesh(new THREE.BoxGeometry(len, 7, 1.4), M.inner); sk.rotation.y = Math.atan2(nx, nz); sk.position.set(mx + nx * .1, 3.5, mz + nz * .1); root.add(sk);
+    }
+  }
   function room(M, st, bounds) {
+    if (st.poly && st.poly.length >= 4) { roomByPoly(M, st); return; }
     const pad = 90, x0 = -pad, x1 = st.W + pad, zMax = bounds.zMax + 220, H = st.roomH;
     const fl = mesh(new THREE.PlaneGeometry(x1 - x0, zMax + 40), M.floor, false); fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, 0, zMax / 2 - 20); fl.receiveShadow = true;
     M.floor.map.repeat.set((x1 - x0) / 160, (zMax + 40) / 160); root.add(fl);
@@ -660,6 +674,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   /* ---------- камера ---------- */
   function center() {
     const st = state; if (!st) return new THREE.Vector3();
+    if (st.poly && st.poly.length >= 4) { const xs = st.poly.map(p => p[0]), zs = st.poly.map(p => p[1]); return new THREE.Vector3((Math.min(...xs) + Math.max(...xs)) / 2, 105, Math.min(Math.max(...zs), 320) / 2); }
     if (st.type === 'parallel') return new THREE.Vector3(st.W / 2, 95, (2 * st.LD + (st.aisle || 120)) / 2);
     let depthMax = st.LD; ['left', 'right'].forEach(w => { const r = st.runs[w]; if (r && r.lower.length) depthMax = Math.max(depthMax, st.LD + r.totalLower); });
     return new THREE.Vector3(st.W / 2, 105, Math.min(depthMax, 160) / 2 + (st.island ? 60 : 0));
