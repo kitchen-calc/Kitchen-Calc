@@ -392,14 +392,10 @@ def build_lead_text(data):
     price = _esc(data.get("price"), 30) or "—"
     source = _clip(data.get("source"), 2000)
 
-    lines = [
-        "🔔 <b>Новая заявка с калькулятора</b>",
-        "",
-        f"👤 {name}",
-        f"📞 {phone}",
-        f"📍 {notes}",
-        f"💰 Ориентировочно: <b>{price} UZS</b>",
-    ]
+    title = "🔔 <b>Новая заявка из опроса на главной</b>" if data.get("form") == "quiz" else "🔔 <b>Новая заявка с калькулятора</b>"
+    lines = [title, "", f"👤 {name}", f"📞 {phone}", f"📍 {notes}"]
+    if price != "—":
+        lines.append(f"💰 Ориентировочно: <b>{price} UZS</b>")
 
     details = data.get("details")
     if isinstance(details, dict) and details:

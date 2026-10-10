@@ -94,6 +94,71 @@
     .btn-line { background: transparent; color: var(--text); border-color: rgba(236, 226, 210, .45); }
     .btn-line:hover { border-color: var(--gold); color: var(--gold-2); }
     .btn-sm { padding: 10px 16px; font-size: .74rem; }
+
+    /* ---------- опрос-квиз ---------- */
+    .quiz-band { padding-top: 30px !important; }
+    .kq { scroll-margin-top: 90px; }
+    .kq-intro { position: relative; min-height: 420px; display: flex; align-items: center; border: 1px solid rgba(200,164,107,.35); overflow: hidden; }
+    .kq-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 75% center; }
+    .kq-intro::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(17,16,14,.95) 0%, rgba(17,16,14,.82) 45%, rgba(17,16,14,.25) 100%); }
+    .kq-in { position: relative; z-index: 1; padding: 46px 48px; max-width: 620px; }
+    .kq-in h2 { font: 600 clamp(1.9rem, 3.4vw, 2.8rem)/1.1 var(--serif); color: #f7f0e4; margin: 16px 0 14px; }
+    .kq-in p { color: #d9cfbf; max-width: 500px; margin-bottom: 26px; }
+    .kq-bonus { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 26px; font-size: .78rem; color: var(--muted); }
+    .kq-bonus span { width: 100%; letter-spacing: .14em; text-transform: uppercase; font-size: .68rem; }
+    .kq-bonus b { font-weight: 600; color: #ecdcb6; border: 1px solid rgba(200,164,107,.4); background: rgba(255,255,255,.03); padding: 7px 12px; }
+    .kq-box { border: 1px solid rgba(200,164,107,.35); background: linear-gradient(160deg, #1d1a16, #14120f); padding: 34px 40px 30px; min-height: 420px; display: flex; flex-direction: column; }
+    .kq-top { display: flex; align-items: center; gap: 16px; font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+    .kq-bar { flex: 1; height: 3px; background: rgba(236,226,210,.12); }
+    .kq-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-2)); transition: width .4s; }
+    .kq-box h3 { font: 600 clamp(1.5rem, 2.6vw, 2.1rem)/1.15 var(--serif); color: #f7f0e4; margin: 22px 0 22px; }
+    .kq-opts { display: grid; gap: 12px; }
+    .kq-opts.grid-img { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .kq-opts.grid-ic { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .kq-opts.grid-tx { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kq-opt { font: inherit; color: var(--text); background: rgba(255,255,255,.03); border: 1px solid var(--line); cursor: pointer; text-align: left; transition: border-color .2s, background .2s, transform .2s; }
+    .kq-opt:hover { border-color: var(--gold); transform: translateY(-2px); }
+    .kq-opt.on { border-color: var(--gold-2); background: rgba(200,164,107,.14); }
+    .kq-img { padding: 0; overflow: hidden; }
+    .kq-img img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+    .kq-img span { display: block; padding: 11px 12px; font-weight: 600; font-size: .9rem; }
+    .kq-ic { padding: 16px 12px 14px; text-align: center; }
+    .kq-ic svg { width: 64px; height: 40px; margin: 0 auto 8px; display: block; fill: rgba(200,164,107,.25); stroke: var(--gold-2); stroke-width: 1.5; }
+    .kq-ic svg text { fill: var(--gold-2); stroke: none; }
+    .kq-ic span { font-weight: 600; font-size: .88rem; }
+    .kq-tx { display: flex; align-items: center; gap: 12px; padding: 16px 18px; font-weight: 600; }
+    .kq-tx i { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--gold); flex: none; }
+    .kq-tx.on i { background: radial-gradient(circle, var(--gold-2) 0 4px, transparent 5px); }
+    .kq-nav { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 24px; }
+    .kq-back { background: none; border: 0; color: var(--muted); font: inherit; cursor: pointer; }
+    .kq-back:hover { color: var(--gold-2); }
+    .kq-next[disabled] { opacity: .4; cursor: default; }
+    .kq-sum { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: -8px 0 18px; font-size: .82rem; color: #ecdcb6; }
+    .kq-sum em { font-style: normal; color: var(--muted); }
+    .kq-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 640px; position: relative; }
+    .kq-form input[type=text], .kq-form input[type=tel] { background: #0f0e0c; color: var(--text); border: 1px solid rgba(236,226,210,.2); padding: 14px 16px; font: inherit; font-size: 16px; outline: none; }
+    .kq-form input:focus { border-color: var(--gold); }
+    .kq-way { grid-column: 1 / -1; display: flex; gap: 18px; font-size: .9rem; color: #d9cfbf; }
+    .kq-way input { accent-color: #c8a46b; margin-right: 6px; }
+    .kq-form .btn { grid-column: 1 / -1; justify-self: start; }
+    .kq-form small { grid-column: 1 / -1; color: var(--muted); font-size: .74rem; }
+    .kq-form small a { color: var(--gold-2); text-decoration: underline; }
+    .kq-err { grid-column: 1 / -1; color: #f2a38e; font-size: .88rem; }
+    .kq-done { align-items: flex-start; justify-content: center; }
+    .kq-done p { color: #d9cfbf; max-width: 520px; margin-bottom: 22px; }
+    .kq-ok { width: 54px; height: 54px; border-radius: 50%; border: 1.5px solid var(--gold); color: var(--gold-2); display: grid; place-items: center; font-size: 1.6rem; }
+    @media (max-width: 900px) {
+      .kq-opts.grid-img { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .kq-opts.grid-ic { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      .kq-in { padding: 30px 20px; }
+      .kq-intro::after { background: linear-gradient(0deg, rgba(17,16,14,.96) 35%, rgba(17,16,14,.7) 100%); }
+      .kq-box { padding: 22px 16px 18px; min-height: 0; }
+      .kq-opts.grid-tx, .kq-form { grid-template-columns: minmax(0, 1fr); }
+      .kq-opts.grid-ic { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .kq-form .btn { justify-self: stretch; }
+    }
     .burger { display: none; background: none; border: 1px solid var(--line); color: var(--text); width: 42px; height: 42px; border-radius: 2px; font-size: 1.2rem; cursor: pointer; }
 
     /* ---------- первый экран ---------- */
@@ -306,6 +371,23 @@
     .rv.in { opacity: 1; transform: none; }
     @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
 
+    /* ---------- телефон: панель действий внизу экрана ---------- */
+    .mbar { display: none; }
+    @media (max-width: 680px) {
+      .mbar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: rgba(17,16,14,.94); border-top: 1px solid rgba(200,164,107,.3); backdrop-filter: blur(8px); transform: translateY(110%); transition: transform .35s; }
+      .mbar.on { transform: none; }
+      .mbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px 4px; font: 700 .68rem var(--sans); letter-spacing: .06em; text-transform: uppercase; color: #ecdcb6; border: 1px solid rgba(200,164,107,.35); }
+      .mbar a b { font-size: 1.05rem; line-height: 1; }
+      .mbar a.gold { background: var(--gold); color: #1b1408; border-color: var(--gold); }
+      body { padding-bottom: 70px; }
+      .block { padding-top: 54px !important; padding-bottom: 54px !important; }
+      .quiz-band { padding-top: 10px !important; }
+      .hero-brands { gap: 8px 14px; }
+      .hero-brands b { font-size: .92rem; }
+      .kq-intro { min-height: 0; }
+      .kq-box h3 { margin: 16px 0 16px; }
+    }
+
     /* ---------- адаптив ---------- */
     @media (max-width: 1280px) {
       .nav { display: none; }
@@ -337,7 +419,7 @@
       .wrap { padding: 0 16px; }
       .hdr .wrap { height: 70px; }
       .hdr.open .nav { top: 70px; padding: 8px 16px 18px; }
-      .logo-mark { font-size: 1.85rem; }
+      .logo-mark { font-size: 1.6rem; white-space: nowrap; }
       .logo-icon { height: 34px; }
       .logo-sub { display: none; }
       .hdr-right .btn, .hdr-right .pill { display: none; }
@@ -375,6 +457,7 @@
     .full-band i { font-style: normal; color: var(--gold); font-size: 1.4rem; }
   </style>
 <script src="/static/js/metrika.js" defer></script>
+<script src="/static/js/quiz.js?v=1" defer></script>
 </head>
 <body>
 
@@ -451,7 +534,7 @@
           <p data-t="iLead">Платите частями напрямую нам — без банков, справок и переплаты. График платежей фиксируется в договоре.</p>
           <div class="hero-cta">
             <a class="btn btn-gold" href="/calc" data-t="iCta">Рассчитать кухню</a>
-            <a class="btn btn-line js-phone" href="tel:+998920934510" data-t="iCall">Узнать условия</a>
+            <a class="btn btn-line" href="#quiz" data-quiz="inst" data-t="iCall">Узнать условия</a>
           </div>
         </div>
         <div class="inst-grid rv" style="transition-delay:.15s">
@@ -461,6 +544,10 @@
           <div><b data-t="i4t">по договору</b><span data-t="i4">график платежей в договоре</span></div>
         </div>
       </div>
+    </section>
+
+    <section class="block quiz-band" id="quiz-sec">
+      <div class="wrap"><div id="quiz" class="kq rv"></div></div>
     </section>
 
     <section class="block" id="kitchens">
@@ -706,7 +793,7 @@
         navHome: 'Главная', navPartners: 'Партнёрам', subKitchens: 'Кухни на заказ', subShkafy: 'Шкафы-купе', subGarderob: 'Гардеробные', subPrihozhie: 'Прихожие', subSpalni: 'Спальни', subShkaf: 'Калькулятор шкафов', subFull: 'Квартиры и дома под ключ', fullTitle: 'Полная меблировка квартир и домов под ключ', fullText: 'Кухня · Прихожая · Спальня · Гардероб · Детская — в едином стиле, один замер и один договор',
         ptEyebrow: 'Партнёрам', ptTitle: 'Дизайнерам и строителям', ptLead: 'Если вы ведёте ремонт или проект интерьера, мы возьмём кухню и корпусную мебель на себя: замер, проект, изготовление, доставку и монтаж. Условия сотрудничества обсуждаем индивидуально.', ptCta: 'Условия для партнёров',
         navKitchens: 'Кухни', navFurniture: 'Мебель', navFaq: 'Вопросы и ответы', navMaterials: 'Материалы', navProcess: 'Как мы работаем', navContacts: 'Контакты', navCalc: 'Калькулятор',
-        ctaCalcShort: 'Рассчитать', heroEyebrow: 'На заказ · Ташкент', heroTitle: 'Кухни и корпусная мебель <em>под ключ</em>',
+        ctaCalcShort: 'Рассчитать', mbQuiz: 'Опрос', heroEyebrow: 'На заказ · Ташкент', heroTitle: 'Кухни и корпусная мебель <em>под ключ</em>',
         heroLead: 'Делаем кухни и корпусную мебель под ваши размеры: бесплатный замер, своё производство, доставка и монтаж. Цену кухни можно узнать онлайн за 2 минуты.',
         ctaCalc: 'Рассчитать стоимость', ctaWorks: 'Смотреть кухни', ctaInstallment: 'Рассрочка без %',
         iEyebrow: 'Оплата частями', iTitle: 'Рассрочка без процентов', iLead: 'Платите частями напрямую нам — без банков, справок и переплаты. График платежей фиксируется в договоре.',
@@ -764,7 +851,7 @@
         navHome: 'Bosh sahifa', navPartners: 'Hamkorlarga', subKitchens: 'Buyurtma oshxonalar', subShkafy: 'Shkaf-kupe', subGarderob: 'Garderob xonalari', subPrihozhie: 'Prixojaylar', subSpalni: 'Yotoqxonalar', subShkaf: 'Shkaf kalkulyatori', subFull: 'Kvartira va uylar kalit topshirish', fullTitle: 'Kvartira va uylarni toʻliq mebel bilan jihozlash', fullText: 'Oshxona · Dahliz · Yotoqxona · Garderob · Bolalar xonasi — yagona uslubda, bitta oʻlchov va bitta shartnoma',
         ptEyebrow: 'Hamkorlarga', ptTitle: 'Dizaynerlar va quruvchilarga', ptLead: 'Agar siz taʼmir yoki interyer loyihasini olib borsangiz, oshxona va korpusli mebelni biz oʻz zimmamizga olamiz: oʻlchov, loyiha, ishlab chiqarish, yetkazib berish va oʻrnatish. Hamkorlik shartlari alohida muhokama qilinadi.', ptCta: 'Hamkorlik shartlari',
         navKitchens: 'Oshxonalar', navFurniture: 'Mebel', navFaq: 'Savol-javob', navMaterials: 'Materiallar', navProcess: 'Qanday ishlaymiz', navContacts: 'Aloqa', navCalc: 'Kalkulyator',
-        ctaCalcShort: 'Hisoblash', heroEyebrow: 'Buyurtma asosida · Toshkent', heroTitle: 'Oshxona va korpusli mebel <em>kalit topshirish</em> asosida',
+        ctaCalcShort: 'Hisoblash', mbQuiz: 'Soʻrovnoma', heroEyebrow: 'Buyurtma asosida · Toshkent', heroTitle: 'Oshxona va korpusli mebel <em>kalit topshirish</em> asosida',
         heroLead: 'Oshxona va korpusli mebelni oʻlchamlaringiz boʻyicha tayyorlaymiz: bepul oʻlchov, oʻz ishlab chiqarishimiz, yetkazish va oʻrnatish. Oshxona narxini 2 daqiqada onlayn bilib oling.',
         ctaCalc: 'Narxni hisoblash', ctaWorks: 'Oshxonalarni koʻrish', ctaInstallment: 'Foizsiz muddatli toʻlov',
         iEyebrow: 'Qismlarga boʻlib toʻlash', iTitle: 'Foizsiz muddatli toʻlov', iLead: 'Toʻgʻridan-toʻgʻri bizga qismlarga boʻlib toʻlaysiz — banksiz, maʼlumotnomasiz va ortiqcha toʻlovsiz. Toʻlov jadvali shartnomada belgilanadi.',
@@ -1002,5 +1089,11 @@
     onScroll();
   })();
   </script>
+  <nav class="mbar" id="mbar" aria-label="Быстрые действия">
+    <a class="js-phone" href="tel:+998920934510"><b>☎</b><span data-t="call">Позвонить</span></a>
+    <a href="#quiz" data-quiz="1"><b>✎</b><span data-t="mbQuiz">Опрос</span></a>
+    <a class="gold" href="/calc"><b>⌂</b><span data-t="ctaCalcShort">Рассчитать</span></a>
+  </nav>
+  <script>(function () { var b = document.getElementById('mbar'); if (!b) return; function f() { b.classList.toggle('on', window.scrollY > 420); } window.addEventListener('scroll', f, { passive: true }); f(); })();</script>
 </body>
 </html>
