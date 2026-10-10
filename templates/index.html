@@ -1088,7 +1088,7 @@
       <!-- СЕКРЕТНО: чертежи мастера (вход: Ctrl+Shift+K или 3 нажатия на логотип) -->
       <div class="card od-card" id="ownerDraw" style="display:none">
         <div class="od-head"><h3>📐 Чертежи — режим мастера</h3><span>Видно только вам. 3 вида каждого шкафа; одинаковые шкафы — один чертёж.</span>
-          <button type="button" onclick="ownerPrint()">🖨 Печать (A3)</button><button type="button" onclick="ownerUnlock()">🔒 Выйти</button></div>
+          <button type="button" onclick="ownerPrint()">🖨 Печать (A4)</button><button type="button" onclick="ownerUnlock()">🔒 Выйти</button></div>
         <div id="ownerDrawBody" class="od-body"></div>
       </div>
 
@@ -3709,11 +3709,11 @@
 
     /* ---------- ЧЕРТЕЖИ КАК В AUTOCAD: 3 вида каждого шкафа (одинаковые — один раз) ---------- */
     const OD = { o: 'stroke="#111" stroke-width="1.5" fill="none" stroke-linejoin="round"', t: 'stroke="#333" stroke-width=".7" fill="none"', h: 'stroke="#555" stroke-width=".7" stroke-dasharray="6 3.5" fill="none"', c: 'stroke="#b3261e" stroke-width=".6" stroke-dasharray="14 3 2 3" fill="none"', d: 'stroke="#0b6e8f" stroke-width=".8" fill="none"', ht: 'stroke="#222" stroke-width=".5"' };
-    const odN = v => Math.round(v * 100) / 100;
+    const odN = v => Math.round(v * 100) / 100, OD_F = 1.4;   // шрифт крупнее: лист печатается на A4
     function odEl(tag, a, extra) { return `<${tag} ${a} ${extra || ''}/>`; }
     function odLine(x1, y1, x2, y2, st) { return `<line x1="${odN(x1)}" y1="${odN(y1)}" x2="${odN(x2)}" y2="${odN(y2)}" ${OD[st || 'o']}/>`; }
     function odRect(x, y, w, h, st, fill) { return `<rect x="${odN(x)}" y="${odN(y)}" width="${odN(Math.max(0, w))}" height="${odN(Math.max(0, h))}" ${OD[st || 'o']}${fill ? ` fill="${fill}"` : ''}/>`; }
-    function odText(x, y, txt, size, anchor, extra) { return `<text x="${odN(x)}" y="${odN(y)}" font-size="${size || 10}" text-anchor="${anchor || 'middle'}" font-family="Arial, sans-serif" fill="#111" ${extra || ''}>${esc(String(txt))}</text>`; }
+    function odText(x, y, txt, size, anchor, extra) { return `<text x="${odN(x)}" y="${odN(y)}" font-size="${odN((size || 10) * OD_F)}" text-anchor="${anchor || 'middle'}" font-family="Arial, sans-serif" fill="#111" ${extra || ''}>${esc(String(txt))}</text>`; }
     function odTick(x, y) { return `<line x1="${odN(x - 3)}" y1="${odN(y + 3)}" x2="${odN(x + 3)}" y2="${odN(y - 3)}" stroke="#0b6e8f" stroke-width="1"/>`; }
     // размер по горизонтали: x1..x2 (бумага), объект на yObj, размерная линия на yDim
     function odDimH(x1, x2, yObj, yDim, label) {
@@ -3723,7 +3723,7 @@
     function odDimV(y1, y2, xObj, xDim, label) {
       const dir = xDim < xObj ? -1 : 1;
       return odLine(xObj + dir * 2, y1, xDim + dir * 4, y1, 'd') + odLine(xObj + dir * 2, y2, xDim + dir * 4, y2, 'd') + odLine(xDim, y1, xDim, y2, 'd') + odTick(xDim, y1) + odTick(xDim, y2) +
-        `<text transform="translate(${odN(xDim - 3)} ${odN((y1 + y2) / 2)}) rotate(-90)" font-size="10" text-anchor="middle" font-family="Arial, sans-serif" fill="#0b6e8f">${esc(label)}</text>`;
+        `<text transform="translate(${odN(xDim - 3)} ${odN((y1 + y2) / 2)}) rotate(-90)" font-size="14" text-anchor="middle" font-family="Arial, sans-serif" fill="#0b6e8f">${esc(label)}</text>`;
     }
     const odDefs = `<defs><pattern id="odHatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#444" stroke-width=".7"/></pattern><pattern id="odHatch2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="4" stroke="#777" stroke-width=".6"/></pattern></defs>`;
     // детали шкафа: панели фасада, ниши, полки (мм, от низа шкафа)
@@ -3852,11 +3852,11 @@
       return out.join('');
     }
     function odTitle(rows, sheetNo, total) {
-      const x = 700, y = 692, w = 470, h = 132;
+      const x = 620, y = 646, w = 538, h = 140;
       let out = odRect(x, y, w, h, 'o') + odLine(x, y + 24, x + w, y + 24, 'o');
-      out += odText(x + 10, y + 17, 'KITCHEN-CALC.UZ · КУХНИ НА ЗАКАЗ · ТАШКЕНТ', 11, 'start', 'font-weight="700"');
-      rows.forEach((r, i) => { const yy = y + 40 + i * 12.5; out += odText(x + 10, yy, r[0], 9, 'start', 'fill="#555"') + odText(x + 92, yy, r[1], 9.5, 'start', 'font-weight="600"'); });
-      out += odText(x + w - 10, y + h - 8, `Лист ${sheetNo} / ${total}`, 10, 'end', 'font-weight="700"');
+      out += odText(x + 10, y + 18, 'KITCHEN-CALC.UZ · КУХНИ НА ЗАКАЗ · ТАШКЕНТ', 9.5, 'start', 'font-weight="700"');
+      rows.forEach((r, i) => { const yy = y + 43 + i * 15; out += odText(x + 10, yy, r[0], 7.6, 'start', 'fill="#555"') + odText(x + 118, yy, r[1], 8, 'start', 'font-weight="600"'); });
+      out += odText(x + w - 10, y + h - 8, `Лист ${sheetNo} / ${total}`, 8.5, 'end', 'font-weight="700"');
       return out;
     }
     function odSheet(inner, rows, no, total) {
@@ -3868,7 +3868,7 @@
       const availW = 1110 - 2 * 90 - 120, availH = 800 - 60 - 130 - 190;
       let sc = Math.min(availW / (m.W + m.D + (tier === 'lower' ? 0 : 0)), (availH) / (m.H + m.D), 0.55); sc = Math.max(.05, sc);
       const fx = 120, fy = 100, sx = fx + m.W * sc + 140, py = fy + m.H * sc + 110;
-      const inner = odFront(s, tier, geo, m, fx, fy, sc, { panelDims: true, pdSize: 8 }) + odSide(s, tier, geo, m, sx, fy, sc) + odPlan(s, tier, geo, m, fx, py, sc) +
+      const inner = odFront(s, tier, geo, m, fx, fy, sc, { panelDims: true, pdSize: 9 }) + odSide(s, tier, geo, m, sx, fy, sc) + odPlan(s, tier, geo, m, fx, py, sc) +
         odText(1100, 60, `М 1:${odNiceScale(sc)}`, 12, 'end', 'font-weight="700"');
       const hwv = effHw(s), cat = (k, grp) => hwName(grp, hwv[k]);
       const p = paintOf(s) ? s.pc : null, fc = (id, def) => { const f = id && findColor(id); return f ? f.item.name : def; };
@@ -3914,8 +3914,8 @@
       let out = odLine(x0 - 40, floorY, x0 + ext * sc + 60, floorY, 'o') + odLine(x0 - 40, floorY + 1.5, x0 + ext * sc + 60, floorY + 1.5, 't');
       out += odRect(X(0), Y(roomHmm), ext * sc, roomHmm * sc, 't');   // стена
       const lowCode = r => 'Н-' + r.sec.id, upCode = r => 'В-' + r.sec.id;
-      lows.forEach(r => { const m = odModel(r.sec, 'lower', geo); out += odFront(r.sec, 'lower', geo, m, X(r.u0 * 10), Y(m.H), sc, { noDim: true, code: lowCode(r), panelDims: true, pdSize: 6.5 }); out += odDimH(X(r.u0 * 10), X(r.u1 * 10), Y(m.H), Y(m.H) - 14, Math.round((r.u1 - r.u0) * 10)); });
-      ups.forEach(r => { const m = odModel(r.sec, 'upper', geo), yb = defaultY(r.sec, 'upper', geo) * 10; out += odFront(r.sec, 'upper', geo, m, X(r.u0 * 10), Y(yb + m.H), sc, { noDim: true, code: upCode(r), panelDims: true, pdSize: 6.5 }); out += odDimH(X(r.u0 * 10), X(r.u1 * 10), Y(yb + m.H), Y(yb + m.H) - 14, Math.round((r.u1 - r.u0) * 10)); });
+      lows.forEach(r => { const m = odModel(r.sec, 'lower', geo); out += odFront(r.sec, 'lower', geo, m, X(r.u0 * 10), Y(m.H), sc, { noDim: true, code: lowCode(r), panelDims: true, pdSize: 7.5 }); out += odDimH(X(r.u0 * 10), X(r.u1 * 10), Y(m.H), Y(m.H) - 14, Math.round((r.u1 - r.u0) * 10)); });
+      ups.forEach(r => { const m = odModel(r.sec, 'upper', geo), yb = defaultY(r.sec, 'upper', geo) * 10; out += odFront(r.sec, 'upper', geo, m, X(r.u0 * 10), Y(yb + m.H), sc, { noDim: true, code: upCode(r), panelDims: true, pdSize: 7.5 }); out += odDimH(X(r.u0 * 10), X(r.u1 * 10), Y(yb + m.H), Y(yb + m.H) - 14, Math.round((r.u1 - r.u0) * 10)); });
       // размеры: ширина каждого шкафа и общая
       lows.forEach(r => { out += odDimH(X(r.u0 * 10), X(r.u1 * 10), floorY, floorY + 22, Math.round((r.u1 - r.u0) * 10)); });
       const lo0 = lows.length ? Math.min.apply(null, lows.map(r => r.u0)) : 0, lo1 = lows.length ? Math.max.apply(null, lows.map(r => r.u1)) : ext / 10;
@@ -3944,7 +3944,7 @@
     function ownerPrint() {
       const box = el('ownerDrawBody'); if (!box || !box._sheets) return;
       const w = window.open('', '_blank'); if (!w) return;
-      w.document.write('<!doctype html><meta charset="utf-8"><title>Чертежи</title><style>@page{size:A3 landscape;margin:0}body{margin:0}svg{width:100%;height:auto;page-break-after:always;display:block}</style>' + box._sheets.join(''));
+      w.document.write('<!doctype html><meta charset="utf-8"><title>Чертежи</title><style>@page{size:A4 landscape;margin:0}body{margin:0}svg{width:100%;height:auto;page-break-after:always;display:block}</style>' + box._sheets.join(''));
       w.document.close(); setTimeout(() => { try { w.print(); } catch (e) {} }, 400);
     }
 
