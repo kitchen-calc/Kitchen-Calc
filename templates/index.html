@@ -880,6 +880,8 @@
     .k3d-side input[type=number] { width: 64px; background: #1d1912 !important; color: #fff4dc !important; border: 1px solid rgba(255,226,154,.35) !important; border-radius: 7px; padding: 4px 6px; font-size: .78rem; }
     .k3d-side .k3s-step { display: inline-flex; align-items: center; gap: 4px; }
     .k3d-side .k3s-step b { min-width: 34px; text-align: center; color: #fff; }
+    .k3d-side .k3s-step input.k3s-in { width: 66px; text-align: center; }
+    .k3d-side .k3s-step small { color: #bda673; font-size: .7rem; }
     .k3d-side .k3s-note { color: #bda673; font-size: .74rem; margin: 4px 0 2px; line-height: 1.35; }
     .k3d-side .k3e-t { font-weight: 800; color: #f6dc9a; margin-bottom: 4px; }
     .k3d-side .k3e-sub { color: #e9b44c; }
@@ -2896,7 +2898,20 @@
       updateCalculator(); renderK3dEdit();
     }
     const k3B = (on, act, txt) => `<button type="button" class="${on ? 'on' : ''}" onclick="${act}">${esc(txt)}</button>`;
-    const k3Step = (val, dec, inc, unit) => `<span class="k3s-step"><button type="button" onclick="${dec}">−</button><b>${val}${unit ? ' ' + unit : ''}</b><button type="button" onclick="${inc}">+</button></span>`;
+    // счётчик «− число +»: число можно и вписать — считаем разницу и вызываем тот же обработчик с этой разницей
+    const k3Step = (val, dec, inc, unit) => {
+      const m = String(val).match(/^\s*(-?[\d]+(?:[.,]\d+)?)(.*)$/s);
+      if (!m) return `<span class="k3s-step"><button type="button" onclick="${dec}">−</button><b>${val}${unit ? ' ' + unit : ''}</b><button type="button" onclick="${inc}">+</button></span>`;
+      const num = parseFloat(m[1].replace(',', '.')), rest = (m[2] + (unit ? ' ' + unit : '')).trim();
+      return `<span class="k3s-step"><button type="button" onclick="${dec}">−</button><input type="number" step="any" class="k3s-in" value="${num}" data-old="${num}" data-inc="${esc(inc)}" onchange="k3dTyped(this)" onfocus="this.select()">${rest ? `<small>${esc(rest)}</small>` : ''}<button type="button" onclick="${inc}">+</button></span>`;
+    };
+    function k3dTyped(inp) {
+      const v = parseFloat(String(inp.value).replace(',', '.')), old = parseFloat(inp.dataset.old);
+      if (!isFinite(v) || !isFinite(old)) { renderK3dEdit(); return; }
+      const d = Math.round((v - old) * 100) / 100; if (d === 0) return;
+      const code = inp.dataset.inc.replace(/(,\s*)(-?[\d.]+)/, (m, c) => c + d);
+      try { new Function(code)(); } catch (e) { console.warn(e); renderK3dEdit(); }
+    }
     const k3Row = (lbl, inner) => `<div class="k3e-r"><span>${esc(lbl)}</span>${inner}</div>`;
     // ничего не выбрано: добавить шкафы и технику, общие настройки кухни
     function k3dSideKitchen() {
