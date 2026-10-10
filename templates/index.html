@@ -2730,7 +2730,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=13');
+        const mod = await import('/static/js/kitchen3d.js?v=14');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),

@@ -141,7 +141,8 @@ export function createK3D(container, hooks = {}, opts = {}) {
       glass: new THREE.MeshPhysicalMaterial({ color: '#cfe6f2', roughness: .05, transmission: .85, transparent: true, opacity: .45, thickness: .4 }),
       inner: new THREE.MeshStandardMaterial({ color: '#efefec', roughness: .7 }),
       led: new THREE.MeshStandardMaterial({ color: '#fff3c4', emissive: '#ffe29a', emissiveIntensity: 2.2 }),
-      fridge: new THREE.MeshStandardMaterial({ color: '#d9dde0', roughness: .3, metalness: .6 })
+      fridge: new THREE.MeshStandardMaterial({ color: '#d9dde0', roughness: .3, metalness: .6 }),
+      gola: new THREE.MeshStandardMaterial({ color: '#b9bfc5', roughness: .3, metalness: .85 })
     };
   }
 
@@ -154,9 +155,15 @@ export function createK3D(container, hooks = {}, opts = {}) {
     return { len: 12.8, r: .55, mat: 'steel', std: 2.6 };
   }
   // ручка на фасаде: vertical — вдоль высоты; (x,y) центр на передней плоскости z
-  function addHandle(parent, M, st, x, y, z, vertical, open) {
+  // Гола-профиль: алюминиевая планка с чёрной щелью по верхней кромке нижних фасадов / нижней кромке верхних
+  function golaProfile(p, M, e, z) {
+    const hh = 3, yy = e.top ? e.y - hh - .1 : e.y + .1;
+    box(p, e.w, hh, 1.5, M.gola, e.x, yy, z);
+    box(p, e.w - .8, .7, .5, M.black, e.x + .4, yy + (e.top ? hh - 1.4 : .7), z + 1.5);
+  }
+  function addHandle(parent, M, st, x, y, z, vertical, open, e) {
     if (open === 'push') { const d = mesh(new THREE.CylinderGeometry(.5, .5, .3, 12), M.chrome); d.rotation.x = Math.PI / 2; d.position.set(x, y, z + .15); parent.add(d); return; }
-    if (open === 'gola') return;
+    if (open === 'gola') { if (e) golaProfile(parent, M, e, z); return; }
     const H = handleSpec(st), m = M[H.mat];
     const bar = mesh(new THREE.CylinderGeometry(H.r, H.r, H.len, 14), m);
     if (!vertical) bar.rotation.z = Math.PI / 2;
@@ -196,7 +203,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
       box(pv, w - 2 * fr, h - 2 * fr, .5, M.glass, dx + fr, fr, .6);
     } else box(pv, w, h, FT, M.facade, dx, 0, 0, 60);
     const hx = hingeSide === 'L' ? dx + w - 3.2 : dx + 3.2, hy = tier === 'lower' ? h - 7 - handleSpec(st).len / 2 : 7 + handleSpec(st).len / 2;
-    addHandle(pv, M, st, hx, Math.max(handleSpec(st).len / 2 + 2, Math.min(h - handleSpec(st).len / 2 - 2, hy)), FT, true, open);
+    addHandle(pv, M, st, hx, Math.max(handleSpec(st).len / 2 + 2, Math.min(h - handleSpec(st).len / 2 - 2, hy)), FT, true, open, { x: dx, w, y: tier === 'lower' ? h : 0, top: tier === 'lower' });
     const ang = (open === 'push' && st.hw.tipon !== 'tier' ? hingeAngle(st) : hingeAngle(st)) * DEG;
     anims.push({ key, apply: f => { pv.rotation.y = (hingeSide === 'L' ? -1 : 1) * ang * f; } });
     return pv;
@@ -204,7 +211,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   function drawer(g, M, st, key, x, y, w, h, z, d, open, sysKey, idx) {
     const grp = new THREE.Group(); g.add(grp);
     box(grp, w, h, FT, M.facade2 || M.facade, x, y, z, 60);
-    addHandle(grp, M, st, x + w / 2, y + h - Math.min(5, h / 3), z + FT, false, open);
+    addHandle(grp, M, st, x + w / 2, y + h - Math.min(5, h / 3), z + FT, false, open, { x, w, y: y + h, top: true });
     // короб ящика: боковины по системе
     const vis = (st.drawerVis && st.drawerVis[sysKey]) || { h: 9, col: '#9aa0a6' };
     const bh = vis.hidden ? Math.min(h - 4, 12) : Math.min(h - 3, Math.max(6, vis.h)), bw = w - 6, bd = d - 8;
@@ -226,13 +233,13 @@ export function createK3D(container, hooks = {}, opts = {}) {
       box(top, w, h2 - GAP / 2, FT, M.facade, 0, -h2 + GAP / 2, 0, 60);
       const mid = new THREE.Group(); mid.position.set(0, -h2, 0); top.add(mid);
       box(mid, w, h2 - GAP / 2, FT, M.facade, 0, -h2 + GAP / 2, 0, 60);
-      addHandle(mid, M, st, w / 2, -h2 + 5, FT, false, open);
+      addHandle(mid, M, st, w / 2, -h2 + 5, FT, false, open, { x: 0, w, y: -h2 + GAP / 2, top: false });
       anims.push({ key, apply: f => { top.rotation.x = -82 * DEG * f; mid.rotation.x = 164 * DEG * f; } });
     } else if (k === 'hl') {
-      box(top, w, h, FT, M.facade, 0, -h, 0, 60); addHandle(top, M, st, w / 2, -h + 5, FT, false, open);
+      box(top, w, h, FT, M.facade, 0, -h, 0, 60); addHandle(top, M, st, w / 2, -h + 5, FT, false, open, { x: 0, w, y: -h, top: false });
       anims.push({ key, apply: f => { top.position.y = y + h + f * (h + 4); } });
     } else {
-      box(top, w, h, FT, M.facade, 0, -h, 0, 60); addHandle(top, M, st, w / 2, -h + 5, FT, false, open);
+      box(top, w, h, FT, M.facade, 0, -h, 0, 60); addHandle(top, M, st, w / 2, -h + 5, FT, false, open, { x: 0, w, y: -h, top: false });
       const a = k === 'hs' ? 165 : 92;
       anims.push({ key, apply: f => { top.rotation.x = -a * DEG * f; } });
     }
@@ -259,7 +266,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     carcass(g, M, w, H, D, PL, kind === 'cargo' ? 0 : s.shelves | 0, { led: s.led | 0 });
     if (s.mwTop) microwaveTop(g, M, st, w);
     if (kind === 'cargo') { cargoModule(g, M, st, s, w, key, H, D, PL, zf, open); return; }
-    if (kind === 'corner' && s._blind) { cornerModule(g, M, st, s, w, key, H, D, PL, zf, open); if (open === 'gola') box(g, w, 2.6, 2, M.black, 0, PL + H - 3, D - 4.5); return; }
+    if (kind === 'corner' && s._blind) { cornerModule(g, M, st, s, w, key, H, D, PL, zf, open); return; }
     if (kind === 'oven') {
       const ovH = H * .7;
       dropDoor(g, M, key, GAP, PL + H - ovH, w - 2 * GAP, ovH - GAP, zf, M.glassBlack, M.chrome);
@@ -279,7 +286,6 @@ export function createK3D(container, hooks = {}, opts = {}) {
       door(g, M, st, key, GAP, PL + GAP, dw, H - 2 * GAP, zf, 'L', open, 'lower');
       door(g, M, st, key, 2 * GAP + dw, PL + GAP, dw, H - 2 * GAP, zf, 'R', open, 'lower');
     } else door(g, M, st, key, GAP, PL + GAP, w - 2 * GAP, H - 2 * GAP, zf, s.hinge === 'R' ? 'R' : 'L', open, 'lower');
-    if (open === 'gola') box(g, w, 2.6, 2, M.black, 0, PL + H - 3, D - 4.5);
   }
 
   function twoDoors(s, w) { return s.dn ? s.dn === 2 : w >= 45; }
@@ -294,7 +300,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   function cargoModule(g, M, st, s, w, key, H, D, PL, zf, open) {
     const grp = new THREE.Group(); g.add(grp);
     box(grp, w - 2 * GAP, H - 2 * GAP, FT, M.facade, GAP, PL + GAP, zf, 60);
-    addHandle(grp, M, st, w / 2, PL + H - Math.min(6, H / 8), zf + FT, false, open);
+    addHandle(grp, M, st, w / 2, PL + H - Math.min(6, H / 8), zf + FT, false, open, { x: GAP, w: w - 2 * GAP, y: PL + H - GAP, top: true });
     const wire = new THREE.MeshStandardMaterial({ color: '#cfd4d8', roughness: .28, metalness: .9 });
     const bw = w - 5, bd = D - 10, x0 = 2.5, z1 = zf - .4, z0 = z1 - bd, bottle = s.cg === 'bottle';
     [x0 + .6, x0 + bw - .6].forEach(x => cyl(grp, .55, H - 6, wire, x, PL + H / 2, z1 - .8, null));   // стойки рамы
