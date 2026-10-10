@@ -2728,7 +2728,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=12');
+        const mod = await import('/static/js/kitchen3d.js?v=13');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -2968,6 +2968,7 @@
       }
       h += `</div>`;
       if (k === 'tower') h += k3Row(L3('Начинка', 'Ichi'), `<select onchange="selUpdate('tw', this.value)">${TOWER_KEYS.map(x => `<option value="${x}" ${(s.tw || 'storage') === x ? 'selected' : ''}>${esc(t('tw_' + x))}</option>`).join('')}</select>`);
+      if (k === 'corner') h += k3dCornerWidths(s, tier, w);
       if (k === 'corner') h += k3Row(L3('Слепая сторона', 'Koʻr tomon'), k3B(s.cs !== 'R', "k3dCornerSide('L')", L3('слева', 'chapda')) + k3B(s.cs === 'R', "k3dCornerSide('R')", L3('справа', 'oʻngda'))) + k3Row(L3('Припарковать', 'Qoʻyish'), k3B(false, "k3dParkCorner('L')", L3('в левый угол', 'chap burchak')) + k3B(false, "k3dParkCorner('R')", L3('в правый угол', 'oʻng burchak')));
       h += `<div class="k3s-sub">${esc(L3('Размеры', 'Oʻlchamlar'))}</div>`;
       h += k3Row(L3('Ширина', 'Kenglik'), k3Step(w + ' ' + L3('см', 'sm'), "k3dStep('width',-5)", "k3dStep('width',5)"));
@@ -3380,6 +3381,21 @@
       const p = { cx: side === 'L' ? dd.w / 2 : geo.W - dd.w / 2, cz: dd.d / 2, r: 0, y: cur.y, w: dd.w, d: dd.d, h: dd.h };
       setPlacement(tg, p); s.cs = side; plannerChanged();
     }
+    // угловой шкаф: ширина глухой части и ширина двери (вместе дают ширину шкафа)
+    function cornerBlind(s, tier) { const w = parseFloat(s.width) || 0, d = s.dp ? +s.dp : (tier === 'upper' ? (parseFloat(el('upperDepth').value) || 35) : 60); return s.bw ? Math.max(10, Math.min(w - 20, +s.bw)) : Math.min(d, w - (tier === 'upper' ? 20 : 25)); }
+    function k3dCornerWidths(s, tier, w) {
+      const bl = Math.round(cornerBlind(s, tier)), dw = w - bl, c = cmU();
+      return k3Row(L3('Ширина двери', 'Eshik kengligi'), k3Step(dw + ' ' + c, "k3dBlind('door',-5)", "k3dBlind('door',5)")) +
+        k3Row(L3('Глухая часть', 'Koʻr qism'), k3Step(bl + ' ' + c, "k3dBlind('blind',-5)", "k3dBlind('blind',5)") + (s.bw ? k3B(false, "k3dBlind('reset',0)", L3('авто', 'avto')) : '')) +
+        `<div class="k3s-note">${esc(L3('Дверь + глухая часть = ширина шкафа. Ширину шкафа меняйте в «Размерах».', 'Eshik + koʻr qism = shkaf kengligi.'))}</div>`;
+    }
+    function k3dBlind(what, d) {
+      const s = selSec; if (!s || s.kind !== 'corner') return;
+      const tier = tierOf(s), w = parseFloat(s.width) || 0, cur = cornerBlind(s, tier);
+      if (what === 'reset') delete s.bw;
+      else s.bw = Math.max(10, Math.min(w - 20, Math.round(what === 'door' ? cur - d : cur + d)));
+      plannerChanged();
+    }
     function k3dCornerSide(side) { const s = selSec; if (!s) return; s.cs = side; s.csFixed = true; plannerChanged(); }
     // ---- остров ----
     function k3dSideIsland() {
@@ -3770,7 +3786,7 @@
       if (k === 'dishwasher') { P(G3, y0, W - 2 * G3, y1 - y0 - G3, 'drop'); m.labels.push('посудомойка'); return m; }
       if (k === 'washer') { m.niche.push({ x: W / 2 - 220, y: PL + (hb - PL) / 2 - 220, w: 440, h: 440, ty: 'washer' }); m.labels.push('стиральная машина'); return m; }
       if (k === 'corner') {
-        const bl = Math.min(m.D, W - 250), blindL = s.cs !== 'R';
+        const bl = s.bw ? Math.min(W - 200, Math.round(+s.bw * 10)) : Math.min(m.D, W - 250), blindL = s.cs !== 'R';
         P(blindL ? G3 : W - bl + G3, y0, bl - 2 * G3, y1 - y0 - G3, 'solid');
         const dw = W - bl, x0 = blindL ? bl : 0;
         if (dw >= 450) { const d2 = (dw - 3 * G3) / 2; P(x0 + G3, y0, d2, y1 - y0 - G3, 'door', 'L'); P(x0 + 2 * G3 + d2, y0, d2, y1 - y0 - G3, 'door', 'R'); }
@@ -4003,7 +4019,7 @@
       if (isTall(sec) || sec.kind === 'oven' || sec.kind === 'washer' || sec.kind === 'open') return 0;
       if (sec.kind === 'dishwasher') return 1;
       if (sec.kind === 'cargo') return 0;
-      if (sec.kind === 'corner') return ((parseFloat(sec.width) || 0) - 60) >= 45 ? 2 : 1;
+      if (sec.kind === 'corner') return ((parseFloat(sec.width) || 0) - (sec.bw ? +sec.bw : 60)) >= 45 ? 2 : 1;
       const inner = tier === 'lower' ? (sec.drawers | 0) > 0 : (sec.gasLifts | 0) > 0;
       return inner ? 0 : (twoDoors(sec, parseFloat(sec.width) || 0) ? 2 : 1);
     }
@@ -5420,7 +5436,7 @@
     /* ===================== ССЫЛКА «ПОДЕЛИТЬСЯ» ===================== */
     function serializeState() {
       const s = getCalcState();
-      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || ''].join('|'), x.ctc || ''];
+      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || ''].join('|'), x.ctc || '', x.bw || ''];
       const enc = (arr, tier) => arr.map(x => encOne(x, tier));
       const dc = decorClean(decorState);
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
@@ -5491,6 +5507,7 @@
         if (typeof e[16] === 'string' && e[16]) { const p = e[16].split('|'), o = {}; if (p[0]) o.f = p[0]; if (p[1]) o.b = p[1]; if (p[2]) o.f2 = p[2]; if (Object.keys(o).length) s.pc = o; }
         if (typeof e[17] === 'string' && e[17]) { const p = e[17].split('|').map(Number); if (p[0] > 0) s.dp = clampN(p[0], 10, 120, 60); if (p[1] > 0) s.ht = clampN(p[1], 10, 320, 85); if (p[2] > 0) s.ctt = clampN(p[2], 1, 10, 3.8); if (p[3] > 0) s.ctd = clampN(p[3], 20, 150, 62); if (s.dp) s.depth = s.dp; }
         if (typeof e[18] === 'string' && /^#[0-9a-f]{6}$/i.test(e[18])) s.ctc = e[18].toLowerCase();
+        if (e[19] > 0) s.bw = clampN(e[19], 10, 300, 60);
         if (typeof e[11] === 'string' && e[11]) s.dsys = e[11].split(',').slice(0, 8).map(k => KIS.drawerSys[k] ? k : 'tier');
         s.name = s.autoName ? defaultModuleName(kind, tier, s.id, s) : String(e[1]).slice(0, 60);
         return s;

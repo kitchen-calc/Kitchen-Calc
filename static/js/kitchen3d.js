@@ -313,7 +313,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   }
   /* ---------- угловой шкаф: глухая часть у угла, дверь — на свободной части ---------- */
   function cornerModule(g, M, st, s, w, key, H, D, PL, zf, open) {
-    const blindL = s._blind === 'L', bl = Math.min(D, w - 25), dw = w - bl, x0 = blindL ? bl : 0;
+    const blindL = s._blind === 'L', bl = s.bw ? Math.max(10, Math.min(w - 20, +s.bw)) : Math.min(D, w - 25), dw = w - bl, x0 = blindL ? bl : 0;
     box(g, bl - GAP, H - 2 * GAP, FT, M.facade, blindL ? GAP : dw + GAP, PL + GAP, zf - D * 0, 60);   // глухая панель (уходит за соседний ряд)
     if (dw >= 45) {
       const d2 = (dw - 3 * GAP) / 2;
@@ -344,7 +344,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
       return;
     }
     if (kind === 'corner') {   // угловой навесной: глухая часть у угла, дверь — на свободной части
-      const blindL = s._blind !== 'R', bl = Math.min(D, w - 20), dw = w - bl, x0 = blindL ? bl : 0;
+      const blindL = s._blind !== 'R', bl = s.bw ? Math.max(10, Math.min(w - 20, +s.bw)) : Math.min(D, w - 20), dw = w - bl, x0 = blindL ? bl : 0;
       box(g, bl - GAP, h - 2 * GAP, FT, M.facade, blindL ? GAP : dw + GAP, y0 + GAP, zf, 60);
       if (dw >= 45) { const d2 = (dw - 3 * GAP) / 2; door(g, M, st, key, x0 + GAP, y0 + GAP, d2, h - 2 * GAP, zf, 'L', open, 'upper'); door(g, M, st, key, x0 + 2 * GAP + d2, y0 + GAP, d2, h - 2 * GAP, zf, 'R', open, 'upper'); }
       else door(g, M, st, key, x0 + GAP, y0 + GAP, dw - 2 * GAP, h - 2 * GAP, zf, blindL ? 'R' : 'L', open, 'upper');
