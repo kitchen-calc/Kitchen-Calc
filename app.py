@@ -31,7 +31,7 @@ async def redirect_old_host(request: Request, call_next):
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
 async def robots():
-    return "User-agent: *\nDisallow: /raskroy\nDisallow: /view\nDisallow: /shkaf/view\nSitemap: " + SITE_URL + "/sitemap.xml\n"
+    return "User-agent: *\nDisallow: /raskroy\nDisallow: /view\nDisallow: /shkaf/view\nDisallow: /shkaf/pro\nSitemap: " + SITE_URL + "/sitemap.xml\n"
 
 
 @app.get("/sitemap.xml")
@@ -261,10 +261,61 @@ async def calculator(request: Request):
     return FileResponse(file_path)
 
 
-# Конструктор шкафа PRO (отсеки, полки, штанги, антресоль, двери) и ссылка для клиента «только просмотр»
+# Секретный режим мастера: ключ в переменной окружения OWNER_KEY на Render. После верного ключа ставится cookie —
+# по ней открываются секретные страницы (конструктор шкафа PRO).
+import hmac as _hmac
+import hashlib as _hashlib
+OWNER_KEY = os.environ.get("OWNER_KEY", "master-kitchen-2026")
+
+
+def _owner_token():
+    return _hmac.new(OWNER_KEY.encode("utf-8"), b"kc-owner-v1", _hashlib.sha256).hexdigest()
+
+
+def _is_owner(request: Request):
+    c = request.cookies.get("kc_owner", "")
+    return bool(c) and _hmac.compare_digest(c.encode("utf-8"), _owner_token().encode("utf-8"))
+
+
+LOCK_HTML = """<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Вход для мастера</title>
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#17130d;font-family:Segoe UI,Arial,sans-serif;color:#f6dc9a}
+.b{background:#211b12;border:1px solid rgba(217,154,28,.5);border-radius:16px;padding:26px;width:min(340px,92vw);text-align:center}h1{font-size:1.2rem;margin:0 0 14px}
+input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #6b5520;background:#120f09;color:#fff;font-size:1rem}
+button{margin-top:12px;width:100%;padding:12px;border:0;border-radius:10px;background:#b07d12;color:#fff;font-weight:700;font-size:1rem;cursor:pointer}
+.e{color:#ff9a8a;min-height:1.2em;margin-top:8px;font-size:.9rem}a{color:#bda673;font-size:.85rem}</style></head><body><div class="b"><h1>🔒 Вход для мастера</h1>
+<input id="k" type="password" placeholder="Ключ" autofocus><button id="go">Войти</button><div class="e" id="e"></div><a href="/">← На главную</a></div>
+<script>async function go(){const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:document.getElementById('k').value})});
+if(r.ok)location.reload();else document.getElementById('e').textContent='Неверный ключ';}
+document.getElementById('go').onclick=go;document.getElementById('k').onkeydown=e=>{if(e.key==='Enter')go();};</script></body></html>"""
+
+
+@app.post("/api/owner")
+async def owner_check(request: Request):
+    try:
+        data = await request.json()
+        key = str(data.get("key", ""))
+    except Exception:
+        key = ""
+    ok = bool(key) and _hmac.compare_digest(key.encode("utf-8"), OWNER_KEY.encode("utf-8"))
+    resp = JSONResponse({"ok": ok}, status_code=200 if ok else 403)
+    if ok:
+        resp.set_cookie("kc_owner", _owner_token(), max_age=60 * 60 * 24 * 60, httponly=True, samesite="lax", secure=request.url.scheme == "https")
+    return resp
+
+
+@app.post("/api/owner/logout")
+async def owner_logout():
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie("kc_owner")
+    return resp
+
+
+# Конструктор шкафа PRO — только для мастера (секретная страница); /shkaf/view — просмотр для клиента без редактирования
 @app.get("/shkaf/pro", response_class=HTMLResponse)
-async def shkaf_pro():
-    return FileResponse(os.path.join(os.path.dirname(__file__), "templates", "shkaf_pro.html"))
+async def shkaf_pro(request: Request):
+    if not _is_owner(request):
+        return HTMLResponse(LOCK_HTML, headers={"X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-store"})
+    return FileResponse(os.path.join(os.path.dirname(__file__), "templates", "shkaf_pro.html"), headers={"X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-store"})
 
 
 @app.get("/shkaf/view", response_class=HTMLResponse)
@@ -277,22 +328,6 @@ async def shkaf_view():
 async def calculator_view(request: Request):
     file_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
     return FileResponse(file_path, headers={"X-Robots-Tag": "noindex, nofollow"})
-
-
-# Секретный режим мастера (чертежи, покраска по деталям): ключ в переменной окружения OWNER_KEY на Render
-OWNER_KEY = os.environ.get("OWNER_KEY", "master-kitchen-2026")
-
-
-@app.post("/api/owner")
-async def owner_check(request: Request):
-    import hmac
-    try:
-        data = await request.json()
-        key = str(data.get("key", ""))
-    except Exception:
-        key = ""
-    ok = bool(key) and hmac.compare_digest(key.encode("utf-8"), OWNER_KEY.encode("utf-8"))
-    return JSONResponse({"ok": ok}, status_code=200 if ok else 403)
 
 
 HOME_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "home")

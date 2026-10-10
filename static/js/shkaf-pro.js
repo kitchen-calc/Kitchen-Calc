@@ -213,11 +213,11 @@ async function sendLead() {
 async function ownerVerify(key) { try { const r = await fetch('/api/owner', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) }); return r.ok; } catch (e) { return false; } }
 async function ownerUnlock() {
   if (VIEW) return;
-  if (OWNER) { if (confirm('Выйти из режима мастера?')) { try { localStorage.removeItem('kc_owner'); } catch (e) {} ownerApply(false); } return; }
+  if (OWNER) { if (confirm('Выйти из режима мастера?')) { fetch('/api/owner/logout', { method: 'POST' }).finally(() => { location.href = '/shkaf'; }); } return; }
   const key = prompt('Ключ мастера'); if (!key) return;
   if (await ownerVerify(key)) { try { localStorage.setItem('kc_owner', key); } catch (e) {} ownerApply(true); toast('Режим мастера включён'); } else toast('Неверный ключ');
 }
-async function ownerBoot() { if (VIEW) return; let k = null; try { k = localStorage.getItem('kc_owner'); } catch (e) {} if (k && await ownerVerify(k)) ownerApply(true); }
+async function ownerBoot() { if (VIEW) return; ownerApply(true); }   // страница открывается только мастеру (cookie), поэтому режим включён сразу
 function ownerApply(on) { OWNER = !!on && !VIEW; const b = $('ownerBox'); if (b) b.style.display = OWNER ? '' : 'none'; const cl = $('clientBtn'); if (cl) cl.style.display = OWNER ? '' : 'none'; if (OWNER) renderOwner(); }
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
