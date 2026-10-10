@@ -885,6 +885,15 @@
     .k3d-side .k3s-note { color: #bda673; font-size: .74rem; margin: 4px 0 2px; line-height: 1.35; }
     .k3d-side .k3e-t { font-weight: 800; color: #f6dc9a; margin-bottom: 4px; }
     .k3d-side .k3e-sub { color: #e9b44c; }
+    /* на весь экран: 3D и панель параметров вместе (панель справа, на телефоне — снизу; кнопка «Скрыть панель») */
+    .studio.k3d-full { display: block; padding: 0 !important; overflow: hidden !important; background: #0f0c08; }
+    .studio.k3d-full .studio-head, .studio.k3d-full .render-note, .studio.k3d-full .k3d-tray { display: none !important; }
+    .studio.k3d-full .studio-body { display: block; position: relative; height: 100vh; }
+    .studio.k3d-full .studio-view { position: absolute; inset: 0; }
+    .studio.k3d-full .k3d-box { height: 100vh !important; border-radius: 0; }
+    .studio.k3d-full .k3d-side { position: absolute; right: 10px; top: 56px; bottom: 10px; width: min(360px, calc(100vw - 20px)); height: auto !important; max-height: none; z-index: 6; box-shadow: 0 10px 34px rgba(0,0,0,.5); }
+    .studio.k3d-full.side-off .k3d-side { display: none; }
+    @media (max-width: 960px) { .studio.k3d-full .k3d-side { left: 8px; right: 8px; width: auto; top: auto; bottom: 8px; height: 42vh !important; } }
     /* размеры комнаты — над 3D */
     .room-top { margin-bottom: 12px; padding-bottom: 12px; }
     .room-top .inputs-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
@@ -2754,8 +2763,11 @@
     function k3dRefresh() { if (K3 && k3dMode === '3d') { K3.update(k3dState()); if (!k3dKeepPanel) renderK3dEdit(); else k3dPosUpdate(); } }
     function renderK3dBar() {
       const b = (act, txt, on) => `<button type="button" class="${on ? 'on' : ''}" onclick="k3dAct('${act}')">${txt}</button>`;
+      const st = el('studio'), isFull = st.classList.contains('k3d-full');
       el('k3dBar').innerHTML = b('openAll', L3('↔ Открыть всё', '↔ Hammasini ochish')) + b('closeAll', L3('Закрыть', 'Yopish')) + '<span class="sp"></span>' +
-        ((VIEW_ONLY || !OWNER_ON) ? '' : b('client', L3('👁 Клиенту', '👁 Mijozga'))) + b('full', L3('⛶ На весь экран', '⛶ Toʻliq ekran'));
+        ((VIEW_ONLY || !OWNER_ON) ? '' : b('client', L3('👁 Клиенту', '👁 Mijozga'))) +
+        (isFull ? b('side', st.classList.contains('side-off') ? L3('⚙ Параметры', '⚙ Parametrlar') : L3('⚙ Скрыть панель', '⚙ Panelni yashirish')) : '') +
+        b('full', isFull ? L3('✕ Свернуть', '✕ Yopish') : L3('⛶ На весь экран', '⛶ Toʻliq ekran'));
     }
     function k3dRun(sec) {
       const tier = tierOf(sec), LAY = layoutAll(lowerSections, upperSections, currentType), wall = wallOfSecIn(currentType, sec);
@@ -2766,6 +2778,7 @@
       if (a === 'unsel') { selSec = null; selIsland = false; swapFrom = null; renderPlanner(); return; }
       if (a === 'openAll' || a === 'closeAll') { if (K3) K3.openAll(a === 'openAll'); return; }
       if (a === 'full') { k3dFull(); return; }
+      if (a === 'side') { el('studio').classList.toggle('side-off'); renderK3dBar(); setTimeout(() => window.dispatchEvent(new Event('resize')), 50); return; }
       const s = selSec; if (!s) return;
       const tier = tierOf(s);
       if (a === 'shift') {   // сдвиг на 5 см: только в пустоту, на соседний шкаф не наезжает
@@ -3447,6 +3460,7 @@
         const fe = document.fullscreenElement || document.webkitFullscreenElement;
         if (fe) { const ex = document.exitFullscreen || document.webkitExitFullscreen; try { const pr = ex.call(document); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {} }
       }
+      box.classList.remove('side-off'); renderK3dBar();
       setTimeout(() => window.dispatchEvent(new Event('resize')), 120);
     }
     ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (!(document.fullscreenElement || document.webkitFullscreenElement) && el('studio').classList.contains('k3d-full')) k3dFull(false); }));
