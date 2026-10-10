@@ -2749,7 +2749,7 @@
     function renderK3dBar() {
       const b = (act, txt, on) => `<button type="button" class="${on ? 'on' : ''}" onclick="k3dAct('${act}')">${txt}</button>`;
       el('k3dBar').innerHTML = b('openAll', L3('↔ Открыть всё', '↔ Hammasini ochish')) + b('closeAll', L3('Закрыть', 'Yopish')) + '<span class="sp"></span>' +
-        (VIEW_ONLY ? '' : b('client', L3('👁 Клиенту', '👁 Mijozga'))) + b('full', L3('⛶ На весь экран', '⛶ Toʻliq ekran'));
+        ((VIEW_ONLY || !OWNER_ON) ? '' : b('client', L3('👁 Клиенту', '👁 Mijozga'))) + b('full', L3('⛶ На весь экран', '⛶ Toʻliq ekran'));
     }
     function k3dRun(sec) {
       const tier = tierOf(sec), LAY = layoutAll(lowerSections, upperSections, currentType), wall = wallOfSecIn(currentType, sec);
@@ -2899,9 +2899,9 @@
       const add = (txt, call) => `<button type="button" onclick="${call}">＋ ${esc(txt)}</button>`;
       let h = `<div class="k3s-h">${esc(L3('Конструктор кухни', 'Oshxona konstruktori'))}</div>
         <div class="k3s-note">${esc(L3('Нажмите на шкаф — справа его параметры. Любой шкаф, технику и остров можно тащить по полу мышью или пальцем (как в Sims) — камера крутится, когда тянете за пустое место.', 'Shkafni bosing — parametrlari chiqadi. Istalgan shkaf, texnika va orolni polda torting.'))}</div>
-        <div class="k3s-sub">👁 ${esc(L3('Показать клиенту', 'Mijozga koʻrsatish'))}</div>
+        ${OWNER_ON ? `        <div class="k3s-sub">👁 ${esc(L3('Показать клиенту', 'Mijozga koʻrsatish'))}</div>
         <div class="k3s-note">${esc(L3('Ссылка откроет только 3D: камеру крутить и дверцы открывать можно, редактировать — нельзя.', 'Havola faqat 3D ni ochadi: kamerani aylantirish va eshiklarni ochish mumkin, tahrirlash — yoʻq.'))}</div>
-        <div class="k3e-r">${k3B(false, 'k3dClientLink()', '🔗 ' + L3('Копировать ссылку', 'Havolani nusxalash'))}${k3B(false, "k3dClientLink('tg')", '✈ Telegram')}</div>
+        <div class="k3e-r">${k3B(false, 'k3dClientLink()', '🔗 ' + L3('Копировать ссылку', 'Havolani nusxalash'))}${k3B(false, "k3dClientLink('tg')", '✈ Telegram')}</div>` : ''}
         <div class="k3s-sub">💡 ${esc(L3('Подсветка', 'Yoritish'))}</div>
         ${k3Row(L3('Класс', 'Sinf'), [0, 1, 2].map(i => k3B(ledState.level === i, 'setLedLevel(' + i + ')', t('led_' + i))).join(''))}
         ${k3Row(L3('Под шкафами', 'Shkaflar ostida'), k3B(ledState.level && ledState.work, "k3dLedZone('work')", L3('рабочая зона', 'ish zonasi')) + k3B(ledState.level && ledState.plinth, "k3dLedZone('plinth')", L3('цоколь', 'sokol')))}
@@ -3672,6 +3672,7 @@
       OWNER_ON = !!on && !VIEW_ONLY;
       const sec = el('ownerDraw'); if (sec) sec.style.display = OWNER_ON ? '' : 'none';
       if (OWNER_ON) renderOwnerDraw();
+      if (K3) renderK3dBar();
       renderK3dEdit();
     }
     // вход: Ctrl+Shift+K или три быстрых нажатия на логотип
