@@ -20,7 +20,7 @@ SEO = {
         "locale": "ru_RU",
         "city": "Ташкент",
         "title": "Кухни и корпусная мебель на заказ в Ташкенте — под ключ | Kitchen Calc",
-        "desc": "Кухни и корпусная мебель на заказ в Ташкенте под ключ: бесплатный замер, своё производство 3–30 рабочих дней, "
+        "desc": "Кухни и корпусная мебель на заказ в Ташкенте под ключ: бесплатный замер, своё производство от 5 рабочих дней, "
                 "доставка и монтаж, гарантия 12 месяцев. Рассчитайте стоимость онлайн за 2 минуты.",
         "biz": "Kitchen Calc — кухни и корпусная мебель на заказ",
         "services": ["Кухни на заказ", "Спальни на заказ", "Гардеробные и шкафы на заказ", "Прихожие на заказ",
@@ -32,7 +32,7 @@ SEO = {
              "Точную стоимость вашей кухни посчитает онлайн-калькулятор за 2 минуты, "
              "а окончательную цену мастер фиксирует в договоре после замера."),
             ("Сколько времени делается кухня?",
-             "Изготовление занимает от 3 до 30 рабочих дней в зависимости от сложности, материалов и загрузки производства. "
+             "Изготовление занимает от 5 рабочих дней в зависимости от сложности, материалов и загрузки производства. "
              "Срок фиксируем в договоре."),
             ("Замер бесплатный?",
              "Да, выезд на замер и консультация бесплатны. Мастер уточнит размеры, поможет выбрать материалы и покажет образцы."),
@@ -61,7 +61,7 @@ SEO = {
         "city": "Toshkent",
         "title": "Toshkentda buyurtma asosida oshxona va korpusli mebel — kalit topshirish | Kitchen Calc",
         "desc": "Toshkentda buyurtma asosida oshxona va korpusli mebel, kalit topshirish bilan: bepul oʻlchov, oʻz ishlab chiqarish "
-                "3–30 ish kuni, yetkazish va oʻrnatish, 12 oy kafolat. Narxni onlayn 2 daqiqada hisoblang.",
+                "5 ish kunidan, yetkazish va oʻrnatish, 12 oy kafolat. Narxni onlayn 2 daqiqada hisoblang.",
         "biz": "Kitchen Calc — buyurtma asosida oshxona va korpusli mebel",
         "services": ["Buyurtma oshxonalar", "Buyurtma yotoqxonalar", "Shkaf va garderob xonalari", "Prixojaya",
                      "Mehmonxona va TV zonasi mebeli", "Bolalar xonasi mebeli", "Kalit topshirish asosida korpusli mebel"],
@@ -72,7 +72,7 @@ SEO = {
              "Aniq narxni onlayn kalkulyator 2 daqiqada hisoblab beradi, "
              "yakuniy narxni usta oʻlchovdan keyin shartnomada belgilaydi."),
             ("Oshxona necha kunda tayyor boʻladi?",
-             "Tayyorlash murakkablik, material va ishlab chiqarish bandligiga qarab 3 dan 30 ish kunigacha davom etadi. "
+             "Tayyorlash murakkablik, material va ishlab chiqarish bandligiga qarab 5 ish kunidan boshlanadi. "
              "Muddat shartnomada belgilanadi."),
             ("Oʻlchov bepulmi?",
              "Ha, oʻlchovga chiqish va maslahat bepul. Usta oʻlchamlarni aniqlaydi, materiallarni tanlashga yordam beradi va "
