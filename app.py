@@ -31,7 +31,7 @@ async def redirect_old_host(request: Request, call_next):
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
 async def robots():
-    return "User-agent: *\nDisallow: /raskroy\nDisallow: /view\nSitemap: " + SITE_URL + "/sitemap.xml\n"
+    return "User-agent: *\nDisallow: /raskroy\nDisallow: /view\nDisallow: /shkaf/view\nSitemap: " + SITE_URL + "/sitemap.xml\n"
 
 
 @app.get("/sitemap.xml")
@@ -259,6 +259,17 @@ async def privacy():
 async def calculator(request: Request):
     file_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
     return FileResponse(file_path)
+
+
+# Конструктор шкафа PRO (отсеки, полки, штанги, антресоль, двери) и ссылка для клиента «только просмотр»
+@app.get("/shkaf/pro", response_class=HTMLResponse)
+async def shkaf_pro():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "templates", "shkaf_pro.html"))
+
+
+@app.get("/shkaf/view", response_class=HTMLResponse)
+async def shkaf_view():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "templates", "shkaf_pro.html"), headers={"X-Robots-Tag": "noindex, nofollow"})
 
 
 # Ссылка для клиента: 3D кухни только для просмотра (камера и дверцы), без редактирования. Не индексируется.

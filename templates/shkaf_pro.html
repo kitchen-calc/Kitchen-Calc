@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Конструктор шкафа PRO — гардеробная и шкаф на заказ | Kitchen Calc</title>
+<meta name="description" content="Соберите шкаф или гардеробную по своим размерам: отсеки, полки, штанги, ящики, антресоль, двери. 3D с перетаскиванием и расчёт цены.">
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<style>
+:root{--ink:#17130d;--gold:#b07d12;--gold2:#e9b44c;--cream:#f6f1e7;--line:#e4dccb}
+*{box-sizing:border-box}
+body{margin:0;font-family:Manrope,Segoe UI,Arial,sans-serif;background:var(--cream);color:#241d12}
+.top{background:#17130d;color:#f6dc9a}.top .in{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:1.15rem;color:#f6dc9a;text-decoration:none;display:flex;align-items:center;gap:10px}
+.top a.lk,.top button.lk{color:#f6dc9a;border:1px solid rgba(217,154,28,.5);background:transparent;border-radius:9px;padding:7px 12px;text-decoration:none;font-size:.82rem;cursor:pointer;font-family:inherit}
+.top .sp{flex:1}
+main{max-width:1280px;margin:0 auto;padding:16px}
+h1{font-family:'Playfair Display',Georgia,serif;margin:6px 0 4px;font-size:1.6rem}
+.sub0{color:#6b5d3d;margin:0 0 14px;font-size:.92rem}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:14px;align-items:start}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 4px 18px rgba(60,40,10,.06)}
+.box3{position:relative;height:620px;border-radius:14px;overflow:hidden;background:#ece6dc}
+.box3.full{position:fixed;inset:0;z-index:1000;height:100vh;border-radius:0}
+#p3d{position:absolute;inset:0}
+.load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#7a6a45}
+.bar{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;z-index:3;pointer-events:none}
+.bar button{pointer-events:auto;background:rgba(20,17,12,.8);color:#f6dc9a;border:1px solid rgba(217,154,28,.55);border-radius:8px;padding:6px 10px;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit}
+.bar .sp{flex:1}
+.price{margin-top:12px;background:#17130d;color:#f6dc9a;border-radius:14px;padding:14px 16px}
+.price small{display:block;opacity:.8}.price b{font-size:2rem;font-family:'Playfair Display',Georgia,serif}.price .sum{opacity:.7;font-size:.8rem}
+.warn{margin-top:10px;font-size:.82rem;color:#8a3b12}.warn .ok{color:#2f6b3a}
+.side{background:#17130d;color:#f3ead7;border:1px solid rgba(217,154,28,.45);border-radius:14px;padding:12px 12px 16px;height:760px;overflow:auto;font-size:.82rem}
+.sh{font-family:'Playfair Display',Georgia,serif;color:#f6dc9a;font-size:1.15rem;margin-bottom:4px}
+.sub{margin:14px 0 6px;font-size:.68rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#e9b44c}
+.note{color:#bda673;font-size:.76rem;line-height:1.4;margin:3px 0 6px}
+.r{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:6px 0}.r>span:first-child{color:#bda673;min-width:110px}
+.side button{background:rgba(255,255,255,.07);color:#fff4dc;border:1px solid rgba(255,226,154,.28);border-radius:8px;padding:7px 9px;font-size:.78rem;cursor:pointer;font-family:inherit;text-align:left;line-height:1.25}
+.side button.on,.side button:hover{background:#b07d12;border-color:#e9b44c;color:#fff}
+.side input[type=number],.side input[type=text],.side select{background:#1d1912;color:#fff4dc;border:1px solid rgba(255,226,154,.35);border-radius:7px;padding:6px 7px;font-size:.8rem;font-family:inherit;max-width:100%}
+.side input[type=number]{width:70px;text-align:center}.side input.nm{width:100%}
+.stp{display:inline-flex;align-items:center;gap:4px}.stp small{color:#bda673}
+.stp button{width:34px;height:32px;text-align:center;padding:0;touch-action:none;user-select:none;font-size:1rem}
+.sw{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.swb{width:28px;height:28px;padding:0!important;border-radius:50%!important;border:2px solid rgba(255,255,255,.35)!important}.swb.on{border-color:#fff!important;box-shadow:0 0 0 2px #e9b44c}
+.sw input[type=color]{width:34px;height:30px;padding:0;border:0;background:none;cursor:pointer}
+.cols{display:flex;flex-wrap:wrap;gap:6px}.colchip{display:flex!important;flex-direction:column;align-items:center;min-width:64px}.colchip b{color:#fff}.colchip small{opacity:.7}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ilist{display:flex;flex-direction:column;gap:5px}.iit{display:flex!important;justify-content:space-between;align-items:center}.iit b{color:#f6dc9a}
+.vp{font-size:1.7rem;font-weight:800;color:#f6dc9a}.cta{display:inline-block;background:#b07d12;color:#fff;border-radius:9px;padding:10px 14px;text-decoration:none;font-weight:700}
+.lead{margin-top:14px}.lead h3{margin:0 0 8px;font-size:1rem}.lead input,.lead textarea{width:100%;padding:9px 10px;border:1px solid #d8cdb4;border-radius:9px;font-family:inherit;margin-bottom:8px}
+.lead .btn{background:#b07d12;color:#fff;border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;font-family:inherit}
+.lead .hint{font-size:.78rem;color:#6b5d3d;margin-top:6px}
+.od-card{margin-top:16px}.od-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.od-head h3{margin:0;font-size:1.05rem}.od-head span{color:#6b7280;font-size:.82rem;flex:1;min-width:200px}
+.od-head button{border:1px solid #cbd2d9;background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.8rem}
+.od-sheet{margin:0 0 14px;border:1px solid #cfd4d8;border-radius:6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);background:#fff}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#17130d;color:#f6dc9a;padding:11px 16px;border-radius:12px;font-size:.85rem;opacity:0;pointer-events:none;transition:.25s;z-index:3000;max-width:90vw}.toast.on{opacity:1;transform:translateX(-50%)}
+body.view .top .lk.edit,body.view .warn,body.view .price,body.view .lead,body.view #ownerBox,body.view h1,body.view .sub0{display:none!important}
+body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
+@media(max-width:900px){.grid,body.view .grid{grid-template-columns:1fr}.box3{height:430px}.side{height:auto;max-height:none}.stp button{width:42px;height:38px}.side button{padding:10px 11px;font-size:.84rem}}
+</style>
+<meta name="robots" content="index,follow" id="robots">
+</head>
+<body>
+<div class="top"><div class="in">
+  <a class="brand" href="/shkaf"><span>🗄</span> Kitchen Calc</a>
+  <a class="lk" href="/shkaf">← Калькулятор шкафов</a><a class="lk" href="/calc">Кухни</a>
+  <span class="sp"></span>
+  <button class="lk edit" type="button" onclick="PRO.undo()">↶ Отменить</button><button class="lk edit" type="button" onclick="PRO.redo()">↷</button>
+  <button class="lk edit" type="button" onclick="PRO.share()">🔗 Ссылка</button>
+  <button class="lk edit" id="clientBtn" type="button" style="display:none" onclick="PRO.client()">👁 Клиенту</button>
+  <button class="lk edit" type="button" onclick="PRO.reset()">Сбросить</button>
+</div></div>
+<main>
+  <h1>Конструктор шкафа PRO</h1>
+  <p class="sub0">Соберите шкаф или гардеробную из отсеков: добавляйте полки, штанги, ящики, антресоль и двери. Всё можно тащить в 3D, а точные размеры вписывать цифрами.</p>
+  <div class="grid">
+    <div>
+      <div class="box3" id="p3dBox">
+        <div id="p3d"></div><div class="load" id="p3dLoad">Загрузка 3D…</div>
+        <div class="bar"><button type="button" onclick="PRO.toggleDoors()">↔ Двери</button><span class="sp"></span><button type="button" onclick="PRO.full()">⛶ На весь экран</button></div>
+      </div>
+      <div class="price" id="price"></div>
+      <div class="warn" id="warn"></div>
+      <div class="card lead">
+        <h3>Понравился проект? Отправьте заявку мастеру</h3>
+        <input id="lName" placeholder="Ваше имя"><input id="lPhone" type="tel" placeholder="+998 (90) 123-45-67"><textarea id="lNotes" rows="2" placeholder="Адрес, когда удобно для замера"></textarea>
+        <input id="lWeb" type="text" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off">
+        <button class="btn" id="lBtn" type="button" onclick="PRO.lead()">📨 Отправить мастеру</button>
+        <div class="hint" id="lStatus"></div>
+        <div class="hint">Или позвоните: <a href="tel:+998920934510">+998 92 093-45-10</a> · <a href="https://t.me/Kitchencalc" target="_blank" rel="noopener">Telegram</a></div>
+      </div>
+    </div>
+    <aside class="side" id="side"></aside>
+  </div>
+  <div class="card od-card" id="ownerBox" style="display:none">
+    <div class="od-head"><h3>📐 Чертежи и спецификация — режим мастера</h3><span>Видно только вам. Лист A4: общий вид, двери, разрезы, каждый отсек, узлы, список деталей и фурнитуры.</span>
+      <button type="button" onclick="PRO.print()">🖨 Печать (A4)</button><button type="button" onclick="PRO.owner()">🔒 Выйти</button></div>
+    <div id="ownerBody"></div>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+<script>if (/^\/shkaf\/view/.test(location.pathname)) document.getElementById('robots').content = 'noindex,nofollow';</script>
+<script type="module" src="/static/js/shkaf-pro.js?v=1"></script>
+</body>
+</html>

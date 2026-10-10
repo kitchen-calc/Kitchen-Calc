@@ -3136,7 +3136,7 @@
       return out;
     }
     const ovl = (a, b) => a.x0 < b.x1 - .4 && b.x0 < a.x1 - .4 && a.z0 < b.z1 - .4 && b.z0 < a.z1 - .4 && a.y0 < b.y1 - .4 && b.y0 < a.y1 - .4;
-    function inRoom(f, geo) { if (roomPoly) return rpRectIn(f) && f.y0 >= -.01 && f.y1 <= geo.roomH + .4; return f.x0 >= -.4 && f.x1 <= geo.W + .4 && f.z0 >= -.4 && f.z1 <= geo.roomD + .4 && f.y0 >= -.01 && f.y1 <= geo.roomH + .4; }
+    function inRoom(f, geo) { if (roomPoly) return rpRectIn(f) && f.y0 >= -.01; return f.x0 >= -.4 && f.x1 <= geo.W + .4 && f.z0 >= -.4 && f.z1 <= geo.roomD + .4 && f.y0 >= -.01; }   // высота потолка не проверяется: верхние ряды могут быть выше — это не «не поместилось»
     function checkOk(tg, p, geo) {
       const f = footprint(p); if (!inRoom(f, geo)) return false;
       const ex = tg.tier === 'island' ? 'island' : tg.sec;
