@@ -6,7 +6,7 @@ export * from '/static/js/room-open-core.js?v=3';
 export function buildOpenings(parent, opens, P, ctx) {
   // ctx: { mat(hex, opts), glass(), picks[], meta(i), edgeMat? } → возвращает карту id → группа
   const E = roomEdges(P), groups = new Map(), DEG = Math.PI / 180;
-  const box = (g, w, h, d, m, x, y, z, pick, i) => { const me = new THREE.Mesh(new THREE.BoxGeometry(Math.max(.05, w), Math.max(.05, h), Math.max(.05, d)), m); me.position.set(x, y + h / 2, z + d / 2); me.castShadow = me.receiveShadow = true; if (pick) { me.userData.sel = ctx.meta(i); ctx.picks.push(me); } g.add(me); return me; };
+  const box = (g, w, h, d, m, x, y, z, pick, i) => { const me = new THREE.Mesh(new THREE.BoxGeometry(Math.max(.05, w), Math.max(.05, h), Math.max(.05, d)), m); me.position.set(x + w / 2, y + h / 2, z + d / 2); me.castShadow = me.receiveShadow = true; if (pick) { me.userData.sel = ctx.meta(i); ctx.picks.push(me); } g.add(me); return me; };
   const white = ctx.mat('#f4f4f2', { roughness: .5 }), dark = ctx.mat('#4a4a4a', { roughness: .6 }), wood = ctx.mat('#8b5a33', { roughness: .55 }), chrome = ctx.mat('#c9ccd0', { roughness: .25, metalness: .8 }), beige = ctx.mat('#e6dfd2', { roughness: .9 });
   opens.forEach((o, i) => {
     const c = openCenter(o, E); if (!c) return; const e = c.e, g = new THREE.Group(), w = o.w, h = o.h;
