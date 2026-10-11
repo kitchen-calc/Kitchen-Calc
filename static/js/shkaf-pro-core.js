@@ -85,6 +85,32 @@ export function rpEditLen(P0, i, v) {   // длина стены i = v: сосе
   const o = P[0], Q = P.map(p => [p[0] - o[0], p[1] - o[1]]);
   return rpValid(Q) ? Q : null;
 }
+export function wfoot(S, rot) {   // габарит шкафа на полу при повороте rot (0/90/180/270): w,d — размеры по x,z; mx,mz — смещение начала
+  const g = geom(S), D = Math.max(S.D, ...S.cols.filter(c => !c.gap).map(c => c.D || S.D)), W = g.W;
+  const a = ((rot === undefined ? (S.room && S.room.rot) : rot) || 0) * Math.PI / 180, c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a));
+  const xs = [0, W].flatMap(x => [0, D].map(z => x * c + z * s)), zs = [0, W].flatMap(x => [0, D].map(z => -x * s + z * c));
+  return { w: Math.max(...xs) - Math.min(...xs), d: Math.max(...zs) - Math.min(...zs), mx: Math.min(...xs), mz: Math.min(...zs) };
+}
+export function wardrobeRect(S) { const f = wfoot(S), r = S.room || {}; return { x0: r.ox || 0, x1: (r.ox || 0) + f.w, z0: r.oz || 0, z1: (r.oz || 0) + f.d }; }
+export function wardrobeMagnet(S, ox, oz, lim, onlyRot) {   // притягивает шкаф задней стенкой к ближайшей стене комнаты и поворачивает его лицом в комнату
+  const P = roomPoly(S), cur = wfoot(S), cx = ox + cur.w / 2, cz = oz + cur.d / 2; lim = lim || 45;
+  let best = null;
+  for (let i = 0; i < P.length; i++) {
+    const a = P[i], b = P[(i + 1) % P.length], L = rpEdgeLen(P, i); if (L < 5) continue;
+    const dx = Math.sign(b[0] - a[0]), dz = Math.sign(b[1] - a[1]), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+    let nx = -dz, nz = dx; if (!rpPointIn(P, mx + nx * 2, mz + nz * 2)) { nx = -nx; nz = -nz; }
+    const rot = nx === 0 ? (nz > 0 ? 0 : 180) : (nx > 0 ? 90 : 270), f = wfoot(S, rot);
+    if (onlyRot !== undefined && rot !== onlyRot) continue;
+    let X, Z;
+    if (nz !== 0) { const lo = Math.min(a[0], b[0]), hi = Math.max(a[0], b[0]); X = Math.min(Math.max(cx - f.w / 2, lo), Math.max(lo, hi - f.w)); if (Math.abs(X - lo) < 12) X = lo; else if (Math.abs(X + f.w - hi) < 12) X = hi - f.w; Z = nz > 0 ? a[1] : a[1] - f.d; }
+    else { const lo = Math.min(a[1], b[1]), hi = Math.max(a[1], b[1]); Z = Math.min(Math.max(cz - f.d / 2, lo), Math.max(lo, hi - f.d)); if (Math.abs(Z - lo) < 12) Z = lo; else if (Math.abs(Z + f.d - hi) < 12) Z = hi - f.d; X = nx > 0 ? a[0] : a[0] - f.w; }
+    const dist = Math.hypot(X + f.w / 2 - cx, Z + f.d / 2 - cz);
+    if (dist > lim + Math.max(f.w, f.d) * .5 * 0 || (best && dist >= best.dist)) continue;
+    if (!rpRectIn(P, { x0: X, x1: X + f.w, z0: Z, z1: Z + f.d })) continue;
+    best = { ox: r1(X), oz: r1(Z), rot, dist };
+  }
+  return best;
+}
 export const roomPoly = S => (S.room && S.room.poly) ? S.room.poly : rpRect((S.room && S.room.W) || 400, (S.room && S.room.D) || 300);
 
 /* ---- состояние ---- */
@@ -99,7 +125,7 @@ export function mkItem(type, y, extra) {
   return Object.assign(b, extra || {});
 }
 export function defState() {
-  const S = { v: 2, W: 240, H: 200, D: 60, t: 1.6, plinth: 8, tier: 1, color: 0, custom: null, cols: [], mezzes: [], panels: [], units: [], beds: [], room: { W: 400, D: 300, H: 260, ox: 0, poly: null, set: false },
+  const S = { v: 2, W: 240, H: 200, D: 60, t: 1.6, plinth: 8, tier: 1, color: 0, custom: null, cols: [], mezzes: [], panels: [], units: [], beds: [], room: { W: 400, D: 300, H: 260, ox: 0, oz: 0, rot: 0, mag: true, poly: null, set: false },
     doors: { kind: 'none', n: 3, fills: ['dsp', 'mirror', 'dsp', 'mirror', 'dsp', 'mirror', 'dsp', 'mirror'], laco: 0, handles: true, gf: 4 }, led: false, name: 'Мой шкаф' };
   S.cols = [
     { id: uid(), w: 78, items: [mkItem('rod', 185), mkItem('shelf', 193), mkItem('shelf', 40), mkItem('shelf', 100)] },
@@ -492,7 +518,7 @@ export function sanitize(S) {
   if (o.cols.length && !o.cols.some(c => !c.gap)) o.cols[0].gap = false;
   o.panels = (Array.isArray(S.panels) ? S.panels : []).slice(0, 8).map(p => ({ id: uid(), x: r1(n(p && p.x, -300, 1200, 0)), y: r1(n(p && p.y, 0, 340, 20)), w: r1(n(p && p.w, 10, 400, 60)), h: r1(n(p && p.h, 10, 340, 180)), kind: PANEL_KINDS[p && p.kind] ? p.kind : 'mirror', mount: p && p.mount === 'front' ? 'front' : (p && p.mount === 'free' ? 'free' : 'wall'), frame: !!(p && p.frame), fw: r1(n(p && p.fw, 1, 15, 3)), shape: ['rect', 'round', 'oval', 'arch'].includes(p && p.shape) ? p.shape : 'rect', bl: !!(p && p.bl), pat: PANEL_PATTERNS[p && p.pat] ? p.pat : 'vgroove', gp: r1(n(p && p.gp, 3, 60, 12)), sw: n(p && p.sw, 10, 400, 100), sd: n(p && p.sd, 6, 100, 32), sg: n(p && p.sg, 0, 200, 20), so: p && p.so === 'h' ? 'h' : 'v', pz: r1(n(p && p.pz, 0, 400, 30)) }));
   { const rm = S.room || {}, P = Array.isArray(rm.poly) ? rm.poly.map(p => [Number(p[0]), Number(p[1])]) : null;
-    o.room = { W: r1(n(rm.W, 100, 1500, 400)), D: r1(n(rm.D, 100, 1500, 300)), H: r1(n(rm.H, 180, 400, 260)), ox: r1(n(rm.ox, -500, 1500, 0)), poly: P && P.every(p => p.every(v => isFinite(v))) && rpValid(P) ? P : null, set: !!rm.set }; }
+    o.room = { W: r1(n(rm.W, 100, 1500, 400)), D: r1(n(rm.D, 100, 1500, 300)), H: r1(n(rm.H, 180, 400, 260)), ox: r1(n(rm.ox, -500, 1500, 0)), oz: r1(n(rm.oz, -500, 1500, 0)), rot: [0, 90, 180, 270].includes(rm.rot) ? rm.rot : 0, mag: rm.mag !== false, poly: P && P.every(p => p.every(v => isFinite(v))) && rpValid(P) ? P : null, set: !!rm.set }; }
   o.units = (Array.isArray(S.units) ? S.units : []).slice(0, 6).map(u => ({ id: uid(), x: r1(n(u && u.x, -600, 1600, 0)), pz: r1(n(u && u.pz, 0, 400, 0)), w: r1(n(u && u.w, 25, 300, 80)), h: r1(n(u && u.h, 30, 200, 100)), d: r1(n(u && u.d, 15, 80, 35)), kind: UNIT_KINDS[u && u.kind] ? u.kind : 'flap', n: n(u && u.n, 1, 8, 2) | 0, fill: ['dsp', 'mdf', 'glass', 'mirror'].includes(u && u.fill) ? u.fill : 'dsp', seat: !!(u && u.seat), legs: r1(n(u && u.legs, 0, 20, 8)) }));
   o.beds = (Array.isArray(S.beds) ? S.beds : []).slice(0, 4).map(b => { const k = b && b.kind === 'bunk' ? 'bunk' : 'single', d = mkBed(0, k); return { id: uid(), x: r1(n(b && b.x, -800, 1800, 0)), pz: r1(n(b && b.pz, 0, 500, 0)), rot: b && b.rot === 90 ? 90 : 0, kind: k, mw: r1(n(b && b.mw, 50, 220, d.mw)), ml: r1(n(b && b.ml, 100, 240, d.ml)), mt: r1(n(b && b.mt, 5, 40, d.mt)), style: BED_STYLES[b && b.style] ? b.style : d.style, mcol: n(b && b.mcol, 0, 5, 0) | 0, sh: r1(n(b && b.sh, 10, 60, d.sh)), hh: r1(n(b && b.hh, 20, 220, d.hh)), fh: r1(n(b && b.fh, 10, 220, d.fh)), lg: r1(n(b && b.lg, 0, 40, d.lg)), drw: n(b && b.drw, 0, 4, 0) | 0, lift: !!(b && b.lift), soft: !!(b && b.soft), bedding: !(b && b.bedding === false), lv2: r1(n(b && b.lv2, 80, 200, 150)), rail: r1(n(b && b.rail, 10, 60, 28)), ladder: b && b.ladder === 'side' ? 'side' : 'end', steps: n(b && b.steps, 3, 9, 5) | 0 }; });
   recalcW(o);

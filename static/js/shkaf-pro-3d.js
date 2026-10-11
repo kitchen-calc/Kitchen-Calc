@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { geom, doorList, PALETTE, LACO, roomPoly, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=1';
+import { geom, doorList, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=3';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -40,7 +40,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   function setLeds(on) { ledsOn = !!on; ledBoost(lastM); invalidate(); }
   let needs = true; const invalidate = () => { needs = true; };
   let root = new THREE.Group(); scene.add(root);
-  let state = null, sel = null, picks = [], doorsAnim = [], openTarget = new Map(), openAmt = new Map(), selBox = null, first = true;
+  let wg = null, state = null, sel = null, picks = [], doorsAnim = [], openTarget = new Map(), openAmt = new Map(), selBox = null, first = true;
 
   const mats = {};
   const stdMat = (hex, o) => new THREE.MeshStandardMaterial(Object.assign({ color: hex, roughness: .55, metalness: 0, envMapIntensity: .6 }, o || {}));
@@ -59,7 +59,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       alu: stdMat('#b8bec4', { roughness: .3, metalness: .85 }),
       glass: n => new THREE.MeshStandardMaterial({ color: (LACO[n] || LACO[0])[1], roughness: .12, metalness: .1, envMapIntensity: .9 })
     };
-    const ox = (S.room && S.room.ox) || 0, wg = new THREE.Group(); wg.position.set(ox, 0, 0); root.add(wg);
+    const rm0 = S.room || {}, ft = wfoot(S); wg = new THREE.Group(); wg.position.set((rm0.ox || 0) - ft.mx, 0, (rm0.oz || 0) - ft.mz); wg.rotation.y = (rm0.rot || 0) * Math.PI / 180; root.add(wg);
     const edgeMat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: .22 });
     const box = (w, h, d, mat, x, y, z, meta, parent) => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(Math.max(.05, w), Math.max(.05, h), Math.max(.05, d)), mat); m.castShadow = m.receiveShadow = true;
@@ -296,7 +296,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     });
     if (S.led && !S.cols.some(c => c.items.some(i => i.type === 'led'))) g.cols.forEach(c => { if (!c.gap) box(c.w - 1, .6, 1.4, M.led, c.xa + .5, g.y1 - t - .8, D - 6); });
     // свет
-    const sx = W / 2 + ox; sun.position.set(sx - 220, g.totalH + 260, D + 340); sun.target.position.set(sx, H / 3, D / 2);
+    const sx = (rm0.ox || 0) + ft.w / 2, sz = (rm0.oz || 0) + ft.d / 2; sun.position.set(sx - 220, g.totalH + 260, sz + D + 340); sun.target.position.set(sx, H / 3, sz);
     const sc = sun.shadow.camera, sp = Math.max(W, g.totalH) * 1.1; sc.left = -sp; sc.right = sp; sc.top = sp; sc.bottom = -sp; sc.near = 10; sc.far = 1400; sc.updateProjectionMatrix();
     lastM = M; ledBoost(M);
     applyDoors(); highlight();
@@ -318,13 +318,15 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   }
   function applyDoors() { doorsAnim.forEach(a => a.apply(ease(openAmt.get(a.key) || 0))); }
   function frame() {
-    if (!state) return; const g = geom(state), ox = (state.room && state.room.ox) || 0, t = state.t;
-    let x0 = ox, x1 = ox + g.W, zMax = state.D;
-    (state.units || []).forEach(u => { x0 = Math.min(x0, ox + u.x); x1 = Math.max(x1, ox + u.x + u.w); zMax = Math.max(zMax, (u.pz || 0) + u.d); });
-    (state.panels || []).forEach(p => { x0 = Math.min(x0, ox + p.x); x1 = Math.max(x1, ox + p.x + p.w); });
-    (state.beds || []).forEach(b => { const d = bedDims(b, t), ex = b.rot === 90 ? d.L : d.W, ez = b.rot === 90 ? d.W : d.L; x0 = Math.min(x0, ox + b.x); x1 = Math.max(x1, ox + b.x + ex); zMax = Math.max(zMax, b.pz + ez); });
-    const W = x1 - x0, H = g.totalH, dist = Math.max(W * 1.55, H * 1.75, 330), cx = (x0 + x1) / 2;
-    controls.target.set(cx, H * .46, Math.min(zMax, 300) / 2); camera.position.set(cx + dist * .28, H * .6, zMax / 2 + dist); controls.update(); invalidate();
+    if (!state) return; const g = geom(state), t = state.t;
+    let x0 = 0, x1 = g.W, zMax = state.D;
+    (state.units || []).forEach(u => { x0 = Math.min(x0, u.x); x1 = Math.max(x1, u.x + u.w); zMax = Math.max(zMax, (u.pz || 0) + u.d); });
+    (state.panels || []).forEach(p => { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x + p.w); });
+    (state.beds || []).forEach(b => { const d = bedDims(b, t), ex = b.rot === 90 ? d.L : d.W, ez = b.rot === 90 ? d.W : d.L; x0 = Math.min(x0, b.x); x1 = Math.max(x1, b.x + ex); zMax = Math.max(zMax, b.pz + ez); });
+    wg.updateMatrixWorld(true);
+    const lc = new THREE.Vector3((x0 + x1) / 2, 0, zMax / 2).applyMatrix4(wg.matrixWorld), rr = (state.room && state.room.rot) || 0, ff = new THREE.Vector3(Math.sin(rr * Math.PI / 180), 0, Math.cos(rr * Math.PI / 180));
+    const W = x1 - x0, H = g.totalH, dist = Math.max(W * 1.55, H * 1.75, 330);
+    controls.target.set(lc.x, H * .46, lc.z); camera.position.set(lc.x + dist * .28 * ff.z + ff.x * dist, H * .6, lc.z + ff.z * dist - dist * .28 * ff.x); controls.update(); invalidate();
   }
   function highlight() {
     if (selBox) { root.remove(selBox); selBox = null; }
@@ -346,6 +348,9 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   renderer.domElement.addEventListener('pointerdown', e => {
     downAt = [e.clientX, e.clientY]; drag = null; if (viewOnly) return;
     const h = hit(e); if (!h) return;
+    if (h.sel.k === 'col' && !(sel && sel.k === 'col' && sel.i === h.sel.i) && hooks.onMoveAll) {   // потянули невыбранный отсек — двигаем весь шкаф по полу
+      rayFrom(e); plane.set(new THREE.Vector3(0, 1, 0), 0); if (ray.ray.intersectPlane(plane, hitP)) { drag = { floor: true, sel: h.sel, p0: hitP.clone(), moved: false }; controls.enabled = false; try { renderer.domElement.setPointerCapture(e.pointerId); } catch (er) {} return; }
+    }
     const colDrag = h.sel.k === 'col' && sel && sel.k === 'col' && sel.i === h.sel.i;   // отсек тащим, только если он уже выбран (иначе камера крутится)
     if (h.sel.k === 'item' || h.sel.k === 'mezz' || h.sel.k === 'panel' || h.sel.k === 'unit' || h.sel.k === 'bed' || colDrag) {
       if (hooks.onSelect) hooks.onSelect(h.sel);
@@ -356,10 +361,13 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) return;
     drag.moved = true; rayFrom(e);
-    plane.set(new THREE.Vector3(0, 0, 1), -drag.p0.z); if (!ray.ray.intersectPlane(plane, hitP)) return;
-    const txt = hooks.onDrag && hooks.onDrag(drag.sel, hitP.y - drag.p0.y, hitP.x, hitP.x - drag.p0.x); setHud(txt || ''); invalidate();
+    if (drag.floor) { plane.set(new THREE.Vector3(0, 1, 0), 0); if (!ray.ray.intersectPlane(plane, hitP)) return; setHud(hooks.onMoveAll(hitP.x - drag.p0.x, hitP.z - drag.p0.z) || ''); invalidate(); return; }
+    const rr = (state && state.room && state.room.rot) || 0, side = rr === 90 || rr === 270;
+    if (side) plane.set(new THREE.Vector3(1, 0, 0), -drag.p0.x); else plane.set(new THREE.Vector3(0, 0, 1), -drag.p0.z); if (!ray.ray.intersectPlane(plane, hitP)) return;
+    wg.updateMatrixWorld(true); const lx = wg.worldToLocal(hitP.clone()).x, lx0 = drag.l0 === undefined ? (drag.l0 = wg.worldToLocal(drag.p0.clone()).x) : drag.l0;
+    const txt = hooks.onDrag && hooks.onDrag(drag.sel, hitP.y - drag.p0.y, lx, lx - lx0); setHud(txt || ''); invalidate();
   });
-  const endDrag = () => { const d = drag; drag = null; controls.enabled = true; setHud(''); if (d && d.moved && hooks.onDragEnd) hooks.onDragEnd(); return !!(d && d.moved); };
+  const endDrag = () => { const d = drag; drag = null; controls.enabled = true; setHud(''); if (d && d.moved && d.floor && hooks.onMoveEnd) hooks.onMoveEnd(); else if (d && d.moved && hooks.onDragEnd) hooks.onDragEnd(); return !!(d && d.moved); };
   renderer.domElement.addEventListener('pointercancel', endDrag);
   renderer.domElement.addEventListener('pointerup', e => {
     if (endDrag()) return;
