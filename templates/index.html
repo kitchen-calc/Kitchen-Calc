@@ -4025,6 +4025,9 @@
     function kitchenCut() {
       const t = CUT_T, ft = t, G = techGeometry(), S = getCalcState(), parts = [], half = v => Math.round(v * 2) / 2, PLmm = Math.round(G.PL * 10);
       const hasUp = S.hasUpper && upperSections.length > 0;
+      // крайние шкафы ряда: у них боковая кромка (торец дна/верха и край спинки); у средних — только лицевая
+      const endLow = new Map(), endUp = new Map(), LAYE = layoutAll(lowerSections, hasUp ? upperSections : [], currentType);
+      ['main', 'left', 'right'].forEach(wl => { const r = LAYE[wl]; if (!r) return; [[r.lower, endLow], [r.upper, endUp]].forEach(([arr, mp]) => { if (!arr || !arr.length) return; mp.set(arr[0].sec, (mp.get(arr[0].sec) || 0) + 1); mp.set(arr[arr.length - 1].sec, (mp.get(arr[arr.length - 1].sec) || 0) + 1); }); });
       let grp = '';
       const P = (name, qty, L, W, mat, eL, eW, note, facade) => { if (qty > 0 && L > 0 && W > 0) { const mL = Math.round(L), mW = Math.round(W); parts.push({ grp, name, qty, L: mL, W: mW, t: facade ? ft : t, mat, eL, eW, edgeT: (eL || eW) ? (facade ? '2' : '0,4') : '', note: note || '', edgeM: Math.round(((eL || 0) * mL + (eW || 0) * mW) * qty) / 1000 }); } };
       const body = 'ЛДСП ' + t + ' мм', fac = 'Фасад ' + ft + ' мм';
@@ -4039,14 +4042,14 @@
       };
       // нижние шкафы
       lowerSections.forEach(s => {
-        const code = 'Н-' + s.id, w = Math.round((parseFloat(s.width) || 0) * 10), D = Math.round((s.dp ? +s.dp : 60) * 10), db = D - ft, k = s.kind || 'door';
+        const code = 'Н-' + s.id, w = Math.round((parseFloat(s.width) || 0) * 10), D = Math.round((s.dp ? +s.dp : 60) * 10), k = s.kind || 'door', hasBack = k !== 'sink', db = D - ft - (hasBack ? t : 0), ee = endLow.get(s) || 0;
         grp = code + ' · ' + s.name + ' · ' + w + ' мм';
         if (k === 'washer') { P('Фасад-заглушка (нет, стиральная машина)', 0, 0, 0, fac, 0, 0); return; }
         if (isTall(s)) {
           const Hct = Math.round(((s.ht ? +s.ht : G.TT) - G.PL) * 10);
           if (k === 'fridge' && s.fr !== 'built') return;
-          if (k === 'fridge') { P('Бок', 2, Hct - t, db, body, 1, 0); P('Дно', 1, w, db, body, 1, 0); P('Верх', 1, w - 2 * t, db, body, 1, 0); const hh = Math.round(178 * 10); P('Фасад холодильника нижний', 1, Math.round(hh * .34) - 3, w - 4, fac, 2, 2, '', true); P('Фасад холодильника верхний', 1, Math.round(hh * .66) - 3, w - 4, fac, 2, 2, '', true); const top = (G.TT - 188) * 10; if (top > 80) P('Фасад над холодильником', 1, Math.round(top) - 3, w - 4, fac, 2, 2, '', true); return; }
-          P('Бок', 2, Hct - t, db, body, 1, 0); P('Дно', 1, w, db, body, 1, 0); P('Верх', 1, w - 2 * t, db, body, 1, 0);
+          if (k === 'fridge') { P('Бок', 2, Hct - t, db, body, 1, 0); P('Дно', 1, w, db, body, 1, ee, 'торцы с боковой кромкой — у крайнего шкафа'); P('Верх', 1, w - 2 * t, db, body, 1, 0); P('Спинка', 1, Hct, w, body, ee, 0, 'ЛДСП, лежит на торцах боковин и дна'); const hh = Math.round(178 * 10); P('Фасад холодильника нижний', 1, Math.round(hh * .34) - 3, w - 4, fac, 2, 2, '', true); P('Фасад холодильника верхний', 1, Math.round(hh * .66) - 3, w - 4, fac, 2, 2, '', true); const top = (G.TT - 188) * 10; if (top > 80) P('Фасад над холодильником', 1, Math.round(top) - 3, w - 4, fac, 2, 2, '', true); return; }
+          P('Бок', 2, Hct - t, db, body, 1, 0); P('Дно', 1, w, db, body, 1, ee, 'торцы с боковой кромкой — у крайнего шкафа'); P('Верх', 1, w - 2 * t, db, body, 1, 0); P('Спинка', 1, Hct, w, body, ee, 0, 'ЛДСП, лежит на торцах боковин и дна');
           (towerBands(s.tw || 'storage', G.TT) || []).forEach(b => {
             const a = b.y0 === 10 ? G.PL : b.y0, bh = Math.round((b.y1 - a) * 10);
             if (b.ty === 'door') P('Фасад пенала (дверь)', 1, bh - 3, w - 4, fac, 2, 2, '', true);
@@ -4058,7 +4061,9 @@
         const Hc = Math.round(((s.ht ? +s.ht : G.BOX) - G.PL) * 10);
         if (k === 'dishwasher') { P('Фасад посудомойки', 1, Hc - 5, w - 4, fac, 2, 2, 'навесной на посудомойку', true); return; }
         P('Бок', 2, Hc - t, db, body, 1, 0, 'стоит на дне; кромка по переднему торцу');
-        P('Дно', 1, w, db, body, 1, 0, 'на всю ширину; кромка по переду');
+        P('Дно', 1, w, db, body, 1, ee, ee ? 'на всю ширину; перед + боковая кромка (крайний шкаф)' : 'на всю ширину; кромка по переду');
+        if (hasBack) P('Спинка', 1, Hc, w, body, ee, 0, 'ЛДСП, лежит на торцах боковин и дна' + (ee ? '; кромка по боковому краю (крайний шкаф)' : ''));
+        else P('Спинка (нет: шкаф под мойку)', 0, 0, 0, body, 0, 0);
         P('Планка под столешницу', 2, w - 2 * t, 70, body, 1, 0, 'между боковин, кромка по 1 длинной');
         const dn = (s.drawers | 0) > 0 ? 0 : doorsOf(s, 'lower');
         if (k === 'oven') {
@@ -4079,16 +4084,17 @@
       });
       // верхние шкафы
       if (hasUp) upperSections.forEach(s => {
-        const code = 'В-' + s.id, w = Math.round((parseFloat(s.width) || 0) * 10), D = Math.round((s.dp ? +s.dp : S.upperD) * 10), db = D - ft, k = s.kind || 'door';
+        const code = 'В-' + s.id, w = Math.round((parseFloat(s.width) || 0) * 10), D = Math.round((s.dp ? +s.dp : S.upperD) * 10), db = D - ft, k = s.kind || 'door', eu = endUp.get(s) || 0;
         const tiers = s.ht ? 1 : (G.TIERS === 2 ? 2 : 1), Hu = Math.round((s.ht ? +s.ht : G.UH) * 10);
         grp = code + ' · ' + s.name + ' · ' + w + ' мм' + (tiers === 2 ? ' · 2 яруса' : '');
         if (k === 'open' || true) {
-          P('Дно', tiers, w, db, body, 1, 0, 'на всю ширину; кромка по переду');
-          P('Верх', tiers, w, db, body, 1, 0, 'лежит на боковинах; кромка по переду');
-          P('Бок', 2 * tiers, Hu - 2 * t, db, body, 1, 0, 'стоит на дне; кромка по переднему торцу');
+          P('Дно', tiers, w, db, body, 1, eu, eu ? 'перед + боковая кромка (крайний шкаф)' : 'на всю ширину; кромка по переду');
+          P('Верх', tiers, w, db, body, 1, eu, eu ? 'лежит на боковинах; перед + боковая кромка (крайний шкаф)' : 'лежит на боковинах; кромка по переду');
+          P('Бок', 2 * tiers, Hu - 2 * t, db - t, body, 1, 0, 'стоит на дне; кромка по переднему торцу');
+          P('Спинка', tiers, Hu - 2 * t, w, body, eu, 0, 'ЛДСП, стоит на дне, на задних торцах боковин' + (eu ? '; кромка по боковому краю (крайний шкаф)' : ''));
         }
         const shn = k === 'open' ? Math.max(2, s.shelves | 0) : ((s.gasLifts | 0) > 0 ? 0 : (s.shelves | 0));
-        if (shn > 0) P('Полка', shn * tiers, w - 2 * t - 2, db - 20, body, 1, 0);
+        if (shn > 0) P('Полка', shn * tiers, w - 2 * t - 2, db - t - 20, body, 1, 0);
         if (k === 'open') return;
         if ((s.gasLifts | 0) > 0) { const n = Math.min(2, s.gasLifts | 0), fh = Math.round((Hu - 2 * (n + 1)) / n); P('Фасад подъёмный', n * tiers, fh, w - 4, fac, 2, 2, '', true); return; }
         const dn = twoDoors(s, w / 10) ? 2 : 1, doorW = half((w - 2 * (dn + 1)) / dn);
@@ -4139,7 +4145,7 @@
           y += 8; o += odRect(54, y - 12, 1096, 66, 'o', '#fffaf0');
           o += odText(62, y, 'ИТОГО: деталей ' + parts.reduce((a, p) => a + p.qty, 0) + ' шт. · ЛДСП корпус ' + fm(tt.dsp.toFixed(2)) + ' м² · фасады ' + fm(tt.facade.toFixed(2)) + ' м²', 8, 'start', 'font-weight="700"');
           o += odText(62, y + 16, edgeLine, 8, 'start', 'font-weight="700" fill="#b3261e"');
-          o += odText(62, y + 32, 'Правило сборки: боковины стоят на дне; нижний шкаф — 2 планки 70 мм между боковинами под столешницу, спинки нет. Кромка: передний торец 0,4 мм, фасады 2 мм по периметру.', 7, 'start');
+          o += odText(62, y + 32, 'Сборка: боковины стоят на дне; спинка ЛДСП есть у всех шкафов, кроме шкафа под мойку; внизу 2 планки 70 мм под столешницу. Кромка: лицо у всех, боковая — у крайних шкафов ряда; фасады 2 мм по периметру.', 7, 'start');
         }
         out.push(odSheet(o, [['Проект', 'Кухня на заказ'], ['Таблица', 'Раскрой, лист ' + (++page)], ['ЛДСП', CUT_T + ' мм (корпус и фасады)'], ['Деталей', parts.reduce((a, p) => a + p.qty, 0) + ' шт.'], ['Кромка', fm(tt.total) + ' м (0,4: ' + fm(tt.e04) + ', 2: ' + fm(tt.e2) + ')'], ['Дата', new Date().toLocaleDateString('ru-RU')]], startNo + out.length, total));
       }
