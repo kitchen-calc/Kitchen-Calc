@@ -69,6 +69,9 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
 .added{background:#fffaf0;border:1px solid #e3d6bb;border-radius:12px;padding:8px 10px;margin:10px 0;font-size:13px}.added .ah{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-weight:700}.added .ah small{font-weight:400;color:#8a7a5c}
 .added .chips{display:flex;flex-wrap:wrap;gap:5px;max-height:104px;overflow:auto}.added .ch{display:inline-flex;align-items:center;gap:5px;border:1px solid #d8cdb8;background:#fff;border-radius:999px;padding:3px 4px 3px 9px;cursor:pointer;font-size:12.5px}.added .ch.bad{border-color:#d9822b;background:#fff1e0}.added .ch b{font-weight:600;color:#6b5a3a}.added .ch i{font-style:normal;border-radius:50%;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;background:#f0e4cc;font-size:11px}.added .ch i:hover{background:#e8b0a0}.added .ch.on{outline:2px solid #e0a21a}
 .p3cv{height:460px;border:1px solid #d8cdb8;border-radius:12px;overflow:hidden;margin-top:10px;background:#f1ebe0}.p3g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:6px 0}.p3f{display:flex;flex-direction:column;font-size:12.5px;gap:3px}.p3f .stp{display:flex;gap:4px;align-items:center}.p3f input{width:84px;padding:6px 7px;border:1px solid #d8cdb8;border-radius:8px;font:inherit}.p3f .stp button{width:32px;padding:6px 0}
+.p3wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;margin-top:10px;align-items:start}.p3wrap .p3cv{margin-top:0;height:600px}.p3side{max-height:600px;overflow:auto;padding-right:4px}.p3side .shr{margin:6px 0}
+#p3Box.p3full{position:fixed;inset:0;z-index:4000;border-radius:0;margin:0;padding:10px 14px;overflow:hidden;background:#fffdf8;display:flex;flex-direction:column}#p3Box.p3full .od-head{flex:0 0 auto}#p3Box.p3full .p3wrap{flex:1 1 auto;min-height:0}#p3Box.p3full .p3wrap .p3cv,#p3Box.p3full .p3side{height:calc(100vh - 110px);max-height:none}#p3Box.p3full > h4,#p3Box.p3full > #shapeLib{display:none}
+@media(max-width:900px){.p3wrap{grid-template-columns:1fr}.p3wrap .p3cv{height:360px}.p3side{max-height:none}#p3Box.p3full .p3wrap{display:flex;flex-direction:column}#p3Box.p3full .p3wrap .p3cv{height:46vh}#p3Box.p3full .p3side{height:auto;max-height:none;flex:1;overflow:auto}}
 </style>
 <meta name="robots" content="index,follow" id="robots">
 </head>
@@ -107,9 +110,8 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
     <aside class="side" id="side"></aside>
   </div>
   <div class="card od-card" id="p3Box">
-    <div class="od-head"><h3>🛠 Конструктор изделий в 3D — шкаф, тумба, стол, стеллаж</h3><span>Отдельная 3D-сцена: соберите изделие из досок, брусков, ножек, дверец на петлях и ящиков или соберите шкаф по размерам. Готовое добавляется в комнату одним предметом (двери и ящики открываются двойным щелчком) и сохраняется в «Мои изделия».</span></div>
-    <div class="p3cv" id="p3Cv"></div>
-    <div id="p3Ui" class="shape-ui"></div><div id="p3Msg" class="hint"></div>
+    <div class="od-head"><h3>🛠 Конструктор изделий в 3D — шкаф, тумба, стол, стеллаж</h3><span>Отдельная 3D-сцена: соберите изделие из досок, брусков, ножек, дверец на петлях и ящиков или соберите шкаф по размерам. Готовое добавляется в комнату одним предметом (двери и ящики открываются двойным щелчком) и сохраняется в «Мои изделия».</span><button type="button" id="p3FullBtn" onclick="PART3D.toggleFull()">⛶ На весь экран</button></div>
+    <div class="p3wrap"><div class="p3cv" id="p3Cv"></div><div class="p3side"><div id="p3Ui" class="shape-ui"></div><div id="p3Msg" class="hint"></div></div></div>
     <h4 style="margin:14px 0 6px">📚 Мои изделия</h4><div id="shapeLib" class="shape-ui"></div>
   </div>
   <div class="card od-card" id="ownerBox" style="display:none">
@@ -124,7 +126,7 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
 <script src="/static/js/sheet-fit.js?v=1"></script>
 <script src="/static/js/sheet-export.js?v=1"></script>
 <script src="/static/js/shkaf-lib.js?v=1"></script>
-<script type="module" src="/static/js/shkaf-3dpart.js?v=1"></script>
+<script type="module" src="/static/js/shkaf-3dpart.js?v=3"></script>
 <script type="module" src="/static/js/shkaf-pro.js?v=34"></script>
 </body>
 </html>

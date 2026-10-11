@@ -26,7 +26,7 @@
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
   <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=19'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script src="/static/js/shkaf-lib.js?v=1"></script>
-  <script type="module" src="/static/js/shkaf-3dpart.js?v=1"></script>
+  <script type="module" src="/static/js/shkaf-3dpart.js?v=3"></script>
   <script src="/static/js/color-catalog.js?v=2"></script>
   <script src="/static/js/sheet-fit.js?v=1"></script>
   <script src="/static/js/sheet-export.js?v=1"></script>
@@ -876,6 +876,10 @@
     .shape-ui .shr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:14px}.shape-ui button{padding:7px 11px;border:1px solid #cdbba0;background:#fffaf0;border-radius:9px;cursor:pointer;font:inherit}.shape-ui button.go{background:#c8892b;color:#fff;border-color:#c8892b;font-weight:700}.shape-ui button:disabled{opacity:.4}
     .p3cv{height:460px;border:1px solid #d8cdb8;border-radius:12px;overflow:hidden;margin-top:10px;background:#f1ebe0}.p3g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:6px 0}.p3f{display:flex;flex-direction:column;font-size:12.5px;gap:3px}.p3f .stp{display:flex;gap:4px;align-items:center}.p3f input{width:84px;padding:6px 7px;border:1px solid #d8cdb8;border-radius:8px;font:inherit}.p3f .stp button{width:32px;padding:6px 0}
     
+    .p3wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;margin-top:10px;align-items:start}.p3wrap .p3cv{margin-top:0;height:600px}.p3side{max-height:600px;overflow:auto;padding-right:4px}.p3side .shr{margin:6px 0}
+#p3Box.p3full{position:fixed;inset:0;z-index:4000;border-radius:0;margin:0;padding:10px 14px;overflow:hidden;background:#fffdf8;display:flex;flex-direction:column}#p3Box.p3full .od-head{flex:0 0 auto}#p3Box.p3full .p3wrap{flex:1 1 auto;min-height:0}#p3Box.p3full .p3wrap .p3cv,#p3Box.p3full .p3side{height:calc(100vh - 110px);max-height:none}#p3Box.p3full > h4,#p3Box.p3full > #shapeLib{display:none}
+@media(max-width:900px){.p3wrap{grid-template-columns:1fr}.p3wrap .p3cv{height:360px}.p3side{max-height:none}#p3Box.p3full .p3wrap{display:flex;flex-direction:column}#p3Box.p3full .p3wrap .p3cv{height:46vh}#p3Box.p3full .p3side{height:auto;max-height:none;flex:1;overflow:auto}}
+
     /* 3D-окно — в золотой раме */
     .k3d-box { border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(184, 134, 43, 0.35); }
     .r3-tab.on { background: linear-gradient(135deg, #f0cf7f, #c8952f) !important; color: #1b1409 !important; }
@@ -1122,9 +1126,8 @@
 
 
   <div class="card od-card" id="p3Box" style="display:none">
-    <div class="od-head"><h3>🛠 Конструктор изделий в 3D — шкаф, тумба, стол, стеллаж</h3><span>Отдельная 3D-сцена: соберите изделие из досок, брусков, ножек, дверец на петлях и ящиков или соберите шкаф по размерам. Готовое добавляется в комнату одним предметом (двери и ящики открываются двойным щелчком) и сохраняется в «Мои изделия».</span></div>
-    <div class="p3cv" id="p3Cv"></div>
-    <div id="p3Ui" class="shape-ui"></div><div id="p3Msg" class="hint"></div>
+    <div class="od-head"><h3>🛠 Конструктор изделий в 3D — шкаф, тумба, стол, стеллаж</h3><span>Отдельная 3D-сцена: соберите изделие из досок, брусков, ножек, дверец на петлях и ящиков или соберите шкаф по размерам. Готовое добавляется в комнату одним предметом (двери и ящики открываются двойным щелчком) и сохраняется в «Мои изделия».</span><button type="button" id="p3FullBtn" onclick="PART3D.toggleFull()">⛶ На весь экран</button></div>
+    <div class="p3wrap"><div class="p3cv" id="p3Cv"></div><div class="p3side"><div id="p3Ui" class="shape-ui"></div><div id="p3Msg" class="hint"></div></div></div>
     <h4 style="margin:14px 0 6px">📚 Мои изделия</h4><div id="shapeLib" class="shape-ui"></div>
   </div>
 

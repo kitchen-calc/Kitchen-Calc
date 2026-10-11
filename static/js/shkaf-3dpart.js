@@ -158,7 +158,7 @@ function bind() {
     else if (a === 'cat') { if (window.KCCAT) window.KCCAT.pick(st.cat || '', id => { st.cat = id || ''; rebuild(); ui(); }); }
     else if (a === 'nocol') { st.cat = ''; st.color = ''; rebuild(); ui(); }
     else if (a === 'new') { st.id = null; ui(); }
-    else if (a === 'apply') { if (!st.pt.length) return; if (window.PRO && window.PRO.shapeApply) { window.PRO.shapeApply(payload(), st.id); msg('✔ Готово — изделие стоит в комнате (см. 3D выше)'); } }
+    else if (a === 'apply') { if (!st.pt.length) return; if (window.PRO && window.PRO.shapeApply) { window.PRO.shapeApply(payload(), st.id); msg('✔ Готово — изделие стоит в комнате'); if ($('p3Box').classList.contains('p3full')) { setFull(false); const t = $('p3dBox') || $('k3dBox'); if (t) setTimeout(() => t.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); } } }
     else if (a === 'save') { if (!st.pt.length || !window.SHAPE) return; const nm = (st.name || '').trim() || 'Изделие'; st.name = window.SHAPE.libAdd(Object.assign(payload(), { id: null }), nm); ui(); msg('✔ Сохранено в «Мои изделия»'); }
   });
   root.addEventListener('change', ev => {
@@ -169,10 +169,17 @@ function bind() {
   });
 }
 function start() { if (alive) return; alive = true; if (!scene) init3d(); size(); rebuild(); frame(); loop(); }
+function setFull(on) {
+  const b = $('p3Box'); if (!b) return; b.classList.toggle('p3full', !!on); const bt = $('p3FullBtn'); if (bt) bt.textContent = on ? '✕ Свернуть' : '⛶ На весь экран';
+  document.body.style.overflow = on ? 'hidden' : ''; setTimeout(() => { size(); draw(); }, 60); if (on) setTimeout(() => { size(); frame(); }, 120);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('p3Box') && $('p3Box').classList.contains('p3full')) setFull(false); });
 window.PART3D = {
+  toggleFull() { const b = $('p3Box'); if (!b) return; if (b.style.display === 'none') b.style.display = ''; bind(); start(); setFull(!b.classList.contains('p3full')); },
+  show() { const b = $('p3Box'); if (!b) return; bind(); start(); ui(); },
   open(o) {
     st = fromObj(o); selI = -1; hist = []; const b = $('p3Box'); if (!b) return; b.style.display = '';
-    bind(); start(); rebuild(); frame(); ui(); b.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    bind(); start(); rebuild(); frame(); ui(); setFull(true);
   }
 };
 st = fromObj(null);
