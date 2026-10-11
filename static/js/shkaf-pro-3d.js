@@ -520,12 +520,16 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     if (endDrag()) return;
     if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
     const h = hit(e);
-    if (viewOnly) { if (h && h.sel.key) toggleDoor(h.sel.key); return; }
+    const tapKey = h ? (h.sel.k === 'obj' && h.sel.id ? 'obj:' + h.sel.id : h.sel.key) : null;   // добавленное изделие открывается целиком: все дверцы и ящики сразу
+    if (viewOnly) { if (tapKey) toggleDoor(tapKey); return; }
     const now = performance.now();   // двойное нажатие по двери/ящику определяем сами: работает и на мыши, и на пальце
-    if (h && h.sel.key) { if (lastTap.key === h.sel.key && now - lastTap.t < 550) { toggleDoor(h.sel.key); lastTap = { key: null, t: 0 }; } else lastTap = { key: h.sel.key, t: now }; } else lastTap = { key: null, t: 0 };
+    if (tapKey) { if (lastTap.key === tapKey && now - lastTap.t < 550) { toggleDoor(tapKey); lastTap = { key: null, t: 0 }; } else lastTap = { key: tapKey, t: now }; } else lastTap = { key: null, t: 0 };
     if (hooks.onSelect) hooks.onSelect(h ? h.sel : null, !!(e.ctrlKey || e.metaKey || multiMode));
   });
-  function toggleDoor(key) { openTarget.set(key, (openTarget.get(key) || 0) > .5 ? 0 : 1); invalidate(); }
+  function toggleDoor(key) {
+    if (key.indexOf('obj:') === 0) { const pre = 'o' + key.slice(4) + '.', ks = [...new Set(doorsAnim.map(a => a.key).filter(k => k.indexOf(pre) === 0))]; if (!ks.length) return; const on = !((openTarget.get(ks[0]) || 0) > .5); ks.forEach(k => openTarget.set(k, on ? 1 : 0)); invalidate(); return; }
+    openTarget.set(key, (openTarget.get(key) || 0) > .5 ? 0 : 1); invalidate();
+  }
   function toggleDoors(on) { const keys = [...new Set(doorsAnim.map(a => a.key))]; if (on === undefined) on = !keys.some(k => (openTarget.get(k) || 0) > .5); keys.forEach(k => openTarget.set(k, on ? 1 : 0)); invalidate(); }
 
   let last = performance.now(), raf = 0, alive = true;
@@ -544,7 +548,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   return {
     update(S) { state = S; build(S); },
     select(s) { sel = s; highlight(); invalidate(); },
-    debug() { return { cam: camera.position.toArray(), target: controls.target.toArray(), n: root.children.length, picks: picks.length }; },
+    debug() { return { cam: camera.position.toArray(), target: controls.target.toArray(), n: root.children.length, picks: picks.length, open: [...openTarget.entries()].filter(e => e[1] > .5).map(e => e[0]) }; },
     setMoveMode(on) { moveMode = !!on; }, setMulti(on) { multiMode = !!on; }, setMultiKeys(k) { multiKeys = k || []; highlight(); invalidate(); },
     setLight, setLeds, isLight: () => !dusk, isLeds: () => ledsOn, setRotate, isRotate: () => rotateMode, toggleDoors, toggleDoor, isOpen: () => [...openTarget.values()].some(v => v > .5), frame, setHud,
     snapshot() { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); },
