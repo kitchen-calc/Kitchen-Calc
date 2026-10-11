@@ -494,9 +494,11 @@ export function buildParts(S) {
     if (q.kind === 'shelf') { addP(gr, 'Полка' + lbl, 1, q.w, q.d, t, body, (q.w + 2 * q.d) / 100, 'кромка перед + 2 торца'); addHw('Крепёж', 'Скрытое крепление полки (штанга-кронштейн)', 2, 'шт.', 18000); return; }
     if (q.kind === 'custom') {
       const E = objEdges(q), B = objBox(q), bw = B.x1 - B.x0, bz = B.z1 - B.z0, per = E.reduce((a, e) => a + e.L, 0) / 100;
+      const PP0 = objPoly(q); let ar = 0; PP0.forEach((pt, i) => { const nx = PP0[(i + 1) % PP0.length]; ar += pt[0] * nx[1] - nx[0] * pt[1]; }); const slabK = Math.min(1, ((Math.abs(ar) / 2) / Math.max(1, bw * bz) + 1) / 2), slabMult = () => { const lp = parts[parts.length - 1]; if (lp) lp.mult = slabK; };   // цена по средней площади: между контуром и габаритом (обрезки)
       addP(gr, 'Дно по контуру' + lbl, 1, bw, bz, t, body, per, 'форма по чертежу (габарит ' + mm(bw) + '×' + mm(bz) + ' мм), кромка по контуру');
-      addP(gr, 'Крышка по контуру' + lbl, 1, bw, bz, t, body, per, 'форма по чертежу, кромка по контуру');
-      if (q.n > 0) addP(gr, 'Полка по контуру' + lbl, q.n, bw, bz, t, body, per, 'форма по чертежу, на полкодержатели');
+      slabMult();
+      addP(gr, 'Крышка по контуру' + lbl, 1, bw, bz, t, body, per, 'форма по чертежу, кромка по контуру'); slabMult();
+      if (q.n > 0) addP(gr, 'Полка по контуру' + lbl, q.n, bw, bz, t, body, per, 'форма по чертежу, на полкодержатели'); slabMult();
       let run = 0, runN = 0; const flush = () => { if (run > 0) { addP(gr, 'Гнутая стенка' + lbl, 1, q.h - 2 * t, run, okind === 'ply' ? 1.2 : t, body, 0, 'гнётся по шаблону/склеивается из ламелей, длина по кривой ' + mm(run) + ' мм, сегментов ' + runN, okind || 'dsp'); if (okind !== 'ply') addHw('Материал', 'Работа: гнутьё/фрезеровка кривой стенки', Math.ceil(run / 100), 'пог. м', 90000); else addHw('Материал', 'Работа: гнутьё фанеры по шаблону', Math.ceil(run / 100), 'пог. м', 70000); } run = 0; runN = 0; };
       E.forEach(e => { if (e.curved) { run += e.L; runN++; return; } flush(); if (e.open) return; const L = Math.max(5, e.L - (e.door ? .4 : 2 * t)); if (e.door) { door('Дверь', 1, q.h - .4, L, 'распашная, сторона ' + (e.i + 1)); addDoorHw(1, q.h); } else addP(gr, 'Стенка (сторона ' + (e.i + 1) + ')' + lbl, 1, q.h - 2 * t, L, t, body, (q.h - 2 * t) / 100, 'видимая кромка по высоте'); });
       flush();
@@ -670,4 +672,14 @@ export function sanitize(S) {
     const mh = n(S.mezz.h, 15, 90, 40); o.H = r1(Math.max(100, o.H - mh - o.t)); o.mezzes.push({ id: uid(), x: 0, w: o.W, h: r1(mh + o.t), y: o.H, n: n(S.mezz.n, 0, 10, 3) | 0, shelves: n(S.mezz.shelves, 0, 3, 0) | 0 });
   }
   return o;
+}
+
+/* ---- свои шкафчики вне шкафа (кухня): раскрой и цена ---- */
+function objsState(objs, t, tier) { const S = defState(); S.cols = []; S.mezzes = []; S.panels = []; S.units = []; S.beds = []; S.opens = []; S.objs = objs || []; S.t = t === 1.8 ? 1.8 : 1.6; S.tier = tier == null ? 1 : tier; recalcW(S); return S; }
+export function objsParts(objs, t) { return buildParts(objsState(objs, t)); }
+export function objsCost(objs, t, tier) {
+  if (!objs || !objs.length) return 0;
+  const S = objsState(objs, t, tier), bp = buildParts(S), pr = pricing(S, bp);
+  let front = 0; objs.forEach(q => { if (q.kind === 'custom') { front += objEdges(q).reduce((a, e) => a + e.L, 0) * q.h / 1e4 * .6; } else front += q.w * q.h / 1e4; });
+  return Math.round((pr.mat * P.K + front * P.laborM2 * P.Klabor) / 10000) * 10000;
 }

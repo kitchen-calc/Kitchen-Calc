@@ -24,6 +24,8 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=1'; import * as C from '/static/js/shkaf-pro-core.js?v=12'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module" src="/static/js/shkaf-shape.js?v=4"></script>
   <script src="/static/js/kis-data.js?v=4"></script>
   <script src="/static/js/kis-art.js?v=2"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
@@ -861,6 +863,13 @@
     .price-value { font-family: 'Playfair Display', Georgia, serif; background: linear-gradient(135deg, #c99a3a, #8a5f12); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
     .price-value .price-currency { -webkit-text-fill-color: #5b4520; }
     .btn-submit { background: linear-gradient(135deg, #f7dc9a, #e3b354 40%, #b8862b) !important; color: #1b1409 !important; border: none !important; box-shadow: 0 10px 24px rgba(184, 134, 43, 0.35) !important; }
+
+    .k-added{padding:10px 14px;margin-top:12px}.k-added .ah{display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;font-weight:700;font-size:14px;flex-wrap:wrap}.k-added .ah small{font-weight:400;color:#8a7a5c}
+    .k-added .chips{display:flex;flex-wrap:wrap;gap:6px;max-height:110px;overflow:auto}.k-added .ch{display:inline-flex;align-items:center;gap:5px;border:1px solid #d8cdb8;background:#fff;border-radius:999px;padding:3px 4px 3px 10px;cursor:pointer;font-size:13px}.k-added .ch.bad{border-color:#d9822b;background:#fff1e0}.k-added .ch b{font-weight:600;color:#6b5a3a}.k-added .ch i{font-style:normal;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;background:#f0e4cc;font-size:11px}.k-added .ch i:hover{background:#e8b0a0}.k-added .ch.on{outline:2px solid #e0a21a}
+
+    .shape-cv{margin-top:10px;border:1px solid #d8cdb8;border-radius:12px;overflow:hidden;background:#fff;touch-action:none}.shape-cv canvas{display:block;width:100%;height:auto;cursor:crosshair}
+    .shlib{display:flex;flex-wrap:wrap;gap:10px}.shcard{border:1px solid #d8cdb8;border-radius:12px;padding:8px;background:#fffdf7;width:180px}.shcard input[type=text]{width:100%;box-sizing:border-box;margin:4px 0;padding:5px 7px;border:1px solid #d8cdb8;border-radius:8px;font:inherit}
+    .shape-ui .shr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:14px}.shape-ui button{padding:7px 11px;border:1px solid #cdbba0;background:#fffaf0;border-radius:9px;cursor:pointer;font:inherit}.shape-ui button.go{background:#c8892b;color:#fff;border-color:#c8892b;font-weight:700}.shape-ui button:disabled{opacity:.4}
     /* 3D-окно — в золотой раме */
     .k3d-box { border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(184, 134, 43, 0.35); }
     .r3-tab.on { background: linear-gradient(135deg, #f0cf7f, #c8952f) !important; color: #1b1409 !important; }
@@ -1101,6 +1110,15 @@
           <aside class="k3d-side" id="k3dSide"></aside>
         </div>
         <div class="render-note" data-i18n="renderNote">Визуализация условная, точный проект — после замера</div>
+      </div>
+
+      <div class="card k-added" id="kAdded" style="display:none"></div>
+
+      <div class="card od-card" id="shapeBox" style="display:none">
+        <div class="od-head"><h3>🛠 Конструктор своих шкафчиков</h3><span>Рисуйте шкафчик сверху: готовые формы (волна, змейка, дуга, зигзаг), точки, линия от руки. Для каждой стороны — стенка, дверца, гнутая стенка или открыто; материал — ЛДСП, фанера или МДФ. Готовое — «В мои шкафчики», оттуда вставляйте в комнату сколько угодно раз.</span></div>
+        <div class="shape-cv"><canvas id="shapeCv" width="640" height="352"></canvas></div>
+        <div id="shapeUi" class="shape-ui"></div><div id="shapeMsg" class="hint"></div>
+        <h4 style="margin:14px 0 6px">📚 Мои шкафчики</h4><div id="shapeLib" class="shape-ui"></div>
       </div>
 
       <!-- СЕКРЕТНО: чертежи мастера (вход: Ctrl+Shift+K или 3 нажатия на логотип) -->
@@ -2720,7 +2738,7 @@
     const HW_DRAWER_VIS = { econ: 'ball', std: 'ball', tbx: 'tbx_m', merivo: 'mer_m', legra: 'lbx_m', tbxp: 'tbx_b', legrafree: 'lbx_fc' };
     function drawerVisMap() { const m = { ball: { h: 10, col: '#d9cdb8' } }; Object.keys(KIS.drawerSys).forEach(k => { if (KIS.drawerSys[k].vis) m[k] = KIS.drawerSys[k].vis; }); return m; }
     function defaultDsys(s) { const h = CONFIG.hardware[s.hw] || CONFIG.hardware[CONFIG.defaults.hw]; return HW_DRAWER_VIS[h.key] || 'ball'; }
-    function k3dSelKey() { if (selIsland && chk('hasIsland')) return { tier: 'island', id: 0 }; return selSec ? { tier: tierOf(selSec), id: selSec.id } : null; }
+    function k3dSelKey() { if (selObjId && kObjs.some(o => o.id === selObjId)) return { tier: 'obj', id: selObjId };  if (selOpenId && kOpens.some(o => o.id === selOpenId)) return { tier: 'open', id: selOpenId }; if (selIsland && chk('hasIsland')) return { tier: 'island', id: 0 }; return selSec ? { tier: tierOf(selSec), id: selSec.id } : null; }
     function k3dState() {
       rpAutoRect();
       const s = getCalcState(), G = techGeometry();
@@ -2728,25 +2746,28 @@
       const LAY = layoutAll(lowerSections, hasUpper ? upperSections : [], currentType);
       const def = defaultDsys(s);
       const room = { main: roomCap('main'), left: parseFloat(el('leftWall').value) || 0, right: parseFloat(el('rightWall').value) || 0 };
-      return { type: currentType, W: Math.max(60, room.main, LAY.main.total), room, aisle: PAR_AISLE, hwOf: sec => effHw(sec), LD: 60, UD: s.upperD, UB: G.UB, UH: s.upperH, tiers: s.upperTiers === 2 ? 2 : 1,
+      const stW = Math.max(60, room.main, LAY.main.total); kWallPolyCache = kWallPoly({ W: stW });
+      return { type: currentType, W: stW, room, aisle: PAR_AISLE, hwOf: sec => effHw(sec), LD: 60, UD: s.upperD, UB: G.UB, UH: s.upperH, tiers: s.upperTiers === 2 ? 2 : 1,
         TT: G.TT, CT: G.CT, PL: 10, BOX: G.BOX, UGAP: G.UGAP, roomH: Math.max(G.TT + 10, s.roomH || 260), FRIDGE_H, hasUpper, runs: LAY,
         colors: { facade: { hex: selectedFacadeColor.hex, img: selectedFacadeColor.img }, body: { hex: selectedBodyColor.hex, img: selectedBodyColor.img }, top: { hex: topColorHex || CONFIG.countertops[s.top].color } },
         hw: Object.assign({}, KHW), led: Object.assign({}, ledState), decor: decorClean(decorState),
         island: s.island ? { L: s.islL, W: s.islW, cx: islandPos ? islandPos.cx : null, cz: islandPos ? islandPos.cz : null, r: islandPos ? islandPos.r : 0 } : null,
         free: k3dFreeList(hasUpper), paintOf, poly: roomPoly, roomD: roomPoly ? rpBBox().z1 : Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0),
-        selected: VIEW_ONLY ? null : k3dSelKey(), drawerVis: drawerVisMap(),
+        opens: kOpens, objs: kObjsState(), selected: VIEW_ONLY ? null : k3dSelKey(), drawerVis: drawerVisMap(),
         dsysOf: (sec, i) => { const k = sec.dsys && sec.dsys[i]; return (k && k !== 'tier' && KIS.drawerSys[k]) ? k : def; }, towerBands };
     }
+    function kWallPoly(st) { st = st || {}; const W = Math.max(60, st.W || parseFloat(el('mainWall').value) || 240), D = st.roomD || Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0); return roomPoly || [[0, 0], [W, 0], [W, D], [0, D]]; }
     function k3dSupported() { try { const c = document.createElement('canvas'); return !!(window.WebGL2RenderingContext && c.getContext('webgl2')); } catch (e) { return false; } }
     async function initK3D() {
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=19');
+        const mod = await import('/static/js/kitchen3d.js?v=21');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
-          onMove: (sel, res, c0) => k3dDropHook(sel, res, c0)
+          onMove: (sel, res, c0) => k3dDropHook(sel, res, c0),
+          onOpenDrag: (id, wall, sx, y) => k3dOpenDrag(id, wall, sx, y), onOpenEnd: () => { updateShareLinks(); renderKAdded(); renderK3dEdit(); }
         }, { viewOnly: VIEW_ONLY });
         K3.setRotate(k3dRotate); k3dLightFx();
         el('k3dLoad').style.display = 'none';
@@ -2923,8 +2944,9 @@
     function k3dDrawerCount(s) { if (s.kind === 'tower') return towerBands(s.tw || 'storage', 250).filter(b => b.ty === 'drawer').length; if (s.kind === 'oven') return 1; return s.drawers | 0; }
     function renderK3dEdit() {
       const box = el('k3dSide'); if (!box) return;
-      box.innerHTML = VIEW_ONLY ? k3dSideView() : (selIsland && chk('hasIsland') ? k3dSideIsland() : (selSec ? k3dSidePart(selSec) : k3dSideKitchen()));
+      box.innerHTML = VIEW_ONLY ? k3dSideView() : (selObjId && kObjs.some(o => o.id === selObjId) ? k3dSideObj() : selOpenId && kOpens.some(o => o.id === selOpenId) ? k3dSideOpen() : selIsland && chk('hasIsland') ? k3dSideIsland() : (selSec ? k3dSidePart(selSec) : k3dSideKitchen()));
       if (!VIEW_ONLY && curTarget()) k3dPosUpdate();
+      renderKAdded();
     }
     function ledMax(s) {
       const k = s.kind || 'door';
@@ -2959,6 +2981,145 @@
     }
     const k3Row = (lbl, inner) => `<div class="k3e-r"><span>${esc(lbl)}</span>${inner}</div>`;
     // ничего не выбрано: добавить шкафы и технику, общие настройки кухни
+    /* ---- двери, окна, розетки ---- */
+    const OPK = () => (window.ROPEN ? window.ROPEN.OPEN_KINDS : {});
+    function kEdges() { return window.ROPEN ? window.ROPEN.roomEdges(kWallPolyCache || kWallPoly()) : []; }
+    /* ---- свои шкафчики (стеллажи, полки, шкафы своей формы) ---- */
+    const SC = () => window.SCORE;
+    function kObjsState() {
+      if (!SC()) return [];
+      return kObjs.map(o => { const b = SC().objBox(o), f = SC().objFoot(o); return Object.assign({}, o, { bw: b.x1 - b.x0, bd: b.z1 - b.z0, cx: o.x + f.w / 2, cz: o.z + f.d / 2, r: o.rot || 0 }); });
+    }
+    function kRoomS() { return { room: { poly: kWallPolyCache || kWallPoly() } }; }
+    function kObjCost() { return SC() && kObjs.length ? SC().objsCost(kObjs, CUT_T === 18 ? 1.8 : 1.6, 1) : 0; }
+    window.kObjsList = () => (!SC() ? [] : kObjs.map((o, i) => ({ icon: '🗄', name: SC().OBJ_KINDS[o.kind].ru.split(' ')[0] + ' ' + (i + 1), size: Math.round(o.w * 10) + '×' + Math.round(o.d * 10), bad: !SC().rpRectIn(kWallPolyCache || kWallPoly(), SC().objRect(o)) || o.w < 1 || o.h < 1, sel: `k3dObjSel('${o.id}')`, del: `k3dObjDel('${o.id}')` })));
+    function k3dObjListHtml() {
+      if (!SC()) return '';
+      const K = SC().OBJ_KINDS, chips = kObjs.map((o, i) => `<button type="button" class="${selObjId === o.id ? 'on' : ''}" onclick="k3dObjSel('${o.id}')">🗄 ${K[o.kind].ru.split(' ')[0]} ${i + 1}</button>`).join('');
+      return `<div class="k3s-sub">${esc(L3('Свои шкафчики и полки', 'Oʻz shkafchalaringiz'))} (${kObjs.length})</div>${chips ? `<div class="k3s-grid">${chips}</div>` : ''}
+        <div class="k3s-grid">${['book', 'rack', 'low', 'wallcab', 'shelf', 'vert'].map(k => `<button type="button" onclick="k3dObjAdd('${k}')">＋ ${esc(K[k].ru)}</button>`).join('')}<button type="button" onclick="kShapeOpen()">✏️ ${esc(L3('Нарисовать свою форму…', 'Oʻz shaklingizni chizing…'))}</button></div>
+        <div class="k3s-note">${esc(L3('Тяните шкафчик по полу мышью; дверцы — двойной щелчок. Своя форма (волна, змейка, дуга) рисуется в окне «Конструктор своих шкафчиков» ниже 3D (режим мастера).', 'Shkafchani sichqoncha bilan sudrang.'))}</div>`;
+    }
+    function k3dSideObj() {
+      const o = kObjs.find(x => x.id === selObjId); if (!o || !SC()) return k3dSideKitchen();
+      const K = SC().OBJ_KINDS[o.kind], f = SC().objFoot(o), cu = o.kind === 'custom', st = (lbl, fld, stp, v) => k3Row(lbl, k3Step((Math.round(v * 10) / 10) + ' ' + cmU(), `k3dObjStep('${fld}',${-stp})`, `k3dObjStep('${fld}',${stp})`)), E = (window.ROPEN ? window.ROPEN.roomEdges(kWallPolyCache || kWallPoly()) : []);
+      let h = `<div class="k3s-h">🗄 ${esc(K.ru)} ${kObjs.indexOf(o) + 1}</div><div class="k3s-note">${esc(L3('Габарит', 'Oʻlcham'))} ${Math.round(f.w * 10)}×${Math.round(f.d * 10)} ${esc(L3('мм, высота', 'mm, balandlik'))} ${Math.round(o.h * 10)} ${esc(L3('мм. Тяните мышью по полу; двойной щелчок открывает дверцы.', 'mm.'))}</div>`;
+      h += k3Row(L3('Магнит', 'Magnit'), k3B(magnetOn, 'k3dMagnet()', magnetOn ? L3('вкл', 'yoq') : L3('выкл', 'oʻch')) + k3B(false, 'k3dObjRot(-90)', '↺ 90°') + k3B(false, 'k3dObjRot(90)', '↻ 90°'));
+      h += st(L3('От левой стены', 'Chap devordan'), 'x', 5, o.x) + st(L3('От дальней стены', 'Uzoq devordan'), 'z', 5, o.z) + st(L3('Над полом', 'Polidan'), 'y', 5, o.y);
+      if (!cu) h += st(o.kind === 'vert' ? L3('Толщина', 'Qalinlik') : L3('Ширина', 'Kenglik'), 'w', o.kind === 'vert' ? .2 : 5, o.w) + st(L3('Глубина', 'Chuqurlik'), 'd', 1, o.d);
+      h += st(o.kind === 'shelf' ? L3('Толщина', 'Qalinlik') : L3('Высота', 'Balandlik'), 'h', 5, o.h);
+      if (o.kind !== 'shelf' && o.kind !== 'vert') {
+        h += st(L3('Полок', 'Tokchalar'), 'n', 1, o.n); if (!cu) h += st(L3('Дверей', 'Eshiklar'), 'dn', 1, o.dn);
+        h += k3Row(L3('Материал', 'Material'), [['dsp', 'ЛДСП'], ['ply', L3('Фанера', 'Faner')], ['mdf', 'МДФ']].map(([k, n]) => k3B((o.mat || 'dsp') === k, `k3dObjSetF('mat','${k}')`, n)).join(''));
+        h += k3Row(L3('Фасад', 'Fasad'), [['dsp', 'ЛДСП'], ['glass', L3('Стекло', 'Oyna')], ['mirror', L3('Зеркало', 'Oyna')]].map(([k, n]) => k3B(o.fill === k, `k3dObjSetF('fill','${k}')`, n)).join(''));
+        h += k3Row(L3('Опции', 'Opsiyalar'), k3B(o.back, "k3dObjFlag('back')", L3('спинка', 'orqa')) + k3B(o.handles, "k3dObjFlag('handles')", L3('ручки', 'dasta')));
+      }
+      if (E.length) h += `<div class="k3s-sub">${esc(L3('Поставить к стене', 'Devorga qoʻyish'))}</div>` + ['start', 'center', 'end'].map(al => `<div class="k3e-r">${E.map((e, i) => k3B(false, `k3dObjWall(${i},'${al}')`, '№' + (i + 1) + (al === 'start' ? ' ◀' : al === 'end' ? ' ▶' : ' ●'))).join('')}</div>`).join('');
+      h += `<div class="k3e-r">${cu ? k3B(false, 'kShapeEdit()', '✏️ ' + L3('Изменить форму', 'Shaklni oʻzgartirish')) : ''}${k3B(false, 'kObjLib()', '💾 ' + L3('В мои шкафчики', 'Kutubxonaga'))}${k3B(false, 'k3dObjDup()', '⧉ ' + L3('Копия', 'Nusxa'))}${k3B(false, `k3dObjDel('${o.id}')`, '🗑 ' + L3('Удалить', 'Oʻchirish'))}${k3B(false, 'k3dObjSel(null)', L3('Готово', 'Tayyor'))}</div>`;
+      return h;
+    }
+    function kObjChanged(priceToo) { k3dRefresh(); updateShareLinks(); renderK3dEdit(); if (priceToo !== false) updateCalculator(); }
+    function k3dObjSel(id) { selObjId = id; selOpenId = null; if (id) { selSec = null; selIsland = false; } renderPlanner(); k3dRefresh(); renderK3dEdit(); }
+    function k3dObjAdd(kind, extra) {
+      if (!SC()) return; if (kObjs.length >= 60) return;
+      const o = SC().mkObj(kind, 0, 0, extra ? JSON.parse(JSON.stringify(extra)) : null), P = kWallPolyCache || kWallPoly(), f = SC().objFoot(o), bb = P.reduce((a, p) => [Math.max(a[0], p[0]), Math.max(a[1], p[1])], [0, 0]);
+      o.x = Math.round(Math.max(0, bb[0] / 2 - f.w / 2)); o.z = Math.round(Math.max(0, Math.min(bb[1] / 2, 200) - f.d / 2));
+      if (magnetOn) { const m = SC().rectMagnet(kRoomS(), o.x, o.z, r => SC().objFoot(o, r), o.rot || 0, 9999); if (m) { o.x = m.ox; o.z = m.oz; o.rot = m.rot; } }
+      kObjs.push(o); selObjId = o.id; selSec = null; selIsland = false; selOpenId = null; kObjChanged();
+    }
+    function k3dObjDel(id) { kObjs = kObjs.filter(o => o.id !== id); if (selObjId === id) selObjId = null; kObjChanged(); }
+    function k3dObjDup() { const o = kObjs.find(x => x.id === selObjId); if (!o) return; const c = JSON.parse(JSON.stringify(o)); c.id = 'k' + Math.random().toString(36).slice(2, 8); c.x += 20; c.z += 20; kObjs.push(c); selObjId = c.id; kObjChanged(); }
+    function k3dObjFlag(f) { const o = kObjs.find(x => x.id === selObjId); if (o) { o[f] = !o[f]; kObjChanged(); } }
+    function k3dObjSetF(f, v) { const o = kObjs.find(x => x.id === selObjId); if (o) { o[f] = v; kObjChanged(); } }
+    function k3dObjStep(f, d) {
+      const o = kObjs.find(x => x.id === selObjId); if (!o) return; const lim = { x: [-800, 2500], z: [-800, 2500], y: [0, 300], w: [.5, 600], d: [5, 120], h: [1, 320], n: [0, 12], dn: [0, 4] }[f];
+      o[f] = Math.round(Math.max(lim[0], Math.min(lim[1], o[f] + d)) * 10) / 10; if (f === 'n' || f === 'dn') o[f] = Math.round(o[f]); kObjChanged();
+    }
+    function k3dObjRot(d) {
+      const o = kObjs.find(x => x.id === selObjId); if (!o) return; const f = SC().objFoot(o), cx = o.x + f.w / 2, cz = o.z + f.d / 2; o.rot = (((o.rot || 0) + d) % 360 + 360) % 360; const n2 = SC().objFoot(o); o.x = Math.round((cx - n2.w / 2) * 10) / 10; o.z = Math.round((cz - n2.d / 2) * 10) / 10;
+      if (magnetOn) { const m = SC().rectMagnet(kRoomS(), o.x, o.z, r => SC().objFoot(o, r), o.rot, 200, o.rot); if (m) { o.x = m.ox; o.z = m.oz; } } kObjChanged();
+    }
+    function k3dObjWall(i, align) { const o = kObjs.find(x => x.id === selObjId); if (!o) return; const m = SC().placeAtWall(kRoomS(), r => SC().objFoot(o, r), i, align); if (m) { o.x = m.ox; o.z = m.oz; o.rot = m.rot; kObjChanged(); } }
+    function k3dMagnet() { magnetOn = !magnetOn; renderK3dEdit(); }
+    function kObjLib() { const o = kObjs.find(x => x.id === selObjId); if (o && window.SHAPE) { const nm = window.SHAPE.libAdd(o, SC().OBJ_KINDS[o.kind].ru + ' ' + Math.round(o.w * 10) + '×' + Math.round(o.d * 10)); if (typeof msToast === 'function') msToast('Сохранено в «Мои шкафчики»: ' + nm); } }
+    function kShapeOpen() { if (window.SHAPE) window.SHAPE.open(null); }
+    function kShapeEdit() { const o = kObjs.find(x => x.id === selObjId); if (o && window.SHAPE) window.SHAPE.open(o); }
+    // адаптер для окна «Конструктор своих шкафчиков»
+    window.PRO = Object.assign(window.PRO || {}, {
+      shapeApply: (data, id) => { const ex = id ? kObjs.find(o => o.id === id) : null; if (ex) { Object.assign(ex, JSON.parse(JSON.stringify(data))); kObjChanged(); } else k3dObjAdd(data.kind || 'custom', data); },
+      insertTpl: tpl => k3dObjAdd(tpl.kind || 'custom', tpl)
+    });
+    function kObjDrag(sel, res) {
+      const o = kObjs.find(x => x.id === sel.id); if (!o) return null; let rot = o.rot || 0, f = SC().objFoot(o, rot), ox = res.cx - f.w / 2, oz = res.cz - f.d / 2;
+      if (magnetOn) { const m = SC().rectMagnet(kRoomS(), ox, oz, r => SC().objFoot(o, r), rot, 45); if (m) { ox = m.ox; oz = m.oz; rot = m.rot; } }
+      f = SC().objFoot(o, rot); const ok = SC().rpRectIn(kWallPolyCache || kWallPoly(), { x0: ox, x1: ox + f.w, z0: oz, z1: oz + f.d });
+      return { cx: ox + f.w / 2, cz: oz + f.d / 2, r: rot, ok, hud: L3('от стены ', 'devordan ') + Math.round(ox) + ' / ' + Math.round(oz) + ' ' + cmU() };
+    }
+    function kObjDrop(sel, res) {
+      const o = kObjs.find(x => x.id === sel.id); if (!o) { k3dRefresh(); return; }
+      if (res.ok === false) { if (typeof msToast === 'function') msToast(L3('За стеной — вернул на место', 'Devordan tashqari — joyiga qaytdi')); k3dRefresh(); return; }
+      const f = SC().objFoot(o, res.r); o.rot = res.r; o.x = Math.round((res.cx - f.w / 2) * 10) / 10; o.z = Math.round((res.cz - f.d / 2) * 10) / 10; kObjChanged(false);
+    }
+    function k3dOpenListHtml() {
+      const K = OPK(); if (!window.ROPEN) return '';
+      const chips = kOpens.map((o, i) => `<button type="button" class="${selOpenId === o.id ? 'on' : ''}" onclick="k3dOpenSel('${o.id}')">${K[o.kind].icon} ${i + 1} · ${L3('ст.', 'dev.')}${o.wall + 1}</button>`).join('');
+      return `<div class="k3s-sub">${esc(L3('Двери, окна, розетки', 'Eshik, deraza, rozetka'))} (${kOpens.length})</div>${chips ? `<div class="k3s-grid">${chips}</div>` : ''}
+        <div class="k3s-grid">${Object.keys(K).map(k => `<button type="button" onclick="k3dOpenAdd('${k}')">${K[k].icon} ${esc(K[k].ru)}</button>`).join('')}</div>
+        <div class="k3s-note">${esc(L3('Элементы ставятся на стену; тяните их мышью по любым стенам. Окно и розетки показывают, где нельзя ставить шкафы.', 'Elementlarni devorlar boʻylab sudrang.'))}</div>`;
+    }
+    function k3dSideOpen() {
+      const o = kOpens.find(x => x.id === selOpenId); if (!o || !window.ROPEN) return k3dSideKitchen();
+      const K = OPK()[o.kind], E = kEdges(), e = E[o.wall], st = (f, stp, v) => k3Row(f[0], k3Step(Math.round(v * 10) / 10 + ' ' + cmU(), `k3dOpenStep('${f[1]}',${-stp})`, `k3dOpenStep('${f[1]}',${stp})`));
+      return `<div class="k3s-h">${K.icon} ${esc(K.ru)} ${kOpens.indexOf(o) + 1}</div>
+        <div class="k3s-note">${esc(L3('Стена', 'Devor'))} ${o.wall + 1} (${Math.round(e ? e.L : 0)} ${cmU()}) · ${esc(L3('от угла стены', 'burchakdan'))} ${Math.round(o.off)} ${cmU()} · ${esc(L3('от пола', 'polidan'))} ${Math.round(o.y)} ${cmU()}. ${esc(L3('Тяните мышью по стенам.', 'Devorlar boʻylab sudrang.'))}</div>
+        ${k3Row(L3('Стена', 'Devor'), E.map((x, i) => k3B(o.wall === i, `k3dOpenWall(${i})`, '№' + (i + 1))).join(''))}
+        ${st([L3('От угла', 'Burchakdan'), 'off'], 5, o.off)}${st([L3('Ширина', 'Kenglik'), 'w'], 5, o.w)}${st([L3('Высота', 'Balandlik'), 'h'], 5, o.h)}${st([L3('От пола', 'Polidan'), 'y'], 5, o.y)}
+        <div class="k3e-r">${k3B(false, 'k3dOpenCenter()', L3('По центру стены', 'Devor markazida'))}${k3B(false, 'k3dOpenDup()', '⧉ ' + L3('Копия', 'Nusxa'))}${k3B(false, `k3dOpenDel('${o.id}')`, '🗑 ' + L3('Удалить', 'Oʻchirish'))}${k3B(false, 'k3dOpenSel(null)', L3('Готово', 'Tayyor'))}</div>`;
+    }
+    function k3dOpenSel(id) { selObjId = null; selOpenId = id; if (id) { selSec = null; selIsland = false; } renderPlanner(); k3dRefresh(); renderK3dEdit(); }
+    function k3dOpenAdd(kind) {
+      if (!window.ROPEN) return; const E = kEdges(); let wi = 0; E.forEach((e, i) => { if (e.L > E[wi].L) wi = i; });
+      const o = window.ROPEN.mkOpen(kind, wi, 0); o.off = Math.round(Math.max(0, (E[wi].L - o.w) / 2)); kOpens.push(o); selOpenId = o.id; selSec = null; selIsland = false;
+      k3dRefresh(); updateShareLinks(); renderK3dEdit();
+    }
+    function k3dOpenDel(id) { kOpens = kOpens.filter(o => o.id !== id); if (selOpenId === id) selOpenId = null; k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
+    function k3dOpenDup() { const o = kOpens.find(x => x.id === selOpenId); if (!o) return; const c = Object.assign({}, o, { id: 'o' + Math.random().toString(36).slice(2, 7) }), E = kEdges(), L = E[o.wall] ? E[o.wall].L : 9999; c.off = Math.min(Math.max(0, L - o.w), o.off + o.w + 10); kOpens.push(c); selOpenId = c.id; k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
+    function k3dOpenWall(i) { const o = kOpens.find(x => x.id === selOpenId); if (!o) return; const E = kEdges(), L = E[i] ? E[i].L : 9999; o.wall = i; o.off = Math.max(0, Math.min(Math.max(0, L - o.w), o.off)); k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
+    function k3dOpenCenter() { const o = kOpens.find(x => x.id === selOpenId); if (!o) return; const E = kEdges(), L = E[o.wall] ? E[o.wall].L : 9999; o.off = Math.max(0, (L - o.w) / 2); k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
+    function k3dOpenStep(f, d) {
+      const o = kOpens.find(x => x.id === selOpenId); if (!o) return; const E = kEdges(), L = E[o.wall] ? E[o.wall].L : 9999;
+      const lim = { off: [0, Math.max(0, L - o.w)], w: [2, 600], h: [2, 400], y: [0, 400] }[f]; o[f] = Math.round(Math.max(lim[0], Math.min(lim[1], o[f] + d)) * 10) / 10;
+      if (f === 'w') o.off = Math.min(o.off, Math.max(0, L - o.w)); k3dRefresh(); updateShareLinks(); renderK3dEdit();
+    }
+    function k3dOpenDrag(id, wall, sx, y) {   // из 3D: перетаскиваем по стенам
+      const o = kOpens.find(x => x.id === id); if (!o) return ''; const E = kEdges(), e = E[wall]; if (!e) return '';
+      o.wall = wall; o.off = Math.round(Math.max(0, Math.min(Math.max(0, e.L - o.w), sx - o.w / 2)));
+      if (['door', 'balcony', 'pipe', 'column'].indexOf(o.kind) < 0) o.y = Math.round(Math.max(0, Math.min(250 - o.h, y - o.h / 2)) / 5) * 5;
+      if (K3) K3.update(k3dState());
+      return OPK()[o.kind].ru + ': ' + L3('стена ', 'devor ') + (wall + 1) + ', ' + Math.round(o.off) + ' ' + cmU() + ' / ' + Math.round(o.y) + ' ' + cmU();
+    }
+    /* ---- строка «что добавлено» (режим мастера): видно всё, что есть в проекте, лишнее удаляется и в чертежи не попадает ---- */
+    function kDelSec(tier, id) {
+      const arr = secsOf(tier), sec = arr.find(x => x.id === id); if (!sec) return;
+      if (tier === 'lower' && arr.length <= 1) { if (typeof msToast === 'function') msToast(t('plLast')); return; }
+      arr.splice(arr.indexOf(sec), 1); if (selSec === sec) selSec = null; plannerChanged();
+    }
+    function kSelSec(tier, id) { const sec = secsOf(tier).find(x => x.id === id); if (!sec) return; selSec = sec; selIsland = false; selOpenId = null; moveBase = null; renderPlanner(); k3dRefresh(); renderK3dEdit(); }
+    function kDelPark(i) { parkedSections.splice(i, 1); plannerChanged(); }
+    function renderKAdded() {
+      const box = el('kAdded'); if (!box) return;
+      if (!OWNER_ON || VIEW_ONLY) { box.style.display = 'none'; return; }
+      const L = [], push = (icon, name, size, bad, sel, del) => L.push({ icon, name, size, bad, sel, del });
+      const nm = (s, tier, i) => (s.name || ((tier === 'lower' ? 'Н-' : 'В-') + s.id));
+      lowerSections.forEach((s, i) => push('▭', nm(s, 'lower', i), Math.round((Number(s.width) || 0) * 10), (Number(s.width) || 0) < 8, `kSelSec('lower',${s.id})`, `kDelSec('lower',${s.id})`));
+      upperSections.forEach((s, i) => push('▤', nm(s, 'upper', i), Math.round((Number(s.width) || 0) * 10), (Number(s.width) || 0) < 8, `kSelSec('upper',${s.id})`, `kDelSec('upper',${s.id})`));
+      parkedSections.forEach((p, i) => push('🧳', L3('В запасе: ', 'Zaxirada: ') + (p.sec.name || p.sec.kind), Math.round((Number(p.sec.width) || 0) * 10), false, `k3dTrayDrag && void 0`, `kDelPark(${i})`));
+      if (chk('hasIsland')) push('🏝', L3('Остров', 'Orol'), (el('islandLength').value || '') + '×' + (el('islandWidth').value || ''), false, 'selIsland=true;selSec=null;selOpenId=null;k3dRefresh();renderK3dEdit()', "k3dIsland(0)");
+      const K = OPK(); kOpens.forEach((o, i) => push(K[o.kind] ? K[o.kind].icon : '▫', (K[o.kind] ? K[o.kind].ru : o.kind) + ' ' + (i + 1), Math.round(o.w * 10), false, `k3dOpenSel('${o.id}')`, `k3dOpenDel('${o.id}')`));
+      (window.kObjsList ? window.kObjsList() : []).forEach(x => L.push(x));
+      const bad = L.filter(x => x.bad).length; box.style.display = '';
+      box.innerHTML = `<div class="ah"><span>🧾 ${esc(L3('Что добавлено в проект', 'Loyihaga nima qoʻshilgan'))}: ${L.length}</span><small>${bad ? '⚠ ' + bad + ' — ' : ''}${esc(L3('нажмите — найти в 3D; ✕ — убрать из проекта и чертежей', 'bosing — 3D da topish; ✕ — oʻchirish'))}</small></div><div class="chips">${L.map(x => `<span class="ch ${x.bad ? 'bad' : ''}" onclick="${x.sel}">${x.icon} ${esc(String(x.name))} <b>${esc(String(x.size))}</b>${x.bad ? ' ⚠' : ''}<i title="✕" onclick="event.stopPropagation(); ${x.del}">✕</i></span>`).join('')}</div>`;
+    }
     function k3dSideKitchen() {
       const up = chk('hasUpperTier'), dc = decorClean(decorState), isl = chk('hasIsland');
       const add = (txt, call) => `<button type="button" onclick="${call}">＋ ${esc(txt)}</button>`;
@@ -3000,6 +3161,8 @@
           k3Row(L3('Ярусов', 'Qavatlar'), k3B(!chk('upperTwoTier'), 'k3dTwoTier(0)', '1') + k3B(chk('upperTwoTier'), 'k3dTwoTier(1)', '2')) : ''}
         <div class="k3s-sub">${esc(L3('Открывание у всех', 'Hammasi uchun ochilish'))}</div>
         <div class="k3e-r">${k3B(false, "setAllOpen('handles')", L3('Ручки', 'Dastalar'))}${k3B(false, "setAllOpen('push')", 'TIP-ON')}${k3B(false, "setAllOpen('gola')", L3('Гола', 'Gola'))}</div>
+        ${k3dObjListHtml()}
+        ${k3dOpenListHtml()}
         <div class="k3s-sub">🪴 ${esc(L3('Интерьер (в цену не входит)', 'Interyer (narxga kirmaydi)'))}</div>
         ${k3Row(L3('Лампы', 'Chiroqlar'), k3Step(dc.lamps, 'k3dDecor(\'lamps\',-1)', 'k3dDecor(\'lamps\',1)'))}
         ${k3Row(L3('Стулья', 'Stullar'), k3Step(dc.stools, 'k3dDecor(\'stools\',-1)', 'k3dDecor(\'stools\',1)'))}
@@ -3123,6 +3286,7 @@
     const topSwatches = (cur, fn, resetTxt) => `<div class="k3sw-row">${TOP_PALETTE.map(c => `<button type="button" class="k3sw ${cur === c[0] ? 'on' : ''}" style="background:${c[0]}" title="${c[1]}" onclick="${fn}('${c[0]}')"></button>`).join('')}<input type="color" class="k3sw-pick" value="${/^#[0-9a-f]{6}$/i.test(cur) ? cur : '#c9a273'}" title="свой цвет" onchange="${fn}(this.value)">${cur ? k3B(false, fn + "('')", resetTxt) : ''}</div>`;
     function k3dTopColor(h) { topColorHex = /^#[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : ''; updateCalculator(); renderK3dEdit(); updateShareLinks(); }
     function k3dCabTop(h) { const s = selSec; if (!s) return; if (/^#[0-9a-f]{6}$/i.test(h)) s.ctc = h.toLowerCase(); else delete s.ctc; updateCalculator(); renderK3dEdit(); updateShareLinks(); }
+    let kOpens = [], selOpenId = null, kWallPolyCache = null, kObjs = [], selObjId = null;
     let selIsland = false, islandPos = null, parkedSections = [], swapFrom = null, moveStep = 1, magnetOn = true, moveBase = null, k3dKeepPanel = false;
     const fpN = v => Math.round(v * 10) / 10;
     const cmU = () => L3('см', 'sm');
@@ -3220,6 +3384,7 @@
       return `${L3('Сдвинуто', 'Surildi')}: ${arr(dx, '→', '←')} ${cmU()} · ${arr(dz, '↓', '↑')} ${cmU()} · ${L3('высота', 'balandlik')} ${dy >= 0 ? '+' : '−'}${Math.abs(fpN(dy))} ${cmU()}\n${L3('От левой стены', 'Chap devordan')} ${fpN(f.x0)} · ${L3('от задней', 'orqa devordan')} ${fpN(f.z0)} · ${L3('от пола', 'poldan')} ${fpN(p.y)}`;
     }
     function k3dDragHook(sel, res) {
+      if (sel.tier === 'obj') return kObjDrag(sel, res);
       const tg = tgtOf(sel); if (!tg || (tg.tier !== 'island' && !tg.sec)) return null;
       const geo = k3dGeo(); let p = Object.assign({}, getTarget(tg, geo), { cx: res.cx, cz: res.cz, r: res.r });
       if (magnetOn) p = magnet(p, tg, geo);
@@ -3227,6 +3392,7 @@
       return { cx: p.cx, cz: p.cz, r: p.r, ok: checkOk(tg, p, geo), hud: hudText(tg, p, geo) };
     }
     function k3dDropHook(sel, res) {
+      if (sel.tier === 'obj') { kObjDrop(sel, res); return; }
       const tg = tgtOf(sel); if (!tg || (tg.tier !== 'island' && !tg.sec)) { k3dRefresh(); return; }
       const geo = k3dGeo(), p = Object.assign({}, getTarget(tg, geo), { cx: res.cx, cz: res.cz, r: res.r });
       if (res.ok === false) { if (typeof msToast === 'function') msToast(L3('Здесь занято или за стеной — шкаф вернулся на место', 'Bu yer band yoki devordan tashqari — shkaf joyiga qaytdi')); k3dRefresh(); return; }
@@ -3504,6 +3670,10 @@
         if (b) { const a = swapFrom; doSwap(a, b); return; }
       }
       if (swapFrom && !sel) swapFrom = null;
+      if (sel && sel.tier === 'obj') { selObjId = sel.id; selOpenId = null; selIsland = false; selSec = null; moveBase = null; renderK3dEdit(); k3dRefresh(); renderKAdded(); return; }
+      selObjId = null;
+      if (sel && sel.tier === 'open') { selOpenId = sel.id; selIsland = false; selSec = null; moveBase = null; renderK3dEdit(); k3dRefresh(); renderKAdded(); return; }
+      selOpenId = null;
       if (sel && sel.tier === 'island') { selIsland = true; selSec = null; }
       else { selIsland = false; selSec = sel ? (secsOf(sel.tier).find(x => x.id === sel.id) || null) : null; }
       moveBase = null;
@@ -3761,9 +3931,10 @@
     function ownerApply(on) {
       OWNER_ON = !!on && !VIEW_ONLY;
       const sec = el('ownerDraw'); if (sec) sec.style.display = OWNER_ON ? '' : 'none';
+      const shp = el('shapeBox'); if (shp) shp.style.display = OWNER_ON ? '' : 'none';
       if (OWNER_ON) renderOwnerDraw();
       if (K3) renderK3dBar();
-      renderK3dEdit();
+      renderK3dEdit(); renderKAdded();
     }
     // вход: Ctrl+Shift+K или три быстрых нажатия на логотип
     document.addEventListener('keydown', e => { if ((e.ctrlKey && e.shiftKey && (e.code === 'KeyK' || e.key === 'K' || e.key === 'k')) || (e.altKey && e.shiftKey && e.code === 'KeyM')) { e.preventDefault(); ownerUnlock(); } });
@@ -4121,6 +4292,7 @@
           parts.push({ grp, name: 'Столешница', qty: 1, L: len, W: Math.round(ctd * 10), t: Math.round(ctt * 10), mat: 'Столешница (' + (CONFIG.countertops[S.top].ru) + ')', eL: 0, eW: 0, edgeT: '', note: 'торцы — по материалу; вырезы под мойку/плиту', edgeM: 0 });
         });
       });
+      if (window.SCORE && kObjs.length) window.SCORE.objsParts(kObjs, CUT_T === 18 ? 1.8 : 1.6).parts.forEach(p => parts.push({ grp: p.grp, name: p.name, qty: p.qty, L: p.L, W: p.W, t: p.t, mat: p.mat, eL: 0, eW: 0, edgeT: p.edgeT, edgeDesc: p.edgeDesc, note: p.note, edgeM: p.edgeM }));
       return parts;
     }
     function kitchenCutTotals(parts) {
@@ -4132,7 +4304,7 @@
       const fm = v => String(v).replace('.', ','), tt = kitchenCutTotals(parts), out = [], rowsPerPage = 29;
       const groups = []; let last = null; parts.forEach(p => { if (p.grp !== last) { groups.push({ h: p.grp }); last = p.grp; } groups.push(p); });
       const edgeLine = `КРОМКА: 0,4 мм — ${fm(tt.e04)} м · 2 мм (фасады) — ${fm(tt.e2)} м · всего ${fm(tt.total)} м (с запасом 10% — ${fm(Math.round(tt.total * 110) / 100)} м)`;
-      const edgeDesc = p => { if (!p.edgeT) return '—'; const e = (p.eL || 0), w = (p.eW || 0); return (e === 2 && w === 2 ? 'по периметру' : (e && !w ? e + ' длинная' : (!e && w ? w + ' короткая' : e + ' дл. + ' + w + ' кор.'))) + ' (' + p.edgeT + ')'; };
+      const edgeDesc = p => { if (p.edgeDesc) return p.edgeDesc; if (!p.edgeT) return '—'; const e = (p.eL || 0), w = (p.eW || 0); return (e === 2 && w === 2 ? 'по периметру' : (e && !w ? e + ' длинная' : (!e && w ? w + ' короткая' : e + ' дл. + ' + w + ' кор.'))) + ' (' + p.edgeT + ')'; };
       let idx = 0, n = 0, page = 0;
       while (idx < groups.length) {
         let o = odText(60, 62, 'РАСКРОЙ КУХНИ · ЛДСП ' + CUT_T + ' мм · кромка на видимых сторонах', 10, 'start', 'font-weight="700"') + odText(1150, 62, 'Кромка всего: ' + fm(tt.total) + ' м', 9, 'end', 'font-weight="700" fill="#b3261e"');
@@ -4357,7 +4529,7 @@
 
     function updateCalculator() {
       const s = getCalcState();
-      const total = computePrice(s);
+      const total = computePrice(s) + kObjCost();
       calculatedTotalPriceNumber = total;
       el('totalPriceDisplay').textContent = usd(total);
       el('totalPriceSum').textContent = sumNote(total);
@@ -4763,6 +4935,7 @@
       renderPlannerEdit();
       renderDecorUI();
       renderOpenAll();
+      renderKAdded();
     }
 
     function addMenuHtml(w) {
@@ -5645,6 +5818,7 @@
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
         tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
+        ox: kOpens.map(o => [o.kind, o.wall, o.off, o.w, o.h, o.y, o.d]), oj: kObjs.length ? kObjs : 0,
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW], kh: KHW, ch: s.counterH, ug: s.upperGap };
     }
     function b64urlEncode(str) {
@@ -5726,6 +5900,8 @@
       topColorHex = typeof st.tc === 'string' && /^#[0-9a-f]{6}$/i.test(st.tc) ? st.tc.toLowerCase() : '';
       roomPoly = null;
       if (Array.isArray(st.rp) && st.rp.length >= 8 && st.rp.length % 2 === 0 && st.rp.every(v => isFinite(v))) { const Q = []; for (let i = 0; i < st.rp.length; i += 2) Q.push([+st.rp[i], +st.rp[i + 1]]); if (rpValid(Q)) roomPoly = Q; }
+      kOpens = window.ROPEN && Array.isArray(st.ox) ? window.ROPEN.sanitizeOpens(st.ox.slice(0, 80).map(a => Array.isArray(a) ? { kind: a[0], wall: a[1], off: a[2], w: a[3], h: a[4], y: a[5], d: a[6] } : {}), roomPoly || [[0, 0], [Math.max(60, +st.m || 240), 0], [Math.max(60, +st.m || 240), 600], [0, 600]]) : []; selOpenId = null;
+      kObjs = window.SCORE && Array.isArray(st.oj) && st.oj.length ? (window.SCORE.sanitize({ cols: [], objs: st.oj.slice(0, 60), room: { poly: roomPoly } }) || { objs: [] }).objs : []; selObjId = null;
       selSec = null;
       addMenuWall = null;
       decorState = decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3] } : null);

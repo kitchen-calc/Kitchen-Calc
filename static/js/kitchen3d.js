@@ -5,6 +5,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { buildOpenings, pickWall } from '/static/js/room-open.js?v=1';
+import { buildObjGroup } from '/static/js/room-objs.js?v=1';
 
 const DEG = Math.PI / 180;
 const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -479,7 +481,17 @@ export function createK3D(container, hooks = {}, opts = {}) {
       const sk = mesh(new THREE.BoxGeometry(len, 7, 1.4), M.inner); sk.rotation.y = Math.atan2(nx, nz); sk.position.set(mx + nx * .1, 3.5, mz + nz * .1); root.add(sk);
     }
   }
-  function room(M, st, bounds) {
+  /* двери, окна, розетки: стоят на стенах комнаты (по углам st.poly или по прямоугольнику главной стены) */
+  const wallPolyOf = st => (st.poly && st.poly.length >= 4) ? st.poly : [[0, 0], [st.W, 0], [st.W, st.roomD || 360], [0, st.roomD || 360]];
+  function openings(st) {
+    const opens = st.opens || []; if (!opens.length) return;
+    const mk = (hex, o) => new THREE.MeshStandardMaterial(Object.assign({ color: hex, roughness: .6, metalness: 0 }, o || {}));
+    const glass = new THREE.MeshPhysicalMaterial({ color: '#cfe6f2', roughness: .04, transparent: true, opacity: .32, depthWrite: false });
+    const groups = buildOpenings(root, opens, wallPolyOf(st), { mat: mk, glass: () => glass, picks: [], meta: () => ({}) });
+    opens.forEach(o => { const g = groups.get(o.id); if (g) { g.userData.mod = { tier: 'open', id: o.id, w: o.w, h: o.h, d: 6, y0: o.y, open: true }; pick.push(g); } });
+  }
+  function room(M, st, bounds) { roomShell(M, st, bounds); openings(st); }
+  function roomShell(M, st, bounds) {
     if (st.poly && st.poly.length >= 4) { roomByPoly(M, st); return; }
     const pad = 90, x0 = -pad, x1 = st.W + pad, zMax = bounds.zMax + 220, H = st.roomH;
     const fl = mesh(new THREE.PlaneGeometry(x1 - x0, zMax + 40), M.floor, false); fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, 0, zMax / 2 - 20); fl.receiveShadow = true;
@@ -664,6 +676,14 @@ export function createK3D(container, hooks = {}, opts = {}) {
     }
     pick.forEach(g => { const m = g.userData.mod; if (!m) return; const c = new THREE.Vector3(m.w / 2, 0, m.d / 2).applyEuler(g.rotation).add(g.position); m.cx = c.x; m.cz = c.z; m.r = ((Math.round(g.rotation.y / DEG) % 360) + 360) % 360; m.y = g.position.y; });
     countertops(M, st);
+    // свои шкафчики (стеллажи, полки, шкафы своей формы): стоят где угодно, двигаются мышью, двери открываются
+    (st.objs || []).forEach(q => {
+      const t = q.mat === 'ply' ? 1.2 : 1.6, body = q.color ? new THREE.MeshStandardMaterial({ color: q.color, roughness: .55 }) : (q.mat === 'ply' ? new THREE.MeshStandardMaterial({ color: '#d8bd8a', roughness: .6 }) : (q.mat === 'mdf' ? M.facade : M.body));
+      const mirror = new THREE.MeshStandardMaterial({ color: '#eef5f9', roughness: .06, metalness: .8 }), key = 'obj:' + q.id;
+      const g = buildObjGroup(q, { t, body, back: M.inner, glass: M.glass, mirror, chrome: M.chrome, edge: null, keyBase: key, onDoor: (k, fn) => anims.push({ key: k, apply: fn }), mark: null });
+      g.position.y = q.y || 0; const wrap = new THREE.Group(); wrap.add(g); placeAt(wrap, q.bw, q.bd, q.cx, q.cz, q.r || 0, 0);
+      wrap.userData.mod = { tier: 'obj', id: q.id, w: q.bw, h: q.h, d: q.bd, y0: q.y || 0, free: true }; root.add(wrap); pick.push(wrap);
+    });
     room(M, st, bounds);
     island(M, st, bounds);
     lamps(M, st, bounds);
@@ -688,6 +708,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     const sel = !viewOnly && state && state.selected; if (!sel) return;
     const g = pick.find(p => p.userData.mod.tier === sel.tier && p.userData.mod.id === sel.id); if (!g) return;
     const m = g.userData.mod;
+    if (m.open) { const b = new THREE.Box3().setFromObject(g), sz = b.getSize(new THREE.Vector3()), ct = b.getCenter(new THREE.Vector3()); selBox = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(sz.x + 1.5, sz.y + 1.5, sz.z + 1.5)), new THREE.LineBasicMaterial({ color: '#e9b44c' })); selBox.position.copy(ct); root.add(selBox); return; }
     const geo = new THREE.EdgesGeometry(new THREE.BoxGeometry(m.w + 1.2, m.h + 1.2, m.d + 1.2));
     selBox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: dragBad ? '#e5484d' : '#e9b44c' }));
     selBox.position.set(m.w / 2, m.y0 + m.h / 2, m.d / 2);
@@ -742,6 +763,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     const h = hit(e); if (!h) return;
     const m = h.m, sel = state && state.selected;
     if (!sel || sel.tier !== m.tier || sel.id !== m.id) { if (hooks.onSelect) hooks.onSelect({ tier: m.tier, id: m.id }); }
+    if (m.tier === 'open') { drag = { open: true, id: m.id, moved: false }; controls.enabled = false; try { renderer.domElement.setPointerCapture(e.pointerId); } catch (er) {} return; }
     drag = { tier: m.tier, id: m.id, p0: h.p, c0: { cx: m.cx, cz: m.cz, r: m.r }, moved: false, res: null };
     controls.enabled = false;
     try { renderer.domElement.setPointerCapture(e.pointerId); } catch (er) {}
@@ -751,6 +773,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     if (!drag.moved && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) return;
     drag.moved = true;
     rayFrom(e);
+    if (drag.open) { const r = pickWall(ray.ray, wallPolyOf(state), state.roomH || 260); if (r && hooks.onOpenDrag) setHud(hooks.onOpenDrag(drag.id, r.wall, r.s, r.y) || ''); invalidate(); return; }
     plane.set(new THREE.Vector3(0, 1, 0), -drag.p0.y);
     if (!ray.ray.intersectPlane(plane, hitP)) return;
     const g = findG(drag.tier, drag.id); if (!g) return;
@@ -767,6 +790,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     const d = drag; drag = null; controls.enabled = true; setHud('');
     if (!d) return false;
     dragBad = false;
+    if (d.open) { if (d.moved && hooks.onOpenEnd) hooks.onOpenEnd(); return !!d.moved; }
     if (d.moved) { if (!cancel && d.res && hooks.onMove) hooks.onMove({ tier: d.tier, id: d.id }, d.res, d.c0); else { highlight(); invalidate(); } return true; }
     return false;
   }
