@@ -729,6 +729,31 @@ window.PRO = {
   opWall: i => mutate(() => { const o = S.opens[sel.oi]; if (!o) return; const L = (roomEdges(roomPoly(S))[i] || { L: 9999 }).L; o.wall = i; o.off = r1(Math.max(0, Math.min(Math.max(0, L - o.w), o.off))); }),
   opCenter: () => mutate(() => { const o = S.opens[sel.oi]; if (!o) return; const L = (roomEdges(roomPoly(S))[o.wall] || { L: 9999 }).L; o.off = r1(Math.max(0, (L - o.w) / 2)); }),
   delItemId: id => mutate(() => { S.cols.forEach(c => { c.items = c.items.filter(i => i.id !== id); }); sel = { k: 'global' }; }),
+  saveFile: () => {   // проект целиком — файлом на компьютер: открывается позже, можно править и отправлять клиенту
+    const d = new Date(), p2 = n => String(n).padStart(2, '0'), stamp = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + '_' + p2(d.getHours()) + '-' + p2(d.getMinutes());
+    let lib = []; try { lib = JSON.parse(localStorage.getItem('kc_pro_lib') || '[]'); } catch (e) {}
+    const data = JSON.stringify({ app: 'kitchen-calc-shkaf', v: 1, saved: d.toISOString(), name: S.name, state: S, lib }, null, 1);
+    const a = document.createElement('a'), name = String(S.name || 'Шкаф').replace(/[\/:*?"<>|]+/g, ' ').trim().slice(0, 50) || 'Шкаф';
+    a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' })); a.download = name + ' ' + stamp + '.kcshkaf.json'; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); toast('Проект сохранён файлом: ' + a.download);
+  },
+  openFile: () => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,.kcshkaf,application/json';
+    inp.onchange = () => {
+      const f = inp.files && inp.files[0]; if (!f) return; const rd = new FileReader();
+      rd.onload = () => {
+        try {
+          const o = JSON.parse(rd.result); if (!o || o.app !== 'kitchen-calc-shkaf' || !o.state) throw new Error('not project');
+          const s = sanitize(o.state); if (!s) throw new Error('bad state');
+          if (Array.isArray(o.lib) && o.lib.length) { try { const cur = JSON.parse(localStorage.getItem('kc_pro_lib') || '[]'), have = new Set(cur.map(x => JSON.stringify(x.tpl))); o.lib.forEach(x => { if (x && x.tpl && !have.has(JSON.stringify(x.tpl))) cur.push(x); }); localStorage.setItem('kc_pro_lib', JSON.stringify(cur)); } catch (e) {} }
+          pushUndo(); S = s; sel = { k: 'global' }; multi = []; fixSel(); refresh(); if (K) K.frame(); toast('Открыт проект «' + S.name + '». Прежний можно вернуть кнопкой «↶ Отменить».');
+        } catch (e) { alert('Этот файл не похож на проект шкафа (сохраняйте кнопкой «💾 Сохранить»).'); }
+      };
+      rd.readAsText(f);
+    };
+    inp.click();
+  },
+  newProject: () => { if (confirm('Сохранить текущий проект в файл перед новым?\n\nОК — скачать файл и начать новый\nОтмена — выбор дальше')) window.PRO.saveFile(); if (confirm('Начать новый проект с шаблона?')) mutate(() => { S = defState(); sel = { k: 'global' }; }); },
   colDp: () => mutate(() => { const c = S.cols[sel.i]; if (c) { if (c.dp === false) delete c.dp; else c.dp = false; } }),
   dtRot: d => mutate(() => { const c = S.cols[sel.i]; if (!c || !c.det) return; const ci = sel.i, f = colFoot(S, ci), cx = c.det.x + f.w / 2, cz = c.det.z + f.d / 2; c.det.rot = (((c.det.rot || 0) + d) % 360 + 360) % 360; const n2 = colFoot(S, ci); c.det.x = r1(cx - n2.w / 2); c.det.z = r1(cz - n2.d / 2); if (S.room.mag) { const m = rectMagnet(S, c.det.x, c.det.z, r => colFoot(S, ci, r), c.det.rot, 200, c.det.rot); if (m) { c.det.x = m.ox; c.det.z = m.oz; } } }),
   magnet: () => mutate(() => { S.room.mag = !S.room.mag; if (S.room.mag) { const m = wardrobeMagnet(S, S.room.ox || 0, S.room.oz || 0, 120); if (m) { S.room.ox = m.ox; S.room.oz = m.oz; S.room.rot = m.rot; } } }),

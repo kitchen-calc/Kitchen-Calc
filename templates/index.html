@@ -2796,7 +2796,7 @@
       const rotLbl = `<label class="rot" title="${esc(L3('Галочка: тянете — вращаете. Без галочки: тянете — двигаете картинку. Колесо мыши — приблизить.', 'Belgi bor — aylantirish, yoʻq — suratni surish. Gʻildirak — yaqinlashtirish.'))}"><input type="checkbox" ${k3dRotate ? 'checked' : ''} onchange="k3dRotMode(this.checked)"> ${k3dRotate ? esc(L3('🔄 Вращать', '🔄 Aylantirish')) : esc(L3('✋ Двигать картинку', '✋ Suratni surish'))}</label>`;
       el('k3dBar').innerHTML = rotLbl + b('openAll', L3('↔ Открыть всё', '↔ Hammasini ochish')) + b('closeAll', L3('Закрыть', 'Yopish')) +
         b('light', k3dLightOn ? L3('💡 Свет: вкл', '💡 Yorugʻlik: yoniq') : L3('🌙 Свет: выкл', '🌙 Yorugʻlik: oʻchiq'), !k3dLightOn) + b('leds', k3dLedsOn ? L3('✨ Подсветка: вкл', '✨ Yoritish: yoniq') : L3('▫ Подсветка: выкл', '▫ Yoritish: oʻchiq'), !k3dLedsOn) + '<span class="sp"></span>' +
-        ((VIEW_ONLY || !OWNER_ON) ? '' : b('client', L3('👁 Клиенту', '👁 Mijozga'))) +
+        ((VIEW_ONLY || !OWNER_ON) ? '' : b('client', L3('👁 Клиенту', '👁 Mijozga')) + b('saveFile', '💾 ' + L3('Сохранить', 'Saqlash')) + b('openFile', '📂 ' + L3('Открыть', 'Ochish'))) +
         (isFull ? b('side', st.classList.contains('side-off') ? L3('⚙ Параметры', '⚙ Parametrlar') : L3('⚙ Скрыть панель', '⚙ Panelni yashirish')) : '') +
         b('full', isFull ? L3('✕ Свернуть', '✕ Yopish') : L3('⛶ На весь экран', '⛶ Toʻliq ekran'));
     }
@@ -2804,10 +2804,38 @@
       const tier = tierOf(sec), LAY = layoutAll(lowerSections, upperSections, currentType), wall = wallOfSecIn(currentType, sec);
       return (LAY[wall][tier === 'lower' ? 'lower' : 'upper'] || []).map(r => r.sec);
     }
+    /* сохранить проект кухни файлом на компьютер и открыть позже (чтобы вернуться к старому и править) */
+    function kSaveFile() {
+      const d = new Date(), p2 = n => String(n).padStart(2, '0'), stamp = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + '_' + p2(d.getHours()) + '-' + p2(d.getMinutes());
+      let lib = []; try { lib = JSON.parse(localStorage.getItem('kc_pro_lib') || '[]'); } catch (e) {}
+      const s = getCalcState(), data = JSON.stringify({ app: 'kitchen-calc-kitchen', v: 1, saved: d.toISOString(), state: serializeState(), lib }, null, 1);
+      const a = document.createElement('a'), name = 'Кухня ' + (s.type || '') + ' ' + (s.mainW || '') + ' ' + stamp + '.kckitchen.json';
+      a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); if (typeof msToast === 'function') msToast(L3('Проект сохранён файлом: ', 'Loyiha fayl sifatida saqlandi: ') + name);
+    }
+    function kOpenFile() {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,.kckitchen,application/json';
+      inp.onchange = () => {
+        const f = inp.files && inp.files[0]; if (!f) return; const rd = new FileReader();
+        rd.onload = () => {
+          try {
+            const o = JSON.parse(rd.result); if (!o || o.app !== 'kitchen-calc-kitchen' || !o.state) throw new Error('not project');
+            if (Array.isArray(o.lib) && o.lib.length) { try { const cur = JSON.parse(localStorage.getItem('kc_pro_lib') || '[]'), have = new Set(cur.map(x => JSON.stringify(x.tpl))); o.lib.forEach(x => { if (x && x.tpl && !have.has(JSON.stringify(x.tpl))) cur.push(x); }); localStorage.setItem('kc_pro_lib', JSON.stringify(cur)); } catch (e) {} }
+            if (!applyState(o.state)) throw new Error('bad state');
+            selSec = null; selIsland = false; selOpenId = null; selObjId = null; renderPlanner(); k3dRefresh(); renderK3dEdit(); updateShareLinks(); renderKAdded();
+            if (typeof msToast === 'function') msToast(L3('Проект открыт', 'Loyiha ochildi'));
+          } catch (e) { alert(L3('Этот файл не похож на проект кухни (сохраняйте кнопкой «💾 Сохранить»).', 'Bu fayl oshxona loyihasiga oʻxshamaydi.')); }
+        };
+        rd.readAsText(f);
+      };
+      inp.click();
+    }
     function k3dAct(a, v) {
       if (a === 'light') { k3dLightOn = !k3dLightOn; k3dLightFx(); renderK3dBar(); return; }
       if (a === 'leds') { k3dLedsOn = !k3dLedsOn; k3dLightFx(); renderK3dBar(); return; }
       if (a === 'client') { k3dClientLink(); return; }
+      if (a === 'saveFile') { kSaveFile(); return; }
+      if (a === 'openFile') { kOpenFile(); return; }
       if (a === 'unsel') { selSec = null; selIsland = false; swapFrom = null; renderPlanner(); return; }
       if (a === 'openAll' || a === 'closeAll') { if (K3) K3.openAll(a === 'openAll'); return; }
       if (a === 'full') { k3dFull(); return; }

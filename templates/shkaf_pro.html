@@ -79,6 +79,7 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
   <button class="lk edit" type="button" onclick="PRO.undo()">↶ Отменить</button><button class="lk edit" type="button" onclick="PRO.redo()">↷</button>
   <button class="lk edit" type="button" onclick="PRO.share()">🔗 Ссылка</button>
   <button class="lk edit" id="clientBtn" type="button" style="display:none" onclick="PRO.client()">👁 Клиенту</button><button class="lk edit" id="clientTg" type="button" style="display:none" onclick="PRO.client('tg')">✈ Клиенту в Telegram</button>
+  <button class="lk edit" id="fsave" type="button" onclick="PRO.saveFile()" title="Скачать проект файлом на компьютер">💾 Сохранить</button><button class="lk edit" id="fopen" type="button" onclick="PRO.openFile()" title="Открыть ранее сохранённый проект">📂 Открыть</button><button class="lk edit" type="button" onclick="PRO.newProject()">＋ Новый</button>
   <button class="lk edit" type="button" onclick="PRO.reset()">Сбросить</button>
 </div></div>
 <main>
@@ -120,6 +121,6 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
 <script>if (/^\/shkaf\/view/.test(location.pathname)) document.getElementById('robots').content = 'noindex,nofollow';</script>
 <script src="/static/js/sheet-fit.js?v=1"></script>
 <script type="module" src="/static/js/shkaf-shape.js?v=3"></script>
-<script type="module" src="/static/js/shkaf-pro.js?v=22"></script>
+<script type="module" src="/static/js/shkaf-pro.js?v=23"></script>
 </body>
 </html>
