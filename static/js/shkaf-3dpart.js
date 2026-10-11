@@ -52,7 +52,7 @@ const snap = () => { hist.push(JSON.stringify(st.pt)); if (hist.length > 80) his
 /* ---- сцена ---- */
 function matOf() {
   const c = st.cat && window.KCCAT && window.KCCAT.find(st.cat), m = new THREE.MeshStandardMaterial({ color: c ? c.hex : (st.color || (st.mat === 'ply' ? '#d8bd8a' : '#e3d9c4')), roughness: .55, metalness: 0 });
-  if (c && c.img) new THREE.TextureLoader().load(c.img, tx => { tx.colorSpace = THREE.SRGBColorSpace; m.map = tx; m.color.set('#ffffff'); m.needsUpdate = true; draw(); });
+  if (c && c.img) window.KCCAT.tex(c.img, cv => { const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.wrapS = tx.wrapT = THREE.MirroredRepeatWrapping; tx.anisotropy = 8; m.map = tx; m.color.set('#ffffff'); m.needsUpdate = true; draw(); });
   return m;
 }
 function rebuild() {

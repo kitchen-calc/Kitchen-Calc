@@ -23,5 +23,11 @@
     });
     document.body.appendChild(ov); draw();
   }
-  window.KCCAT = { all: all, byId: byId, find: function (id) { return byId[id] || null; }, pick: pick, name: function (id) { return byId[id] ? byId[id].name : ''; } };
+  var cc = {};
+  /* чистая середина фото (без логотипа и подписей) в canvas 512×512; cb вызывается, когда фото загрузилось */
+  function tex(url, cb) {
+    var e = cc[url]; if (!e) { var c = document.createElement('canvas'); c.width = c.height = 512; e = cc[url] = { c: c, ok: false, cbs: [] }; var im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = function () { var sz = Math.min(im.width, im.height), cw = sz * .44; c.getContext('2d').drawImage(im, (im.width - cw) / 2, (im.height - cw) / 2, cw, cw, 0, 0, 512, 512); e.ok = true; e.cbs.forEach(function (f) { f(c); }); e.cbs = []; }; im.src = url; }
+    if (e.ok) { if (cb) cb(e.c); } else if (cb) e.cbs.push(cb); return e.c; }
+  window.KCCAT = { tex: tex, all: all, byId: byId, find: function (id) { return byId[id] || null; }, pick: pick, name: function (id) { return byId[id] ? byId[id].name : ''; } };
 })();

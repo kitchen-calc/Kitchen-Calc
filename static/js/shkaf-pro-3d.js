@@ -49,7 +49,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   function catM(id) {   // материал из каталога цветов (фото поставщика) — кэшируется
     const c = window.KCCAT && window.KCCAT.find(id); if (!c) return null; if (catCache.has(id)) return catCache.get(id);
     const m = new THREE.MeshStandardMaterial({ color: c.hex, roughness: .55, metalness: 0, envMapIntensity: .7 });
-    if (c.img) new THREE.TextureLoader().load(c.img, tex => { tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; m.map = tex; m.color.set('#ffffff'); m.needsUpdate = true; invalidate(); });
+    if (c.img) window.KCCAT.tex(c.img, cv => { const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.MirroredRepeatWrapping; tex.anisotropy = 8; m.map = tex; m.color.set('#ffffff'); m.needsUpdate = true; invalidate(); });
     catCache.set(id, m); return m;
   }
   function bodyHex(S) { return S.custom || (PALETTE[S.color] || PALETTE[0])[1]; }
