@@ -526,12 +526,28 @@ function sheetIso(S, bp, no, total, vk) {
   const sc = Math.min(780 / (ax1 - ax0 || 1), 560 / (ay1 - ay0 || 1)), ox = 46 - ax0 * sc + (780 - (ax1 - ax0) * sc) / 2, oy = 84 - ay0 * sc;
   const Q = (x, y, z) => { const p = pr(x, y, z); return [ox + p[0] * sc, oy + p[1] * sc]; };
   const SK = 'stroke="#111" stroke-width="1" stroke-linejoin="round"', SKT = 'stroke="#444" stroke-width=".7" stroke-linejoin="round"';
+  const used = [];   // занятые места под подписи: цифры никогда не накладываются друг на друга
+  const hitB = (cx, cy, w, h) => used.some(u => Math.abs(cx - u[0]) < (w + u[2]) / 2 && Math.abs(cy - u[1]) < (h + u[3]) / 2);
+  const boxOf = (txt, sz) => [String(txt).length * sz * F * .56 + 3, sz * F + 2];
+  const reg = (cx, cy, txt, sz) => { const b = boxOf(txt, sz); used.push([cx, cy, b[0], b[1]]); };
+  const free = (cx, cy, txt, sz) => { const b = boxOf(txt, sz); if (hitB(cx, cy, b[0], b[1])) return false; used.push([cx, cy, b[0], b[1]]); return true; };
+  const thr = (cx, cy, txt, sz, anchor, extra) => { reg(cx, cy - 3, txt, sz); return thx(cx, cy, txt, sz, anchor, extra); };
+  const dimS = (A, B, ox, oy, txt, sz) => {   // размер между экранными точками A и B со смещением (ox, oy); подпись над линией
+    const a = [A[0] + ox, A[1] + oy], b = [B[0] + ox, B[1] + oy], mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+    if (Math.hypot(b[0] - a[0], b[1] - a[1]) < boxOf(txt, sz)[0] + 6 || !free(mx, my - 3, txt, sz)) return '';
+    return line(A[0], A[1], a[0], a[1], 't') + line(B[0], B[1], b[0], b[1], 't') + line(a[0], a[1], b[0], b[1], 'd') + tick(a[0], a[1]) + tick(b[0], b[1]) + thx(mx, my - 3, txt, sz, 'middle', 'fill="#0b6e8f"');
+  };
+  const dimSV = (A, B, ox, txt, sz) => {   // вертикальный размер: подпись слева от линии
+    const a = [A[0] + ox, A[1]], b = [B[0] + ox, B[1]], my = (a[1] + b[1]) / 2, bx0 = boxOf(txt, sz);
+    if (Math.abs(b[1] - a[1]) < 16 || !free(a[0] - 3 - bx0[0] / 2, my, txt, sz)) return '';
+    return line(A[0], A[1], a[0], a[1], 't') + line(B[0], B[1], b[0], b[1], 't') + line(a[0], a[1], b[0], b[1], 'd') + tick(a[0], a[1]) + tick(b[0], b[1]) + thx(a[0] - 3, my + 3, txt, sz, 'end', 'fill="#0b6e8f"');
+  };
   const poly = (arr, fill, st) => `<polygon points="${arr.map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" fill="${fill}" ${st || SK}/>`;
   let o = poly(P.map(p => Q(p[0], 0, p[1])), '#fff', 'stroke="#111" stroke-width="1.6"');
   E.forEach(e => {   // две дальние стены, видимые изнутри
     if ((e.nx + e.nz) / Math.SQRT2 < .3) return;
     o += poly([Q(e.a[0], 0, e.a[1]), Q(e.b[0], 0, e.b[1]), Q(e.b[0], H, e.b[1]), Q(e.a[0], H, e.a[1])], '#fff', 'stroke="#555" stroke-width="1"');
-    if (e.L >= 150) { const mid = Q((e.a[0] + e.b[0]) / 2, H, (e.a[1] + e.b[1]) / 2); o += thx(mid[0], mid[1] - 6, 'стена ' + mm(e.L), 6.6, 'middle', 'fill="#444"'); }
+    if (e.L >= 150) { const mid = Q((e.a[0] + e.b[0]) / 2, H, (e.a[1] + e.b[1]) / 2); o += thr(mid[0], mid[1] - 6, 'стена ' + mm(e.L), 6.6, 'middle', 'fill="#444"'); }
   });
   (S.opens || []).forEach((q, i) => {
     const e = E[q.wall]; if (!e || (e.nx + e.nz) / Math.SQRT2 < .3) return;
@@ -541,7 +557,7 @@ function sheetIso(S, bp, no, total, vk) {
       if (k === 'window' || k === 'balcony') { const m = Math.min(3, q.w / 4, q.h / 4); o += poly([W3(u0 + m, y0 + m), W3(u1 - m, y0 + m), W3(u1 - m, y1 - m), W3(u0 + m, y1 - m)], 'none', SKT); for (let j = 1; j < (q.n || 1); j++) { const u = u0 + (u1 - u0) * j / q.n; o += line(W3(u, y0)[0], W3(u, y0)[1], W3(u, y1)[0], W3(u, y1)[1], 't'); } }
       if (k === 'door') o += line(W3(u0, y1)[0], W3(u0, y1)[1], W3(u1, (y0 + y1) / 2)[0], W3(u1, (y0 + y1) / 2)[1], 'h') + line(W3(u0, y0)[0], W3(u0, y0)[1], W3(u1, (y0 + y1) / 2)[0], W3(u1, (y0 + y1) / 2)[1], 'h');
     } else { const c = W3((u0 + u1) / 2, (y0 + y1) / 2); o += circ(c[0], c[1], Math.max(2.4, 3 * sc), 'o', '#fff'); }
-    const c = W3((u0 + u1) / 2, y1 + 6); o += thx(c[0], c[1], '№' + (i + 1), 6.5, 'middle', 'font-weight="700"');
+    const c = W3((u0 + u1) / 2, y1 + 6); o += thr(c[0], c[1], '№' + (i + 1), 6.5, 'middle', 'font-weight="700"');
   });
   // порядок рисования: от дальних к ближним (граф «кто кого закрывает»)
   const n = D.length, adj = D.map(() => []), indeg = D.map(() => 0), key = d => d.x0 + d.z0 + d.y0 * .01 + (d.x1 + d.z1) * .5, bf = (a, b) => a.x1 <= b.x0 + .01 || a.z1 <= b.z0 + .01 || a.y1 <= b.y0 + .01;
@@ -566,7 +582,14 @@ function sheetIso(S, bp, no, total, vk) {
     const fill = d.r === 'a' ? 'url(#h2)' : '#fff', st = d.r === 'f' ? SKT : SK;
     o += poly(fR, fill, st) + poly(fF, fill, st) + poly(fT, '#fff', st);
   });
-  items0.forEach(it => { const bb = it.boxes && it.boxes.length ? bxBounds(it.boxes) : it, p = rot((bb.x0 + bb.x1) / 2, (bb.z0 + bb.z1) / 2), c = Q(p[0], bb.y1, p[1]); o += thx(c[0], c[1] + 3, it.n, 7.4, 'middle', 'font-weight="700"'); });
+  items0.forEach(it => { const bb = it.boxes && it.boxes.length ? bxBounds(it.boxes) : it, p = rot((bb.x0 + bb.x1) / 2, (bb.z0 + bb.z1) / 2), c = Q(p[0], bb.y1, p[1]); o += thr(c[0], c[1] + 3, it.n, 7.4, 'middle', 'font-weight="700"'); });
+  /* ---- размеры в мм на самом виде: комната по полу и высота, затем габариты каждого предмета (ширина, глубина, высота) ---- */
+  E.forEach(e => { if ((e.nx + e.nz) / Math.SQRT2 > -.3) return; const A = Q(e.a[0], 0, e.a[1]), B = Q(e.b[0], 0, e.b[1]), A2 = Q(e.a[0] - e.nx * 45, 0, e.a[1] - e.nz * 45); o += dimS(A, B, A2[0] - A[0], A2[1] - A[1], String(mm(e.L)), 7.4); });
+  { let far = P[0]; P.forEach(p => { if (p[0] + p[1] < far[0] + far[1]) far = p; }); o += dimSV(Q(far[0], 0, far[1]), Q(far[0], H, far[1]), -14, String(mm(H)), 7.4); }
+  items0.slice().sort((a, b) => ((b.x1 - b.x0) * (b.z1 - b.z0) * (b.y1 - b.y0)) - ((a.x1 - a.x0) * (a.z1 - a.z0) * (a.y1 - a.y0))).forEach(it => {
+    const ds = D.filter(d => d.it === it); if (!ds.length) return; const x0 = Math.min(...ds.map(d => d.x0)), x1 = Math.max(...ds.map(d => d.x1)), z0 = Math.min(...ds.map(d => d.z0)), z1 = Math.max(...ds.map(d => d.z1)), y0 = Math.min(...ds.map(d => d.y0)), y1 = Math.max(...ds.map(d => d.y1));
+    o += dimS(Q(x0, y0, z1), Q(x1, y0, z1), -9, 6, String(mm(x1 - x0)), 6.8) + dimS(Q(x1, y0, z0), Q(x1, y0, z1), 9, 6, String(mm(z1 - z0)), 6.8) + dimSV(Q(x0, y0, z1), Q(x0, y1, z1), -12, String(mm(y1 - y0)), 6.8);
+  });
   o += text(46 + 390, 58, `ВИД ИЗ УГЛА ${vk + 1} ИЗ 4 · комната ${mm(bx1 - bx0)}×${mm(bz1 - bz0)}×${mm(H)} мм · изделия показаны как есть (доски, дверцы, ящики)`, 9, 'middle', 'font-weight="700"');
   const lx = 850, ly = 96; o += text(lx, ly - 8, 'ЭКСПЛИКАЦИЯ (Ш×Г×В, мм)', 8.6, 'start', 'font-weight="700"');
   items0.slice(0, 20).forEach((it, i) => { o += text(lx, ly + 12 + i * 26, `${it.n} ${it.name}`.slice(0, 40), 6.8, 'start', 'font-weight="700"') + text(lx + 6, ly + 23 + i * 26, `${mm(it.x1 - it.x0)}×${mm(it.z1 - it.z0)}×${mm(it.y1 - it.y0)} · от пола ${mm(it.y0)}`, 6, 'start', 'fill="#444"'); });
