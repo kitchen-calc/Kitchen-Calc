@@ -20,7 +20,8 @@ export function buildObjGroup(q, ctx) {
     const groups = {}, DEGR = Math.PI / 180;
     (q.pt || []).forEach((b, idx) => {
       const k = b[0], x = b[1], y = b[2], z = b[3], w = b[4], h = b[5], d = b[6], gi = b[7] || 0;
-      if (k === 1) { const m = new THREE.Mesh(new THREE.CylinderGeometry(w / 2, w / 2, h, 24), BM); m.position.set(x + w / 2, y + h / 2, z + d / 2); add(og, m); return; }
+      const rot = m => { if (b[8] || b[9] || b[10]) { m.rotation.order = 'YXZ'; m.rotation.set((b[9] || 0) * DEGR, (b[8] || 0) * DEGR, (b[10] || 0) * DEGR); } return m; };
+      if (k === 1) { const m = new THREE.Mesh(new THREE.CylinderGeometry(w / 2, w / 2, h, 24), BM); m.position.set(x + w / 2, y + h / 2, z + d / 2); rot(m); add(og, m); return; }
       if (k >= 2 && k <= 5) {   // дверца на петлях: слева / справа / сверху / снизу
         const pv = new THREE.Group(); og.add(pv);
         if (k === 2) { pv.position.set(x, y, z + d); bx(w, h, d, fmat, 0, 0, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.y = -105 * DEGR * f; }); }
@@ -31,7 +32,7 @@ export function buildObjGroup(q, ctx) {
         return;
       }
       if (k === 6 && gi) { if (!groups[gi]) { groups[gi] = { g: new THREE.Group(), dmax: 0 }; og.add(groups[gi].g); } groups[gi].dmax = Math.max(groups[gi].dmax, d); bx(w, h, d, BM, x, y, z, groups[gi].g); return; }
-      bx(w, h, d, BM, x, y, z);
+      rot(bx(w, h, d, BM, x, y, z));
     });
     Object.keys(groups).forEach(gi => { const G = groups[gi]; ctx.onDoor(ctx.keyBase + ':g' + gi, f => { G.g.position.z = f * G.dmax * .8; }); });
     return og;

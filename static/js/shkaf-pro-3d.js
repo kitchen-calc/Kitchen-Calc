@@ -350,7 +350,8 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         const groups = {};
         (q.pt || []).forEach((b, idx) => {
           const k = b[0], x = b[1], y = b[2], z = b[3], pw = b[4], ph = b[5], pd = b[6], gi = b[7] || 0, key = 'o' + q.id + '.p' + idx, meta = Object.assign({ key }, base);
-          if (k === 1) { const m = new THREE.Mesh(new THREE.CylinderGeometry(pw / 2, pw / 2, ph, 24), BM); m.position.set(x + pw / 2, y + ph / 2, z + pd / 2); m.castShadow = m.receiveShadow = true; m.userData.sel = base; picks.push(m); og.add(m); return; }
+          const rot = m => { if (b[8] || b[9] || b[10]) { m.rotation.order = 'YXZ'; m.rotation.set((b[9] || 0) * DEG, (b[8] || 0) * DEG, (b[10] || 0) * DEG); } return m; };
+          if (k === 1) { const m = new THREE.Mesh(new THREE.CylinderGeometry(pw / 2, pw / 2, ph, 24), BM); m.position.set(x + pw / 2, y + ph / 2, z + pd / 2); rot(m); m.castShadow = m.receiveShadow = true; m.userData.sel = base; picks.push(m); og.add(m); return; }
           if (k >= 2 && k <= 5) {
             const pv = new THREE.Group(); og.add(pv);
             if (k === 2) { pv.position.set(x, y, z + pd); bx(pw, ph, pd, fmat, 0, 0, -pd, meta, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = -105 * DEG * f; } }); }
@@ -361,7 +362,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
             return;
           }
           if (k === 6 && gi) { const gk = 'o' + q.id + '.g' + gi; if (!groups[gi]) { groups[gi] = { g: new THREE.Group(), dmax: 0, key: gk }; og.add(groups[gi].g); } groups[gi].dmax = Math.max(groups[gi].dmax, pd); bx(pw, ph, pd, BM, x, y, z, Object.assign({ key: gk }, base), groups[gi].g); return; }
-          bx(pw, ph, pd, BM, x, y, z);
+          rot(bx(pw, ph, pd, BM, x, y, z));
         });
         Object.keys(groups).forEach(gi => { const G = groups[gi]; doorsAnim.push({ key: G.key, apply: f => { G.g.position.z = f * G.dmax * .8; } }); });
         return;

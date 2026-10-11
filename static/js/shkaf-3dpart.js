@@ -3,6 +3,7 @@
    и сохраняется в «Мои изделия». Размеры — в сантиметрах, шаг до 1 мм. */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ptAabb } from '/static/js/shkaf-pro-core.js?v=19';
 const $ = id => document.getElementById(id);
 const r1 = v => Math.round(v * 10) / 10;
 let host, renderer, scene, camera, controls, group, raf = 0, st = null, selI = -1, meshes = [], selBox = null, drag = null, alive = false, started = false, bound = false, hist = [], openAll = false;
@@ -44,7 +45,8 @@ const P = {
   stool: { ru: 'Табурет', f: () => tableP(35, 35, 45, 2.8, 4, 2.5) },
   shelf: { ru: 'Стеллаж 4 полки', f: t => cabinetP(80, 180, 30, 3, 0, 0, t).filter(b => b[6] !== .3 && !(b[5] === .3)) }
 };
-function fromObj(o) { return { id: o ? o.id : null, name: (o && o.name) || '', mat: (o && o.mat) || 'dsp', color: (o && o.color) || '', cat: (o && o.cat) || '', pt: ((o && o.pt && o.pt.length) ? o.pt : P.cab.f(1.6)).map(b => { const c = b.slice(); while (c.length < 8) c.push(0); return c; }) }; }
+const pad = b => { const c = b.slice(); while (c.length < 11) c.push(0); return c; };
+function fromObj(o) { return { id: o ? o.id : null, name: (o && o.name) || '', mat: (o && o.mat) || 'dsp', color: (o && o.color) || '', cat: (o && o.cat) || '', pt: ((o && o.pt && o.pt.length) ? o.pt : P.cab.f(1.6)).map(pad) }; }
 const snap = () => { hist.push(JSON.stringify(st.pt)); if (hist.length > 80) hist.shift(); };
 
 /* ---- сцена ---- */
@@ -58,7 +60,7 @@ function rebuild() {
   meshes = []; const mat = matOf(), dmat = mat.clone(), rmat = mat.clone(); dmat.color = dmat.color.clone().multiplyScalar(.92); rmat.color = rmat.color.clone().multiplyScalar(.85);
   st.pt.forEach((b, i) => {
     const k = b[0], g = k === 1 ? new THREE.CylinderGeometry(b[4] / 2, b[4] / 2, b[5], 28) : new THREE.BoxGeometry(Math.max(.05, b[4]), Math.max(.05, b[5]), Math.max(.05, b[6]));
-    const m = new THREE.Mesh(g, k >= 2 && k <= 5 ? dmat : (k === 6 ? rmat : mat)); m.position.set(b[1] + b[4] / 2, b[2] + b[5] / 2, b[3] + b[6] / 2); m.castShadow = m.receiveShadow = true; m.userData.i = i;
+    const m = new THREE.Mesh(g, k >= 2 && k <= 5 ? dmat : (k === 6 ? rmat : mat)); m.position.set(b[1] + b[4] / 2, b[2] + b[5] / 2, b[3] + b[6] / 2); m.rotation.order = 'YXZ'; m.rotation.set((b[9] || 0) * Math.PI / 180, (b[8] || 0) * Math.PI / 180, (b[10] || 0) * Math.PI / 180); m.castShadow = m.receiveShadow = true; m.userData.i = i;
     if (openAll) { if (k === 6) m.position.z += 30; if (k === 2) { m.position.x -= b[4] * .15; m.rotation.y = -1; } }
     m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: .28 })));
     group.add(m); meshes.push(m);
@@ -69,14 +71,15 @@ function hl() {
   if (selBox) { scene.remove(selBox); selBox = null; }
   const m = meshes[selI]; if (!m) { draw(); return; }
   const p = m.geometry.parameters, g = m.geometry.type === 'CylinderGeometry' ? new THREE.CylinderGeometry(p.radiusTop + .3, p.radiusTop + .3, p.height + .6, 28) : new THREE.BoxGeometry(p.width + .6, p.height + .6, p.depth + .6);
-  selBox = new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: 0xe0a21a })); selBox.position.copy(m.position); scene.add(selBox); draw();
+  selBox = new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: 0xe0a21a })); selBox.position.copy(m.position); selBox.rotation.copy(m.rotation); scene.add(selBox); draw();
 }
 function draw() { if (renderer && scene) renderer.render(scene, camera); }
 function loop() { if (!alive) return; controls.update(); renderer.render(scene, camera); raf = requestAnimationFrame(loop); }
 function size() { if (!host || !renderer) return; const w = host.clientWidth || 600, h = host.clientHeight || 420; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); draw(); }
 function bbox() {
   if (!st.pt.length) return { x0: 0, y0: 0, z0: 0, x1: 0, y1: 0, z1: 0 };
-  return { x0: Math.min(...st.pt.map(b => b[1])), y0: Math.min(...st.pt.map(b => b[2])), z0: Math.min(...st.pt.map(b => b[3])), x1: Math.max(...st.pt.map(b => b[1] + b[4])), y1: Math.max(...st.pt.map(b => b[2] + b[5])), z1: Math.max(...st.pt.map(b => b[3] + b[6])) };
+  const A = st.pt.map(ptAabb);
+  return { x0: Math.min(...A.map(v => v[0])), y0: Math.min(...A.map(v => v[1])), z0: Math.min(...A.map(v => v[2])), x1: Math.max(...A.map(v => v[3])), y1: Math.max(...A.map(v => v[4])), z1: Math.max(...A.map(v => v[5])) };
 }
 function frame() { const b = bbox(), cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2, cy = (b.y0 + b.y1) / 2, s = Math.max(b.x1 - b.x0, b.z1 - b.z0, b.y1 - b.y0, 60); controls.target.set(cx, cy, cz); camera.position.set(cx + s * .9, cy + s * .6, cz + s * 1.7); controls.update(); draw(); }
 function init3d() {
@@ -121,6 +124,7 @@ function ui() {
   h += `<div class="shr">Деталей: <b>${st.pt.length}</b> · габарит <b>${Math.round((bb.x1 - bb.x0) * 10)}×${Math.round((bb.z1 - bb.z0) * 10)}×${Math.round((bb.y1 - bb.y0) * 10)}</b> мм (Ш×Г×В)</div>`;
   if (b) {
     h += `<div class="shr"><b>Деталь ${selI + 1}:</b> <select id="pK">${KN.map((n, i) => `<option value="${i}" ${b[0] === i ? 'selected' : ''}>${n}</option>`).join('')}</select></div><div class="p3g">${num('pX', b[1], .1, 'X (слева), см')}${num('pZ', b[3], .1, 'Z (вглубь), см')}${num('pY', b[2], .1, 'Y (от пола), см')}${num('pW', b[4], .1, isC ? 'Диаметр, см' : 'Ширина X, см')}${num('pH', b[5], .1, 'Высота, см')}${isC ? '' : num('pD', b[6], .1, 'Глубина Z, см')}</div>`;
+    if (b[0] <= 1) h += `<div class="shr"><b>Поворот, °:</b></div><div class="p3g">${num('pRY', b[8] || 0, 5, 'По горизонтали (вокруг вертикали)')}${num('pRX', b[9] || 0, 5, 'По вертикали: наклон вперёд / назад')}${num('pRZ', b[10] || 0, 5, 'По вертикали: наклон влево / вправо')}</div><div class="shr"><button type="button" data-rot="8:-90">↺ 90° гор.</button><button type="button" data-rot="8:90">↻ 90° гор.</button><button type="button" data-rot="8:-45">↺ 45°</button><button type="button" data-rot="8:45">↻ 45°</button><button type="button" data-rot="9:90">⤴ 90° верт.</button><button type="button" data-rot="all:0">Сбросить поворот</button></div>`;
     h += `<div class="shr"><button type="button" data-n="-1,0">◀ 1 см</button><button type="button" data-n="1,0">1 см ▶</button><button type="button" data-n="0,-1">▲ 1 см</button><button type="button" data-n="0,1">▼ 1 см</button><button type="button" data-act="mx">⇋ Копия зеркально слева-направо</button><button type="button" data-act="mz">⇵ Копия зеркально вперёд-назад</button><button type="button" data-act="dup">⧉ Копия</button><button type="button" data-act="del">🗑 Удалить</button></div>`;
   }
   h += `<div class="shr">Материал <select id="p3Mat">${MATS.map(([k, n]) => `<option value="${k}" ${st.mat === k ? 'selected' : ''}>${n}</option>`).join('')}</select> Цвет <input type="color" id="p3Col" value="${st.color || '#d8bd8a'}"><button type="button" data-act="cat">🎨 ${st.cat && window.KCCAT ? window.KCCAT.name(st.cat) : 'Из каталога'}</button>${st.cat || st.color ? '<button type="button" data-act="nocol">✕</button>' : ''}</div>`;
@@ -128,7 +132,7 @@ function ui() {
   e.innerHTML = h;
 }
 function payload() {
-  const bb = bbox(), pt = st.pt.map(b => [b[0], r1(b[1] - bb.x0), r1(b[2] - bb.y0), r1(b[3] - bb.z0), r1(b[4]), r1(b[5]), r1(b[6]), b[7] || 0]);
+  const bb = bbox(), pt = st.pt.map(b => [b[0], r1(b[1] - bb.x0), r1(b[2] - bb.y0), r1(b[3] - bb.z0), r1(b[4]), r1(b[5]), r1(b[6]), b[7] || 0, b[8] || 0, b[9] || 0, b[10] || 0]);
   return { kind: 'parts', pt, w: r1(bb.x1 - bb.x0), d: r1(bb.z1 - bb.z0), h: r1(bb.y1 - bb.y0), y: r1(bb.y0), mat: st.mat, color: st.color, cat: st.cat || undefined, n: 0, dn: 0, back: false, handles: true, fill: 'dsp' };
 }
 const msg = t => { const m = $('p3Msg'); if (m) { m.textContent = t; setTimeout(() => { if (m.textContent === t) m.textContent = ''; }, 3500); } };
@@ -142,9 +146,10 @@ function bind() {
   if (bound) return; const root = $('p3Box'); if (!root) return; bound = true;
   root.addEventListener('click', ev => {
     const b = ev.target.closest('button'); if (!b) return;
-    if (b.dataset.pre) { snap(); st.pt = P[b.dataset.pre].f(T()).map(x => { const c = x.slice(); while (c.length < 8) c.push(0); return c; }); selI = -1; rebuild(); frame(); ui(); return; }
+    if (b.dataset.pre) { snap(); st.pt = P[b.dataset.pre].f(T()).map(pad); selI = -1; rebuild(); frame(); ui(); return; }
     if (b.dataset.add) { addPart(b.dataset.add); return; }
     if (b.dataset.st) { const [id, d] = b.dataset.st.split(':'), el = $(id); if (el) { el.value = r1(parseFloat(el.value || 0) + parseFloat(d)); el.dispatchEvent(new Event('change', { bubbles: true })); } return; }
+    if (b.dataset.rot && selI >= 0) { snap(); const [k, d] = b.dataset.rot.split(':'), p = st.pt[selI]; if (k === 'all') { p[8] = p[9] = p[10] = 0; } else p[+k] = r1((((p[+k] || 0) + +d) % 360 + 540) % 360 - 180); rebuild(); ui(); return; }
     if (b.dataset.n && selI >= 0) { snap(); const [dx, dz] = b.dataset.n.split(',').map(Number), p = st.pt[selI]; p[1] = r1(p[1] + dx); p[3] = r1(p[3] + dz); rebuild(); ui(); return; }
     const a = b.dataset.act, p = selI >= 0 ? st.pt[selI] : null;
     if (a === 'clear') { snap(); st.pt = []; selI = -1; rebuild(); ui(); }
@@ -153,8 +158,8 @@ function bind() {
     else if (a === 'wiz') { const g = id => parseFloat($(id).value) || 0; snap(); st.pt = cabinetP(Math.max(20, g('wcW')), Math.max(20, g('wcH')), Math.max(15, g('wcD')), Math.max(0, Math.round(g('wcN'))), Math.max(0, Math.min(2, Math.round(g('wcDn')))), Math.max(0, Math.min(8, Math.round(g('wcDr')))), T()); selI = -1; rebuild(); frame(); ui(); }
     else if (a === 'del' && p) { snap(); st.pt.splice(selI, 1); selI = -1; rebuild(); ui(); }
     else if (a === 'dup' && p) { snap(); st.pt.push(p.map((v, i) => (i === 1 || i === 3 ? r1(v + 5) : (i === 7 ? 0 : v)))); selI = st.pt.length - 1; rebuild(); ui(); }
-    else if (a === 'mx' && p) { snap(); const bb = bbox(); st.pt.push(p.map((v, i) => (i === 1 ? r1(bb.x0 + bb.x1 - p[1] - p[4]) : (i === 0 && (p[0] === 2 || p[0] === 3) ? (p[0] === 2 ? 3 : 2) : v)))); selI = st.pt.length - 1; rebuild(); ui(); }
-    else if (a === 'mz' && p) { snap(); const bb = bbox(); st.pt.push(p.map((v, i) => (i === 3 ? r1(bb.z0 + bb.z1 - p[3] - p[6]) : v))); selI = st.pt.length - 1; rebuild(); ui(); }
+    else if (a === 'mx' && p) { snap(); const bb = bbox(); st.pt.push(p.map((v, i) => (i === 1 ? r1(bb.x0 + bb.x1 - p[1] - p[4]) : (i === 8 || i === 10 ? -(v || 0) : (i === 0 && (p[0] === 2 || p[0] === 3) ? (p[0] === 2 ? 3 : 2) : v))))); selI = st.pt.length - 1; rebuild(); ui(); }
+    else if (a === 'mz' && p) { snap(); const bb = bbox(); st.pt.push(p.map((v, i) => (i === 3 ? r1(bb.z0 + bb.z1 - p[3] - p[6]) : (i === 8 || i === 9 ? -(v || 0) : v)))); selI = st.pt.length - 1; rebuild(); ui(); }
     else if (a === 'cat') { if (window.KCCAT) window.KCCAT.pick(st.cat || '', id => { st.cat = id || ''; rebuild(); ui(); }); }
     else if (a === 'nocol') { st.cat = ''; st.color = ''; rebuild(); ui(); }
     else if (a === 'new') { st.id = null; ui(); }
@@ -164,6 +169,7 @@ function bind() {
   root.addEventListener('change', ev => {
     const t = ev.target, v = parseFloat(String(t.value).replace(',', '.')), p = selI >= 0 ? st.pt[selI] : null;
     if (t.id === 'pK' && p) { snap(); p[0] = +t.value; rebuild(); ui(); return; }
+    if (p && /^pR[XYZ]$/.test(t.id) && isFinite(v)) { snap(); p[{ pRY: 8, pRX: 9, pRZ: 10 }[t.id]] = r1(Math.max(-360, Math.min(360, v))); rebuild(); ui(); return; }
     if (p && /^p[XZYWHD]$/.test(t.id) && isFinite(v)) { snap(); const k = { pX: 1, pY: 2, pZ: 3, pW: 4, pH: 5, pD: 6 }[t.id]; p[k] = r1(k >= 4 ? Math.max(.1, v) : v); if (p[0] === 1 && k === 4) p[6] = p[4]; rebuild(); ui(); return; }
     if (t.id === 'p3Mat') { st.mat = t.value; rebuild(); } else if (t.id === 'p3Col') { st.color = t.value; st.cat = ''; rebuild(); } else if (t.id === 'p3Name') st.name = t.value;
   });

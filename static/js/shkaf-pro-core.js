@@ -153,9 +153,22 @@ export function tablePt(W, D, H, tt, ls, inset) {   // стол: столешн�
   o.push([0, inset + ls, H - tt - 8, inset, W - 2 * inset - 2 * ls, 8, 1.6], [0, inset + ls, H - tt - 8, D - inset - 1.6, W - 2 * inset - 2 * ls, 8, 1.6]);
   return o;
 }
+export function ptAabb(b) {   // габарит детали с учётом поворота: ry — по горизонтали (вокруг вертикальной оси), rx / rz — наклоны; порядок Y·X·Z как в three.js
+  const ry = (b[8] || 0) * Math.PI / 180, rx = (b[9] || 0) * Math.PI / 180, rz = (b[10] || 0) * Math.PI / 180;
+  if (!ry && !rx && !rz) return [b[1], b[2], b[3], b[1] + b[4], b[2] + b[5], b[3] + b[6]];
+  const cx = b[1] + b[4] / 2, cy = b[2] + b[5] / 2, cz = b[3] + b[6] / 2, mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
+  for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) {
+    let x = sx * b[4] / 2, y = sy * b[5] / 2, z = sz * b[6] / 2, t;
+    t = x * Math.cos(rz) - y * Math.sin(rz); y = x * Math.sin(rz) + y * Math.cos(rz); x = t;
+    t = y * Math.cos(rx) - z * Math.sin(rx); z = y * Math.sin(rx) + z * Math.cos(rx); y = t;
+    t = x * Math.cos(ry) + z * Math.sin(ry); z = -x * Math.sin(ry) + z * Math.cos(ry); x = t;
+    const p = [cx + x, cy + y, cz + z]; for (let i = 0; i < 3; i++) { mn[i] = Math.min(mn[i], p[i]); mx[i] = Math.max(mx[i], p[i]); }
+  }
+  return [mn[0], mn[1], mn[2], mx[0], mx[1], mx[2]];
+}
 export function fitParts(o) {
-  const B = o.pt || []; if (!B.length) return o;
-  o.w = Math.round(Math.max(...B.map(b => b[1] + b[4])) * 10) / 10; o.d = Math.round(Math.max(...B.map(b => b[3] + b[6])) * 10) / 10; o.h = Math.round(Math.max(...B.map(b => b[2] + b[5])) * 10) / 10; return o;
+  const B = o.pt || []; if (!B.length) return o; const A = B.map(ptAabb);
+  o.w = Math.round(Math.max(...A.map(v => v[3])) * 10) / 10; o.d = Math.round(Math.max(...A.map(v => v[5])) * 10) / 10; o.h = Math.round(Math.max(...A.map(v => v[4])) * 10) / 10; return o;
 }
 export function fitBoards(o) {   // габарит стеллажа из досок по доскам
   const B = o.bd || []; if (!B.length) return o;
@@ -760,7 +773,7 @@ export function sanitize(S) {
   o.opens = sanitizeOpens(S.opens, roomPoly(o));
   o.objs = (Array.isArray(S.objs) ? S.objs : []).slice(0, 80).map(q => {
     const kind = q && OBJ_KINDS[q.kind] ? q.kind : 'book', d = mkObj(kind, 0, 0), poly = kind === 'custom' && Array.isArray(q.poly) && q.poly.length >= 3 && q.poly.length <= 40 && q.poly.every(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1])) ? q.poly.map(p => [r1(n(p[0], -2000, 2000, 0)), r1(n(p[1], -2000, 2000, 0))]) : (kind === 'custom' ? CORNER_L.map(p => p.slice()) : null);
-    return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), pt: kind === 'parts' ? ((Array.isArray(q && q.pt) ? q.pt : []).slice(0, 200).filter(b => Array.isArray(b) && b.length >= 7 && b.every(v => isFinite(v))).map(b => [Math.max(0, Math.min(6, Math.round(b[0]))), r1(n(b[1], -500, 1500, 0)), r1(n(b[2], -50, 400, 0)), r1(n(b[3], -500, 1500, 0)), r1(n(b[4], .1, 800, 10)), r1(n(b[5], .1, 400, 10)), r1(n(b[6], .1, 800, 10)), b.length > 7 && isFinite(b[7]) ? Math.max(0, Math.min(99, Math.round(b[7]))) : 0])) : undefined, bd: kind === 'boards' ? ((Array.isArray(q && q.bd) ? q.bd : []).slice(0, 120).filter(b => Array.isArray(b) && b.length >= 4 && b.every(v => isFinite(v))).map(b => [r1(n(b[0], -50, 800, 0)), r1(n(b[1], -50, 400, 0)), r1(n(b[2], .3, 800, 10)), r1(n(b[3], .3, 400, 1.6))]) || []) : undefined, cat: catId(q && q.cat), mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };
+    return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), pt: kind === 'parts' ? ((Array.isArray(q && q.pt) ? q.pt : []).slice(0, 200).filter(b => Array.isArray(b) && b.length >= 7 && b.every(v => isFinite(v))).map(b => [Math.max(0, Math.min(6, Math.round(b[0]))), r1(n(b[1], -500, 1500, 0)), r1(n(b[2], -50, 400, 0)), r1(n(b[3], -500, 1500, 0)), r1(n(b[4], .1, 800, 10)), r1(n(b[5], .1, 400, 10)), r1(n(b[6], .1, 800, 10)), b.length > 7 && isFinite(b[7]) ? Math.max(0, Math.min(99, Math.round(b[7]))) : 0, r1(n(b[8], -360, 360, 0)), r1(n(b[9], -360, 360, 0)), r1(n(b[10], -360, 360, 0))])) : undefined, bd: kind === 'boards' ? ((Array.isArray(q && q.bd) ? q.bd : []).slice(0, 120).filter(b => Array.isArray(b) && b.length >= 4 && b.every(v => isFinite(v))).map(b => [r1(n(b[0], -50, 800, 0)), r1(n(b[1], -50, 400, 0)), r1(n(b[2], .3, 800, 10)), r1(n(b[3], .3, 400, 1.6))]) || []) : undefined, cat: catId(q && q.cat), mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };
   }).map(q => { if (q.kind === 'parts') { if (!q.pt || !q.pt.length) q.pt = tablePt(140, 80, 75, 2.8, 6, 5); fitParts(q); } if (q.kind === 'boards') { if (!q.bd || !q.bd.length) q.bd = snakeBoards(4, 80, 40, 1.6); fitBoards(q); } return q; });
   recalcW(o);
   if (Array.isArray(S.mezzes)) S.mezzes.slice(0, 8).forEach(m => { if (m) o.mezzes.push({ id: uid(), x: r1(n(m.x, -100, 900, 0)), w: r1(n(m.w, 20, 900, 60)), h: r1(n(m.h, 15, 120, 40)), y: r1(n(m.y, 0, 340, o.H)), n: n(m.n, 0, 10, 2) | 0, shelves: n(m.shelves, 0, 3, 0) | 0, fill: FILLS[m.fill] ? m.fill : 'dsp', div: (Array.isArray(m.div) ? m.div : []).slice(0, 7).map(v => r1(n(v, 5, 800, 30))), cd: (Array.isArray(m.cd) ? m.cd : []).slice(0, 8).map(v => v == null ? null : n(v, 0, 5, 1) | 0), dir: (Array.isArray(m.dir) ? m.dir : []).slice(0, 8).map(v => ['swing', 'U', 'D'].includes(v) ? v : 'swing') }); });
