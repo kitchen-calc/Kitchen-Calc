@@ -708,6 +708,8 @@ export function edgeTotals(parts) {
   const r = v => Math.round(v * 100) / 100;
   return { e04: r(e['0,4']), e2: r(e['2']), total: r(e['0,4'] + e['2']), dsp: r(dsp), facade: r(facade), hdf: r(hdf) };
 }
+/* площадь «лицевой» работы добавленных изделий (стеллажи, столы, шкафчики) — идёт в стоимость работы */
+function objsFront(objs) { let f = 0; (objs || []).forEach(q => { if (q.kind === 'parts') f += (q.w * q.h + q.d * q.h) / 1e4 * .6; else if (q.kind === 'custom') f += objEdges(q).reduce((a, e) => a + e.L, 0) * q.h / 1e4 * .6; else f += q.w * q.h / 1e4; }); return f; }
 export function pricing(S, bp) {
   bp = bp || buildParts(S);
   const T = P.tiers[S.tier], pm = T.sheet / P.sheetArea * P.waste + P.cutM2 + 3 * P.edgeM, lines = [];
@@ -729,7 +731,7 @@ export function pricing(S, bp) {
   add('Клеёный МДФ — рейки перегородок', Math.round(slatM3 * 1000) / 1000 + ' м³', slatM3 * P.slatM3);
   add('Алюминиевая рамка дверей', Math.round(frameM * 10) / 10 + ' м', frameM * P.frameM);
   bp.hw.forEach(h => add(h.name, h.qty + ' ' + h.unit, h.qty * h.price));
-  const mat = lines.reduce((a, l) => a + l.c, 0), front = bp.g.W / 100 * bp.g.totalH / 100 + S.cols.reduce((a, c) => a + (c.det ? (c.w + 2 * S.t) / 100 * (c.H || S.H) / 100 : 0), 0), labor = front * P.laborM2 * P.Klabor;
+  const mat = lines.reduce((a, l) => a + l.c, 0), front = bp.g.W / 100 * bp.g.totalH / 100 + S.cols.reduce((a, c) => a + (c.det ? (c.w + 2 * S.t) / 100 * (c.H || S.H) / 100 : 0), 0) + objsFront(S.objs) + (S.units || []).reduce((a, u) => a + u.w * u.h / 1e4 * .5, 0), labor = front * P.laborM2 * P.Klabor;
   const total = Math.round((mat * P.K + labor + P.delivery) / 10000) * 10000;
   return { lines, mat, labor: Math.round(labor), delivery: P.delivery, total, front, dspM2, hdfM2 };
 }

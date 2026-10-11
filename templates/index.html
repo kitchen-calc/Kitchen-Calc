@@ -24,7 +24,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=20'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=21'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script src="/static/js/shkaf-lib.js?v=1"></script>
   <script type="module" src="/static/js/shkaf-3dpart.js?v=6"></script>
   <script src="/static/js/color-catalog.js?v=3"></script>
@@ -4246,6 +4246,36 @@
       ];
       return odSheet(inner, rows, no, total);
     }
+    /* ---- добавленные изделия (свои шкафчики, стеллажи, столы из конструктора) на старых чертежах кухни ---- */
+    function odObjWall(o, wall, geo) {   // положение изделия вдоль стены: u0..u1 — от угла ряда, dist — до стены (см)
+      const r = SC().objRect(o); let u0, u1, dist;
+      if (wall === 'main') { u0 = r.x0; u1 = r.x1; dist = r.z0; }
+      else if (wall === 'left') { u0 = r.z0 - 60; u1 = r.z1 - 60; dist = r.x0; }
+      else if (currentType === 'parallel') { u0 = geo.W - r.x1; u1 = geo.W - r.x0; dist = geo.roomD - r.z1; }
+      else { u0 = r.z0 - 60; u1 = r.z1 - 60; dist = geo.W - r.x1; }
+      return { r, u0, u1, dist };
+    }
+    function odObjFront(o, X, Y, sc, wmm, hmm, axis) {   // вид спереди изделия: габарит, доски, дверцы, полки (X, Y — левый верх в бумаге)
+      let out = odRect(X, Y, wmm * sc, hmm * sc, 'o', '#fbf8f1');
+      const L = (x1, y1, x2, y2, st) => odLine(X + x1 * sc, Y + y1 * sc, X + x2 * sc, Y + y2 * sc, st || 't');
+      const lbl = (x, y, w, h, txt) => (w * sc > 40 && h * sc > 14) ? odText(X + (x + w / 2) * sc, Y + (y + h / 2) * sc + 3, txt, 7, 'middle') : '';
+      if (o.kind === 'parts') {
+        const rr = (o.rot || 0) * Math.PI / 180, cs = Math.round(Math.cos(rr)), sn = Math.round(Math.sin(rr)), rp = (x, z) => [x * cs + z * sn, -x * sn + z * cs];
+        const spans = (o.pt || []).map(b => { const A = SC().ptAabb(b), cr = [rp(A[0], A[2]), rp(A[3], A[2]), rp(A[3], A[5]), rp(A[0], A[5])], us = cr.map(c => axis === 'z' ? c[1] : c[0]); return { b, A, u0: Math.min.apply(null, us), u1: Math.max.apply(null, us) }; });
+        const mn = spans.length ? Math.min.apply(null, spans.map(q => q.u0)) : 0, mx = spans.length ? Math.max.apply(null, spans.map(q => q.u1)) : 0;
+        spans.forEach(q => {
+          const b = q.b, A = q.A, x = (axis === 'xm' ? mx - q.u1 : q.u0 - mn) * 10, w = (q.u1 - q.u0) * 10, h = (A[4] - A[1]) * 10, y = hmm - A[4] * 10;
+          if (b[0] >= 2 && b[0] <= 5) { out += odRect(X + x * sc, Y + y * sc, w * sc, h * sc, 'h') + L(x, y, x + w, y + h, 'h') + L(x + w, y, x, y + h, 'h'); out += lbl(x, y, w, h, Math.round(w) + '×' + Math.round(h)); }
+          else if (b[0] === 6) out += odRect(X + x * sc, Y + y * sc, w * sc, h * sc, 'h', 'rgba(11,110,143,.06)') + lbl(x, y, w, h, Math.round(w) + '×' + Math.round(h));
+          else out += odRect(X + x * sc, Y + y * sc, w * sc, h * sc, 't', '#efe6d4');
+        });
+      } else {
+        const n = o.n | 0, t = 16, dn = o.dn | 0;
+        for (let k = 1; k <= n; k++) out += L(t, hmm * k / (n + 1), wmm - t, hmm * k / (n + 1));
+        if (dn > 0 && o.kind !== 'shelf' && o.kind !== 'vert') { const dh = (o.dh > 0 ? Math.min(o.dh * 10, hmm - 2 * t) : hmm - 2 * t), dw = wmm / dn; for (let k = 0; k < dn; k++) { out += odRect(X + (k * dw + 2) * sc, Y + (hmm - t - dh) * sc, (dw - 4) * sc, dh * sc, 'h') + L(k * dw + 2, hmm - t - dh, (k + 1) * dw - 2, hmm - t, 'h') + L((k + 1) * dw - 2, hmm - t - dh, k * dw + 2, hmm - t, 'h'); } }
+      }
+      return out;
+    }
     function odRoomSheet(geo, groups, no, total) {
       const availW = 700, availH = 560, sc = Math.min(availW / geo.W, availH / geo.roomD, 1.2), x0 = 90, y0 = 90, X = v => x0 + v * sc, Y = v => y0 + v * sc;
       let out = odRect(X(0), Y(0), geo.W * sc, geo.roomD * sc, 'o');
@@ -4257,12 +4287,17 @@
         out += odText(X(p.cx), Y(p.cz) + 3, code, Math.max(7, Math.min(10, (f.x1 - f.x0) * sc * .45)));
       });
       if (chk('hasIsland')) { const p = getTarget({ tier: 'island', sec: null }, geo), f = footprint(p); out += odRect(X(f.x0), Y(f.z0), (f.x1 - f.x0) * sc, (f.z1 - f.z0) * sc, 'o', '#f3ecd9') + odText(X(p.cx), Y(p.cz) + 3, 'ОСТРОВ', 10); }
+      kObjs.forEach((o, i) => {   // добавленные изделия: контур, номер, ширина и глубина в мм
+        const r = SC().objRect(o); out += odRect(X(r.x0), Y(r.z0), (r.x1 - r.x0) * sc, (r.z1 - r.z0) * sc, 'o', '#ece2cf') + odText(X((r.x0 + r.x1) / 2), Y((r.z0 + r.z1) / 2) + 3, 'С' + (i + 1), 10, 'middle', 'font-weight="700"');
+        out += odDimH(X(r.x0), X(r.x1), Y(r.z1), Y(r.z1) + 14, Math.round((r.x1 - r.x0) * 10)) + odDimV(Y(r.z0), Y(r.z1), X(r.x1), X(r.x1) + 14, Math.round((r.z1 - r.z0) * 10));
+      });
       out += odDimH(X(0), X(geo.W), Y(0), Y(0) - 30, Math.round(geo.W * 10)) + odDimV(Y(0), Y(geo.roomD), X(geo.W), X(geo.W) + 34, Math.round(geo.roomD * 10));
       out += odText(X(geo.W / 2), Y(geo.roomD) + 30, 'ПЛАН РАССТАНОВКИ (вид сверху, мм)', 12, 'middle', 'font-weight="700"');
       // таблица координат
       let ty = 70; const tx = 840;
       out += odText(tx, ty - 14, 'Код · шкаф · от левой / от задней / от пола, см', 10, 'start', 'font-weight="700"');
       items.slice(0, 34).forEach(it => { const p = getTarget(it, geo), f = footprint(p); ty += 14.5; out += odText(tx, ty, `${it.tier === 'lower' ? 'Н-' : 'В-'}${it.s.id} · ${String(it.s.name).slice(0, 22)} · ${fpN(f.x0)} / ${fpN(f.z0)} / ${fpN(p.y)} · ${p.r}°`, 8.5, 'start'); });
+      kObjs.forEach((o, i) => { const r = SC().objRect(o); ty += 14.5; out += odText(tx, ty, `С${i + 1} · ${SC().OBJ_KINDS[o.kind].ru.slice(0, 22)} · ${fpN(r.x0)} / ${fpN(r.z0)} / ${fpN(o.y || 0)} · ${o.rot || 0}° · ${Math.round(o.w * 10)}×${Math.round(o.d * 10)}×${Math.round(o.h * 10)} мм`, 8.5, 'start'); });
       const rows = [['Проект', 'Кухня на заказ'], ['Помещение', `${Math.round(geo.W)} × ${Math.round(geo.roomD)} см (ширина × глубина)`], ['Шкафов', String(items.length) + (parkedSections.length ? ` (в запасе: ${parkedSections.length})` : '')], ['Дата', new Date().toLocaleDateString('ru-RU')]];
       return odSheet(out, rows, no, total);
     }
@@ -4271,7 +4306,7 @@
       const run = geo.LAY[wall]; if (!run) return null;
       const lows = run.lower || [], ups = geo.hasUp ? (run.upper || []) : [];
       if (!lows.length && !ups.length) return null;
-      const ext = Math.max.apply(null, lows.map(r => r.u1).concat(ups.map(r => r.u1), [10])) * 10;
+      const ext = Math.max.apply(null, lows.map(r => r.u1).concat(ups.map(r => r.u1), kObjs.map(o => odObjWall(o, wall, geo)).filter(q => q.dist <= 40).map(q => q.u1), [10])) * 10;
       const roomHmm = Math.max(geo.roomH, geo.G.TT + 10) * 10;
       const sc = Math.min(1000 / ext, 520 / roomHmm, .6), x0 = 100, floorY = 600, X = v => x0 + v * sc, Y = v => floorY - v * sc;
       let out = odLine(x0 - 40, floorY, x0 + ext * sc + 60, floorY, 'o') + odLine(x0 - 40, floorY + 1.5, x0 + ext * sc + 60, floorY + 1.5, 't');
@@ -4287,6 +4322,18 @@
       if (cnt) out += odDimV(Y(cnt), floorY, X(0), X(0) - 28, cnt);
       if (ups.length) { const u = ups[0], m = odModel(u.sec, 'upper', geo), yb = defaultY(u.sec, 'upper', geo) * 10; out += odDimV(Y(yb), Y(yb + m.H), X(0), X(0) - 56, m.H) + odDimV(floorY, Y(yb), X(0), X(0) - 84, Math.round(yb)); }
       const tall = lows.find(r => isTall(r.sec)); if (tall) { const m = odModel(tall.sec, 'lower', geo); out += odDimV(Y(m.H), floorY, X(ext) , X(ext) + 30, m.H); }
+      // добавленные изделия у этой стены: вид спереди, ширина, высота, от пола и зазоры до соседних шкафов, мм
+      const objsHere = kObjs.map((o, i) => Object.assign(odObjWall(o, wall, geo), { o, i })).filter(q => q.dist <= 40 && q.u1 > -1);
+      objsHere.forEach(q => {
+        const o = q.o, wmm = (q.u1 - q.u0) * 10, hmm = o.h * 10, y0mm = (o.y || 0) * 10, X0 = X(q.u0 * 10), Y0 = Y(y0mm + hmm);
+        out += odObjFront(o, X0, Y0, sc, wmm, hmm, wall === 'main' ? 'x' : (wall === 'left' || currentType !== 'parallel' ? 'z' : 'xm')) + odText(X0 + wmm * sc / 2, Y0 - 6, 'С' + (q.i + 1) + ' ' + SC().OBJ_KINDS[o.kind].ru, 8, 'middle', 'font-weight="700"');
+        out += odDimH(X0, X0 + wmm * sc, Y0, Y0 - 22, Math.round(wmm)) + odDimV(Y0, Y0 + hmm * sc, X0 + wmm * sc, X0 + wmm * sc + 18, Math.round(hmm));
+        if (y0mm > 5) out += odDimV(Y0 + hmm * sc, floorY, X0, X0 - 18, 'от пола ' + Math.round(y0mm));
+        const near = lows.map(r => [r.u0, r.u1]).filter(r => r[1] <= q.u0 + .01).sort((a, b) => b[1] - a[1])[0], nr = lows.map(r => [r.u0, r.u1]).filter(r => r[0] >= q.u1 - .01).sort((a, b) => a[0] - b[0])[0];
+        if (near && q.u0 - near[1] > .5) out += odDimH(X(near[1] * 10), X0, floorY, floorY + 36, 'зазор ' + Math.round((q.u0 - near[1]) * 10));
+        if (nr && nr[0] - q.u1 > .5) out += odDimH(X0 + wmm * sc, X(nr[0] * 10), floorY, floorY + 36, 'зазор ' + Math.round((nr[0] - q.u1) * 10));
+        out += odDimH(X0, X0 + wmm * sc, floorY, floorY + 22, Math.round(wmm));
+      });
       const nm = { main: 'основная стена', left: 'левая стена', right: geo.s.type === 'parallel' ? 'противоположный ряд' : 'правая стена' }[wall];
       out += odText(x0 + ext * sc / 2, floorY + 84, 'ГОТОВЫЙ ЧЕРТЁЖ · ВИД СПЕРЕДИ · ' + nm.toUpperCase(), 12, 'middle', 'font-weight="700"');
       out += odText(1100, 60, `М 1:${odNiceScale(sc)}`, 12, 'end', 'font-weight="700"');
@@ -4441,7 +4488,7 @@
         (pp ? pp.hw : []).forEach(h => { const k = h.name + '|' + h.unit; if (!hwAll[k]) hwAll[k] = { grp: 'С' + (i + 1), name: h.name, qty: 0, unit: h.unit }; else if (hwAll[k].grp.indexOf('С' + (i + 1)) < 0) hwAll[k].grp += ', С' + (i + 1); hwAll[k].qty += h.qty; }); });
       return { name: 'Кухня на заказ', poly: kWallPolyCache || kWallPoly(), H: geo.roomH, opens: kOpens, items, hw: Object.keys(hwAll).map(k => hwAll[k]), meta: [['Проект', 'Кухня на заказ'], ['Помещение', Math.round(geo.W * 10) + ' × ' + Math.round(geo.roomD * 10) + ' мм · высота ' + Math.round(geo.roomH * 10)], ['Материал', 'ЛДСП ' + CUT_T + ' мм']] };
     }
-    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=25').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
+    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=26').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
     function renderOwnerDraw() {
       const box = el('ownerDrawBody'); if (!box || !OWNER_ON) return;
       const geo = k3dGeo(), groups = new Map();

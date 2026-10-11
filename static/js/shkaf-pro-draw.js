@@ -1,6 +1,6 @@
 /* Чертежи конструктора шкафа PRO в стиле AutoCAD, лист A4 (альбомный). Размеры на чертежах — в мм. Только для режима мастера. */
 import { OPEN_KINDS, openVariantName, roomEdges, openCenter } from '/static/js/room-open-core.js?v=3';
-import { runInfo, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1, objsParts } from '/static/js/shkaf-pro-core.js?v=20';
+import { runInfo, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1, objsParts } from '/static/js/shkaf-pro-core.js?v=21';
 
 const F = 1.4;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -656,7 +656,7 @@ export function buildSheets(S0) {
     const bpd = buildParts(Sd); add('Отдельный шкаф ' + (di + 1), n => sheetOverview(Sd, bpd, n, total)); add('Отдельный шкаф ' + (di + 1) + ': отсек', n => sheetColumn(Sd, bpd, 0, n, total));
   });
   { const items1 = roomItems(S0, bp), E1 = roomEdges(roomPoly(S0));   // последние листы — розетки, окна, двери: размеры и расстояния от мебели
-    E1.forEach((e, wi) => { if ((S0.opens || []).some(q => q.wall === wi)) add('Стена ' + (wi + 1) + ': окна, двери, розетки', n => sheetWall(S0, bp, wi, items1, n, total)); }); }
+    E1.forEach((e, wi) => { if (wallElements(S0, bp, wi, E1, items1).length) add('Стена ' + (wi + 1) + ': окна, двери, розетки', n => sheetWall(S0, bp, wi, items1, n, total)); }); }
   add('Раскрой и спецификация', n => tableSheets(S0, bpAll, pr, n, total));
   return { sheets: sheets.map(x => x.split('__T__').join(String(sheets.length))), bp: bpAll, pr };
 }
