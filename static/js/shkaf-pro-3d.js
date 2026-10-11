@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall } from '/static/js/room-open.js?v=4';
-import { MILL_PITCH } from '/static/js/shkaf-pro-core.js?v=23';
-import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=23';
+import { MILL_PITCH } from '/static/js/shkaf-pro-core.js?v=24';
+import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=24';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -131,12 +131,13 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     });
     // наполнение
     S.cols.forEach((col, ci) => inCol(ci, () => {
+      const CB = (col.cat && catM(col.cat)) || M.body;   // цвет этого отсека изнутри (полки, ящики, перегородки)
       const c = g.cols[ci]; if (col.gap) return;
       const D = c.D;
-      colSplits(S, g, ci).forEach(x => box(t, c.y1 - g.y0 - 2 * t, D - z0, M.body, x - t / 2, g.y0 + t, z0, { k: 'col', i: ci }));
+      colSplits(S, g, ci).forEach(x => box(t, c.y1 - g.y0 - 2 * t, D - z0, CB, x - t / 2, g.y0 + t, z0, { k: 'col', i: ci }));
       col.items.forEach(it => {
         const meta = { k: 'item', id: it.id, col: ci };
-        if (it.type === 'shelf') shelfSpans(col, c.w, t, it).forEach(ss => box(ss.w - .2, t, it.d || D - 2.5, M.body, c.xa + ss.x0 + .1, it.y, z0, meta));
+        if (it.type === 'shelf') shelfSpans(col, c.w, t, it).forEach(ss => box(ss.w - .2, t, it.d || D - 2.5, CB, c.xa + ss.x0 + .1, it.y, z0, meta));
         else if (SPLITTABLE.includes(it.type)) itemSpans(S, col, c.w, it).forEach(ss => ((c) => {
           if (false) {}
         else if (it.type === 'rod') {
@@ -145,7 +146,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         }
         else if (it.type === 'drawer') {
           const y = it.y, fh = it.fh, key = 'w' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, grp = new THREE.Group(); wg.add(grp);
-          box(c.w - .4, fh - .3, t, M.body, c.xa + .2, y + .15, D - t, dm, grp);
+          box(c.w - .4, fh - .3, t, CB, c.xa + .2, y + .15, D - t, dm, grp);
           box(1.2, fh - 4, D - 12, M.steel, c.xa + 1.2, y + 1.5, 6, dm, grp); box(1.2, fh - 4, D - 12, M.steel, c.xb - 2.4, y + 1.5, 6, dm, grp);
           box(c.w - 4.8, fh - 4, 1.2, M.inner, c.xa + 2.4, y + 1.5, 6, dm, grp); box(c.w - 4.8, 1, D - 12, M.inner, c.xa + 2.4, y + 1.2, 6, dm, grp);
           if (S.doors.handles !== false) box(Math.min(14, c.w * .5), .8, 1.4, M.chrome, c.xa + c.w / 2 - Math.min(14, c.w * .5) / 2, y + fh - 4, D, dm, grp);
@@ -153,7 +154,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         }
         else if (it.type === 'shoe') {
           for (let k = 0; k < it.n; k++) {
-            const m = box(c.w - .2, t, D - 6, M.body, -(c.w - .2) / 2, -t / 2, -(D - 6) / 2, meta); wg.remove(m);
+            const m = box(c.w - .2, t, D - 6, CB, -(c.w - .2) / 2, -t / 2, -(D - 6) / 2, meta); wg.remove(m);
             const gr = new THREE.Group(); gr.add(m); m.position.set(0, 0, 0); gr.position.set(c.xa + c.w / 2, it.y + k * 12 + 6, z0 + (D - 6) / 2); gr.rotation.x = 12 * DEG; wg.add(gr);
             const lip = box(c.w - .2, 3, .8, M.steel, -(c.w - .2) / 2, -1.5, (D - 6) / 2 - .4, meta, gr); void lip;
           }
@@ -170,7 +171,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
           [0, 1].forEach(b => box(bw, .5, .5, M.steel, c.xa + 1.5, it.y + it.h - .5, 8 + b * (bdp - .5), meta)); [0, 1].forEach(a => box(.5, .5, bdp, M.steel, c.xa + 1.5 + a * (bw - .5), it.y + it.h - .5, 8, meta));
         }
         else if (it.type === 'hook') {
-          box(c.w - .4, 4, 1.6, M.body, c.xa + .2, it.y, z0, meta);
+          box(c.w - .4, 4, 1.6, CB, c.xa + .2, it.y, z0, meta);
           const n = Math.max(2, Math.floor(c.w / 8)); for (let k = 0; k < n; k++) box(.8, .8, 5, M.chrome, c.xa + (k + .5) * c.w / n, it.y + 2, z0 + 1.6, meta);
         }
         else if (it.type === 'led') { box(c.w - 1, .6, 1.4, M.led, c.xa + .5, it.y, D - 6, meta); box(c.w - 1, 7, D - 14, M.glowMat, c.xa + .5, it.y - 6.6, 7); }
@@ -178,12 +179,12 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         else if (it.type === 'idoor') {
           const key = 'i' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, iw = idoorSpan(col, c.w, t, it).w, ih = it.y1 - it.y, x0 = c.xa + it.x, z = D - 1.2;
           const pv = new THREE.Group(); wg.add(pv);
-          if (it.dir === 'R') { pv.position.set(x0 + iw, it.y, z); box(iw - .2, ih - .2, 1.6, M.body, -iw + .1, .1, 0, dm, pv); box(.9, Math.min(20, ih * .3), 1.6, M.chrome, -iw + 3, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = 105 * DEG * f; } }); }
-          else if (it.dir === 'U') { pv.position.set(x0, it.y + ih, z); box(iw - .2, ih - .2, 1.6, M.body, .1, -ih + .1, 0, dm, pv); box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, -ih + 3, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = -100 * DEG * f; } }); }
-          else if (it.dir === 'D') { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, M.body, .1, .1, 0, dm, pv); box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, ih - 4, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = 95 * DEG * f; } }); }
-          else { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, M.body, .1, .1, 0, dm, pv); box(.9, Math.min(20, ih * .3), 1.6, M.chrome, iw - 3.5, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = -105 * DEG * f; } }); }
+          if (it.dir === 'R') { pv.position.set(x0 + iw, it.y, z); box(iw - .2, ih - .2, 1.6, CB, -iw + .1, .1, 0, dm, pv); box(.9, Math.min(20, ih * .3), 1.6, M.chrome, -iw + 3, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = 105 * DEG * f; } }); }
+          else if (it.dir === 'U') { pv.position.set(x0, it.y + ih, z); box(iw - .2, ih - .2, 1.6, CB, .1, -ih + .1, 0, dm, pv); box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, -ih + 3, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = -100 * DEG * f; } }); }
+          else if (it.dir === 'D') { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, CB, .1, .1, 0, dm, pv); box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, ih - 4, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = 95 * DEG * f; } }); }
+          else { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, CB, .1, .1, 0, dm, pv); box(.9, Math.min(20, ih * .3), 1.6, M.chrome, iw - 3.5, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = -105 * DEG * f; } }); }
         }
-        else if (it.type === 'vpanel') { const x = Math.max(c.xa + 1, Math.min(c.xb - t - 1, c.xa + it.x)); box(t, it.y1 - it.y, D - 2.5, M.body, x, it.y, z0, meta); }
+        else if (it.type === 'vpanel') { const x = Math.max(c.xa + 1, Math.min(c.xb - t - 1, c.xa + it.x)); box(t, it.y1 - it.y, D - 2.5, CB, x, it.y, z0, meta); }
       });
     }));
     // отдельные панели: зеркало / стекло на стене или на фасаде
@@ -307,7 +308,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     const dl = doorList(S);
     dl.forEach(d => inCol(d.zone === 'main' && d.ci != null ? d.ci : -1, () => {
       const D = d.ci != null && g.cols[d.ci] ? g.cols[d.ci].D : S.D;
-      const mz = d.zone === 'mezz', gl = d.fill === 'glass', mat = (d.fill === 'dsp' || d.fill === 'mdf') ? ((S.doors.cat && catM(S.doors.cat)) || M.body) : (d.fill === 'laco' ? M.glass(S.doors.laco) : (gl ? M.glassClear : M.mirror)), th = (d.fill === 'dsp' || d.fill === 'mdf') ? 1.6 : .8;
+      const mz = d.zone === 'mezz', gl = d.fill === 'glass', mat = (d.fill === 'dsp' || d.fill === 'mdf') ? ((d.ci != null && S.cols[d.ci] && S.cols[d.ci].dcat && catM(S.cols[d.ci].dcat)) || (S.doors.cat && catM(S.doors.cat)) || M.body) : (d.fill === 'laco' ? M.glass(S.doors.laco) : (gl ? M.glassClear : M.mirror)), th = (d.fill === 'dsp' || d.fill === 'mdf') ? 1.6 : .8;
       const face = (par, dx, dy) => { if (!gl) { box(d.w, d.h, th, mat, dx, dy, 0, meta, par); if (d.fill === 'mdf') grooves(dx, dy, d.w, d.h, th, (S.doors.mp || 'frame'), (MILL_PITCH[S.doors.mp || 'frame'] || 10), meta, par); return; } const f = Math.min(Math.max(1, S.doors.gf || 4), d.w / 2 - .6, d.h / 2 - .6); box(d.w - 2 * f, d.h - 2 * f, .5, M.glassClear, dx + f, dy + f, .5, meta, par); box(d.w, f, 1.8, M.alu, dx, dy, 0, meta, par); box(d.w, f, 1.8, M.alu, dx, dy + d.h - f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx, dy + f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx + d.w - f, dy + f, 0, meta, par); };
       const key = mz ? 'm' + d.mi + '.' + d.i : 'd' + d.i, meta = mz ? { k: 'mezz', i: d.mi, key } : (d.ci != null ? { k: 'col', i: d.ci, key } : { k: 'doors', key });
       if (d.sliding) {

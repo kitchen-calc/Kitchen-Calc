@@ -1,5 +1,5 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=23';
+import * as C from '/static/js/shkaf-pro-core.js?v=24';
 const { uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=3';
@@ -226,6 +226,7 @@ function sideCol() {
   } else h += `<div class="r">${btn(0, "PRO.doors('swing')", '🚪 Включить двери по отсекам')}</div>`;
   h += `<div class="sub">Добавить в отсек</div>` + addButtons();
   h += `<div class="r"><span>Полки поровну</span><input type="number" min="0" max="12" value="${c.items.filter(x => x.type === 'shelf').length}" onchange="PRO.even(this.value)" style="width:56px"><small>шт</small></div>`;
+  h += catBtn('col', c.cat, 'Цвет отсека (внутри)') + (S.doors.kind === 'swing' ? catBtn('cold', c.dcat, 'Цвет дверей отсека') : '');
   h += colSyncHtml(i);
   h += `<div class="sub">Содержимое (сверху вниз)</div><div class="ilist">${items.map(it => `<button type="button" class="iit" onclick="PRO.selItem('${it.id}')">${ITEM_ICON[it.type]} ${ITEM_TYPES[it.type]}<b>${Math.round(ext(it, S)[0] * 10)} мм</b></button>`).join('') || '<div class="note">Пусто — добавьте полки, штангу, ящики…</div>'}</div>`;
   return h;
@@ -471,7 +472,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=31');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=32');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -615,7 +616,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=32');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=33');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -818,13 +819,13 @@ window.PRO = {
   flag: f => mutate(() => { S[f] = !S[f]; }),
   colFlag: f => mutate(() => { const c = S.cols[sel.i]; if (c) { if (c[f]) delete c[f]; else c[f] = true; } }),
   pickCat: t => {
-    const cur = t === 's' ? S.cat : t === 'doors' ? S.doors.cat : t === 'unit' ? (S.units[sel.ui] || {}).cat : t === 'bed' ? (S.beds[sel.bi] || {}).cat : t === 'obj' ? (S.objs[sel.oi] || {}).cat : (S.panels[sel.pi] || {}).cat;
+    const cur = t === 'col' ? (S.cols[sel.i] || {}).cat : t === 'cold' ? (S.cols[sel.i] || {}).dcat : t === 's' ? S.cat : t === 'doors' ? S.doors.cat : t === 'unit' ? (S.units[sel.ui] || {}).cat : t === 'bed' ? (S.beds[sel.bi] || {}).cat : t === 'obj' ? (S.objs[sel.oi] || {}).cat : (S.panels[sel.pi] || {}).cat;
     if (!window.KCCAT) { toast('Каталог цветов не загрузился'); return; }
     window.KCCAT.pick(cur || '', id => window.PRO.setCat(t, id));
   },
   setCat: (t, id) => mutate(() => {
     const v = id || undefined;
-    if (t === 's') S.cat = v; else if (t === 'doors') S.doors.cat = v; else { const it = t === 'unit' ? S.units[sel.ui] : t === 'bed' ? S.beds[sel.bi] : t === 'obj' ? S.objs[sel.oi] : S.panels[sel.pi]; if (it) it.cat = v; }
+    if (t === 'col' || t === 'cold') { const c = S.cols[sel.i]; if (c) { if (t === 'col') c.cat = v; else c.dcat = v; if (!v) delete c[t === 'col' ? 'cat' : 'dcat']; } } else if (t === 's') S.cat = v; else if (t === 'doors') S.doors.cat = v; else { const it = t === 'unit' ? S.units[sel.ui] : t === 'bed' ? S.beds[sel.bi] : t === 'obj' ? S.objs[sel.oi] : S.panels[sel.pi]; if (it) it.cat = v; }
   }),
   dbg: () => K && K.debug && K.debug(),
   colDp: () => mutate(() => { const c = S.cols[sel.i]; if (c) { if (c.dp === false) delete c.dp; else c.dp = false; } }),

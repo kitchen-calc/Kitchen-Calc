@@ -465,7 +465,9 @@ export function buildParts(S) {
   const HN = hSel ? hSel.ru : 'Петля с доводчиком', HP = hSel ? hSel.price + (KS.plate || 0) : T.hinge, HDN = oSel ? oSel.ru : 'Ручка', HDP = oSel ? oSel.price : T.handle;
   const DRP = (HWs.drawer && KS && KS.drawerSys && KS.drawerSys[HWs.drawer] && KS.drawerSys[HWs.drawer].price) || T.drawer, DS = k => (KS && KS.drawerSys && KS.drawerSys[k] && KS.drawerSys[k].price ? KS.drawerSys[k] : DRAWER_SYS[k]);
   const body = 'ЛДСП ' + mm(t) + ' мм' + (S.cat ? ' · ' + catName(S.cat) : '');
-  const add = (grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind) => {
+  let curCat = '';   // цвет отсека из каталога: детали этого отсека помечаются названием цвета
+  const add = (grp, name, qty, L, Wd, tt, mat0, edgeEach, note, kind) => {
+    let mat = mat0; if (curCat && mat0 === body) mat = body.replace(/ · .*$/, '') + ' · ' + catName(curCat);
     const lg = Math.max(L, Wd), sh = Math.min(L, Wd), e = edgeEach * 100, facade = /^(Дверь|Фасад|Вставка)/.test(name);
     let desc = '—';
     if (edgeEach > 0) desc = Math.abs(e - 2 * (L + Wd)) < .6 ? 'по периметру (4 стороны)' : Math.abs(e - lg) < .6 ? '1 длинная сторона' : Math.abs(e - sh) < .6 ? '1 короткая сторона' : Math.abs(e - lg - sh) < .6 ? '2 стороны (длинная + короткая)' : Math.abs(e - lg - 2 * sh) < .6 ? '3 стороны (перед + 2 торца)' : Math.round(e) / 100 + ' м на деталь';
@@ -646,6 +648,7 @@ export function buildParts(S) {
   let rods = 0, hooks = 0, ledM = 0, basket = 0, pant = 0, pins = g.mz.reduce((a, m) => a + (m.shelves | 0) * 4 * m.comp.length, 0), lifts = 0, lowers = 0; const drw = {};
   S.cols.forEach((c, ci) => {
     if (c.gap) return;
+    curCat = c.cat || '';
     const lbl = ' (отсек ' + (ci + 1) + ')', D = g.cols[ci].D, splitsN = colSplits(S, g, ci).length;
     if (splitsN) { add('Наполнение', 'Перегородка под двери' + lbl, splitsN, g.cols[ci].y1 - g.y0 - S.plinth * 0 - 2 * t, D - .3, t, body, (g.cols[ci].y1 - g.y0 - 2 * t) / 100, 'у каждой двери своя секция; кромка по переднему торцу'); joints_u += splitsN * 4; }
     c.items.forEach(it => {
@@ -681,6 +684,7 @@ export function buildParts(S) {
       else if (it.type === 'vpanel') add('Наполнение', 'Вертикальная панель' + lbl, 1, it.y1 - it.y, D - 2.5, t, body, (it.y1 - it.y) / 100);
     });
   });
+  curCat = '';
   addHw('Фурнитура', rSel ? rSel.ru : 'Штанга хромированная ⌀25 (в сборе)', rods, 'шт.', rSel ? rSel.price : T.rod);
   addHw('Фурнитура', 'Штангодержатель', rods * 2, 'шт.', 0, 'входит в цену штанги');
   addHw('Фурнитура', 'Полкодержатель ⌀5', pins, 'шт.', 1500);
@@ -692,6 +696,7 @@ export function buildParts(S) {
   Object.keys(drw).forEach(k => addHw('Ящики', 'Направляющие / система: ' + (DS(k) ? DS(k).ru : k), drw[k], 'комплект', (DS(k) && DS(k).price) || DRP));
   const doors = doorList(S); let hinges = 0, handles = 0, slidingN = 0;
   doors.forEach(d => {
+    curCat = (d.ci != null && S.cols[d.ci] && S.cols[d.ci].dcat) || '';
     d.gf = S.doors.gf || 4; const lbl = d.zone === 'mezz' ? ' антресоли ' + (d.mi + 1) + '.' : (d.ci != null ? ' отсека ' + (d.ci + 1) + '.' : ' '), nm = d.zone === 'mezz' ? d.i + 1 : (d.ci != null ? d.ri + 1 : d.i + 1);
     const mat = d.fill === 'dsp' ? body : FILLS[d.fill] + (d.fill === 'mdf' ? millName(S) : '');
     if (d.fill === 'glass') { const gf = d.gf || 4; add('Двери', 'Стекло' + lbl + nm, 1, d.h - 2 * gf, d.w - 2 * gf, .4, 'Стекло 4 мм, полировка кромки', (2 * (d.h + d.w - 4 * gf)) / 100, 'размер стекла ' + mm(d.w - 2 * gf) + '×' + mm(d.h - 2 * gf), 'glass'); add('Двери', 'Рамка алюминиевая' + lbl + nm, 1, d.h, d.w, gf, 'Алюминий, профиль ' + mm(gf) + ' мм', (2 * (d.h + d.w)) / 100, 'периметр', 'frame'); }
@@ -699,6 +704,7 @@ export function buildParts(S) {
     else add('Двери', 'Вставка / дверь' + lbl + nm, 1, d.h, d.w, .4, mat, (2 * (d.h + d.w)) / 100, 'полировка кромки', d.fill);
     if (!d.sliding) { if (d.hinge === 'U') lifts += 2; else if (d.hinge === 'D') lowers += 2; else hinges += d.h <= 90 ? 2 : d.h <= 160 ? 3 : d.h <= 220 ? 4 : 5; if (S.doors.handles !== false) handles++; } else slidingN = d.n;
   });
+  curCat = '';
   addHw('Двери', HN, hinges + hinges0, 'шт.', HP);
   addHw('Двери', lSel ? lSel.ru + ' (на дверь)' : 'Подъёмник (газлифт) для дверей вверх', lifts, 'шт.', lSel ? Math.round(lSel.price / 2) : 85000);
   addHw('Двери', 'Откидной механизм (ограничители) для дверей вниз', lowers, 'шт.', 45000);
@@ -773,6 +779,7 @@ export function sanitize(S) {
     if (c && c.nl) col.nl = true;
     if (c && c.det && isFinite(c.det.x) && isFinite(c.det.z)) col.det = { x: r1(n(c.det.x, -1500, 3000, 0)), z: r1(n(c.det.z, -1500, 3000, 0)), rot: [0, 90, 180, 270].includes(c.det.rot) ? c.det.rot : 0 };
     if (c && FILLS[c.df] && c.df !== 'dsp') col.df = c.df;
+    if (c && catId(c.cat)) col.cat = c.cat; if (c && catId(c.dcat)) col.dcat = c.dcat;
     if (c && ['L', 'R', 'U', 'D'].includes(c.dd)) col.dd = c.dd;
     (!col.gap && c && Array.isArray(c.items) ? c.items : []).slice(0, 40).forEach(it => {
       if (it && it.type === 'drawers') { const cnt = n(it.n, 1, 8, 3) | 0, fh0 = n(it.fh, 8, 40, 18); for (let k = 0; k < cnt; k++) { const b0 = mkItem('drawer', n(it.y, 0, 330, 10) + k * fh0); b0.fh = fh0; b0.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; col.items.push(b0); } return; }

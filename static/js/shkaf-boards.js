@@ -1,6 +1,6 @@
 /* Конструктор «Стеллаж из досок»: рисуем вид спереди — горизонтальные и вертикальные доски (змейка, лесенка, ячейки…).
    Готовое ставится в комнату как свободный шкафчик (3D, раскрой, цена, чертежи) и сохраняется в «Мои шкафчики». */
-import { BOARD_PRESETS } from '/static/js/shkaf-pro-core.js?v=23';
+import { BOARD_PRESETS } from '/static/js/shkaf-pro-core.js?v=24';
 const $ = id => document.getElementById(id);
 const SNAP = 5, MATS = [['dsp', 'ЛДСП 16 мм'], ['ply', 'Фанера 12 мм'], ['mdf', 'МДФ крашеный']];
 let st = null, cv, cx, view = { s: 2, ox: 20, oy: 20 }, drag = null, draw = null, selB = -1, tool = 'sel';
