@@ -730,8 +730,19 @@ export function createK3D(container, hooks = {}, opts = {}) {
   }
 
   /* ---------- выделение ---------- */
-  let dragBad = false;
+  let dragBad = false, extraBoxes = [];
+  function highlightMulti() {   // Ctrl+клик: ещё выбранные шкафы подсвечены рамкой
+    extraBoxes.forEach(b => root.remove(b)); extraBoxes = [];
+    const sel = !viewOnly && state && state.selected, list = (!viewOnly && state && state.multi) || []; if (list.length < 2) return;
+    list.forEach(it => {
+      if (sel && sel.tier === it.tier && sel.id === it.id) return;
+      const g = pick.find(p => p.userData.mod.tier === it.tier && p.userData.mod.id === it.id); if (!g) return; const m = g.userData.mod;
+      const bx = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(m.w + 1.2, m.h + 1.2, m.d + 1.2)), new THREE.LineBasicMaterial({ color: '#e9b44c' }));
+      bx.position.set(m.w / 2, m.y0 + m.h / 2, m.d / 2); bx.position.applyEuler(g.rotation); bx.position.add(g.position); bx.rotation.copy(g.rotation); root.add(bx); extraBoxes.push(bx);
+    });
+  }
   function highlight() {
+    highlightMulti();
     if (selBox) { root.remove(selBox); selBox = null; }
     const sel = !viewOnly && state && state.selected; if (!sel) return;
     const g = pick.find(p => p.userData.mod.tier === sel.tier && p.userData.mod.id === sel.id); if (!g) return;
@@ -789,6 +800,9 @@ export function createK3D(container, hooks = {}, opts = {}) {
     downAt = [e.clientX, e.clientY]; drag = null;
     if (viewOnly || !hooks.onDrag) return;
     const h = hit(e); if (!h) return;
+    if ((e.ctrlKey || e.metaKey) && h.m.tier !== 'open') { if (hooks.onSelect) hooks.onSelect({ tier: h.m.tier, id: h.m.id }, true); return; }   // Ctrl+клик: добавить / убрать из выбранных
+    const multi = state && state.multi, mm0 = h.m;
+    if (multi && multi.length > 1 && mm0.tier !== 'open' && multi.some(x => x.tier === mm0.tier && x.id === mm0.id)) { drag = { multi: true, items: multi.slice(), p0: h.p, moved: false, res: { dx: 0, dz: 0 } }; controls.enabled = false; try { renderer.domElement.setPointerCapture(e.pointerId); } catch (er) {} return; }   // тянем сразу всех выбранных
     const m = h.m, sel = state && state.selected;
     if (!sel || sel.tier !== m.tier || sel.id !== m.id) { if (hooks.onSelect) hooks.onSelect({ tier: m.tier, id: m.id }); }
     if (m.tier === 'open') { drag = { open: true, id: m.id, moved: false }; controls.enabled = false; try { renderer.domElement.setPointerCapture(e.pointerId); } catch (er) {} return; }
@@ -801,6 +815,12 @@ export function createK3D(container, hooks = {}, opts = {}) {
     if (!drag.moved && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) return;
     drag.moved = true;
     rayFrom(e);
+    if (drag.multi) {
+      plane.set(new THREE.Vector3(0, 1, 0), -drag.p0.y); if (!ray.ray.intersectPlane(plane, hitP)) return;
+      const dx = hitP.x - drag.p0.x, dz = hitP.z - drag.p0.z; drag.res = { dx, dz };
+      drag.items.forEach(it => { const g = findG(it.tier, it.id); if (!g) return; const m = g.userData.mod; placeAt(g, m.w, m.d, m.cx + dx, m.cz + dz, m.r); });
+      highlight(); setHud('Δ ' + fmt(dx) + ' / ' + fmt(dz) + ' · выбрано ' + drag.items.length); invalidate(); return;
+    }
     if (drag.open) { const r = pickWall(ray.ray, wallPolyOf(state), state.roomH || 260); if (r && hooks.onOpenDrag) setHud(hooks.onOpenDrag(drag.id, r.wall, r.s, r.y) || ''); invalidate(); return; }
     plane.set(new THREE.Vector3(0, 1, 0), -drag.p0.y);
     if (!ray.ray.intersectPlane(plane, hitP)) return;
@@ -818,6 +838,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     const d = drag; drag = null; controls.enabled = true; setHud('');
     if (!d) return false;
     dragBad = false;
+    if (d.multi) { if (d.moved && !cancel && hooks.onMoveMulti) hooks.onMoveMulti(d.items, d.res.dx, d.res.dz); else { highlight(); invalidate(); } return !!d.moved; }
     if (d.open) { if (d.moved && hooks.onOpenEnd) hooks.onOpenEnd(); return !!d.moved; }
     if (d.moved) { if (!cancel && d.res && hooks.onMove) hooks.onMove({ tier: d.tier, id: d.id }, d.res, d.c0); else { highlight(); invalidate(); } return true; }
     return false;
@@ -825,6 +846,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   renderer.domElement.addEventListener('pointercancel', e => endDrag(e, true));
   renderer.domElement.addEventListener('pointerup', e => {
     if (endDrag(e, false)) return;
+    if (e.ctrlKey || e.metaKey) return;
     if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6) return;
     const h = hit(e);
     if (viewOnly) { if (h) toggle(h.m.tier + ':' + h.m.id); return; }

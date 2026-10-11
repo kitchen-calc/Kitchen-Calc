@@ -2791,7 +2791,7 @@
         hw: Object.assign({}, KHW), led: Object.assign({}, ledState), decor: decorClean(decorState),
         island: s.island ? { L: s.islL, W: s.islW, cx: islandPos ? islandPos.cx : null, cz: islandPos ? islandPos.cz : null, r: islandPos ? islandPos.r : 0 } : null,
         free: k3dFreeList(hasUpper), paintOf, poly: roomPoly, roomD: roomPoly ? rpBBox().z1 : Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0),
-        opens: kOpens, objs: kObjsState(), mill: facadeMill, millOf, selected: VIEW_ONLY ? null : k3dSelKey(), drawerVis: drawerVisMap(),
+        opens: kOpens, objs: kObjsState(), mill: facadeMill, millOf, multi: kMulti.slice(), selected: VIEW_ONLY ? null : k3dSelKey(), drawerVis: drawerVisMap(),
         dsysOf: (sec, i) => { const k = sec.dsys && sec.dsys[i]; return (k && k !== 'tier' && KIS.drawerSys[k]) ? k : def; }, towerBands: (a, top) => towerBands(a && typeof a === 'object' && a.kind ? towerCfg(a) : a, top) };
     }
     function kWallPoly(st) { st = st || {}; const W = Math.max(60, st.W || parseFloat(el('mainWall').value) || 240), D = st.roomD || Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0); return roomPoly || [[0, 0], [W, 0], [W, D], [0, D]]; }
@@ -2800,9 +2800,9 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=36');
+        const mod = await import('/static/js/kitchen3d.js?v=37');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
-          onSelect: sel => k3dOnSelect(sel),
+          onSelect: (sel, multi) => k3dOnSelect(sel, multi), onMoveMulti: (items, dx, dz) => k3dMoveMulti(items, dx, dz),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
           onMove: (sel, res, c0) => k3dDropHook(sel, res, c0),
           onOpenDrag: (id, wall, sx, y) => k3dOpenDrag(id, wall, sx, y), onOpenEnd: () => { updateShareLinks(); renderKAdded(); renderK3dEdit(); }
@@ -3753,7 +3753,24 @@
       setTimeout(() => window.dispatchEvent(new Event('resize')), 120);
     }
     ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (!(document.fullscreenElement || document.webkitFullscreenElement) && el('studio').classList.contains('k3d-full')) k3dFull(false); }));
-    function k3dOnSelect(sel) {
+    let kMulti = [];   // несколько выбранных шкафов (Ctrl+клик): двигаются вместе
+    function k3dMoveMulti(items, dx, dz) {
+      const geo = k3dGeo(); k3dKeepPanel = true; let objsMoved = false;
+      items.forEach(it => {
+        if (it.tier === 'obj') { const o = kObjs.find(x => x.id === it.id); if (o) { o.x = Math.round((o.x + dx) * 10) / 10; o.z = Math.round((o.z + dz) * 10) / 10; objsMoved = true; } return; }
+        const tg = tgtOf(it); if (!tg || (tg.tier !== 'island' && !tg.sec)) return;
+        const p = Object.assign({}, getTarget(tg, geo)); p.cx += dx; p.cz += dz; setPlacementCore(tg, p, true);
+      });
+      k3dKeepPanel = false; if (objsMoved) kObjChanged(false); else { k3dRefresh(); updateShareLinks(); }
+    }
+    function k3dOnSelect(sel, multi) {
+      if (multi && sel && sel.tier !== 'open') {
+        if (!kMulti.length) { const cur = k3dSelKey(); if (cur) kMulti.push(cur); }
+        const k = kMulti.findIndex(x => x.tier === sel.tier && x.id === sel.id); if (k >= 0) kMulti.splice(k, 1); else kMulti.push({ tier: sel.tier, id: sel.id });
+        k3dRefresh(); if (typeof msToast === 'function' && kMulti.length > 1) msToast(L3('Выбрано шкафов: ', 'Tanlangan: ') + kMulti.length + L3('. Потяните любой — переедут вместе.', '. Birini torting — hammasi birga siljiydi.'));
+        return;
+      }
+      kMulti = [];
       if (swapFrom && sel && sel.tier !== 'island') {
         const b = secsOf(sel.tier).find(x => x.id === sel.id);
         if (b && b === swapFrom) return;
