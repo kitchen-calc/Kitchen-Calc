@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { geom, doorList, PALETTE, LACO, roomPoly } from '/static/js/shkaf-pro-core.js?v=1';
+import { geom, doorList, PALETTE, LACO, roomPoly, MIRROR_KINDS } from '/static/js/shkaf-pro-core.js?v=1';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -32,9 +32,11 @@ export function createPro3D(container, hooks = {}, opts = {}) {
 
   const glowTex = (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(255,214,130,1)'); gr.addColorStop(1, 'rgba(255,214,130,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
   const mkGlow = () => new THREE.MeshBasicMaterial({ map: glowTex, color: '#ffffff', transparent: true, opacity: .2, depthWrite: false, blending: THREE.AdditiveBlending });
+  const glowRTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 8, 64, 64, 64); gr.addColorStop(0, 'rgba(255,214,130,1)'); gr.addColorStop(1, 'rgba(255,214,130,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+  const mkGlowR = () => new THREE.MeshBasicMaterial({ map: glowRTex, color: '#ffffff', transparent: true, opacity: .35, depthWrite: false, blending: THREE.AdditiveBlending });
   let dusk = false, ledsOn = true, lastM = null;
-  function ledBoost(M) { if (!M) return; const k = ledsOn ? (dusk ? 14 : 2) : 0; M.led.emissiveIntensity = k; M.led.color.set(ledsOn ? '#fff3c4' : '#6b6a66'); M.glowMat.opacity = ledsOn ? (dusk ? .62 : .2) : 0; }
-  function setLight(on) { dusk = !on; renderer.toneMappingExposure = dusk ? .24 : 1.05; hemi.intensity = dusk ? .08 : HEMI0; sun.intensity = dusk ? .15 : SUN0; scene.background = new THREE.Color(dusk ? '#2e2a26' : '#ece6dc'); ledBoost(lastM); invalidate(); }
+  function ledBoost(M) { if (!M) return; const k = ledsOn ? (dusk ? 36 : 2) : 0; M.led.emissiveIntensity = k; M.led.color.set(ledsOn ? '#fff3c4' : '#6b6a66'); M.glowMat.opacity = ledsOn ? (dusk ? .95 : .2) : 0; if (M.glowR) M.glowR.opacity = ledsOn ? (dusk ? 1 : .3) : 0; }
+  function setLight(on) { dusk = !on; renderer.toneMappingExposure = dusk ? .11 : 1.05; hemi.intensity = dusk ? .03 : HEMI0; sun.intensity = dusk ? .05 : SUN0; scene.background = new THREE.Color(dusk ? '#15120f' : '#ece6dc'); ledBoost(lastM); invalidate(); }
   function setLeds(on) { ledsOn = !!on; ledBoost(lastM); invalidate(); }
   let needs = true; const invalidate = () => { needs = true; };
   let root = new THREE.Group(); scene.add(root);
@@ -51,7 +53,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     const M = {
       body: stdMat(hex), bodyDark: stdMat(new THREE.Color(hex).multiplyScalar(.82).getStyle()), back: stdMat(new THREE.Color(hex).multiplyScalar(.9).getStyle(), { roughness: .8 }),
       plinth: stdMat('#2d2b29', { roughness: .7 }), chrome: stdMat('#e8ecef', { roughness: .15, metalness: 1 }), steel: stdMat('#9aa0a6', { roughness: .35, metalness: .7 }),
-      led: new THREE.MeshStandardMaterial({ color: '#fff3c4', emissive: '#ffe29a', emissiveIntensity: 2 }), glowMat: mkGlow(), inner: stdMat('#efefec', { roughness: .8 }), black: stdMat('#1a1b1d', { roughness: .3, metalness: .4 }),
+      led: new THREE.MeshStandardMaterial({ color: '#fff3c4', emissive: '#ffe29a', emissiveIntensity: 2 }), glowMat: mkGlow(), glowR: mkGlowR(), groove: stdMat(new THREE.Color(hex).multiplyScalar(.55).getStyle(), { roughness: .8 }), inner: stdMat('#efefec', { roughness: .8 }), black: stdMat('#1a1b1d', { roughness: .3, metalness: .4 }),
       mirror: new THREE.MeshStandardMaterial({ color: '#eef5f9', roughness: .06, metalness: .8, envMapIntensity: 2.4 }),
       glassClear: new THREE.MeshPhysicalMaterial({ color: '#cfe6f2', roughness: .04, metalness: 0, transparent: true, opacity: .32, envMapIntensity: 1, depthWrite: false }),
       alu: stdMat('#b8bec4', { roughness: .3, metalness: .85 }),
@@ -149,18 +151,43 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       });
     });
     // отдельные панели: зеркало / стекло на стене или на фасаде
+    // grooves(): фрезеровка (пазы, кассеты, филёнка) на лицевой стороне
+    const grooves = (x, y, w, h, z, pat, pitch, meta, parent) => {
+      const gw = .45, gz = .35;
+      if (pat === 'vgroove' || pat === 'grid') for (let xi = x + pitch; xi < x + w - .5; xi += pitch) box(gw, h - 4, gz, M.groove, xi, y + 2, z, meta, parent);
+      if (pat === 'hgroove' || pat === 'grid') for (let yi = y + pitch; yi < y + h - .5; yi += pitch) box(w - 4, gw, gz, M.groove, x + 2, yi, z, meta, parent);
+      if (pat === 'frame') { const m = Math.min(6, w / 5, h / 5); box(w - 2 * m, gw, gz, M.groove, x + m, y + m, z, meta, parent); box(w - 2 * m, gw, gz, M.groove, x + m, y + h - m, z, meta, parent); box(gw, h - 2 * m, gz, M.groove, x + m, y + m, z, meta, parent); box(gw, h - 2 * m, gz, M.groove, x + w - m, y + m, z, meta, parent); }
+    };
     (S.panels || []).forEach((p, pi) => {
-      const meta = { k: 'panel', i: pi }, z = p.mount === 'front' ? D + 3.8 : .5, th = p.kind === 'dsp' ? 1.6 : .7;
-      const mat = p.kind === 'dsp' ? M.body : (p.kind === 'glass' ? M.glassClear : (p.kind === 'laco' ? M.glass(S.doors.laco) : M.mirror));
-      if (p.frame) { const f = Math.min(p.fw || 3, p.w / 2 - .5, p.h / 2 - .5); box(p.w - 2 * f, p.h - 2 * f, th, mat, p.x + f, p.y + f, z, meta); box(p.w, f, th + 1, M.alu, p.x, p.y, z, meta); box(p.w, f, th + 1, M.alu, p.x, p.y + p.h - f, z, meta); box(f, p.h - 2 * f, th + 1, M.alu, p.x, p.y + f, z, meta); box(f, p.h - 2 * f, th + 1, M.alu, p.x + p.w - f, p.y + f, z, meta); }
+      const meta = { k: 'panel', i: pi }, z = p.mount === 'front' ? D + 3.8 : (p.mount === 'free' ? Math.max(.5, p.pz || 30) : .5);
+      if (p.kind === 'slats') {
+        const sw = (p.sw || 100) / 10, sd = (p.sd || 32) / 10, sg = (p.sg || 20) / 10, vert = p.so !== 'h', span = vert ? p.w : p.h, cnt = Math.max(1, Math.floor((span + sg) / (sw + sg)));
+        for (let k = 0; k < cnt; k++) { const o = k * (sw + sg); if (vert) box(sw, p.h, sd, M.body, p.x + o, p.y, z, meta); else box(p.w, sw, sd, M.body, p.x, p.y + o, z, meta); }
+        return;
+      }
+      const th = (p.kind === 'dsp' || p.kind === 'mdf') ? 1.6 : .7;
+      const mat = (p.kind === 'dsp' || p.kind === 'mdf') ? M.body : (p.kind === 'glass' ? M.glassClear : (p.kind === 'laco' ? M.glass(S.doors.laco) : M.mirror));
+      const shape = MIRROR_KINDS.includes(p.kind) ? (p.shape || 'rect') : 'rect', cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+      const ell = (w, h, mt, zz, tt) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, tt, 56), mt); m.rotation.x = Math.PI / 2; m.scale.set(w, 1, h); m.position.set(cx, cy, zz + tt / 2); m.castShadow = true; m.userData.sel = meta; picks.push(m); wg.add(m); return m; };
+      if (shape === 'round' || shape === 'oval') {
+        ell(p.w, p.h, mat, z, th);
+        if (p.bl) { ell(p.w + 3, p.h + 3, M.led, z - .5, .4); const gl = new THREE.Mesh(new THREE.PlaneGeometry(p.w + 40, p.h + 40), M.glowR); gl.position.set(cx, cy, z - .6); wg.add(gl); }
+      } else if (shape === 'arch') {
+        const r = p.w / 2, bh = Math.max(1, p.h - r);
+        box(p.w, bh, th, mat, p.x, p.y, z, meta);
+        { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, th, 56), mat); m.rotation.x = Math.PI / 2; m.position.set(cx, p.y + bh, z + th / 2); m.userData.sel = meta; picks.push(m); wg.add(m); }
+        if (p.bl) { box(p.w + 3, bh, .4, M.led, p.x - 1.5, p.y - 1.5, z - .5, null); const m2 = new THREE.Mesh(new THREE.CylinderGeometry(r + 1.5, r + 1.5, .4, 56), M.led); m2.rotation.x = Math.PI / 2; m2.position.set(cx, p.y + bh, z - .3); wg.add(m2); const gl = new THREE.Mesh(new THREE.PlaneGeometry(p.w + 40, p.h + 40), M.glowR); gl.position.set(cx, cy, z - .6); wg.add(gl); }
+      } else if (p.frame && p.kind !== 'mdf') { const f = Math.min(p.fw || 3, p.w / 2 - .5, p.h / 2 - .5); box(p.w - 2 * f, p.h - 2 * f, th, mat, p.x + f, p.y + f, z, meta); box(p.w, f, th + 1, M.alu, p.x, p.y, z, meta); box(p.w, f, th + 1, M.alu, p.x, p.y + p.h - f, z, meta); box(f, p.h - 2 * f, th + 1, M.alu, p.x, p.y + f, z, meta); box(f, p.h - 2 * f, th + 1, M.alu, p.x + p.w - f, p.y + f, z, meta); }
       else box(p.w, p.h, th, mat, p.x, p.y, z, meta);
+      if (shape === 'rect' && p.bl && MIRROR_KINDS.includes(p.kind)) { const b = 1.2; box(p.w + 2 * b, b, .4, M.led, p.x - b, p.y - b, z - .5); box(p.w + 2 * b, b, .4, M.led, p.x - b, p.y + p.h, z - .5); box(b, p.h, .4, M.led, p.x - b, p.y, z - .5); box(b, p.h, .4, M.led, p.x + p.w, p.y, z - .5); const gl = new THREE.Mesh(new THREE.PlaneGeometry(p.w + 44, p.h + 44), M.glowR); gl.position.set(cx, cy, z - .6); wg.add(gl); }
+      if (p.kind === 'mdf') grooves(p.x, p.y, p.w, p.h, z + th, p.pat || 'vgroove', p.gp || 12, meta);
     });
     // двери: основные (по секциям) и антресолей (каждая своими)
     const dl = doorList(S);
     dl.forEach(d => {
       const D = d.ci != null && g.cols[d.ci] ? g.cols[d.ci].D : S.D;
-      const mz = d.zone === 'mezz', gl = d.fill === 'glass', mat = d.fill === 'dsp' ? M.body : (d.fill === 'laco' ? M.glass(S.doors.laco) : (gl ? M.glassClear : M.mirror)), th = d.fill === 'dsp' ? 1.6 : .8;
-      const face = (par, dx, dy) => { if (!gl) { box(d.w, d.h, th, mat, dx, dy, 0, meta, par); return; } const f = Math.min(Math.max(1, S.doors.gf || 4), d.w / 2 - .6, d.h / 2 - .6); box(d.w - 2 * f, d.h - 2 * f, .5, M.glassClear, dx + f, dy + f, .5, meta, par); box(d.w, f, 1.8, M.alu, dx, dy, 0, meta, par); box(d.w, f, 1.8, M.alu, dx, dy + d.h - f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx, dy + f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx + d.w - f, dy + f, 0, meta, par); };
+      const mz = d.zone === 'mezz', gl = d.fill === 'glass', mat = (d.fill === 'dsp' || d.fill === 'mdf') ? M.body : (d.fill === 'laco' ? M.glass(S.doors.laco) : (gl ? M.glassClear : M.mirror)), th = (d.fill === 'dsp' || d.fill === 'mdf') ? 1.6 : .8;
+      const face = (par, dx, dy) => { if (!gl) { box(d.w, d.h, th, mat, dx, dy, 0, meta, par); if (d.fill === 'mdf') grooves(dx, dy, d.w, d.h, th, 'frame', 10, meta, par); return; } const f = Math.min(Math.max(1, S.doors.gf || 4), d.w / 2 - .6, d.h / 2 - .6); box(d.w - 2 * f, d.h - 2 * f, .5, M.glassClear, dx + f, dy + f, .5, meta, par); box(d.w, f, 1.8, M.alu, dx, dy, 0, meta, par); box(d.w, f, 1.8, M.alu, dx, dy + d.h - f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx, dy + f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx + d.w - f, dy + f, 0, meta, par); };
       const key = mz ? 'm' + d.mi + '.' + d.i : 'd' + d.i, meta = mz ? { k: 'mezz', i: d.mi, key } : (d.ci != null ? { k: 'col', i: d.ci, key } : { k: 'doors', key });
       if (d.sliding) {
         const layer = d.ri % 2, z = D + .4 + layer * 3.4, grp = new THREE.Group(); grp.position.set(d.x, 0, z); wg.add(grp);

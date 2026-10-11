@@ -103,9 +103,9 @@ export function createK3D(container, hooks = {}, opts = {}) {
   const glowTex = (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(255,214,130,1)'); gr.addColorStop(1, 'rgba(255,214,130,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
   const mkGlow = () => new THREE.MeshBasicMaterial({ map: glowTex, color: '#ffffff', transparent: true, opacity: .22, depthWrite: false, blending: THREE.AdditiveBlending });
   const glowM = M => M.ledGlow || (M.ledGlow = mkGlow());
-  function ledBoost(M) { if (!M) return; const k = ledsOn ? (dusk ? 14 : 2.2) : 0; if (M.led) { M.led.emissiveIntensity = k; M.led.color.set(ledsOn ? '#fff3c4' : '#6b6a66'); } if (M.ledGlow) M.ledGlow.opacity = ledsOn ? (dusk ? .62 : .22) : 0; if (M.glowMat) M.glowMat.opacity = ledsOn ? (dusk ? .55 : .2) : 0; }
+  function ledBoost(M) { if (!M) return; const k = ledsOn ? (dusk ? 36 : 2.2) : 0; if (M.led) { M.led.emissiveIntensity = k; M.led.color.set(ledsOn ? '#fff3c4' : '#6b6a66'); } if (M.ledGlow) M.ledGlow.opacity = ledsOn ? (dusk ? .95 : .22) : 0; if (M.glowMat) M.glowMat.opacity = ledsOn ? (dusk ? .55 : .2) : 0; }
   function setLeds(on) { ledsOn = !!on; ledBoost(lastM); invalidate(); }
-  function setLight(on) { dusk = !on; renderer.toneMappingExposure = dusk ? .24 : 1.05; hemi.intensity = dusk ? .08 : HEMI0; sun.intensity = dusk ? .15 : SUN0; scene.background = new THREE.Color(dusk ? '#2e2a26' : '#ece6dc'); ledBoost(lastM); invalidate(); }
+  function setLight(on) { dusk = !on; renderer.toneMappingExposure = dusk ? .11 : 1.05; hemi.intensity = dusk ? .03 : HEMI0; sun.intensity = dusk ? .05 : SUN0; scene.background = new THREE.Color(dusk ? '#15120f' : '#ece6dc'); ledBoost(lastM); invalidate(); }
 
 
   const tex = { floor: FLOOR_TEX(), tile: TILE_TEX() };

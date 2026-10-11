@@ -1,6 +1,7 @@
 /* Конструктор шкафа PRO: модель, геометрия, список деталей, цена. Без DOM — можно проверять в node. Размеры в см. */
 
 export const P = {
+  mdfM2: 480000, slatM3: 9500000, shapeK: 1.3,
   K: 1.55, Klabor: 1.25, laborM2: 260000, delivery: 250000,
   sheetArea: 2.75 * 1.83, waste: 1.15, cutM2: 7950, edgeM: 2500, hdfM2: 42000,
   glass: { mirror: 190000, film: 235000, laco: 420000, sand: 330000, glass: 260000 }, frameM: 70000,
@@ -17,7 +18,12 @@ export const DRAWER_SYS = {
 };
 export const PALETTE = [['Белый', '#f2f1ee'], ['Светлый дуб', '#d8bd91'], ['Бежевый', '#cdbba0'], ['Серый', '#a9adb0'], ['Орех', '#7a5638'], ['Графит', '#3a3d41'], ['Чёрный', '#1c1d1f'], ['Капучино', '#a88b73']];
 export const LACO = [['Графит', '#2a2d31'], ['Серо-зелёный', '#6f7d73'], ['Шампань', '#d6c3a1'], ['Белый', '#f0efe9'], ['Синий', '#33476a'], ['Бордо', '#6b2a35']];
-export const FILLS = { dsp: 'ЛДСП', glass: 'Стекло в алюминиевой раме', mirror: 'Зеркало', laco: 'Лакобель (цветное стекло)', film: 'Зеркало с плёнкой', sand: 'Зеркало с рисунком' };
+export const FILLS = { dsp: 'ЛДСП', mdf: 'Фрезерованный МДФ', glass: 'Стекло в алюминиевой раме', mirror: 'Зеркало', laco: 'Лакобель (цветное стекло)', film: 'Зеркало с плёнкой', sand: 'Зеркало с рисунком' };
+export const PANEL_KINDS = { mirror: 'Зеркало', film: 'Зеркало с плёнкой', sand: 'Зеркало с рисунком', glass: 'Стекло в алюминиевой раме', laco: 'Лакобель', dsp: 'ЛДСП', mdf: 'Фрезерованный МДФ', slats: 'Перегородка из клеёного МДФ (рейки)' };
+export const MIRROR_KINDS = ['mirror', 'film', 'sand'];
+export const SLAT_PRESETS = [[32, 100], [32, 60], [20, 50], [40, 80], [25, 40]];   // [толщина, ширина] рейки, мм
+export const MIRROR_SIZES = [[60, 180, 'rect'], [80, 200, 'rect'], [100, 200, 'rect'], [120, 200, 'rect'], [60, 60, 'round'], [80, 80, 'round'], [100, 100, 'round'], [60, 100, 'oval'], [80, 160, 'arch']];
+export const PANEL_PATTERNS = { vgroove: 'Вертикальные пазы', hgroove: 'Горизонтальные пазы', grid: 'Кассеты (сетка)', frame: 'Филёнка (рамка)' };
 export const ITEM_TYPES = {
   shelf: 'Полка', rod: 'Штанга', drawer: 'Ящик', idoor: 'Дверца в отсеке', shoe: 'Обувные полки', pant: 'Брючница', basket: 'Корзина', hook: 'Крючки', led: 'Подсветка', vpanel: 'Вертикальная панель'
 };
@@ -99,7 +105,7 @@ export function defState() {
   S.mezzes = [mkMezz(0, S.W, S.H)];
   return S;
 }
-export function mkPanel(x, y, w, h) { return { id: uid(), x: r1(x), y: r1(y), w: r1(w), h: r1(h), kind: 'mirror', mount: 'wall', frame: false, fw: 3 }; }
+export function mkPanel(x, y, w, h) { return { id: uid(), x: r1(x), y: r1(y), w: r1(w), h: r1(h), kind: 'mirror', mount: 'wall', frame: false, fw: 3, shape: 'rect', bl: false, pat: 'vgroove', gp: 12, sw: 100, sd: 32, sg: 20, so: 'v', pz: 30 }; }
 export function mkMezz(x, w, y) { return { id: uid(), x: r1(x), w: r1(w), h: 40, y: r1(y), n: Math.max(1, Math.round(w / 60)), shelves: 0, fill: 'dsp', div: [], cd: [], dir: [] }; }
 export function presetP() {   // П-образный шкаф: две башни и антресоль-перемычка над проёмом
   const S = defState(); S.H = 240; S.name = 'П-образный шкаф';
@@ -231,7 +237,7 @@ export function buildParts(S) {
     const lg = Math.max(L, Wd), sh = Math.min(L, Wd), e = edgeEach * 100, facade = /^(Дверь|Фасад|Вставка)/.test(name);
     let desc = '—';
     if (edgeEach > 0) desc = Math.abs(e - 2 * (L + Wd)) < .6 ? 'по периметру (4 стороны)' : Math.abs(e - lg) < .6 ? '1 длинная сторона' : Math.abs(e - sh) < .6 ? '1 короткая сторона' : Math.abs(e - lg - sh) < .6 ? '2 стороны (длинная + короткая)' : Math.abs(e - lg - 2 * sh) < .6 ? '3 стороны (перед + 2 торца)' : Math.round(e) / 100 + ' м на деталь';
-    parts.push({ grp, name, qty, L: mm(lg), W: mm(sh), t: mm(tt), mat, kind: kind || 'dsp', edgeM: Math.round(edgeEach * qty * 100) / 100, edgeT: edgeEach > 0 ? (facade ? '2' : '0,4') : '', edgeDesc: desc, note: note || '' });
+    parts.push({ grp, name, qty, L: mm(lg), W: mm(sh), t: mm(tt), mat, kind: kind || 'dsp', edgeM: Math.round(edgeEach * qty * 100) / 100, edgeT: (edgeEach > 0 && (!kind || kind === 'dsp')) ? (facade ? '2' : '0,4') : '', edgeDesc: desc, note: note || '' });
   };
   const addHw = (grp, name, qty, unit, price, note) => { qty = Math.round(qty * 100) / 100; if (qty > 0) hw.push({ grp, name, qty, unit: unit || 'шт.', price: Math.round(price || 0), note: note || '' }); };
   const bd = D - .3, ph = S.plinth, hs = H - ph;
@@ -257,9 +263,19 @@ export function buildParts(S) {
     joints += 16 + (m.shelves | 0) * 4 + m.dv.length * 8;
   });
   (S.panels || []).forEach((p, i) => {
-    const th = p.kind === 'dsp' ? t : .6, mat = p.kind === 'dsp' ? body : FILLS[p.kind] + ', 6 мм';
-    add('Панели', 'Панель ' + (i + 1) + ' (' + (p.mount === 'front' ? 'на фасад' : 'на стену') + ')', 1, p.h, p.w, th, mat, (2 * (p.h + p.w)) / 100, 'размер ' + mm(p.w) + '×' + mm(p.h), p.kind);
-    if (p.frame) add('Панели', 'Рамка панели ' + (i + 1), 1, p.h, p.w, p.fw || 3, 'Алюминий, профиль ' + mm(p.fw || 3) + ' мм', (2 * (p.h + p.w)) / 100, 'периметр', 'frame');
+    const where = p.mount === 'front' ? 'на фасад' : (p.mount === 'free' ? 'отдельно стоящая' : 'на стену'), per = (2 * (p.h + p.w)) / 100;
+    if (p.kind === 'slats') {
+      const sw = p.sw || 100, sd = p.sd || 32, sg = p.sg || 20, vert = p.so !== 'h', span = (vert ? p.w : p.h) * 10, len = (vert ? p.h : p.w) * 10, cnt = Math.max(1, Math.floor((span + sg) / (sw + sg)));
+      parts.push({ grp: 'Панели', name: 'Рейка клеёного МДФ ' + sd + '×' + sw + ' (панель ' + (i + 1) + ')', qty: cnt, L: Math.round(len), W: Math.round(sw), t: Math.round(sd), mat: 'Клеёный МДФ', kind: 'slat', edgeM: 0, edgeT: '', edgeDesc: '—', note: (vert ? 'вертикально' : 'горизонтально') + ', зазор ' + sg + ' мм, ' + where });
+      addHw('Крепёж', 'Монтажная рейка и клей для реек панели ' + (i + 1), 1, 'комплект', 45000 + cnt * 1500);
+      return;
+    }
+    const isMirror = MIRROR_KINDS.includes(p.kind), th = (p.kind === 'dsp' || p.kind === 'mdf') ? t : .6, mat = p.kind === 'dsp' ? body : (p.kind === 'mdf' ? 'Фрезерованный МДФ ' + mm(t) + ' мм' : FILLS[p.kind] + ', 6 мм');
+    const shapeName = { rect: '', round: ', круглое', oval: ', овальное', arch: ', арка' }[p.shape || 'rect'];
+    add('Панели', 'Панель ' + (i + 1) + ' (' + where + ')' + (isMirror ? shapeName : ''), 1, p.h, p.w, th, mat, per, 'размер ' + mm(p.w) + '×' + mm(p.h) + (p.kind === 'mdf' ? ', фрезеровка: ' + (PANEL_PATTERNS[p.pat] || '') + ', шаг ' + mm(p.gp || 12) + ' мм' : ''), p.kind);
+    if (isMirror && p.shape && p.shape !== 'rect') parts[parts.length - 1].mult = P.shapeK;
+    if (p.frame && p.kind !== 'mdf') add('Панели', 'Рамка панели ' + (i + 1), 1, p.h, p.w, p.fw || 3, 'Алюминий, профиль ' + mm(p.fw || 3) + ' мм', per, 'периметр', 'frame');
+    if (isMirror && p.bl) { const pm = (p.shape === 'round' ? Math.PI * p.w : (p.shape === 'oval' ? Math.PI * (p.w + p.h) / 2 : 2 * (p.w + p.h))) / 100; addHw('Свет', 'Подсветка зеркала ' + (i + 1) + ' (LED по контуру + блок)', 1, 'комплект', pm * T.led + T.ledKit, 'периметр ' + Math.round(pm * 100) / 100 + ' м'); }
   });
   addHw('Крепёж', 'Крепёж зеркальных / стеклянных панелей (подвесы, клей)', (S.panels || []).length, 'шт.', 35000);
   addHw('Крепёж', 'Конфирмат 7×50', joints, 'шт.', 600);
@@ -332,16 +348,20 @@ export function edgeTotals(parts) {
 export function pricing(S, bp) {
   bp = bp || buildParts(S);
   const T = P.tiers[S.tier], pm = T.sheet / P.sheetArea * P.waste + P.cutM2 + 3 * P.edgeM, lines = [];
-  let dspM2 = 0, hdfM2 = 0, frameM = 0, glass = {};
+  let dspM2 = 0, hdfM2 = 0, frameM = 0, mdfM2 = 0, slatM3 = 0, glass = {};
   bp.parts.forEach(p => {
-    const a = p.L * p.W * p.qty / 1e6;
+    const a = p.L * p.W * p.qty / 1e6 * (p.mult || 1);
     if (p.kind === 'frame') { frameM += p.edgeM; return; }
+    if (p.kind === 'slat') { slatM3 += p.L * p.W * p.t * p.qty / 1e9; return; }
+    if (p.kind === 'mdf') { mdfM2 += a; return; }
     if (p.kind === 'dsp') dspM2 += a; else if (p.kind === 'hdf') hdfM2 += a; else if (p.kind !== 'metal') glass[p.kind] = (glass[p.kind] || 0) + a;
   });
   const add = (n, q, c) => { if (c > 0) lines.push({ n, q, c: Math.round(c) }); };
   add('ЛДСП с распилом и кромкой', Math.round(dspM2 * 100) / 100 + ' м²', dspM2 * pm);
   add('Задняя стенка ХДФ', Math.round(hdfM2 * 100) / 100 + ' м²', hdfM2 * P.hdfM2);
   Object.keys(glass).forEach(k => add(k === 'glass' ? 'Стекло дверей' : (FILLS[k] || k), Math.round(glass[k] * 100) / 100 + ' м²', glass[k] * P.glass[k]));
+  add('Фрезерованный МДФ (двери, панели)', Math.round(mdfM2 * 100) / 100 + ' м²', mdfM2 * P.mdfM2);
+  add('Клеёный МДФ — рейки перегородок', Math.round(slatM3 * 1000) / 1000 + ' м³', slatM3 * P.slatM3);
   add('Алюминиевая рамка дверей', Math.round(frameM * 10) / 10 + ' м', frameM * P.frameM);
   bp.hw.forEach(h => add(h.name, h.qty + ' ' + h.unit, h.qty * h.price));
   const mat = lines.reduce((a, l) => a + l.c, 0), front = bp.g.W / 100 * bp.g.totalH / 100, labor = front * P.laborM2 * P.Klabor;
@@ -387,7 +407,7 @@ export function sanitize(S) {
     o.cols.push(col);
   });
   if (o.cols.length && !o.cols.some(c => !c.gap)) o.cols[0].gap = false;
-  o.panels = (Array.isArray(S.panels) ? S.panels : []).slice(0, 8).map(p => ({ id: uid(), x: r1(n(p && p.x, -300, 1200, 0)), y: r1(n(p && p.y, 0, 340, 20)), w: r1(n(p && p.w, 10, 400, 60)), h: r1(n(p && p.h, 10, 340, 180)), kind: ['mirror', 'film', 'sand', 'glass', 'laco', 'dsp'].includes(p && p.kind) ? p.kind : 'mirror', mount: p && p.mount === 'front' ? 'front' : 'wall', frame: !!(p && p.frame), fw: r1(n(p && p.fw, 1, 15, 3)) }));
+  o.panels = (Array.isArray(S.panels) ? S.panels : []).slice(0, 8).map(p => ({ id: uid(), x: r1(n(p && p.x, -300, 1200, 0)), y: r1(n(p && p.y, 0, 340, 20)), w: r1(n(p && p.w, 10, 400, 60)), h: r1(n(p && p.h, 10, 340, 180)), kind: PANEL_KINDS[p && p.kind] ? p.kind : 'mirror', mount: p && p.mount === 'front' ? 'front' : (p && p.mount === 'free' ? 'free' : 'wall'), frame: !!(p && p.frame), fw: r1(n(p && p.fw, 1, 15, 3)), shape: ['rect', 'round', 'oval', 'arch'].includes(p && p.shape) ? p.shape : 'rect', bl: !!(p && p.bl), pat: PANEL_PATTERNS[p && p.pat] ? p.pat : 'vgroove', gp: r1(n(p && p.gp, 3, 60, 12)), sw: n(p && p.sw, 10, 400, 100), sd: n(p && p.sd, 6, 100, 32), sg: n(p && p.sg, 0, 200, 20), so: p && p.so === 'h' ? 'h' : 'v', pz: r1(n(p && p.pz, 0, 400, 30)) }));
   { const rm = S.room || {}, P = Array.isArray(rm.poly) ? rm.poly.map(p => [Number(p[0]), Number(p[1])]) : null;
     o.room = { W: r1(n(rm.W, 100, 1500, 400)), D: r1(n(rm.D, 100, 1500, 300)), H: r1(n(rm.H, 180, 400, 260)), ox: r1(n(rm.ox, -500, 1500, 0)), poly: P && P.every(p => p.every(v => isFinite(v))) && rpValid(P) ? P : null, set: !!rm.set }; }
   recalcW(o);
