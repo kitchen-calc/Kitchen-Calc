@@ -157,7 +157,7 @@ function sheetOpenings(S, bp, no, total) {
   const P = roomPoly(S), E = roomEdges(P), hd = ['№', 'Элемент', 'Стена', 'От угла стены до левого края, мм', 'Ширина × высота, мм', 'От пола, мм', 'Выступ, мм'], cw = [44, 200, 100, 300, 200, 110, 90], x0 = 70;
   let o = '', y = 80, xs = [x0]; cw.forEach(w => xs.push(xs[xs.length - 1] + w));
   o += text(x0, 62, 'ДВЕРИ, ОКНА, РОЗЕТКИ И ДРУГИЕ ЭЛЕМЕНТЫ СТЕН (номера — как на плане комнаты)', 10, 'start', 'font-weight="700"');
-  o += rect(x0, y, xs[xs.length - 1] - x0, 26, 'o', '#f0e9d8'); hd.forEach((t, i) => { o += text(xs[i] + 6, y + 17, t, 7.6, 'start', 'font-weight="700"'); if (i) o += line(xs[i], y, xs[i], y + 26 + 26 * Math.min(S.opens.length, 24)); });
+  o += rect(x0, y, xs[xs.length - 1] - x0, 26, 'o', '#eeeeee'); hd.forEach((t, i) => { o += text(xs[i] + 6, y + 17, t, 7.6, 'start', 'font-weight="700"'); if (i) o += line(xs[i], y, xs[i], y + 26 + 26 * Math.min(S.opens.length, 24)); });
   S.opens.slice(0, 24).forEach((q, i) => {
     const yy = y + 26 + i * 26, e = E[q.wall], k = OPEN_KINDS[q.kind];
     o += rect(x0, yy, xs[xs.length - 1] - x0, 26, 't');
@@ -289,12 +289,12 @@ function tableSheets(S, bp, pr, startNo, total) {
     let y = 112, k = 0;
     while (idx < groups.length && k < rowsPerPage) {
       const r = groups[idx++]; k++;
-      if (r.h) { o += rect(54, y - 11, 1096, 15, 't', '#eef3f6') + text(60, y, r.h.toUpperCase(), 7.4, 'start', 'font-weight="700"'); y += 16; continue; }
+      if (r.h) { o += rect(54, y - 11, 1096, 15, 't', '#eeeeee') + text(60, y, r.h.toUpperCase(), 7.4, 'start', 'font-weight="700"'); y += 16; continue; }
       n++; [n, r.name, r.qty, r.L, r.W, r.t, r.mat, r.edgeDesc && r.edgeDesc !== '—' ? r.edgeDesc + ' (' + r.edgeT + ')' : '—', r.edgeM || '', r.note].forEach((v, i) => o += text(cols[i] + 2, y, String(i === 8 && v !== '' ? fm(v) : v).slice(0, i === 9 ? 30 : 60), 7, 'start'));
       o += line(54, y + 4, 1150, y + 4, 't'); y += 16;
     }
     if (idx >= groups.length) {   // последний лист раскроя — итоги по материалам и кромке
-      y += 8; o += rect(54, y - 12, 1096, 66, 'o', '#fffaf0');
+      y += 8; o += rect(54, y - 12, 1096, 66, 'o', '#fafafa');
       o += text(62, y, 'ИТОГО: деталей ' + bp.parts.reduce((a, p) => a + p.qty, 0) + ' шт. · ЛДСП корпус ' + fm(et.dsp.toFixed(2)) + ' м² · фасады ' + fm(et.facade.toFixed(2)) + ' м² · ХДФ ' + fm(et.hdf.toFixed(2)) + ' м²', 8, 'start', 'font-weight="700"');
       o += text(62, y + 16, edgeLine, 8, 'start', 'font-weight="700" fill="#b3261e"');
       o += text(62, y + 32, 'Правило сборки: боковины, спинка и перегородки стоят на дне; крышка — между боковинами. Кромка — на видимых сторонах: передний торец, фасады по периметру.', 7, 'start');
@@ -321,7 +321,7 @@ function sheetBedMain(S, bp, bi, no, total) {
   o += rect(PX(0), PY(0), W * k, L * k, 'o');
   o += rect(PX(0), PY(0), W * k, t * k, 'o', 'url(#h1)') + rect(PX(0), PY(L - t), W * k, t * k, 'o', 'url(#h1)') + rect(PX(0), PY(t), t * k, (L - 2 * t) * k, 'o', 'url(#h1)') + rect(PX(W - t), PY(t), t * k, (L - 2 * t) * k, 'o', 'url(#h1)');
   const n = d.n, span = (b.ml + 1) - 6.8;
-  for (let i = 0; i < n; i++) o += rect(PX(t), PY(t + (n > 1 ? i * span / (n - 1) : 0)), (W - 2 * t) * k, 6.8 * k, 't', '#f1e6d2');
+  for (let i = 0; i < n; i++) o += rect(PX(t), PY(t + (n > 1 ? i * span / (n - 1) : 0)), (W - 2 * t) * k, 6.8 * k, 't', '#eeeeee');
   o += rect(PX(t + .5), PY(t + .5), b.mw * k, b.ml * k, 'h') + text(PX(W / 2), PY(L / 2), 'МАТРАС ' + mm(b.mw) + '×' + mm(b.ml), 8);
   [[0, 0], [W - 5, 0], [0, L - 5], [W - 5, L - 5]].forEach(([lx, lz]) => { o += rect(PX(lx), PY(lz), 5 * k, 5 * k, 'h'); });
   o += rect(PX(t), PY(t), 3 * k, (L - 2 * t) * k, 'h') + rect(PX(W - t - 3), PY(t), 3 * k, (L - 2 * t) * k, 'h');
@@ -371,7 +371,7 @@ function sheetBedDetails(S, bp, bi, no, total) {
   x = 440; y = 110;
   o += text(x + 100, y - 34, '2 · Ламель в ламеледержателе (сечение)', 9, 'middle', 'font-weight="700"');
   o += rect(x, y + 70, 200, 38, 'o', 'url(#h2)') + text(x + 100, y + 128, 'опорный брусок 30×40', 7.5);
-  o += rect(x + 20, y + 54, 160, 16, 'o', '#f1e6d2') + text(x + 100, y + 48, 'ламель бук 68×8, шаг ' + mm((b.ml + 1) / d.n) + ' мм', 7.5);
+  o += rect(x + 20, y + 54, 160, 16, 'o', '#eeeeee') + text(x + 100, y + 48, 'ламель бук 68×8, шаг ' + mm((b.ml + 1) / d.n) + ' мм', 7.5);
   o += `<path d="M ${x + 20} ${y + 54} q 0 -10 -8 -10 M ${x + 180} ${y + 54} q 0 -10 8 -10" ${ST.o}/>` + dimH(x + 20, x + 180, y + 70, y + 160, 68);
   // 3. ножка и крепление
   x = 780; y = 110;
@@ -384,7 +384,7 @@ function sheetBedDetails(S, bp, bi, no, total) {
   o += text(x + 150, y - 24, '4 · Матрас «' + BED_STYLES[b.style].ru + '»: слои (сумма ' + mm(b.mt) + ' мм)', 9, 'middle', 'font-weight="700"');
   const layers = b.style === 'foam' ? [['Чехол стёганый', .08], ['Пена HR', .46], ['Пена средней жёсткости', .38], ['Чехол', .08]] : b.style === 'spring' ? [['Чехол стёганый', .08], ['Слой пены / струттофайбер', .17], ['Блок независимых пружин', .67], ['Основание', .08]] : b.style === 'ortho' ? [['Чехол', .08], ['Латекс', .25], ['Кокосовая койра', .34], ['Латекс', .25], ['Чехол', .08]] : [['Чехол', .08], ['Пена', .16], ['Блок пружин', .42], ['Кокосовая койра', .26], ['Основание', .08]];
   let yy = y; const th = 250;
-  layers.forEach(([nm, f]) => { const h = th * f; o += rect(x, yy, 220, h, 'o', '#f6f3ec') + text(x + 236, yy + h / 2 + 3, nm + ' · ' + mm(b.mt * f) + ' мм', 7.5, 'start'); yy += h; });
+  layers.forEach(([nm, f]) => { const h = th * f; o += rect(x, yy, 220, h, 'o', '#f4f4f4') + text(x + 236, yy + h / 2 + 3, nm + ' · ' + mm(b.mt * f) + ' мм', 7.5, 'start'); yy += h; });
   o += dimV(y, y + th, x, x - 24, mm(b.mt));
   // 5. спецификация основных деталей кровати
   x = 560; y = 400; o += text(x, y - 24, '5 · Детали кровати (из общего раскроя)', 9, 'start', 'font-weight="700"');
@@ -402,7 +402,7 @@ function sheetBunk(S, bp, bi, no, total) {
   o += rect(X(7), Y(b.lv2 + b.mt + b.rail), (d.L - 14) * k, (b.mt + b.rail + 2) * k, 'h') + text(X(d.L / 2), Y(b.lv2 + b.mt + b.rail / 2) + 3, 'бортик ' + mm(b.rail) + ' над матрасом', 7.5);
   o += rect(X(t + .5), Y(b.lv2 + .8 + b.mt), b.ml * k, b.mt * k, 'h') + rect(X(t + .5), Y(d.slatTop + .8 + b.mt), b.ml * k, b.mt * k, 'h');
   const lx = X(d.L) + 40; o += rect(lx, Y(b.lv2 + 6), 6 * k, (b.lv2 + 6) * k, 'o', 'url(#h1)') + rect(lx + 40 * k, Y(b.lv2 + 6), 6 * k, (b.lv2 + 6) * k, 'o', 'url(#h1)');
-  for (let i = 1; i <= sn; i++) { o += rect(lx + 6 * k, Y(i * sp + 1.25), 34 * k, 2.5 * k, 'o', '#f1e6d2'); if (i > 1) o += dimV(Y(i * sp), Y((i - 1) * sp), lx + 46 * k, lx + 46 * k + 26 + (i % 2) * 22, mm(sp)); }
+  for (let i = 1; i <= sn; i++) { o += rect(lx + 6 * k, Y(i * sp + 1.25), 34 * k, 2.5 * k, 'o', '#eeeeee'); if (i > 1) o += dimV(Y(i * sp), Y((i - 1) * sp), lx + 46 * k, lx + 46 * k + 26 + (i % 2) * 22, mm(sp)); }
   o += dimV(Y(sp), Y(0), lx, lx - 26, mm(sp)) + dimV(Y(b.lv2), Y(0), X(0), X(0) - 34, mm(b.lv2)) + dimV(Y(d.postH), Y(0), X(0), X(0) - 70, mm(d.postH));
   o += dimV(Y(b.lv2 + b.mt + b.rail), Y(b.lv2), X(d.L - 7), X(d.L - 7) - 30, mm(b.mt + b.rail));
   o += dimH(X(0), X(d.L), Y(d.postH), Y(d.postH) - 26, mm(d.L)) + text(X(d.L / 2), Y(0) + 40, 'ДВУХЪЯРУСНАЯ: стойки 70×70, ярусы, бортики, лестница (' + sn + ' ступеней, шаг ' + mm(sp) + ' мм)', 9, 'middle', 'font-weight="700"');
@@ -720,6 +720,68 @@ function sheetItem(S, bp, it, items, no, total) {
   }
   return sheet(o, meta(S, bp).slice(0, 3).concat([['Предмет', it.n + ' · ' + it.name], ['Габарит Ш×Г×В', mm(w) + '×' + mm(d) + '×' + mm(h) + ' мм'], ['От пола / стена', mm(it.y0) + ' мм · ' + (wall ? 'у стены ' + (wall.wi + 1) : 'свободно')]]), no, total);
 }
+/* ---------- страница изделия: вид спереди, сбоку и сверху в одном стиле с листами шкафов; цепочки размеров по всем деталям, мм ---------- */
+function edgeChain(vals, lo, hi) {   // границы деталей без дублей (ближе 0,25 см склеиваем)
+  const a = [lo, hi]; vals.forEach(v => { if (v > lo + .25 && v < hi - .25) a.push(v); }); a.sort((p, q) => p - q);
+  const out = [a[0]]; for (let i = 1; i < a.length; i++) if (a[i] - out[out.length - 1] > .25) out.push(a[i]); return out;
+}
+function viewBoxes(o, bs, A, B, ka, kb, oa, ob, flipB, shade) {   // рисуем коробки в проекции: A — горизонталь, B — вертикаль
+  bs.forEach(b => {
+    const a0 = oa + b[A + 'a'] * ka, a1 = oa + b[A + 'b'] * ka, b0 = flipB ? ob + b[B + 'a'] * kb : ob - b[B + 'b'] * kb, b1 = flipB ? ob + b[B + 'b'] * kb : ob - b[B + 'a'] * kb;
+    const x = Math.min(a0, a1), y = Math.min(b0, b1), w = Math.abs(a1 - a0), h = Math.abs(b1 - b0);
+    if (b.r === 'l') { o.s += rect(x, y, w, h, 't'); return; }
+    o.s += rect(x, y, w, h, 't', b.r === 'a' ? 'url(#h2)' : '#fff');
+    if (b.r === 'f' && w > 12 && h > 12 && shade) o.s += line(x, y, x + w, y + h, 'h') + line(x + w, y, x, y + h, 'h');
+  });
+}
+function sheetItemViews(S, bp, it, no, total) {
+  const lw = it.lw || (it.x1 - it.x0), ld = it.ld || (it.z1 - it.z0), lh = it.lh || (it.y1 - it.y0);
+  const L = (it.local || []).filter(b => !b.poly).map(b => ({ xa: b.x0, xb: b.x1, ya: b.y0, yb: b.y1, za: b.z0, zb: b.z1, r: b.r }));
+  const poly = (it.local || []).find(b => b.poly);
+  if (poly) { const xs = poly.poly.map(p => p[0]), zs = poly.poly.map(p => p[1]); L.push({ xa: Math.min(...xs), xb: Math.max(...xs), ya: poly.y0, yb: poly.y1, za: Math.min(...zs), zb: Math.max(...zs), r: 'b' }); }
+  if (!L.length) L.push({ xa: 0, xb: lw, ya: 0, yb: lh, za: 0, zb: ld, r: 'b' });
+  const sc = Math.min(470 / Math.max(lw, ld), 230 / lh, 190 / ld, 3), k = sc;
+  let o = '';
+  // --- ВИД СПЕРЕДИ (x → вправо, y вверх; ближние детали рисуем последними)
+  { const x0 = 90, yb0 = 330, bs = L.slice().sort((p, q) => p.zb - q.zb), box = { s: '' };
+    viewBoxes(box, bs, 'x', 'y', k, k, x0, yb0, false, true); o += box.s + rect(x0, yb0 - lh * k, lw * k, lh * k, 'o');
+    const xs = edgeChain(L.flatMap(b => [b.xa, b.xb]), 0, lw), ys = edgeChain(L.flatMap(b => [b.ya, b.yb]), 0, lh);
+    for (let i = 0; i < xs.length - 1; i++) { const a = x0 + xs[i] * k, b = x0 + xs[i + 1] * k; if (b - a >= 22) o += wl(a, yb0, a, yb0 + 17) + wl(b, yb0, b, yb0 + 17) + dH(a, b, yb0 + 14, String(mm(xs[i + 1] - xs[i])), 6.8); }
+    o += wl(x0, yb0, x0, yb0 + 40) + wl(x0 + lw * k, yb0, x0 + lw * k, yb0 + 40) + dH(x0, x0 + lw * k, yb0 + 37, String(mm(lw)), 8);
+    const xr = x0 + lw * k + 16;
+    for (let i = 0; i < ys.length - 1; i++) { const a = yb0 - ys[i] * k, b = yb0 - ys[i + 1] * k; if (a - b >= 22) o += wl(x0 + lw * k, a, xr + 3, a) + wl(x0 + lw * k, b, xr + 3, b) + dV(b, a, xr, String(mm(ys[i + 1] - ys[i])), 6.8); }
+    o += wl(x0 + lw * k, yb0 - lh * k, xr + 38, yb0 - lh * k) + wl(x0 + lw * k, yb0, xr + 38, yb0) + dV(yb0 - lh * k, yb0, xr + 35, String(mm(lh)), 8);
+    o += text(x0 + lw * k / 2, yb0 - lh * k - 16, 'ВИД СПЕРЕДИ', 10, 'middle', 'font-weight="700"');
+  }
+  // --- ВИД СБОКУ (справа): слева задняя сторона, справа — лицо
+  { const x0 = 640, yb0 = 330, bs = L.slice().sort((p, q) => p.xb - q.xb), box = { s: '' };
+    viewBoxes(box, bs, 'z', 'y', k, k, x0, yb0, false, false); o += box.s + rect(x0, yb0 - lh * k, ld * k, lh * k, 'o');
+    const zs = edgeChain(L.flatMap(b => [b.za, b.zb]), 0, ld);
+    for (let i = 0; i < zs.length - 1; i++) { const a = x0 + zs[i] * k, b = x0 + zs[i + 1] * k; if (b - a >= 22) o += wl(a, yb0, a, yb0 + 17) + wl(b, yb0, b, yb0 + 17) + dH(a, b, yb0 + 14, String(mm(zs[i + 1] - zs[i])), 6.8); }
+    o += wl(x0, yb0, x0, yb0 + 40) + wl(x0 + ld * k, yb0, x0 + ld * k, yb0 + 40) + dH(x0, x0 + ld * k, yb0 + 37, String(mm(ld)), 8);
+    o += wl(x0 + ld * k, yb0 - lh * k, x0 + ld * k + 38, yb0 - lh * k) + wl(x0 + ld * k, yb0, x0 + ld * k + 38, yb0) + dV(yb0 - lh * k, yb0, x0 + ld * k + 35, String(mm(lh)), 8);
+    o += text(x0 + ld * k / 2, yb0 - lh * k - 16, 'ВИД СБОКУ (справа)', 10, 'middle', 'font-weight="700"');
+  }
+  // --- ВИД СВЕРХУ: задняя сторона вверху, лицо внизу
+  { const x0 = 90, y0 = 440, bs = L.slice().sort((p, q) => p.yb - q.yb), box = { s: '' };
+    viewBoxes(box, bs, 'x', 'z', k, k, x0, y0, true, false); o += box.s + rect(x0, y0, lw * k, ld * k, 'o');
+    const xs = edgeChain(L.flatMap(b => [b.xa, b.xb]), 0, lw), zs = edgeChain(L.flatMap(b => [b.za, b.zb]), 0, ld);
+    for (let i = 0; i < xs.length - 1; i++) { const a = x0 + xs[i] * k, b = x0 + xs[i + 1] * k; if (b - a >= 22) o += wl(a, y0, a, y0 - 14) + wl(b, y0, b, y0 - 14) + dH(a, b, y0 - 11, String(mm(xs[i + 1] - xs[i])), 6.8); }
+    const xr = x0 + lw * k + 16;
+    for (let i = 0; i < zs.length - 1; i++) { const a = y0 + zs[i] * k, b = y0 + zs[i + 1] * k; if (b - a >= 22) o += wl(x0 + lw * k, a, xr + 3, a) + wl(x0 + lw * k, b, xr + 3, b) + dV(a, b, xr, String(mm(zs[i + 1] - zs[i])), 6.8); }
+    o += wl(x0 + lw * k, y0, xr + 38, y0) + wl(x0 + lw * k, y0 + ld * k, xr + 38, y0 + ld * k) + dV(y0, y0 + ld * k, xr + 35, String(mm(ld)), 8);
+    o += text(x0 + lw * k / 2, y0 + ld * k + 18, 'ВИД СВЕРХУ (ПЛАН) · лицо внизу', 10, 'middle', 'font-weight="700"');
+  }
+  // --- детали и крепёж (справа внизу, над рамкой)
+  if (it.parts && it.parts.length) {
+    const tx = 640, ty = 478, rows = it.parts.slice(0, 11), cf = (it.hw || []).filter(q => /Конфирмат/.test(q.name)).reduce((a, q) => a + q.qty, 0);
+    o += text(tx, ty - 12, 'ДЕТАЛИ (длина × ширина × толщина, мм)', 7.6, 'start', 'font-weight="700"') + line(tx, ty - 6, 1150, ty - 6, 'o');
+    rows.forEach((r, i) => { const yy = ty + 6 + i * 11.5; o += text(tx, yy, String(r.name).replace(/ \(.*\)$/, '').slice(0, 32), 6.4, 'start') + text(tx + 250, yy, r.qty + ' шт.', 6.4, 'start', 'font-weight="700"') + text(tx + 305, yy, `${Math.round(r.L)} × ${Math.round(r.W)} × ${Math.round(r.t)}`, 6.4, 'start') + text(tx + 410, yy, String(r.mat || '').slice(0, 22), 5.8, 'start', 'fill="#555"'); });
+    if (it.parts.length > rows.length) o += text(tx, ty + 6 + rows.length * 11.5, '… и ещё ' + (it.parts.length - rows.length) + ' поз. — в таблице раскроя', 6, 'start', 'fill="#555"');
+    if (cf) o += text(tx, ty + 8 + (rows.length + (it.parts.length > rows.length ? 1 : 0)) * 11.5, 'Конфирматы 7×50: ' + cf + ' шт. (по одному через каждые 30 см стыка)', 6.6, 'start', 'font-weight="700" fill="#0b6e8f"');
+  }
+  return sheet(o, meta(S, bp).slice(0, 3).concat([['Изделие', it.n + ' · ' + it.name], ['Габарит Ш×Г×В', mm(lw) + '×' + mm(ld) + '×' + mm(lh) + ' мм'], ['Лист', 'Виды изделия: спереди, сбоку, сверху']]), no, total);
+}
 export function buildSheets(S0) {
   const bpAll = buildParts(S0), pr = pricing(S0, bpAll), S = Object.assign({}, S0, { cols: S0.cols.filter(c => !c.det) }); S.W = geom(S).W;
   const bp = buildParts(S), total = '__T__', sheets = [], hasMain = S.cols.some(c => !c.gap);
@@ -734,7 +796,7 @@ export function buildSheets(S0) {
   { const items0 = roomItems(S0, bp);
     if (items0.length || (S0.opens || []).length) {
       [0, 1, 2, 3].forEach(vk => add('Вид из угла ' + (vk + 1), n => sheetIso(S0, bp, n, total, vk)));
-      items0.forEach(it => add('Предмет ' + it.n, n => sheetItem(S0, bp, it, items0, n, total)));
+      items0.forEach(it => { add('Предмет ' + it.n, n => sheetItem(S0, bp, it, items0, n, total)); if (/^[СКТЗ]\d/.test(it.n) && it.local && it.local.length) add('Виды ' + it.n, n => sheetItemViews(S0, bp, it, n, total)); });
     } }
   if (hasMain) { add('Двери', n => sheetDoors(S, bp, n, total)); add('Секции', n => sheetSections(S, bp, n, total)); }
   S.cols.forEach((c, i) => { if (!c.gap) add('Отсек ' + (i + 1), n => sheetColumn(S, bp, i, n, total)); });
@@ -756,7 +818,7 @@ export function buildSheets(S0) {
 function sheetHw(S, bp, hw, no, total) {
   const x0 = 70, cw = [330, 90, 90, 330], hd = ['Крепёж и фурнитура', 'Кол-во', 'Ед.', 'Откуда'];
   let o = text(x0, 62, 'КРЕПЁЖ И ФУРНИТУРА ДОБАВЛЕННЫХ ИЗДЕЛИЙ · конфирматы 7×50 — по одному через каждые 30 см стыка (минимум 2 на стык)', 9, 'start', 'font-weight="700"'), xs = [x0]; cw.forEach(w => xs.push(xs[xs.length - 1] + w));
-  const rows = hw.slice(0, 34); o += rect(x0, 80, xs[4] - x0, 22, 'o', '#f0e9d8'); hd.forEach((t, i) => { o += text(xs[i] + 6, 95, t, 7.6, 'start', 'font-weight="700"'); });
+  const rows = hw.slice(0, 34); o += rect(x0, 80, xs[4] - x0, 22, 'o', '#eeeeee'); hd.forEach((t, i) => { o += text(xs[i] + 6, 95, t, 7.6, 'start', 'font-weight="700"'); });
   rows.forEach((r, i) => { const yy = 102 + i * 18; o += rect(x0, yy, xs[4] - x0, 18, 't') + text(xs[0] + 6, yy + 12, String(r.name).slice(0, 52), 7.2, 'start') + text(xs[1] + 6, yy + 12, String(r.qty), 7.4, 'start', 'font-weight="700"') + text(xs[2] + 6, yy + 12, r.unit || 'шт.', 7.2, 'start') + text(xs[3] + 6, yy + 12, String(r.grp || '').slice(0, 50), 7, 'start'); });
   return sheet(o, meta(S, bp).slice(0, 3).concat([['Лист', 'Крепёж и фурнитура'], ['Позиций', String(hw.length)], ['Дата', new Date().toLocaleDateString('ru-RU')]]), no, total);
 }
@@ -768,7 +830,7 @@ export function buildExtraSheets(K, startNo) {
   add('План комнаты', n => sheetRoomPlan(S, bp, n, total));
   if (S.opens.length) add('Элементы стен', n => sheetOpenings(S, bp, n, total));
   if (K.items.length || S.opens.length) { [0, 1, 2, 3].forEach(vk => add('Вид из угла ' + (vk + 1), n => sheetIso(S, bp, n, total, vk))); }
-  K.items.filter(it => it.sheet).forEach(it => add('Предмет ' + it.n, n => sheetItem(S, bp, it, K.items, n, total)));
+  K.items.filter(it => it.sheet).forEach(it => { add('Предмет ' + it.n, n => sheetItem(S, bp, it, K.items, n, total)); if (it.local && it.local.length) add('Виды ' + it.n, n => sheetItemViews(S, bp, it, n, total)); });
   const E = roomEdges(roomPoly(S)); E.forEach((e, wi) => { if (S.opens.some(q => q.wall === wi)) add('Стена ' + (wi + 1), n => sheetWall(S, bp, wi, K.items, n, total)); });
   if (K.hw && K.hw.length) add('Крепёж', n => sheetHw(S, bp, K.hw, n, total));
   return out;

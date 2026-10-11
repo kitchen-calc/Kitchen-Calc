@@ -4303,7 +4303,7 @@
       return { r, u0, u1, dist };
     }
     function odObjFront(o, X, Y, sc, wmm, hmm, axis) {   // вид спереди изделия: габарит, доски, дверцы, полки (X, Y — левый верх в бумаге)
-      let out = odRect(X, Y, wmm * sc, hmm * sc, 'o', '#fbf8f1');
+      let out = odRect(X, Y, wmm * sc, hmm * sc, 'o', '#fff');
       const L = (x1, y1, x2, y2, st) => odLine(X + x1 * sc, Y + y1 * sc, X + x2 * sc, Y + y2 * sc, st || 't');
       const lbl = (x, y, w, h, txt) => (w * sc > 40 && h * sc > 14) ? odText(X + (x + w / 2) * sc, Y + (y + h / 2) * sc + 3, txt, 7, 'middle') : '';
       if (o.kind === 'parts') {
@@ -4314,13 +4314,31 @@
           const b = q.b, A = q.A, x = (axis === 'xm' ? mx - q.u1 : q.u0 - mn) * 10, w = (q.u1 - q.u0) * 10, h = (A[4] - A[1]) * 10, y = hmm - A[4] * 10;
           if (b[0] >= 2 && b[0] <= 5) { out += odRect(X + x * sc, Y + y * sc, w * sc, h * sc, 'h') + L(x, y, x + w, y + h, 'h') + L(x + w, y, x, y + h, 'h'); out += lbl(x, y, w, h, Math.round(w) + '×' + Math.round(h)); }
           else if (b[0] === 6) out += odRect(X + x * sc, Y + y * sc, w * sc, h * sc, 'h', 'rgba(11,110,143,.06)') + lbl(x, y, w, h, Math.round(w) + '×' + Math.round(h));
-          else out += odRect(X + x * sc, Y + y * sc, w * sc, h * sc, 't', '#efe6d4');
+          else out += odRect(X + x * sc, Y + y * sc, w * sc, h * sc, 't', '#f2f2f2');
         });
       } else {
         const n = o.n | 0, t = 16, dn = o.dn | 0;
         for (let k = 1; k <= n; k++) out += L(t, hmm * k / (n + 1), wmm - t, hmm * k / (n + 1));
         if (dn > 0 && o.kind !== 'shelf' && o.kind !== 'vert') { const dh = (o.dh > 0 ? Math.min(o.dh * 10, hmm - 2 * t) : hmm - 2 * t), dw = wmm / dn; for (let k = 0; k < dn; k++) { out += odRect(X + (k * dw + 2) * sc, Y + (hmm - t - dh) * sc, (dw - 4) * sc, dh * sc, 'h') + L(k * dw + 2, hmm - t - dh, (k + 1) * dw - 2, hmm - t, 'h') + L((k + 1) * dw - 2, hmm - t - dh, k * dw + 2, hmm - t, 'h'); } }
       }
+      return out;
+    }
+    /* вид спереди добавленного изделия у стены ряда: настоящие детали (мировые коробки), от дальних к ближним */
+    function odObjFrontW(o, wall, geo, X, Y) {
+      const SO = window.PRODRAW && window.PRODRAW.SOLIDS; if (!SO) return '';
+      const sol = SO.objSolid(o, CUT_T === 18 ? 1.8 : 1.6), W = geo.W, R = []; let out = '';
+      sol.boxes.filter(b => !b.poly).forEach(b => {
+        let u0, u1, d;
+        if (wall === 'main') { u0 = b.x0; u1 = b.x1; d = b.z0; } else if (wall === 'left') { u0 = b.z0 - 60; u1 = b.z1 - 60; d = b.x0; }
+        else if (currentType === 'parallel') { u0 = W - b.x1; u1 = W - b.x0; d = geo.roomD - b.z1; } else { u0 = b.z0 - 60; u1 = b.z1 - 60; d = W - b.x1; }
+        R.push({ u0, u1, d, y0: b.y0, y1: b.y1, r: b.r });
+      });
+      R.sort((a, b) => a.d - b.d).forEach(r => {
+        const x = X(r.u0 * 10), y = Y(r.y1 * 10), w = Math.max(.6, (X(r.u1 * 10) - x)), h = Math.max(.6, Y(r.y0 * 10) - y);
+        if (r.r === 'l') { out += odRect(x, y, w, h, 't'); return; }
+        out += odRect(x, y, w, h, 't', r.r === 'a' ? 'url(#h2)' : '#fff');
+        if (r.r === 'f' && w > 12 && h > 12) out += odLine(x, y, x + w, y + h, 'h') + odLine(x + w, y, x, y + h, 'h');
+      });
       return out;
     }
     function odRoomSheet(geo, groups, no, total) {
@@ -4330,12 +4348,12 @@
       lowerSections.forEach(s => items.push({ s, sec: s, tier: 'lower' })); if (geo.hasUp) upperSections.forEach(s => items.push({ s, sec: s, tier: 'upper' }));
       items.forEach(it => {
         const p = getTarget(it, geo), f = footprint(p), code = (it.tier === 'lower' ? 'Н-' : 'В-') + it.s.id;
-        out += odRect(X(f.x0), Y(f.z0), (f.x1 - f.x0) * sc, (f.z1 - f.z0) * sc, it.tier === 'upper' ? 'h' : 'o', it.tier === 'upper' ? 'rgba(11,110,143,.08)' : '#fafafa');
+        out += odRect(X(f.x0), Y(f.z0), (f.x1 - f.x0) * sc, (f.z1 - f.z0) * sc, it.tier === 'upper' ? 'h' : 'o', it.tier === 'upper' ? '#fff' : '#fafafa');
         out += odText(X(p.cx), Y(p.cz) + 3, code, Math.max(7, Math.min(10, (f.x1 - f.x0) * sc * .45)));
       });
-      if (chk('hasIsland')) { const p = getTarget({ tier: 'island', sec: null }, geo), f = footprint(p); out += odRect(X(f.x0), Y(f.z0), (f.x1 - f.x0) * sc, (f.z1 - f.z0) * sc, 'o', '#f3ecd9') + odText(X(p.cx), Y(p.cz) + 3, 'ОСТРОВ', 10); }
+      if (chk('hasIsland')) { const p = getTarget({ tier: 'island', sec: null }, geo), f = footprint(p); out += odRect(X(f.x0), Y(f.z0), (f.x1 - f.x0) * sc, (f.z1 - f.z0) * sc, 'o', '#fff') + odText(X(p.cx), Y(p.cz) + 3, 'ОСТРОВ', 10); }
       kObjs.forEach((o, i) => {   // добавленные изделия: контур, номер, ширина и глубина в мм
-        const r = SC().objRect(o); out += odRect(X(r.x0), Y(r.z0), (r.x1 - r.x0) * sc, (r.z1 - r.z0) * sc, 'o', '#ece2cf') + odText(X((r.x0 + r.x1) / 2), Y((r.z0 + r.z1) / 2) + 3, 'С' + (i + 1), 10, 'middle', 'font-weight="700"');
+        const r = SC().objRect(o); out += odRect(X(r.x0), Y(r.z0), (r.x1 - r.x0) * sc, (r.z1 - r.z0) * sc, 'o', '#fff') + odText(X((r.x0 + r.x1) / 2), Y((r.z0 + r.z1) / 2) + 3, 'С' + (i + 1), 10, 'middle', 'font-weight="700"');
         out += odDimH(X(r.x0), X(r.x1), Y(r.z1), Y(r.z1) + 14, Math.round((r.x1 - r.x0) * 10)) + odDimV(Y(r.z0), Y(r.z1), X(r.x1), X(r.x1) + 14, Math.round((r.z1 - r.z0) * 10));
       });
       out += odDimH(X(0), X(geo.W), Y(0), Y(0) - 30, Math.round(geo.W * 10)) + odDimV(Y(0), Y(geo.roomD), X(geo.W), X(geo.W) + 34, Math.round(geo.roomD * 10));
@@ -4373,7 +4391,7 @@
       const objsHere = kObjs.map((o, i) => Object.assign(odObjWall(o, wall, geo), { o, i })).filter(q => q.dist <= 40 && q.u1 > -1);
       objsHere.forEach(q => {
         const o = q.o, wmm = (q.u1 - q.u0) * 10, hmm = o.h * 10, y0mm = (o.y || 0) * 10, X0 = X(q.u0 * 10), Y0 = Y(y0mm + hmm);
-        out += odObjFront(o, X0, Y0, sc, wmm, hmm, wall === 'main' ? 'x' : (wall === 'left' || currentType !== 'parallel' ? 'z' : 'xm')) + odText(X0 + wmm * sc / 2, Y0 - 6, 'С' + (q.i + 1) + ' ' + SC().OBJ_KINDS[o.kind].ru, 8, 'middle', 'font-weight="700"');
+        out += (odObjFrontW(o, wall, geo, X, Y) || odObjFront(o, X0, Y0, sc, wmm, hmm, wall === 'main' ? 'x' : (wall === 'left' || currentType !== 'parallel' ? 'z' : 'xm'))) + odRect(X0, Y0, wmm * sc, hmm * sc, 'o') + odText(X0 + wmm * sc / 2, Y0 - 6, 'С' + (q.i + 1) + ' ' + SC().OBJ_KINDS[o.kind].ru, 8, 'middle', 'font-weight="700"');
         out += odDimH(X0, X0 + wmm * sc, Y0, Y0 - 22, Math.round(wmm)) + odDimV(Y0, Y0 + hmm * sc, X0 + wmm * sc, X0 + wmm * sc + 18, Math.round(hmm));
         if (y0mm > 5) out += odDimV(Y0 + hmm * sc, floorY, X0, X0 - 18, 'от пола ' + Math.round(y0mm));
         const near = lows.map(r => [r.u0, r.u1]).filter(r => r[1] <= q.u0 + .01).sort((a, b) => b[1] - a[1])[0], nr = lows.map(r => [r.u0, r.u1]).filter(r => r[0] >= q.u1 - .01).sort((a, b) => a[0] - b[0])[0];
@@ -4538,7 +4556,7 @@
         (pp ? pp.hw : []).forEach(h => { const k = h.name + '|' + h.unit; if (!hwAll[k]) hwAll[k] = { grp: 'С' + (i + 1), name: h.name, qty: 0, unit: h.unit }; else if (hwAll[k].grp.indexOf('С' + (i + 1)) < 0) hwAll[k].grp += ', С' + (i + 1); hwAll[k].qty += h.qty; }); });
       return { name: 'Кухня на заказ', poly: kWallPolyCache || kWallPoly(), H: geo.roomH, opens: kOpens, items, hw: Object.keys(hwAll).map(k => hwAll[k]), meta: [['Проект', 'Кухня на заказ'], ['Помещение', Math.round(geo.W * 10) + ' × ' + Math.round(geo.roomD * 10) + ' мм · высота ' + Math.round(geo.roomH * 10)], ['Материал', 'ЛДСП ' + CUT_T + ' мм']] };
     }
-    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=29').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
+    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=30').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
     function renderOwnerDraw() {
       const box = el('ownerDrawBody'); if (!box || !OWNER_ON) return;
       const geo = k3dGeo(), groups = new Map();

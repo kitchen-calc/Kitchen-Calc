@@ -599,7 +599,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=29');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=30');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
