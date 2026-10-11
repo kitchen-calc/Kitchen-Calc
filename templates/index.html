@@ -24,7 +24,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=24'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=4'; import * as C from '/static/js/shkaf-pro-core.js?v=24'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script src="/static/js/shkaf-lib.js?v=2"></script>
   <script type="module" src="/static/js/shkaf-3dpart.js?v=6"></script>
   <script src="/static/js/color-catalog.js?v=3"></script>
@@ -2800,7 +2800,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=37');
+        const mod = await import('/static/js/kitchen3d.js?v=38');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: (sel, multi) => k3dOnSelect(sel, multi), onMoveMulti: (items, dx, dz) => k3dMoveMulti(items, dx, dz),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3150,9 +3150,9 @@
         <div class="k3s-note">${esc(L3('Стена', 'Devor'))} ${o.wall + 1} (${Math.round(e ? e.L : 0)} ${cmU()}) · ${esc(L3('от угла стены', 'burchakdan'))} ${Math.round(o.off)} ${cmU()} · ${esc(L3('от пола', 'polidan'))} ${Math.round(o.y)} ${cmU()}. ${esc(L3('Тяните мышью по стенам.', 'Devorlar boʻylab sudrang.'))}</div>
         ${k3Row(L3('Стена', 'Devor'), E.map((x, i) => k3B(o.wall === i, `k3dOpenWall(${i})`, '№' + (i + 1))).join(''))}
         ${(window.ROPEN.OPEN_VARIANTS[o.kind]) ? k3Row(L3('Вид', 'Turi'), window.ROPEN.OPEN_VARIANTS[o.kind].map(([k, n]) => k3B(o.v === k, `k3dOpenV('${k}')`, n)).join('')) : ''}
-        ${(window.ROPEN.OPEN_COLORS[o.kind]) ? `<div class="k3e-r"><span>${esc(L3('Цвет', 'Rang'))}</span>${window.ROPEN.OPEN_COLORS[o.kind].map((c, i) => `<button type="button" class="k3sw ${(o.c | 0) === i ? 'on' : ''}" style="background:${c[0]}" title="${c[1]}" onclick="k3dOpenC(${i})"></button>`).join('')}</div>` : ''}
+        ${(window.ROPEN.OPEN_COLORS[o.kind]) ? `<div class="k3e-r"><span>${esc(L3('Цвет', 'Rang'))}</span>${window.ROPEN.OPEN_COLORS[o.kind].map((c, i) => `<button type="button" class="k3sw ${(o.c | 0) === i ? 'on' : ''}" style="background:${c[0] || 'repeating-linear-gradient(45deg,#bbb,#bbb 3px,#fff 3px,#fff 6px)'}" title="${c[1]}" onclick="k3dOpenC(${i})"></button>`).join('')}</div>` : ''}
         ${(o.kind === 'window' || o.kind === 'balcony') ? k3Row(L3('Створок', 'Qanotlar'), [1, 2, 3, 4, 5, 6].map(k => k3B((o.n || 1) === k, `k3dOpenN(${k})`, String(k))).join('')) : ''}
-        ${st([L3('От угла', 'Burchakdan'), 'off'], 5, o.off)}${st([L3('Ширина', 'Kenglik'), 'w'], 5, o.w)}${st([L3('Высота', 'Balandlik'), 'h'], 5, o.h)}${st([L3('От пола', 'Polidan'), 'y'], 5, o.y)}
+        ${st([L3('От угла', 'Burchakdan'), 'off'], 5, o.off)}${st([L3('Ширина', 'Kenglik'), 'w'], 5, o.w)}${st([L3('Высота', 'Balandlik'), 'h'], 5, o.h)}${st([L3('От пола', 'Polidan'), 'y'], 5, o.y)}${(o.kind === 'apron' || o.kind === 'wpanel') ? st([L3('Толщина', 'Qalinlik'), 'd'], .2, o.d) : ''}
         <div class="k3e-r">${k3B(false, 'k3dOpenCenter()', L3('По центру стены', 'Devor markazida'))}${k3B(false, 'k3dOpenDup()', '⧉ ' + L3('Копия', 'Nusxa'))}${k3B(false, `k3dOpenDel('${o.id}')`, '🗑 ' + L3('Удалить', 'Oʻchirish'))}${k3B(false, 'k3dOpenSel(null)', L3('Готово', 'Tayyor'))}</div>`;
     }
     function k3dOpenV(v) { const o = kOpens.find(x => x.id === selOpenId); if (!o) return; o.v = v; if (o.kind === 'window') { if (v === 'pano') { o.y = 0; o.h = Math.max(o.h, 230); } else if (v === 'round') { const d = Math.min(o.w, o.h, 100); o.w = d; o.h = d; } else if (v === 'arch') o.h = Math.max(o.h, o.w / 2 + 70); else if (v === 'transom') o.h = Math.max(o.h, 150); } if (o.kind === 'door') { if (v === 'double' || v === 'sliding') o.w = Math.max(o.w, 120); if (v === 'arch') o.w = Math.max(o.w, 90); } const E = kEdges(), L = E[o.wall] ? E[o.wall].L : 9999; o.off = Math.max(0, Math.min(Math.max(0, L - o.w), o.off)); k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
@@ -3161,7 +3161,13 @@
     function k3dOpenSel(id) { selObjId = null; selOpenId = id; if (id) { selSec = null; selIsland = false; } renderPlanner(); k3dRefresh(); renderK3dEdit(); }
     function k3dOpenAdd(kind) {
       if (!window.ROPEN) return; const E = kEdges(); let wi = 0; E.forEach((e, i) => { if (e.L > E[wi].L) wi = i; });
-      const o = window.ROPEN.mkOpen(kind, wi, 0); o.off = Math.round(Math.max(0, (E[wi].L - o.w) / 2)); kOpens.push(o); selOpenId = o.id; selSec = null; selIsland = false;
+      const o = window.ROPEN.mkOpen(kind, wi, 0); o.off = Math.round(Math.max(0, (E[wi].L - o.w) / 2));
+      if (kind === 'apron') {   // фартук: вдоль основной стены от начала до конца ряда нижних шкафов, от столешницы до низа верхних
+        const geo = k3dGeo(), G = geo.G, rowL = (geo.LAY.main && geo.LAY.main.lower || []).filter(r => !isTall(r.sec)); o.wall = 0; const e0 = E[0] || E[wi];
+        if (rowL.length) { const u0 = Math.min.apply(null, rowL.map(r => r.u0)), u1 = Math.max.apply(null, rowL.map(r => r.u1)); o.off = Math.round(u0); o.w = Math.max(20, Math.min(e0.L - o.off, Math.round(u1 - u0))); } else { o.off = 0; o.w = Math.round(e0.L); }
+        o.y = Math.round((G.BOX + G.CT) * 10) / 10; o.h = Math.round(Math.max(20, G.UGAP) * 10) / 10;
+      }
+      kOpens.push(o); selOpenId = o.id; selSec = null; selIsland = false;
       k3dRefresh(); updateShareLinks(); renderK3dEdit();
     }
     function k3dOpenDel(id) { kOpens = kOpens.filter(o => o.id !== id); if (selOpenId === id) selOpenId = null; k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
@@ -3170,13 +3176,13 @@
     function k3dOpenCenter() { const o = kOpens.find(x => x.id === selOpenId); if (!o) return; const E = kEdges(), L = E[o.wall] ? E[o.wall].L : 9999; o.off = Math.max(0, (L - o.w) / 2); k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
     function k3dOpenStep(f, d) {
       const o = kOpens.find(x => x.id === selOpenId); if (!o) return; const E = kEdges(), L = E[o.wall] ? E[o.wall].L : 9999;
-      const lim = { off: [0, Math.max(0, L - o.w)], w: [2, 600], h: [2, 400], y: [0, 400] }[f]; o[f] = Math.round(Math.max(lim[0], Math.min(lim[1], o[f] + d)) * 10) / 10;
+      const lim = { off: [0, Math.max(0, L - o.w)], w: [2, 600], h: [2, 400], y: [0, 400], d: [.2, 12] }[f]; o[f] = Math.round(Math.max(lim[0], Math.min(lim[1], o[f] + d)) * 10) / 10;
       if (f === 'w') o.off = Math.min(o.off, Math.max(0, L - o.w)); k3dRefresh(); updateShareLinks(); renderK3dEdit();
     }
     function k3dOpenDrag(id, wall, sx, y) {   // из 3D: перетаскиваем по стенам
       const o = kOpens.find(x => x.id === id); if (!o) return ''; const E = kEdges(), e = E[wall]; if (!e) return '';
       o.wall = wall; o.off = Math.round(Math.max(0, Math.min(Math.max(0, e.L - o.w), sx - o.w / 2)));
-      if (['door', 'balcony', 'pipe', 'column'].indexOf(o.kind) < 0) o.y = Math.round(Math.max(0, Math.min(250 - o.h, y - o.h / 2)) / 5) * 5;
+      if (['door', 'balcony', 'pipe', 'column', 'apron', 'wpanel'].indexOf(o.kind) < 0) o.y = Math.round(Math.max(0, Math.min(250 - o.h, y - o.h / 2)) / 5) * 5;
       if (K3) K3.update(k3dState());
       return OPK()[o.kind].ru + ': ' + L3('стена ', 'devor ') + (wall + 1) + ', ' + Math.round(o.off) + ' ' + cmU() + ' / ' + Math.round(o.y) + ' ' + cmU();
     }
@@ -4558,7 +4564,7 @@
         (pp ? pp.hw : []).forEach(h => { const k = h.name + '|' + h.unit; if (!hwAll[k]) hwAll[k] = { grp: 'С' + (i + 1), name: h.name, qty: 0, unit: h.unit }; else if (hwAll[k].grp.indexOf('С' + (i + 1)) < 0) hwAll[k].grp += ', С' + (i + 1); hwAll[k].qty += h.qty; }); });
       return { name: 'Кухня на заказ', poly: kWallPolyCache || kWallPoly(), H: geo.roomH, opens: kOpens, items, hw: Object.keys(hwAll).map(k => hwAll[k]), meta: [['Проект', 'Кухня на заказ'], ['Помещение', Math.round(geo.W * 10) + ' × ' + Math.round(geo.roomD * 10) + ' мм · высота ' + Math.round(geo.roomH * 10)], ['Материал', 'ЛДСП ' + CUT_T + ' мм']] };
     }
-    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=33').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
+    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=34').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
     function renderOwnerDraw() {
       const box = el('ownerDrawBody'); if (!box || !OWNER_ON) return;
       const geo = k3dGeo(), groups = new Map();
@@ -4733,6 +4739,7 @@
         });
       });
       if (s.hasUpper) s.upper.forEach(x => { total += millCost(x, (parseFloat(x.width) || 0) / 100, 'upper'); });
+      if (window.ROPEN && window.ROPEN.openCost) total += window.ROPEN.openCost(kOpens);   // фартук и стеновые панели: площадь × цена варианта
       let upM = 0;
       if (s.hasUpper) {
         upM = sumW(s.upper);

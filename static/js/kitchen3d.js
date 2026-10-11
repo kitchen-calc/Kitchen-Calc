@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildOpenings, pickWall } from '/static/js/room-open.js?v=4';
+import { buildOpenings, pickWall } from '/static/js/room-open.js?v=6';
 import { buildObjGroup } from '/static/js/room-objs.js?v=5';
 
 const DEG = Math.PI / 180;
@@ -455,7 +455,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   function slabInto(g, M, st, L, items, apron) {
     const CT = st.CT, D = st.CTD || st.LD + 2;
     box(g, L, CT, D, M.top, 0, st.BOX, 0, 80);
-    if (apron && st.UB - st.BOX - CT > 1) box(g, L, st.UB - st.BOX - CT, .6, M.tile, 0, st.BOX + CT, -.6, 30);
+    if (apron && !(st.opens || []).some(q => q.kind === 'apron') && st.UB - st.BOX - CT > 1) box(g, L, st.UB - st.BOX - CT, .6, M.tile, 0, st.BOX + CT, -.6, 30);
     items.forEach(r => {
       const cx = (r.u0 + r.u1) / 2, w = r.u1 - r.u0;
       if (r.sec.kind === 'hob') {

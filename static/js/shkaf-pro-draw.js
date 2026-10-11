@@ -1,5 +1,5 @@
 /* Чертежи конструктора шкафа PRO в стиле AutoCAD, лист A4 (альбомный). Размеры на чертежах — в мм. Только для режима мастера. */
-import { OPEN_KINDS, openVariantName, roomEdges, openCenter } from '/static/js/room-open-core.js?v=3';
+import { OPEN_KINDS, openVariantName, roomEdges, openCenter } from '/static/js/room-open-core.js?v=4';
 import { modelLocal, placeLocal, wardrobeSolids, detSolid, unitSolid, bedSolid, panelSolid, objSolid } from '/static/js/draw-solids.js?v=4';
 import { runInfo, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1, objsParts } from '/static/js/shkaf-pro-core.js?v=24';
 
@@ -449,6 +449,7 @@ function openGlyph(q, X, Y, ks) {   // X(u), Y(y) — перевод в бума
   } else if (k === 'door') o += rect(x0, t0, x1 - x0, t1 - t0, 'o', '#fff') + line(x0, t0, x1, (t0 + t1) / 2, 'h') + line(x0, t1, x1, (t0 + t1) / 2, 'h');
   else if (k === 'radiator') o += rect(x0, t0, x1 - x0, t1 - t0, 'o', 'url(#h2)');
   else if (k === 'column') o += rect(x0, t0, x1 - x0, t1 - t0, 'o', 'url(#h1)');
+  else if (k === 'apron' || k === 'wpanel') o += rect(x0, t0, x1 - x0, t1 - t0, 'o', 'url(#h2)');
   else { const cx = (x0 + x1) / 2, cy = (t0 + t1) / 2, r = Math.max(3.4, Math.min(8, (x1 - x0) / 2)); o += circ(cx, cy, r, 'o', '#fff') + line(cx - r * .45, cy, cx + r * .45, cy, 't') + line(cx, cy - r * .45, cx, cy + r * .45, 't'); }
   return o;
 }
@@ -483,6 +484,7 @@ function sheetRoomPlan(S, bp, no, total) {
         for (let j = 1; j < (q.n || 1); j++) { const pp = [p1[0] + (p2[0] - p1[0]) * j / q.n, p1[1] + (p2[1] - p1[1]) * j / q.n]; o += ln(P2(pp, -2.2), P2(pp, 2.2)); }
       } else if (k === 'radiator') o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, 9), P2(p1, 9)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${sty('o', 1)} fill="url(#h2)"/>`;
       else if (k === 'column') o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, q.d || 40), P2(p1, q.d || 40)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${sty('o', 1)} fill="url(#h1)"/>`;
+      else if (k === 'apron' || k === 'wpanel') o += ln(P2(p1, 0), P2(p2, 0), ST.o) + ln(P2(p1, 1.4), P2(p2, 1.4), ST.t);
       else { const cc = P2([c.x, c.z], 2.5); o += circ(cc[0], cc[1], k === 'pipe' ? Math.max(2, q.w / 2 * k10) : 3.4, 'o', '#fff'); }
       const lb = P2([c.x, c.z], -9); o += thx(lb[0], lb[1] + 3, '№' + (i + 1), 6.5, 'middle', 'font-weight="700"');
     }); }
@@ -552,8 +554,8 @@ function sheetIso(S, bp, no, total, vk) {
   (S.opens || []).forEach((q, i) => {
     const e = E[q.wall]; if (!e || (e.nx + e.nz) / Math.SQRT2 < .3) return;
     const W3 = (u, y) => Q(e.a[0] + e.ex * u, y, e.a[1] + e.ez * u), u0 = q.off, u1 = q.off + q.w, y0 = q.y, y1 = q.y + q.h, k = q.kind;
-    if (k === 'window' || k === 'balcony' || k === 'door' || k === 'radiator' || k === 'column') {
-      o += poly([W3(u0, y0), W3(u1, y0), W3(u1, y1), W3(u0, y1)], k === 'radiator' ? 'url(#h2)' : '#fff');
+    if (k === 'window' || k === 'balcony' || k === 'door' || k === 'radiator' || k === 'column' || k === 'apron' || k === 'wpanel') {
+      o += poly([W3(u0, y0), W3(u1, y0), W3(u1, y1), W3(u0, y1)], (k === 'radiator' || k === 'apron' || k === 'wpanel') ? 'url(#h2)' : '#fff');
       if (k === 'window' || k === 'balcony') { const m = Math.min(3, q.w / 4, q.h / 4); o += poly([W3(u0 + m, y0 + m), W3(u1 - m, y0 + m), W3(u1 - m, y1 - m), W3(u0 + m, y1 - m)], 'none', SKT); for (let j = 1; j < (q.n || 1); j++) { const u = u0 + (u1 - u0) * j / q.n; o += line(W3(u, y0)[0], W3(u, y0)[1], W3(u, y1)[0], W3(u, y1)[1], 't'); } }
       if (k === 'door') o += line(W3(u0, y1)[0], W3(u0, y1)[1], W3(u1, (y0 + y1) / 2)[0], W3(u1, (y0 + y1) / 2)[1], 'h') + line(W3(u0, y0)[0], W3(u0, y0)[1], W3(u1, (y0 + y1) / 2)[0], W3(u1, (y0 + y1) / 2)[1], 'h');
     } else { const c = W3((u0 + u1) / 2, (y0 + y1) / 2); o += circ(c[0], c[1], Math.max(2.4, 3 * sc), 'o', '#fff'); }
@@ -613,7 +615,7 @@ function sheetWall(S, bp, wi, items, no, total) {
   els.forEach(el => {
     const w = (el.u1 - el.u0) * k10, h = (el.y1 - el.y0) * k10;
     if (el.open) {
-      o += rect(X(el.u0), Y(el.y1), w, h, 'o', el.kind === 'door' || el.kind === 'balcony' ? 'url(#h2)' : '#fff');
+      o += rect(X(el.u0), Y(el.y1), w, h, 'o', el.kind === 'door' || el.kind === 'balcony' || el.kind === 'apron' || el.kind === 'wpanel' ? 'url(#h2)' : '#fff');
       if (el.kind === 'window') for (let j = 1; j < el.ns; j++) o += line(X(el.u0 + (el.u1 - el.u0) * j / el.ns), Y(el.y1), X(el.u0 + (el.u1 - el.u0) * j / el.ns), Y(el.y0), 't');
       if (el.kind === 'door' || el.kind === 'balcony') o += line(X(el.u0), Y(el.y1), X(el.u1), (Y(el.y0) + Y(el.y1)) / 2, 'h') + line(X(el.u0), Y(el.y0), X(el.u1), (Y(el.y0) + Y(el.y1)) / 2, 'h');
     } else o += rect(X(Math.max(0, el.u0)), Y(el.y1), (Math.min(L, el.u1) - Math.max(0, el.u0)) * k10, h, 'o', 'url(#h2)');

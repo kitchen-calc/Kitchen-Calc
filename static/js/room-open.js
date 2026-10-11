@@ -1,7 +1,72 @@
 /* 3D-часть элементов стен (общая для шкафа и кухни); логика и данные — в room-open-core.js */
 import * as THREE from 'three';
-import { roomEdges, openCenter, OPEN_KINDS, OPEN_COLORS } from '/static/js/room-open-core.js?v=3';
-export * from '/static/js/room-open-core.js?v=3';
+import { roomEdges, openCenter, OPEN_KINDS, OPEN_COLORS, OPEN_INFO, OPEN_TINTS } from '/static/js/room-open-core.js?v=4';
+export * from '/static/js/room-open-core.js?v=4';
+/* ---- текстуры фартука и стеновых панелей: рисуем на canvas по виду (кладка, мозаика, мрамор, рейка…) ---- */
+function rngSeed(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const shade = (hex, k) => { const n = parseInt(String(hex).slice(1), 16), f = c => Math.max(0, Math.min(255, Math.round(k < 0 ? c * (1 + k) : c + (255 - c) * k))); return `rgb(${f(n >> 16 & 255)},${f(n >> 8 & 255)},${f(n & 255)})`; };
+function panelMat(THREE, inf, base, W, H, id) {
+  const R = rngSeed(hashStr(id)), cv = document.createElement('canvas'), p = inf.pat, tw = inf.tw || 10, th = inf.th || 10, grout = inf.grout || shade(base, -.3);
+  const mk = (w, h) => { cv.width = w; cv.height = h; return cv.getContext('2d'); };
+  let c, rep = [1, 1];
+  if (p === 'grid') {
+    const cw = 128, ch = Math.max(32, Math.round(128 * th / tw)); c = mk(cw, ch); c.fillStyle = grout; c.fillRect(0, 0, cw, ch); c.fillStyle = base; c.fillRect(2, 2, cw - 4, ch - 4);
+    const g = c.createLinearGradient(0, 0, cw, ch); g.addColorStop(0, 'rgba(255,255,255,.18)'); g.addColorStop(1, 'rgba(0,0,0,.08)'); c.fillStyle = g; c.fillRect(2, 2, cw - 4, ch - 4); rep = [W / tw, H / th];
+  } else if (p === 'brick') {
+    const cw = 256, ch = Math.max(48, Math.round(256 * th / tw)), hh = ch / 2, tl = (x, y) => { c.fillStyle = shade(base, (R() - .5) * .1); c.fillRect(x, y, cw / 2 - 4, hh - 4); };
+    c = mk(cw, ch); c.fillStyle = grout; c.fillRect(0, 0, cw, ch); tl(2, 2); tl(cw / 2 + 2, 2); tl(-cw / 4 + 2, hh + 2); tl(cw / 4 + 2, hh + 2); tl(3 * cw / 4 + 2, hh + 2); rep = [W / (2 * tw), H / (2 * th)];
+  } else if (p === 'mosaic') {
+    c = mk(128, 128); c.fillStyle = grout; c.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { c.fillStyle = shade(base, (R() - .5) * .28); c.fillRect(i * 32 + 2, j * 32 + 2, 28, 28); } rep = [W / (4 * tw), H / (4 * th)];
+  } else if (p === 'hex') {
+    const r = 32; c = mk(96, 111); c.fillStyle = grout; c.fillRect(0, 0, 96, 111);
+    const hx = (cx, cy) => { c.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; c.lineTo(cx + (r - 2.5) * Math.cos(a), cy + (r - 2.5) * Math.sin(a)); } c.closePath(); c.fillStyle = shade(base, (R() - .5) * .08); c.fill(); };
+    [[0, 0], [48, 55.4], [96, 0], [0, 110.8], [96, 110.8]].forEach(q => hx(q[0], q[1])); rep = [W / (1.5 * tw), H / (1.732 * tw)];
+  } else if (p === 'diamond') {
+    c = mk(128, 128); c.fillStyle = grout; c.fillRect(0, 0, 128, 128);
+    const d = (cx, cy) => { c.beginPath(); c.moveTo(cx, cy - 61); c.lineTo(cx + 61, cy); c.lineTo(cx, cy + 61); c.lineTo(cx - 61, cy); c.closePath(); c.fillStyle = shade(base, (R() - .5) * .08); c.fill(); };
+    d(64, 64); d(0, 0); d(128, 0); d(0, 128); d(128, 128); rep = [W / tw, H / tw];
+  } else if (p === 'herring') {
+    const cw = 192, s = 40, pw = 32; c = mk(cw, s * 4); c.fillStyle = grout; c.fillRect(0, 0, cw, s * 4);
+    for (let k = -6; k < 12; k++) { const y = k * s; c.beginPath(); c.moveTo(0, y); c.lineTo(cw / 2, y + cw / 2); c.lineTo(cw, y); c.lineTo(cw, y + pw); c.lineTo(cw / 2, y + cw / 2 + pw); c.lineTo(0, y + pw); c.closePath(); c.fillStyle = shade(base, (R() - .5) * .12); c.fill(); c.strokeStyle = grout; c.lineWidth = 1.5; c.stroke(); }
+    rep = [W / th, H / (th * s * 4 / cw)];
+  } else if (p === 'slab') {
+    c = mk(1024, 512); c.fillStyle = base; c.fillRect(0, 0, 1024, 512);
+    for (let i = 0; i < 1800; i++) { c.fillStyle = shade(base, (R() - .5) * .08); c.fillRect(R() * 1024, R() * 512, 2 + R() * 3, 2 + R() * 3); }
+    c.strokeStyle = inf.veins || shade(base, -.3);
+    for (let i = 0; i < 14; i++) { c.globalAlpha = .12 + R() * .35; c.lineWidth = .6 + R() * 3; c.beginPath(); const y0 = R() * 512; c.moveTo(-10, y0); c.bezierCurveTo(300 + R() * 200, y0 + (R() - .5) * 260, 600 + R() * 200, y0 + (R() - .5) * 260, 1034, y0 + (R() - .5) * 300); c.stroke(); }
+    c.globalAlpha = 1;
+  } else if (p === 'flat') {
+    c = mk(64, 256); const g = c.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, shade(base, .1)); g.addColorStop(.5, base); g.addColorStop(1, shade(base, -.06)); c.fillStyle = g; c.fillRect(0, 0, 64, 256);
+  } else if (p === 'wood') {
+    c = mk(256, 256); c.fillStyle = base; c.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 90; i++) { c.fillStyle = shade(base, (R() - .5) * .22); c.globalAlpha = .35; c.fillRect(R() * 256, 0, .6 + R() * 2, 256); } c.globalAlpha = 1;
+    c.fillStyle = shade(base, -.35); [64, 128, 192, 0].forEach(x => c.fillRect(x, 0, 1.5, 256)); rep = [W / (4 * tw), H / 60];
+  } else if (p === 'brushed') {
+    c = mk(256, 256); c.fillStyle = base; c.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 700; i++) { c.fillStyle = R() > .5 ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.10)'; c.fillRect(0, R() * 256, 256, .5 + R()); } rep = [W / 60, H / 60];
+  } else if (p === 'ribbed') {
+    c = mk(64, 16); const g = c.createLinearGradient(0, 0, 64, 0); g.addColorStop(0, shade(base, -.32)); g.addColorStop(.3, shade(base, .12)); g.addColorStop(.7, base); g.addColorStop(1, shade(base, -.38)); c.fillStyle = g; c.fillRect(0, 0, 64, 16); rep = [W / tw, 1];
+  } else if (p === 'frame') {
+    const cw = 256, ch = Math.round(256 * th / tw); c = mk(cw, ch); c.fillStyle = base; c.fillRect(0, 0, cw, ch);
+    c.strokeStyle = 'rgba(0,0,0,.38)'; c.lineWidth = 4; c.strokeRect(22, 22, cw - 44, ch - 44); c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 3; c.strokeRect(27, 27, cw - 54, ch - 54); rep = [W / tw, H / th];
+  } else if (p === 'wave') {
+    c = mk(128, 8); for (let x = 0; x < 128; x++) { c.fillStyle = shade(base, Math.sin(x / 128 * Math.PI * 2) * .2); c.fillRect(x, 0, 1.2, 8); } rep = [W / tw, 1];
+  } else if (p === 'slats') {
+    c = mk(64, 16); c.fillStyle = shade(base, -.78); c.fillRect(0, 0, 64, 16);
+    for (let x = 0; x < 52; x++) { c.fillStyle = shade(base, (R() - .5) * .14 + (x < 4 || x > 48 ? -.12 : 0)); c.fillRect(x, 0, 1.2, 16); } rep = [W / tw, 1];
+  } else if (p === 'soft') {
+    c = mk(128, 128); c.fillStyle = base; c.fillRect(0, 0, 128, 128);
+    const g = c.createRadialGradient(64, 64, 4, 64, 64, 64); g.addColorStop(0, 'rgba(255,255,255,.18)'); g.addColorStop(1, 'rgba(0,0,0,.2)'); c.fillStyle = g; c.fillRect(0, 0, 128, 128);
+    c.strokeStyle = shade(base, -.4); c.lineWidth = 3; c.beginPath(); c.moveTo(0, 64); c.lineTo(64, 0); c.lineTo(128, 64); c.lineTo(64, 128); c.closePath(); c.stroke();
+    c.fillStyle = shade(base, -.45); [[0, 0], [128, 0], [0, 128], [128, 128], [64, 64]].forEach(q => { c.beginPath(); c.arc(q[0], q[1], 6, 0, 7); c.fill(); }); rep = [W / tw, H / th];
+  } else {   // зеркало
+    c = mk(64, 256); const g = c.createLinearGradient(0, 0, 64, 256); g.addColorStop(0, '#f4f9fb'); g.addColorStop(.5, '#c9d9e0'); g.addColorStop(1, '#eef5f8'); c.fillStyle = g; c.fillRect(0, 0, 64, 256);
+  }
+  const tex = new THREE.CanvasTexture(cv); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(Math.max(.2, rep[0]), Math.max(.2, rep[1])); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  return new THREE.MeshStandardMaterial({ map: tex, roughness: inf.gloss != null ? inf.gloss : .5, metalness: inf.metal || 0, envMapIntensity: p === 'mirror' || p === 'flat' ? 1.2 : .7 });
+}
 /* ---- 3D ---- */
 export function buildOpenings(parent, opens, P, ctx) {
   // ctx: { mat(hex, opts), glass(), picks[], meta(i), edgeMat? } → возвращает карту id → группа
@@ -10,7 +75,7 @@ export function buildOpenings(parent, opens, P, ctx) {
   const white = ctx.mat('#f4f4f2', { roughness: .5 }), dark = ctx.mat('#4a4a4a', { roughness: .6 }), wood = ctx.mat('#8b5a33', { roughness: .55 }), chrome = ctx.mat('#c9ccd0', { roughness: .25, metalness: .8 }), beige = ctx.mat('#e6dfd2', { roughness: .9 });
   opens.forEach((o, i) => {
     const c = openCenter(o, E); if (!c) return; const e = c.e, g = new THREE.Group(), w = o.w, h = o.h;
-    g.position.set(c.x + e.nx * .1, o.y, c.z + e.nz * .1); g.rotation.y = Math.atan2(e.nx, e.nz); parent.add(g); groups.set(o.id, g);
+    g.position.set(c.x + e.nx * ((o.kind === 'apron' || o.kind === 'wpanel') ? 0 : .1), o.y, c.z + e.nz * ((o.kind === 'apron' || o.kind === 'wpanel') ? 0 : .1)); g.rotation.y = Math.atan2(e.nx, e.nz); parent.add(g); groups.set(o.id, g);
     const bx = (bw, bh, bd, m, x, y, z, pk) => box(g, bw, bh, bd, m, x, y, z, pk !== false, i);
     const k = o.kind;
     const cols = OPEN_COLORS[k] || [], cc = cols[Math.max(0, Math.min(cols.length - 1, o.c | 0))], fm = cc ? ctx.mat(cc[0], { roughness: .5 }) : white, v = o.v;
@@ -73,6 +138,9 @@ export function buildOpenings(parent, opens, P, ctx) {
       const m = new THREE.Mesh(new THREE.CylinderGeometry(w / 2, w / 2, h, 18), white); m.position.set(0, h / 2, w / 2 + .5); m.castShadow = true; m.userData.sel = ctx.meta(i); ctx.picks.push(m); g.add(m);
     } else if (k === 'column') {
       bx(w, h, o.d || 40, beige, -w / 2, 0, -.1);
+    } else if (k === 'apron' || k === 'wpanel') {   // сидит на стене: тыльная сторона вплотную к стене, толщина регулируется
+      const inf = (OPEN_INFO[k] || {})[o.v] || Object.values(OPEN_INFO[k])[0], tint = (OPEN_TINTS[o.c | 0] || [''])[0], bs = tint || inf.col;
+      bx(w, h, Math.max(.2, o.d || (k === 'apron' ? .6 : 1.8)), panelMat(THREE, inf, bs, w, h, o.id + '|' + o.v + '|' + bs), -w / 2, 0, 0);
     }
   });
   return groups;
