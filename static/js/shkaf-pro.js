@@ -27,7 +27,7 @@ function findItem(id) { for (let ci = 0; ci < S.cols.length; ci++) { const it = 
 const toast = (t) => { const e = $('toast'); if (!e) return; e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2600); };
 
 /* ---------- ввод чисел ---------- */
-const RANGE = { W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [15, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [15, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250] };
+const RANGE = { W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [15, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [15, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 3] };
 function stepper(label, path, val, step, unit) {
   return `<div class="r"><span>${esc(label)}</span><span class="stp"><button type="button" onpointerdown="PRO.hold(event,'${path}',${-step})">−</button><input type="number" step="any" value="${r1(val)}" onfocus="this.select()" onchange="PRO.set('${path}',this.value)"><button type="button" onpointerdown="PRO.hold(event,'${path}',${step})">+</button><small>${esc(unit || 'см')}</small></span></div>`;
 }
@@ -37,6 +37,7 @@ function getVal(path) {
   if (path.startsWith('mzc.')) { const m = S.mezzes[sel.mi], ci = +path.slice(4); return m ? (m.cd && m.cd[ci] != null ? m.cd[ci] : geom(S).mz[sel.mi].comp.length ? Math.max(1, Math.round((geom(S).mz[sel.mi].comp[ci].x1 - geom(S).mz[sel.mi].comp[ci].x0) / 60)) : 1) : 0; }
   if (path.startsWith('mz.')) { const m = S.mezzes[sel.mi]; return m ? m[path.slice(3)] : 0; }
   if (path.startsWith('pn.')) { const p = S.panels[sel.pi]; return p ? p[path.slice(3)] : 0; }
+  if (path === 'col.dn') { const c = S.cols[sel.i], g = geom(S); return c ? (c.dn != null ? c.dn : (c.w > 65 ? 2 : 1)) : 0; }
   if (path === 'col.w') return S.cols[sel.i] ? S.cols[sel.i].w : 0;
   if (path === 'W') return geom(S).W;
   return path.split('.').reduce((o, k) => o[k], S);
@@ -50,6 +51,7 @@ function setVal(path, v) {
     if (path.startsWith('mzc.')) { const m = S.mezzes[sel.mi]; if (m) { m.cd = m.cd || []; m.cd[+path.slice(4)] = Math.round(clamp(v, 0, 5)); } return; }
     if (path.startsWith('pn.')) { const p = S.panels[sel.pi]; if (p) p[path.slice(3)] = r1(v); return; }
     if (path.startsWith('mz.')) { const m = S.mezzes[sel.mi]; if (!m) return; const k = path.slice(3); m[k] = ['n', 'shelves'].includes(k) ? Math.round(v) : r1(v); return; }
+    if (path === 'col.dn') { S.cols[sel.i].dn = Math.round(clamp(v, 0, 3)); return; }
     if (path === 'col.w') { S.cols[sel.i].w = r1(v); return; }
     if (path === 'W') { const g = geom(S), inner0 = g.W - (S.cols.length + 1) * S.t, inner1 = v - (S.cols.length + 1) * S.t; if (inner1 < S.cols.length * 15) return; const full = S.mezzes.filter(m => Math.abs(m.x) < .6 && Math.abs(m.w - g.W) < .6); S.cols.forEach(c => { c.w = r1(c.w * inner1 / inner0); }); const drift = r1(inner1 - S.cols.reduce((x, c) => x + c.w, 0)); S.cols[S.cols.length - 1].w = r1(S.cols[S.cols.length - 1].w + drift); recalcW(S); full.forEach(m => { m.w = S.W; }); return; }
     if (path === 'mezz.n' || path === 'mezz.shelves' || path === 'doors.n') v = Math.round(v);
@@ -95,7 +97,7 @@ function mezzOver(i) { mutate(() => { const m = S.mezzes[sel.mi], c = geom(S).co
 function mezzMove(dx, dy) { mutate(() => { const m = S.mezzes[sel.mi]; m.x = r1(m.x + dx); m.y = r1(Math.max(0, m.y + dy)); }); }
 function selectMezz(i) { sel = { k: 'mezz', mi: i }; refresh(false); }
 function loadTemplate(kind) { if (!confirm('Заменить текущий проект шаблоном?')) return; mutate(() => { S = kind === 'P' ? presetP() : defState(); sel = { k: 'global' }; }); if (K) K.frame(); }
-function addCol() { mutate(() => { const w = r1(Math.min(80, S.cols[S.cols.length - 1].w)); S.cols.push({ id: C.uid(), w, items: [mkItem('shelf', 70), mkItem('shelf', 140)] }); sel = { k: 'col', i: S.cols.length - 1 }; }); }
+function addCol(side) { mutate(() => { const w = r1(Math.min(80, S.cols[S.cols.length - 1].w)); const at = sel.k === 'col' && side ? sel.i + (side > 0 ? 1 : 0) : S.cols.length; S.cols.splice(at, 0, { id: C.uid(), w, items: [mkItem('shelf', 70), mkItem('shelf', 140)] }); sel = { k: 'col', i: at }; }); }
 function dupCol(i) { mutate(() => { const c = JSON.parse(JSON.stringify(S.cols[i])); c.id = C.uid(); c.items.forEach(it => { it.id = C.uid(); }); S.cols.splice(i + 1, 0, c); sel = { k: 'col', i: i + 1 }; }); }
 function delCol(i) { if (S.cols.length <= 1) { toast('Должен остаться хотя бы один отсек'); return; } mutate(() => { S.cols.splice(i, 1); sel = { k: 'global' }; }); }
 function moveCol(i, d) { const j = i + d; if (j < 0 || j >= S.cols.length) return; mutate(() => { const t = S.cols[i]; S.cols[i] = S.cols[j]; S.cols[j] = t; sel = { k: 'col', i: j }; }); }
@@ -123,7 +125,7 @@ function sideGlobal() {
   h += `<div class="sub">Цвет корпуса</div><div class="sw">${PALETTE.map((c, i) => `<button type="button" class="swb ${!S.custom && S.color === i ? 'on' : ''}" style="background:${c[1]}" title="${c[0]}" onclick="PRO.color(${i})"></button>`).join('')}<input type="color" value="${S.custom || '#cdbba0'}" onchange="PRO.custom(this.value)" title="свой цвет"></div>`;
   h += `<div class="r"><span>Класс</span>${T.map((t, i) => btn(S.tier === i, `PRO.tier(${i})`, t.ru)).join('')}</div>`;
   h += `<div class="sub">Отсеки (${S.cols.length})</div><div class="cols">${S.cols.map((c, i) => `<button type="button" class="colchip" onclick="PRO.selCol(${i})">${c.gap ? 'проём' : '№' + (i + 1)}<b>${Math.round(c.w * 10)}</b><small>${c.gap ? '—' : c.items.length + ' поз.'}</small></button>`).join('')}</div>`;
-  h += `<div class="r">${btn(0, 'PRO.addCol()', '＋ Отсек')}${btn(0, 'PRO.eqCols()', 'Выровнять ширину')}</div>`;
+  h += `<div class="r">${btn(0, 'PRO.addCol()', '＋ Отсек (шкаф)')}${btn(0, 'PRO.eqCols()', 'Выровнять ширину')}</div>`;
   const gm = geom(S);
   h += `<div class="sub">Антресоли (${S.mezzes.length}) — отдельные блоки</div><div class="cols">${S.mezzes.map((m, i) => `<button type="button" class="colchip" onclick="PRO.selMezz(${i})">А${i + 1}<b>${Math.round(m.w * 10)}</b><small>y ${Math.round(m.y * 10)}</small></button>`).join('')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.addMezz()', '＋ Антресоль')}${btn(0, 'PRO.addGap()', '＋ Проём между отсеками')}</div><div class="note">Антресоль — отдельная коробка: её можно двигать вбок и вверх независимо от низа, поставить над проёмом (П-образный шкаф).</div>`;
@@ -131,10 +133,11 @@ function sideGlobal() {
   h += `<div class="sub">Шаблоны</div><div class="r">${btn(0, "PRO.tpl('S')", 'Прямой шкаф')}${btn(0, "PRO.tpl('P')", 'П-образный')}</div>`;
   h += `<div class="sub">Двери</div><div class="r">${btn(S.doors.kind === 'none', "PRO.doors('none')", 'Без дверей')}${btn(S.doors.kind === 'swing', "PRO.doors('swing')", 'Распашные')}${btn(S.doors.kind === 'sliding', "PRO.doors('sliding')", 'Купе')}</div>`;
   if (S.doors.kind !== 'none') {
-    h += stepper('Количество', 'doors.n', S.doors.n, 1, 'шт');
-    for (let i = 0; i < S.doors.n; i++) h += `<div class="r"><span>Дверь ${i + 1}</span><select onchange="PRO.fill(${i},this.value)">${Object.keys(FILLS).map(k => `<option value="${k}" ${S.doors.fills[i] === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select>${S.doors.kind === 'swing' ? `<select onchange="PRO.ddir(${i},this.value)" title="Как открывается">${[['auto', 'открывание: авто'], ['L', '◀ влево'], ['R', 'вправо ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => `<option value="${k}" ${((S.doors.dir && S.doors.dir[i]) || 'auto') === k ? 'selected' : ''}>${t}</option>`).join('')}</select>` : ''}</div>`;
-    if (S.doors.fills.slice(0, S.doors.n).includes('glass')) { const gd = doorList(S).find(d => d.fill === 'glass' && d.zone === 'main'); h += stepper('Рамка вокруг стекла', 'doors.gf', S.doors.gf || 4, 1) + `<div class="note">Меньше рамка — больше стекло.${gd ? ' Стекло одной двери: ' + mm(gd.w - 2 * (S.doors.gf || 4)) + '×' + mm(gd.h - 2 * (S.doors.gf || 4)) + ' мм.' : ''}</div>`; }
-    if (S.doors.fills.slice(0, S.doors.n).includes('laco')) h += `<div class="r"><span>Лакобель</span><div class="sw">${LACO.map((c, i) => `<button type="button" class="swb ${S.doors.laco === i ? 'on' : ''}" style="background:${c[1]}" title="${c[0]}" onclick="PRO.laco(${i})"></button>`).join('')}</div></div>`;
+    if (S.doors.kind === 'swing') h += `<div class="note">Распашные двери настраиваются в каждом отсеке отдельно: нажмите на отсек в 3D. Новый отсек — кнопка «＋ Отсек».</div><div class="r"><span>Все двери</span>${['dsp', 'glass', 'mirror', 'laco'].map(k => btn(0, `PRO.allDf('${k}')`, FILLS[k].split(' ')[0])).join('')}</div>`;
+    if (S.doors.kind === 'sliding') h += stepper('Количество', 'doors.n', S.doors.n, 1, 'шт');
+    if (S.doors.kind === 'sliding') for (let i = 0; i < S.doors.n; i++) h += `<div class="r"><span>Дверь ${i + 1}</span><select onchange="PRO.fill(${i},this.value)">${Object.keys(FILLS).map(k => `<option value="${k}" ${S.doors.fills[i] === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select>${S.doors.kind === 'swing' ? `<select onchange="PRO.ddir(${i},this.value)" title="Как открывается">${[['auto', 'открывание: авто'], ['L', '◀ влево'], ['R', 'вправо ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => `<option value="${k}" ${((S.doors.dir && S.doors.dir[i]) || 'auto') === k ? 'selected' : ''}>${t}</option>`).join('')}</select>` : ''}</div>`;
+    if (S.cols.some(c => c.df === 'glass') || (S.doors.kind === 'sliding' && S.doors.fills.slice(0, S.doors.n).includes('glass'))) { const gd = doorList(S).find(d => d.fill === 'glass' && d.zone === 'main'); h += stepper('Рамка вокруг стекла', 'doors.gf', S.doors.gf || 4, 1) + `<div class="note">Меньше рамка — больше стекло.${gd ? ' Стекло одной двери: ' + mm(gd.w - 2 * (S.doors.gf || 4)) + '×' + mm(gd.h - 2 * (S.doors.gf || 4)) + ' мм.' : ''}</div>`; }
+    if (S.cols.some(c => c.df === 'laco') || S.doors.fills.slice(0, S.doors.n).includes('laco')) h += `<div class="r"><span>Лакобель</span><div class="sw">${LACO.map((c, i) => `<button type="button" class="swb ${S.doors.laco === i ? 'on' : ''}" style="background:${c[1]}" title="${c[0]}" onclick="PRO.laco(${i})"></button>`).join('')}</div></div>`;
     h += `<div class="r">${btn(S.doors.handles !== false, 'PRO.handles()', 'Ручки')}${btn(0, 'PRO.openAll(true)', '↔ Открыть всё')}${btn(0, 'PRO.openAll(false)', 'Закрыть')}</div><div class="note">Двойной щелчок по двери в 3D открывает её отдельно.</div>`;
   }
   h += `<div class="sub">Свет</div><div class="r">${btn(S.led, 'PRO.led()', '💡 Общая подсветка')}</div>`;
@@ -146,7 +149,12 @@ function sideCol() {
   const i = sel.i, c = S.cols[i], g = geom(S), items = c.items.slice().sort((a, b) => ext(b, S)[0] - ext(a, S)[0]);
   if (c.gap) return `<div class="sh">Проём ${i + 1}</div><div class="note">Пустое место без стенок: проход, стол, техника. Антресоль может проходить над ним.</div>` + stepper('Ширина', 'col.w', c.w, 1) + `<div class="r">${btn(0, `PRO.moveCol(${i},-1)`, '◀')}${btn(0, `PRO.moveCol(${i},1)`, '▶')}${btn(0, `PRO.toggleGap(${i})`, 'Сделать отсеком')}${btn(0, `PRO.delCol(${i})`, 'Удалить')}${btn(0, 'PRO.global()', '✕ Весь шкаф')}</div>`;
   let h = `<div class="sh">Отсек ${i + 1}</div>` + stepper('Ширина', 'col.w', c.w, 1);
-  h += `<div class="r">${btn(0, `PRO.moveCol(${i},-1)`, '◀')}${btn(0, `PRO.moveCol(${i},1)`, '▶')}${btn(0, `PRO.dupCol(${i})`, 'Копия')}${btn(0, `PRO.toggleGap(${i})`, 'Сделать проёмом')}${btn(0, `PRO.delCol(${i})`, 'Удалить')}${btn(0, 'PRO.global()', '✕ Весь шкаф')}</div>`;
+  h += `<div class="r">${btn(0, `PRO.moveCol(${i},-1)`, '◀')}${btn(0, `PRO.moveCol(${i},1)`, '▶')}${btn(0, `PRO.addCol(-1)`, '＋ слева')}${btn(0, `PRO.addCol(1)`, '＋ справа')}${btn(0, `PRO.dupCol(${i})`, 'Копия')}${btn(0, `PRO.toggleGap(${i})`, 'Сделать проёмом')}${btn(0, `PRO.delCol(${i})`, 'Удалить')}${btn(0, 'PRO.global()', '✕ Весь шкаф')}</div>`;
+  if (S.doors.kind === 'swing') {
+    const nn = c.dn != null ? c.dn : (c.w > 65 ? 2 : 1), dr = c.dd || 'auto';
+    h += `<div class="sub">Двери этого отсека</div><div class="r"><span>Дверей</span>${[0, 1, 2, 3].map(k => btn(nn === k, `PRO.set('col.dn',${k})`, k === 0 ? 'Нет' : String(k))).join('')}</div>`;
+    if (nn > 0) h += `<div class="r"><span>Материал</span><select onchange="PRO.cdf(this.value)">${Object.keys(FILLS).map(k => `<option value="${k}" ${(c.df || 'dsp') === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select></div><div class="r"><span>Открывание</span>${[['auto', 'авто'], ['L', '◀ влево'], ['R', 'вправо ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => btn(dr === k, `PRO.cdd('${k}')`, t)).join('')}</div><div class="note">Двойной щелчок по двери в 3D открывает её. Двери удаляются вместе с отсеком или кнопкой «Нет».</div>`;
+  } else h += `<div class="r">${btn(0, "PRO.doors('swing')", '🚪 Включить двери по отсекам')}</div>`;
   h += `<div class="sub">Добавить в отсек</div>` + addButtons();
   h += `<div class="r"><span>Полки поровну</span><input type="number" min="0" max="12" value="${c.items.filter(x => x.type === 'shelf').length}" onchange="PRO.even(this.value)" style="width:56px"><small>шт</small></div>`;
   h += `<div class="sub">Содержимое (сверху вниз)</div><div class="ilist">${items.map(it => `<button type="button" class="iit" onclick="PRO.selItem('${it.id}')">${ITEM_ICON[it.type]} ${ITEM_TYPES[it.type]}<b>${Math.round(ext(it, S)[0] * 10)} мм</b></button>`).join('') || '<div class="note">Пусто — добавьте полки, штангу, ящики…</div>'}</div>`;
@@ -373,6 +381,7 @@ window.PRO = {
   handles: () => mutate(() => { S.doors.handles = S.doors.handles === false; }), led: () => mutate(() => { S.led = !S.led; }),
   sys: v => mutate(() => { const f = findItem(sel.id); if (f) f.it.sys = v; }),
   toggleDoors: () => { if (K) { K.toggleDoors(); setTimeout(renderSide, 50); } }, openAll: on => { if (K) { K.toggleDoors(on); setTimeout(renderSide, 50); } },
+  cdf: v => mutate(() => { const c = S.cols[sel.i]; if (c) { if (v === 'dsp') delete c.df; else c.df = v; } }), cdd: v => mutate(() => { const c = S.cols[sel.i]; if (c) { if (v === 'auto') delete c.dd; else c.dd = v; } }), allDf: v => mutate(() => { S.cols.forEach(c => { if (!c.gap) { if (v === 'dsp') delete c.df; else c.df = v; } }); }),
   rot: on => { if (K) K.setRotate(on); }, sideToggle, drawerAbove: () => drawerNear(1), drawerBelow: () => drawerNear(-1), between, vpCenter: () => mutate(() => { const f = findItem(sel.id); if (f) f.it.x = r1(f.col.w / 2 - S.t / 2); }), idoorDir: v => mutate(() => { const f = findItem(sel.id); if (f) f.it.dir = v; }),
   addDiv: () => mutate(() => { const m = S.mezzes[sel.mi]; m.div = m.div || []; const w = m.w - 2 * S.t, pts = [0].concat(m.div.slice().sort((a, b) => a - b).map(v => v + S.t), [w]); let bi = 0, bw = -1; for (let i = 0; i < pts.length - 1; i++) if (pts[i + 1] - pts[i] > bw) { bw = pts[i + 1] - pts[i]; bi = i; } m.div.push(r1(pts[bi] + (pts[bi + 1] - pts[bi] - S.t) / 2)); m.div.sort((a, b) => a - b); m.cd = []; }),
   delDiv: i => mutate(() => { const m = S.mezzes[sel.mi]; m.div.splice(i, 1); m.cd = []; m.dir = []; }),
