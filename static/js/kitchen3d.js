@@ -405,7 +405,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
       return;
     }
     let di = 0;
-    (st.towerBands(s.tw || 'storage', top) || []).forEach(bd => {
+    (st.towerBands(s, top) || []).forEach(bd => {
       const a = bd.y0 === 10 ? PL : bd.y0, b = bd.y1, hh = b - a - 2 * GAP;
       if (bd.ty === 'door') door(g, M, st, key, GAP, a + GAP, w - 2 * GAP, hh, zf, s.hinge === 'R' ? 'R' : 'L', open, b > 150 ? 'upper' : 'lower');
       else if (bd.ty === 'drawer') { drawer(g, M, st, key, GAP, a + GAP, w - 2 * GAP, hh, zf, D, open, st.dsysOf(s, di), di); di++; }

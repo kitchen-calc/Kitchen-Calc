@@ -1948,8 +1948,20 @@
     };
     const TOWER_KEYS = Object.keys(TOWERS);
     function tallTopOf(roomH) { return Math.max(200, Math.min(Number(roomH) || 240, 270)); }
+    // положение духовки / микроволновки в пенале можно менять: sec.ovY / sec.mwY — низ ниши, см от пола
+    function towerCfg(sec) { const k = (sec && sec.tw) || 'storage'; return (sec && (sec.ovY != null || sec.mwY != null)) ? { k, ov: sec.ovY, mw: sec.mwY } : k; }
+    function towerRebuild(list, o, top) {
+      const nich = []; list.forEach(([ty, a, b]) => { if (ty === 'oven' || ty === 'micro') { const h = b - a, v = ty === 'oven' ? o.ov : o.mw, y0 = v != null ? Math.max(12, Math.min(top - h - 2, +v)) : a; nich.push([ty, y0, y0 + h]); } });
+      if (!nich.length) return list;
+      nich.sort((p, q) => p[1] - q[1]);
+      for (let i = 1; i < nich.length; i++) if (nich[i][1] < nich[i - 1][2]) { const h = nich[i][2] - nich[i][1]; nich[i][1] = nich[i - 1][2]; nich[i][2] = nich[i][1] + h; }
+      const out = []; let y = 10;
+      nich.forEach(([ty, a, b]) => { const gap = a - y; if (y === 10 && gap >= 55) out.push(['drawer', 10, 45], ['door', 45, a]); else if (y === 10 && gap >= 18) out.push(['drawer', 10, a]); else if (gap >= 3) out.push(['door', y, a]); out.push([ty, a, b]); y = b; });
+      out.push(['door', y, 999]); return out;
+    }
     function towerBands(cfg, top) {
-      const list = TOWERS[cfg] || TOWERS.storage, out = [];
+      let list = TOWERS[typeof cfg === 'object' ? cfg.k : cfg] || TOWERS.storage; const out = [];
+      if (cfg && typeof cfg === 'object') list = towerRebuild(list, cfg, top);
       list.forEach(([ty, a, b]) => { const y1 = Math.min(b, top); if (a < y1 - 3) out.push({ ty, y0: a, y1 }); });
       return out;
     }
@@ -2191,7 +2203,7 @@
         if (top - (y1 + 2) > 6) door(y1 + 2, top, 'door');
         return;
       }
-      towerBands(sec.tw, top).forEach(bd => {
+      towerBands(towerCfg(sec), top).forEach(bd => {
         const a = bd.y0 === 10 ? PLH : bd.y0, bb = bd.y1;
         if (bd.ty === 'door' || bd.ty === 'drawer') { door(a, bb, bd.ty); return; }
         if (bd.ty === 'oven') {
@@ -2217,7 +2229,7 @@
         if (top - y1 > 1) segs.push({ y0: y1, y1: top });
         return segs;
       }
-      towerBands(sec.tw, top).forEach(bd => segs.push({ y0: bd.y0 === 10 ? PLH : bd.y0, y1: bd.y1 }));
+      towerBands(towerCfg(sec), top).forEach(bd => segs.push({ y0: bd.y0 === 10 ? PLH : bd.y0, y1: bd.y1 }));
       return segs;
     }
     // Цепочка вертикальных размеров по линиям модуля; x — где рисовать, xFrom — откуда выносные линии
@@ -2508,7 +2520,7 @@
         b.dimV(-h, 0, w + fs * 4.2, String(MM(h)), fs, w + fs * 1.7);
         const nw = MM(w) - 36, nb = [];
         if (sec.kind === 'fridge') nb.push(`${t('nicheWord')} ${nw}×${MM(sec.fr === 'built' ? 178 : FRIDGE_H)}`);
-        else towerBands(sec.tw, TT).forEach(bd => { if (bd.ty === 'oven' || bd.ty === 'micro') nb.push(`${t('ap_' + (bd.ty === 'oven' ? 'oven' : 'micro'))}: ${t('nicheWord')} ${nw}×${MM(bd.y1 - bd.y0)}`); });
+        else towerBands(towerCfg(sec), TT).forEach(bd => { if (bd.ty === 'oven' || bd.ty === 'micro') nb.push(`${t('ap_' + (bd.ty === 'oven' ? 'oven' : 'micro'))}: ${t('nicheWord')} ${nw}×${MM(bd.y1 - bd.y0)}`); });
         nb.forEach((txt, i) => b.text(w / 2, fs * (5.2 + i * 1.5), txt, fs * 0.72, 'fill="#64748b" font-weight="700"'));
       } else b.dimV(-h, 0, w + fs * 1.7, String(MM(h)), fs, w + 0.5);
       b.text(w / 2, fs * 3.6, t('techDepthShort', { x: MM(sec.depth || (isLower ? 60 : 35)) }), fs * 0.8, 'fill="#64748b" font-weight="700"');
@@ -2764,7 +2776,7 @@
         island: s.island ? { L: s.islL, W: s.islW, cx: islandPos ? islandPos.cx : null, cz: islandPos ? islandPos.cz : null, r: islandPos ? islandPos.r : 0 } : null,
         free: k3dFreeList(hasUpper), paintOf, poly: roomPoly, roomD: roomPoly ? rpBBox().z1 : Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0),
         opens: kOpens, objs: kObjsState(), selected: VIEW_ONLY ? null : k3dSelKey(), drawerVis: drawerVisMap(),
-        dsysOf: (sec, i) => { const k = sec.dsys && sec.dsys[i]; return (k && k !== 'tier' && KIS.drawerSys[k]) ? k : def; }, towerBands };
+        dsysOf: (sec, i) => { const k = sec.dsys && sec.dsys[i]; return (k && k !== 'tier' && KIS.drawerSys[k]) ? k : def; }, towerBands: (a, top) => towerBands(a && typeof a === 'object' && a.kind ? towerCfg(a) : a, top) };
     }
     function kWallPoly(st) { st = st || {}; const W = Math.max(60, st.W || parseFloat(el('mainWall').value) || 240), D = st.roomD || Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0); return roomPoly || [[0, 0], [W, 0], [W, D], [0, D]]; }
     function k3dSupported() { try { const c = document.createElement('canvas'); return !!(window.WebGL2RenderingContext && c.getContext('webgl2')); } catch (e) { return false; } }
@@ -2772,7 +2784,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=32');
+        const mod = await import('/static/js/kitchen3d.js?v=33');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -2922,7 +2934,7 @@
         if (ot === 'handles') h += row(L3('Ручка', 'Dasta'), sel('handle', 'open', HANDLE_KEYS, G.handle));
         if (ot === 'push') h += row('TIP-ON', sel('tipon', 'open', TIPON_KEYS, G.tipon));
       }
-      const hasDoors = tier === 'upper' ? (!(s.gasLifts | 0) && s.kind !== 'open') : (doorsOf(s, 'lower') > 0 || (s.kind === 'tower' && towerBands(s.tw || 'storage', 250).some(b => b.ty === 'door')) || (s.kind === 'fridge' && s.fr === 'built'));
+      const hasDoors = tier === 'upper' ? (!(s.gasLifts | 0) && s.kind !== 'open') : (doorsOf(s, 'lower') > 0 || (s.kind === 'tower' && towerBands(towerCfg(s), 250).some(b => b.ty === 'door')) || (s.kind === 'fridge' && s.fr === 'built'));
       if (hasDoors) h += row(L3('Петли', 'Ilmoqlar'), sel('hinge', 'hinges', first('tier', KIS.hinges), G.hinge));
       if (tier === 'upper' && ['door', 'dryer', 'hood', 'side'].indexOf(s.kind) >= 0) {
         const lf = (s.gasLifts | 0) > 0;
@@ -2979,7 +2991,7 @@
       updateCalculator(); renderK3dEdit();
     }
     function k3dDsys(i, k) { const s = selSec; if (!s) return; s.dsys = (s.dsys || []).slice(); while (s.dsys.length <= i) s.dsys.push('tier'); s.dsys[i] = k; updateCalculator(); }
-    function k3dDrawerCount(s) { if (s.kind === 'tower') return towerBands(s.tw || 'storage', 250).filter(b => b.ty === 'drawer').length; if (s.kind === 'oven') return 1; return s.drawers | 0; }
+    function k3dDrawerCount(s) { if (s.kind === 'tower') return towerBands(towerCfg(s), 250).filter(b => b.ty === 'drawer').length; if (s.kind === 'oven') return 1; return s.drawers | 0; }
     function renderK3dEdit() {
       const box = el('k3dSide'); if (!box) return;
       box.innerHTML = VIEW_ONLY ? k3dSideView() : (selObjId && kObjs.some(o => o.id === selObjId) ? k3dSideObj() : selOpenId && kOpens.some(o => o.id === selOpenId) ? k3dSideOpen() : selIsland && chk('hasIsland') ? k3dSideIsland() : (selSec ? k3dSidePart(selSec) : k3dSideKitchen()));
@@ -3242,6 +3254,7 @@
           kb(k === 'dishwasher', 'dishwasher', L3('Посудомойка', 'Idish yuvgich')) + kb(k === 'washer', 'washer', L3('Стиральная', 'Kir yuvgich')) + kb(k === 'cargo', 'cargo', L3('Карго', 'Kargo')) + kb(k === 'corner', 'corner', L3('Угловой', 'Burchak'));
       }
       h += `</div>`;
+      if (k === 'tower') { const TT = k3dGeo().G.TT, bd = towerBands(towerCfg(s), TT), ap = (ty, fld, lbl) => { const b = bd.find(x => x.ty === ty); return b ? k3Row(lbl, k3Step(Math.round(b.y0) + ' ' + L3('см', 'sm'), `k3dStep('${fld}',-5)`, `k3dStep('${fld}',5)`) + (s[fld] != null ? k3B(false, `k3dStep('${fld}',0)`, L3('как было', 'avvalgidek')) : '')) : ''; }; h += ap('oven', 'ovY', L3('Духовка: низ от пола', 'Duxovka: pol dan')) + ap('micro', 'mwY', L3('Микроволновка: низ от пола', 'Mikroto‘lqinli: pol dan')); }
       if (k === 'tower') h += k3Row(L3('Начинка', 'Ichi'), `<select onchange="selUpdate('tw', this.value)">${TOWER_KEYS.map(x => `<option value="${x}" ${(s.tw || 'storage') === x ? 'selected' : ''}>${esc(t('tw_' + x))}</option>`).join('')}</select>`);
       if (k === 'corner') h += k3dCornerWidths(s, tier, w);
       if (k === 'corner') h += k3Row(L3('Слепая сторона', 'Koʻr tomon'), k3B(s.cs !== 'R', "k3dCornerSide('L')", L3('слева', 'chapda')) + k3B(s.cs === 'R', "k3dCornerSide('R')", L3('справа', 'oʻngda'))) + k3Row(L3('Припарковать', 'Qoʻyish'), k3B(false, "k3dParkCorner('L')", L3('в левый угол', 'chap burchak')) + k3B(false, "k3dParkCorner('R')", L3('в правый угол', 'oʻng burchak')));
@@ -3311,6 +3324,7 @@
     function k3dStep(field, d) {
       const s = selSec; if (!s) return;
       if (field === 'width') { selUpdate('width', (parseFloat(s.width) || 0) + d); return; }
+      if (field === 'ovY' || field === 'mwY') { if (d === 0) delete s[field]; else { const ty = field === 'ovY' ? 'oven' : 'micro', b = towerBands(towerCfg(s), k3dGeo().G.TT).find(x => x.ty === ty); if (b) s[field] = Math.max(12, Math.min(250, Math.round((s[field] != null ? +s[field] : b.y0) + d))); } updateCalculator(); return; }
       if (field === 'ug') { if (d === 0) delete s.ug; else s.ug = Math.max(20, Math.min(120, (s.ug != null ? +s.ug : (parseFloat(el('upperGap').value) || 56)) + d)); updateCalculator(); return; }
       if (field === 'drawers') { s.drawers = Math.max(1, Math.min(5, (s.drawers | 0) + d)); }
       if (field === 'shelves') { s.shelves = Math.max(0, Math.min(5, (s.shelves | 0) + d)); s.led = Math.min(s.led | 0, ledMax(s)); }
@@ -4099,7 +4113,7 @@
       if (tallK) {
         if (k === 'fridge' && s.fr !== 'built') { m.niche.push({ x: 0, y: 0, w: W, h: Math.round(185 * 10), ty: 'fridge' }); m.labels.push('холодильник отдельный'); if (hb - 1850 > 150) P(G3, 1850 + 20 + G3, W - 2 * G3, hb - 1850 - 20 - 2 * G3, 'door', hing); return m; }
         if (k === 'fridge') { P(G3, PL + G3, W - 2 * G3, 600, 'door', hing); P(G3, PL + 606, W - 2 * G3, 1180 - 606 + 100, 'door', hing); if (hb - 1880 > 80) P(G3, 1880 + G3, W - 2 * G3, hb - 1880 - 2 * G3, 'door', hing); m.labels.push('холодильник встроенный'); return m; }
-        (towerBands(s.tw || 'storage', geo.G.TT) || []).forEach(bd => { const a = (bd.y0 === 10 ? 10 : bd.y0) * 10, b = bd.y1 * 10; if (bd.ty === 'door') P(G3, a + G3, W - 2 * G3, b - a - 2 * G3, 'door', hing); else if (bd.ty === 'drawer') P(G3, a + G3, W - 2 * G3, b - a - 2 * G3, 'drawer'); else { m.niche.push({ x: (W - Math.min(W - 40, 600)) / 2, y: a, w: Math.min(W - 40, 600), h: b - a, ty: bd.ty }); m.labels.push(bd.ty === 'oven' ? 'духовка' : 'СВЧ'); } });
+        (towerBands(towerCfg(s), geo.G.TT) || []).forEach(bd => { const a = (bd.y0 === 10 ? 10 : bd.y0) * 10, b = bd.y1 * 10; if (bd.ty === 'door') P(G3, a + G3, W - 2 * G3, b - a - 2 * G3, 'door', hing); else if (bd.ty === 'drawer') P(G3, a + G3, W - 2 * G3, b - a - 2 * G3, 'drawer'); else { m.niche.push({ x: (W - Math.min(W - 40, 600)) / 2, y: a, w: Math.min(W - 40, 600), h: b - a, ty: bd.ty }); m.labels.push(bd.ty === 'oven' ? 'духовка' : 'СВЧ'); } });
         return m;
       }
       const y0 = PL + G3, y1 = hb;
@@ -4313,7 +4327,7 @@
           if (k === 'fridge' && s.fr !== 'built') return;
           if (k === 'fridge') { P('Бок', 2, Hct - t, db, body, 1, 0); P('Дно', 1, w, db, body, 1, ee, 'торцы с боковой кромкой — у крайнего шкафа'); P('Верх', 1, w - 2 * t, db, body, 1, 0); P('Спинка', 1, Hct, w, body, ee, 0, 'ЛДСП, лежит на торцах боковин и дна'); const hh = Math.round(178 * 10); P('Фасад холодильника нижний', 1, Math.round(hh * .34) - 3, w - 4, fac, 2, 2, '', true); P('Фасад холодильника верхний', 1, Math.round(hh * .66) - 3, w - 4, fac, 2, 2, '', true); const top = (G.TT - 188) * 10; if (top > 80) P('Фасад над холодильником', 1, Math.round(top) - 3, w - 4, fac, 2, 2, '', true); return; }
           P('Бок', 2, Hct - t, db, body, 1, 0); P('Дно', 1, w, db, body, 1, ee, 'торцы с боковой кромкой — у крайнего шкафа'); P('Верх', 1, w - 2 * t, db, body, 1, 0); P('Спинка', 1, Hct, w, body, ee, 0, 'ЛДСП, лежит на торцах боковин и дна');
-          (towerBands(s.tw || 'storage', G.TT) || []).forEach(b => {
+          (towerBands(towerCfg(s), G.TT) || []).forEach(b => {
             const a = b.y0 === 10 ? G.PL : b.y0, bh = Math.round((b.y1 - a) * 10);
             if (b.ty === 'door') P('Фасад пенала (дверь)', 1, bh - 3, w - 4, fac, 2, 2, '', true);
             else if (b.ty === 'drawer') { P('Фасад ящика пенала', 1, bh - 3, w - 4, fac, 2, 2, '', true); drawerBox(w, db, bh, (s.dsys && s.dsys[0]) || 'tier'); }
@@ -4522,7 +4536,7 @@
         if (isTall(x)) {   // пенал: двери — по 3 петли, ящики — высокие; встроенный холодильник — фасад на двух шарнирах
           if (x.kind === 'fridge') { if (x.fr === 'built') sum += 4 * HG(x); return; }
           let di = 0;
-          towerBands(x.tw || 'storage', 250).forEach(b => { if (b.ty === 'door') { sum += 3 * HG(x); handles(x, 1); } else if (b.ty === 'drawer') { const k = x.dsys && x.dsys[di]; sum += (k && k !== 'tier' && KIS.drawerSys[k]) ? KIS.drawerSys[k].price : (H.drawerTall || H.drawer); di++; handles(x, 1); } });
+          towerBands(towerCfg(x), 250).forEach(b => { if (b.ty === 'door') { sum += 3 * HG(x); handles(x, 1); } else if (b.ty === 'drawer') { const k = x.dsys && x.dsys[di]; sum += (k && k !== 'tier' && KIS.drawerSys[k]) ? KIS.drawerSys[k].price : (H.drawerTall || H.drawer); di++; handles(x, 1); } });
           return;
         }
         if (x.kind === 'sink' && SB) { sum += SB; handles(x, 1); const eb = effHw(x, K).bin; if (eb !== 'none' && KIS.bin[eb]) sum += KIS.bin[eb].price; return; }   // глубокий ящик Blum вместо дверок под мойкой
@@ -5588,7 +5602,7 @@
           if (TT - a0 > 6) door(a0, TT, 'door');
           return;
         }
-        towerBands(sec.tw, TT).forEach(bd => {
+        towerBands(towerCfg(sec), TT).forEach(bd => {
           const a = bd.y0 === 10 ? PL : bd.y0, b = bd.y1;
           if (bd.ty === 'door' || bd.ty === 'drawer') { door(a, b, bd.ty); return; }
           if (bd.ty === 'oven') {
@@ -5858,6 +5872,8 @@
       if (q[1]) r.led = Math.max(0, Math.min(6, q[1] | 0));
       if (q[2] !== undefined && q[2] !== '') { const v = +q[2]; if (v >= 20 && v <= 120) r.ug = v; }
       if (q[3] === '1') r.mwTop = true;
+      if (q[4] !== undefined && q[4] !== '') { const v = +q[4]; if (v >= 12 && v <= 250) r.ovY = v; }
+      if (q[5] !== undefined && q[5] !== '') { const v = +q[5]; if (v >= 12 && v <= 250) r.mwY = v; }
       return r;
     }
     function ledFromArr(a) {
@@ -5913,7 +5929,7 @@
     /* ===================== ССЫЛКА «ПОДЕЛИТЬСЯ» ===================== */
     function serializeState() {
       const s = getCalcState();
-      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || ''].join('|'), x.ctc || '', x.bw || '', (x.glass || x.kind === 'glass') ? [1, x.gf || '', x.gt || ''].join('|') : ''];
+      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : '', x.ovY != null ? x.ovY : '', x.mwY != null ? x.mwY : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || ''].join('|'), x.ctc || '', x.bw || '', (x.glass || x.kind === 'glass') ? [1, x.gf || '', x.gt || ''].join('|') : ''];
       const enc = (arr, tier) => arr.map(x => encOne(x, tier));
       const dc = decorClean(decorState);
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
@@ -6125,7 +6141,7 @@
       if (sec.kind === 'open') parts.push(tr('kind_open'));
       const nw = MM(sec.width) - 36;
       if (sec.kind === 'fridge') parts.push(`${tr('nicheWord')} ${nw}×${MM(sec.fr === 'built' ? 178 : FRIDGE_H)}`);
-      if (sec.kind === 'tower') towerBands(sec.tw, 250).forEach(bd => { if (bd.ty === 'oven' || bd.ty === 'micro') parts.push(`${tr('ap_' + (bd.ty === 'oven' ? 'oven' : 'micro'))}: ${tr('nicheWord')} ${nw}×${MM(bd.y1 - bd.y0)}, ${tr('fromFloor')} ${MM(bd.y0)}`); });
+      if (sec.kind === 'tower') towerBands(towerCfg(sec), 250).forEach(bd => { if (bd.ty === 'oven' || bd.ty === 'micro') parts.push(`${tr('ap_' + (bd.ty === 'oven' ? 'oven' : 'micro'))}: ${tr('nicheWord')} ${nw}×${MM(bd.y1 - bd.y0)}, ${tr('fromFloor')} ${MM(bd.y0)}`); });
       if (sec.kind !== 'tower') appliancesOf(sec).forEach(a => { if (a.k !== 'hobpanel' && a.k !== 'fridge') parts.push(tr('ap_' + a.k)); });
       if (sec.note) parts.push('«' + sec.note + '»');
       return parts.join('; ');
