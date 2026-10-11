@@ -1,5 +1,5 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=8';
+import * as C from '/static/js/shkaf-pro-core.js?v=9';
 const { BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { openRoomStart, openRoomEditor } from '/static/js/shkaf-room.js?v=2';
@@ -230,7 +230,7 @@ function sideItem() {
   if (it.type === 'drawer') { h += stepper('Высота фасада', 'item.fh', it.fh, 1) + `<div class="r">${btn(0, 'PRO.drawerAbove()', '＋ Ещё ящик над этим')}${btn(0, 'PRO.drawerBelow()', '＋ ниже')}</div><div class="note">Ящики добавляются по одному: у каждого своя высота. Двойной щелчок по ящику — выдвинуть.</div>`; h += `<div class="r"><span>Система</span><select onchange="PRO.sys(this.value)">${Object.keys(DRAWER_SYS).map(k => `<option value="${k}" ${it.sys === k ? 'selected' : ''}>${DRAWER_SYS[k].ru}</option>`).join('')}</select></div>`; }
   if (it.type === 'shoe') h += stepper('Полок', 'item.n', it.n, 1, 'шт');
   if (it.type === 'basket') h += stepper('Высота корзины', 'item.h', it.h, 1);
-  if (it.type === 'vpanel') h += betweenHtml(f.col, it) + stepper('Низ панели', 'item.y', it.y, 1) + stepper('Верх панели', 'item.y1', it.y1, 1) + stepper('От левого края отсека', 'item.x', it.x, 1) + `<div class="r">${btn(0, 'PRO.vpCenter()', 'По центру отсека')}</div><div class="note">Панель делит отсек на две части. Рядом с ней можно поставить «Дверцу в отсеке».</div>`;
+  if (it.type === 'vpanel') h += betweenHtml(f.col, it) + stepper('Низ панели', 'item.y', it.y, 1) + stepper('Верх панели', 'item.y1', it.y1, 1) + stepper('От левого края отсека', 'item.x', it.x, 1) + `<div class="r">${btn(0, 'PRO.vpCenter()', 'По центру отсека')}</div><div class="r"><span>Полки рядом с панелью</span>${btn((it.sh || 'L') === 'L', "PRO.vpSide('L')", '◀ слева')}${btn(it.sh === 'R', "PRO.vpSide('R')", 'справа ▶')}</div><div class="note">Панель делит отсек на две части. Рядом с ней можно поставить «Дверцу в отсеке».</div>`;
   if (it.type === 'idoor') h += betweenHtml(f.col, it) + stepper('Верх дверцы', 'item.y1', it.y1, 1) + stepper('От левого края отсека', 'item.x', it.x, 1) + stepper('Ширина дверцы (0 — до края)', 'item.w', it.w || 0, 1) + `<div class="r"><span>Открывание</span>${[['L', '◀ влево'], ['R', 'вправо ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => btn(it.dir === k, `PRO.idoorDir('${k}')`, t)).join('')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.moveItemCol(-1)', '◀ в левый отсек')}${btn(0, 'PRO.moveItemCol(1)', 'в правый ▶')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.dupItem()', 'Копия')}${btn(0, 'PRO.delItem()', 'Удалить')}${btn(0, `PRO.selCol(${f.ci})`, '✕ К отсеку')}</div>`;
@@ -397,7 +397,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=13');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=14');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -532,7 +532,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; const b = $('ownerBox'); if (b)
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=6');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=7');
   const r = drawMod.buildSheets(S); lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
 }
@@ -674,6 +674,7 @@ window.PRO = {
     else if (si && si.it) { const fp = freeItem(S, si.kind, si.it), m = placeAtWall(S, r => itemFoot(S, si.kind, si.it, r), i, align); if (m) { fp.x = m.ox; fp.z = m.oz; fp.rot = m.rot; } }
     else { const m = placeAtWall(S, r => wfoot(S, r), i, align); if (m) { S.room.ox = m.ox; S.room.oz = m.oz; S.room.rot = m.rot; } }
   }),
+  vpSide: v => mutate(() => { const f = findItem(sel.id); if (f && f.it.type === 'vpanel') f.it.sh = v; }),
   colDp: () => mutate(() => { const c = S.cols[sel.i]; if (c) { if (c.dp === false) delete c.dp; else c.dp = false; } }),
   dtRot: d => mutate(() => { const c = S.cols[sel.i]; if (!c || !c.det) return; const ci = sel.i, f = colFoot(S, ci), cx = c.det.x + f.w / 2, cz = c.det.z + f.d / 2; c.det.rot = (((c.det.rot || 0) + d) % 360 + 360) % 360; const n2 = colFoot(S, ci); c.det.x = r1(cx - n2.w / 2); c.det.z = r1(cz - n2.d / 2); if (S.room.mag) { const m = rectMagnet(S, c.det.x, c.det.z, r => colFoot(S, ci, r), c.det.rot, 200, c.det.rot); if (m) { c.det.x = m.ox; c.det.z = m.oz; } } }),
   magnet: () => mutate(() => { S.room.mag = !S.room.mag; if (S.room.mag) { const m = wardrobeMagnet(S, S.room.ox || 0, S.room.oz || 0, 120); if (m) { S.room.ox = m.ox; S.room.oz = m.oz; S.room.rot = m.rot; } } }),

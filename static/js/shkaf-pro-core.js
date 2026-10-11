@@ -192,7 +192,7 @@ export function mkItem(type, y, extra) {
   if (type === 'idoor') Object.assign(b, { y1: r1(y + 60), x: 0, w: null, dir: 'L' });
   if (type === 'shoe') Object.assign(b, { n: 3 });
   if (type === 'basket') Object.assign(b, { h: 18 });
-  if (type === 'vpanel') Object.assign(b, { y1: r1(y + 60), x: 0 });
+  if (type === 'vpanel') Object.assign(b, { y1: r1(y + 60), x: 0, sh: 'L' });
   return Object.assign(b, extra || {});
 }
 export function defState() {
@@ -319,6 +319,11 @@ export function warnings(S) {
 }
 
 /* ---- двери ---- */
+export function shelfSpan(col, wcol, t, it) {   // полка рядом с вертикальной панелью есть только с выбранной стороны: слева или справа от неё
+  let x0 = 0, x1 = wcol;
+  (col.items || []).forEach(v => { if (v.type === 'vpanel' && it.y >= v.y - .05 && it.y <= v.y1 + .05) { if ((v.sh || 'L') === 'L') x1 = Math.min(x1, v.x); else x0 = Math.max(x0, v.x + t); } });
+  return { x0, x1, w: Math.max(5, x1 - x0) };
+}
 export function colSplits(S, g, ci) {   // перегородки «у каждой двери»: при 3–4 дверях в отсеке у каждой своя секция
   const c = g.cols[ci], col = S.cols[ci], t = S.t; if (!c || c.gap || !col || S.doors.kind !== 'swing') return [];
   const n = col.dn != null ? col.dn : (c.w > 65 ? 2 : 1); if (n < 3 || col.dp === false) return [];
@@ -514,7 +519,7 @@ export function buildParts(S) {
     const lbl = ' (отсек ' + (ci + 1) + ')', D = g.cols[ci].D, splitsN = colSplits(S, g, ci).length;
     if (splitsN) { add('Наполнение', 'Перегородка под двери' + lbl, splitsN, g.cols[ci].y1 - g.y0 - S.plinth * 0 - 2 * t, D - .3, t, body, (g.cols[ci].y1 - g.y0 - 2 * t) / 100, 'у каждой двери своя секция; кромка по переднему торцу'); joints_u += splitsN * 4; }
     c.items.forEach(it => {
-      if (it.type === 'shelf') { const d = it.d || D - 2.5, sp = splitsN, sw = (c.w - .2 - sp * t) / (sp + 1); add('Наполнение', 'Полка' + lbl + (sp ? ' (между перегородками)' : ''), sp + 1, sw, d, t, body, sw / 100, 'на 4 полкодержателя'); pins += 4 * (sp + 1); }
+      if (it.type === 'shelf') { const d = it.d || D - 2.5, sp = splitsN, ss = shelfSpan(c, c.w, t, it), sw = sp ? (c.w - .2 - sp * t) / (sp + 1) : ss.w - .2, vside = !sp && ss.w < c.w - .5 ? (ss.x0 > 0 ? ' (справа от панели)' : ' (слева от панели)') : ''; add('Наполнение', 'Полка' + lbl + (sp ? ' (между перегородками)' : '') + vside, sp + 1, sw, d, t, body, sw / 100, 'на 4 полкодержателя'); pins += 4 * (sp + 1); }
       else if (it.type === 'rod') { rods++; add('Наполнение', 'Штанга ⌀25' + lbl, 1, c.w - .6, 2.5, 2.5, 'Хром, труба 25×15', 0, 'длина ' + mm(c.w - .6) + ' мм', 'metal'); }
       else if (it.type === 'drawer') {
         const bw = c.w - .4;
@@ -633,7 +638,7 @@ export function sanitize(S) {
       if (it.type === 'idoor') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 250, 0); b.w = it.w ? n(it.w, 8, 250, 40) : null; b.dir = ['L', 'R', 'U', 'D'].includes(it.dir) ? it.dir : 'L'; }
       if (it.type === 'shoe') b.n = n(it.n, 1, 6, 3) | 0;
       if (it.type === 'basket') b.h = n(it.h, 10, 40, 18);
-      if (it.type === 'vpanel') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 200, 0); }
+      if (it.type === 'vpanel') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 200, 0); b.sh = it.sh === 'R' ? 'R' : 'L'; }
       col.items.push(b);
     });
     o.cols.push(col);
