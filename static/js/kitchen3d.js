@@ -678,7 +678,8 @@ export function createK3D(container, hooks = {}, opts = {}) {
     countertops(M, st);
     // свои шкафчики (стеллажи, полки, шкафы своей формы): стоят где угодно, двигаются мышью, двери открываются
     (st.objs || []).forEach(q => {
-      const t = q.mat === 'ply' ? 1.2 : 1.6, body = q.color ? new THREE.MeshStandardMaterial({ color: q.color, roughness: .55 }) : (q.mat === 'ply' ? new THREE.MeshStandardMaterial({ color: '#d8bd8a', roughness: .6 }) : (q.mat === 'mdf' ? M.facade : M.body));
+      const catMat = (() => { const c = q.cat && window.KCCAT && window.KCCAT.find(q.cat); if (!c) return null; const m = new THREE.MeshStandardMaterial({ color: c.hex, roughness: .55, envMapIntensity: .7 }); if (c.img) { const tx = loadTex(c.img); if (tx) { m.map = tx; m.color.set('#ffffff'); } } return m; })();
+      const t = q.mat === 'ply' ? 1.2 : 1.6, body = catMat || (q.color ? new THREE.MeshStandardMaterial({ color: q.color, roughness: .55 }) : (q.mat === 'ply' ? new THREE.MeshStandardMaterial({ color: '#d8bd8a', roughness: .6 }) : (q.mat === 'mdf' ? M.facade : M.body)));
       const mirror = new THREE.MeshStandardMaterial({ color: '#eef5f9', roughness: .06, metalness: .8 }), key = 'obj:' + q.id;
       const g = buildObjGroup(q, { t, body, back: M.inner, glass: M.glass, mirror, chrome: M.chrome, edge: null, keyBase: key, onDoor: (k, fn) => anims.push({ key: k, apply: fn }), mark: null });
       g.position.y = q.y || 0; const wrap = new THREE.Group(); wrap.add(g); placeAt(wrap, q.bw, q.bd, q.cx, q.cz, q.r || 0, 0);

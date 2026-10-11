@@ -351,6 +351,8 @@ export function runInfo(S, g, r) {   // что убрано у секции: л�
   let rmPart = 0; for (let i = r.a + 1; i <= r.b; i++) if (S.cols[i] && S.cols[i].nl && !g.cols[i].gap && !g.cols[i].split) rmPart++;
   return { noL, noR, segs, rmPart };
 }
+export const catId = v => (typeof v === 'string' && /^[a-z]{2}\d{1,3}$/.test(v)) ? v : undefined;
+export const catName = id => (id && typeof window !== 'undefined' && window.KCCAT && window.KCCAT.name(id)) || '';
 export const SPLITTABLE = ['rod', 'drawer', 'shoe', 'pant', 'basket', 'hook', 'led'];
 export function itemSpans(S, col, wcol, it) {   // куски предмета отсека: вертикальные панели делят его; сторона sd: L / R / обе
   const [a, b] = ext(it, S), t = S.t; let sp = [[0, wcol]];
@@ -416,7 +418,7 @@ export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, le
 export function buildParts(S) {
   const g = geom(S), t = S.t, W = g.W, H = S.H, D = S.D, mm = v => Math.round(v * 10), T = P.tiers[S.tier];
   const parts = [], hw = [];
-  const body = 'ЛДСП ' + mm(t) + ' мм';
+  const body = 'ЛДСП ' + mm(t) + ' мм' + (S.cat ? ' · ' + catName(S.cat) : '');
   const add = (grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind) => {
     const lg = Math.max(L, Wd), sh = Math.min(L, Wd), e = edgeEach * 100, facade = /^(Дверь|Фасад|Вставка)/.test(name);
     let desc = '—';
@@ -448,6 +450,7 @@ export function buildParts(S) {
     joints += 16 + (m.shelves | 0) * 4 + m.dv.length * 8;
   });
   (S.panels || []).forEach((p, i) => {
+    const body = 'ЛДСП ' + mm(t) + ' мм' + (p.cat ? ' · ' + catName(p.cat) : (S.cat ? ' · ' + catName(S.cat) : ''));
     const where = p.mount === 'front' ? 'на фасад' : (p.mount === 'free' ? 'отдельно стоящая' : 'на стену'), per = (2 * (p.h + p.w)) / 100;
     if (p.kind === 'slats') {
       const sw = p.sw || 100, sd = p.sd || 32, sg = p.sg || 20, vert = p.so !== 'h', span = (vert ? p.w : p.h) * 10, len = (vert ? p.h : p.w) * 10, cnt = Math.max(1, Math.floor((span + sg) / (sw + sg)));
@@ -463,6 +466,7 @@ export function buildParts(S) {
     if (isMirror && p.bl) { const pm = (p.shape === 'round' ? Math.PI * p.w : (p.shape === 'oval' ? Math.PI * (p.w + p.h) / 2 : 2 * (p.w + p.h))) / 100; addHw('Свет', 'Подсветка зеркала ' + (i + 1) + ' (LED по контуру + блок)', 1, 'комплект', pm * T.led + T.ledKit, 'периметр ' + Math.round(pm * 100) / 100 + ' м'); }
   });
   (S.units || []).forEach((u, i) => {
+    const body = 'ЛДСП ' + mm(t) + ' мм' + (u.cat ? ' · ' + catName(u.cat) : (S.cat ? ' · ' + catName(S.cat) : ''));
     const gr = 'Тумба-обувница ' + (i + 1), lbl = ' (тумба ' + (i + 1) + ')', ph2 = u.legs || 0, hb = u.h - ph2, w = u.w, d = u.d;
     add(gr, 'Дно' + lbl, 1, w, d, t, body, (w + 2 * d) / 100, 'на всю ширину; боковины и спинка стоят на дне; кромка перед + 2 торца');
     add(gr, 'Боковина' + lbl, 2, hb - t, d, t, body, (hb - t) / 100, 'стоит на дне; кромка по переднему торцу');
@@ -491,6 +495,7 @@ export function buildParts(S) {
     joints_u += 12;
   });
   (S.beds || []).forEach((b, i) => {
+    const body = 'ЛДСП ' + mm(t) + ' мм' + (b.cat ? ' · ' + catName(b.cat) : (S.cat ? ' · ' + catName(S.cat) : ''));
     const gr = (b.kind === 'bunk' ? 'Двухъярусная кровать ' : 'Кровать ') + (i + 1), lbl = ' (кровать ' + (i + 1) + ')', d = bedDims(b, t), per = (a, c) => (2 * (a + c)) / 100;
     add(gr, 'Боковина' + lbl, 2, b.ml + 1, b.sh, t, body, per(b.ml + 1, b.sh), 'видимая, кромка по периметру');
     add(gr, 'Изголовье' + lbl, 1, d.W, b.hh - b.lg, t, body, per(d.W, b.hh - b.lg), (b.soft ? 'под мягкую накладку; ' : '') + 'кромка по периметру');
@@ -532,7 +537,7 @@ export function buildParts(S) {
   });
   (S.objs || []).forEach((q, i) => {
     const okind = q.mat === 'ply' ? 'ply' : q.mat === 'mdf' ? 'mdf' : undefined, t = q.mat === 'ply' ? 1.2 : S.t;
-    const body = q.mat === 'ply' ? OBJ_MATS.ply : q.mat === 'mdf' ? 'МДФ крашеный ' + mm(S.t) + ' мм' : 'ЛДСП ' + mm(S.t) + ' мм';
+    const body = q.mat === 'ply' ? OBJ_MATS.ply : q.mat === 'mdf' ? 'МДФ крашеный ' + mm(S.t) + ' мм' : 'ЛДСП ' + mm(S.t) + ' мм' + (q.cat ? ' · ' + catName(q.cat) : '');
     const addP = (grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind) => { if (okind && !kind) add(grp, name, qty, L, Wd, tt, mat, 0, (note ? note + '; ' : '') + (okind === 'ply' ? 'торцы: шлифовка + масло/лак' : 'торцы: шпаклёвка + покраска'), okind); else add(grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind); };
     const gr = OBJ_KINDS[q.kind].ru + ' ' + (i + 1), lbl = ' (' + OBJ_KINDS[q.kind].ru.toLowerCase() + ' ' + (i + 1) + ')', hnd = q.handles !== false;
     const fmat = q.fill === 'dsp' ? body : FILLS[q.fill], fth = q.fill === 'dsp' || q.fill === 'mdf' ? t : .4;
@@ -689,8 +694,8 @@ export function sanitize(S) {
   const D = defState(), n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? clamp(v, a, b) : d; };
   const o = { v: 2, W: n(S.W, 60, 800, 240), H: n(S.H, 100, 320, 200), D: n(S.D, 25, 90, 60), t: S.t === 1.8 ? 1.8 : 1.6, plinth: n(S.plinth, 0, 20, 8), tier: n(S.tier, 0, 2, 1) | 0, color: n(S.color, 0, 99, 0) | 0, custom: /^#[0-9a-f]{6}$/i.test(S.custom || '') ? S.custom : null,
     mezzes: [],
-    doors: { kind: ['none', 'swing', 'sliding'].includes(S.doors && S.doors.kind) ? S.doors.kind : 'none', n: n(S.doors && S.doors.n, 1, 8, 3) | 0, fills: (S.doors && Array.isArray(S.doors.fills) ? S.doors.fills : D.doors.fills).map(f => FILLS[f] ? f : 'dsp').slice(0, 8), laco: n(S.doors && S.doors.laco, 0, 5, 0) | 0, handles: !(S.doors && S.doors.handles === false), gf: n(S.doors && S.doors.gf, 2, 30, 4), dir: (S.doors && Array.isArray(S.doors.dir) ? S.doors.dir : []).slice(0, 8).map(v => ['auto', 'L', 'R', 'U', 'D'].includes(v) ? v : 'auto') },
-    led: !!S.led, nb: !!S.nb, nsl: !!S.nsl, nsr: !!S.nsr, name: String(S.name || 'Мой шкаф').slice(0, 60), cols: [] };
+    doors: { kind: ['none', 'swing', 'sliding'].includes(S.doors && S.doors.kind) ? S.doors.kind : 'none', n: n(S.doors && S.doors.n, 1, 8, 3) | 0, fills: (S.doors && Array.isArray(S.doors.fills) ? S.doors.fills : D.doors.fills).map(f => FILLS[f] ? f : 'dsp').slice(0, 8), laco: n(S.doors && S.doors.laco, 0, 5, 0) | 0, handles: !(S.doors && S.doors.handles === false), gf: n(S.doors && S.doors.gf, 2, 30, 4), cat: catId(S.doors && S.doors.cat), dir: (S.doors && Array.isArray(S.doors.dir) ? S.doors.dir : []).slice(0, 8).map(v => ['auto', 'L', 'R', 'U', 'D'].includes(v) ? v : 'auto') },
+    cat: catId(S.cat), led: !!S.led, nb: !!S.nb, nsl: !!S.nsl, nsr: !!S.nsr, name: String(S.name || 'Мой шкаф').slice(0, 60), cols: [] };
   while (o.doors.fills.length < 8) o.doors.fills.push('dsp');
   S.cols.slice(0, 14).forEach(c => {
     const col = { id: uid(), w: n(c && c.w, 15, 250, 60), items: [] };
@@ -720,15 +725,15 @@ export function sanitize(S) {
   });
   if (o.cols.length && !o.cols.some(c => !c.gap)) o.cols[0].gap = false;
   const fpOf = q => (q && q.fp && isFinite(q.fp.x) && isFinite(q.fp.z)) ? { x: r1(n(q.fp.x, -1500, 3000, 0)), z: r1(n(q.fp.z, -1500, 3000, 0)), rot: [0, 90, 180, 270].includes(q.fp.rot) ? q.fp.rot : 0 } : undefined;
-  o.panels = (Array.isArray(S.panels) ? S.panels : []).slice(0, 24).map(p => ({ id: uid(), x: r1(n(p && p.x, -300, 1200, 0)), y: r1(n(p && p.y, 0, 340, 20)), w: r1(n(p && p.w, 10, 400, 60)), h: r1(n(p && p.h, 10, 340, 180)), kind: PANEL_KINDS[p && p.kind] ? p.kind : 'mirror', mount: p && p.mount === 'front' ? 'front' : (p && p.mount === 'free' ? 'free' : 'wall'), frame: !!(p && p.frame), fw: r1(n(p && p.fw, 1, 15, 3)), shape: ['rect', 'round', 'oval', 'arch'].includes(p && p.shape) ? p.shape : 'rect', bl: !!(p && p.bl), pat: PANEL_PATTERNS[p && p.pat] ? p.pat : 'vgroove', gp: r1(n(p && p.gp, 3, 60, 12)), sw: n(p && p.sw, 10, 400, 100), sd: n(p && p.sd, 6, 100, 32), sg: n(p && p.sg, 0, 200, 20), so: p && p.so === 'h' ? 'h' : 'v', pz: r1(n(p && p.pz, 0, 400, 30)), fp: fpOf(p) }));
+  o.panels = (Array.isArray(S.panels) ? S.panels : []).slice(0, 24).map(p => ({ id: uid(), x: r1(n(p && p.x, -300, 1200, 0)), y: r1(n(p && p.y, 0, 340, 20)), w: r1(n(p && p.w, 10, 400, 60)), h: r1(n(p && p.h, 10, 340, 180)), kind: PANEL_KINDS[p && p.kind] ? p.kind : 'mirror', mount: p && p.mount === 'front' ? 'front' : (p && p.mount === 'free' ? 'free' : 'wall'), frame: !!(p && p.frame), fw: r1(n(p && p.fw, 1, 15, 3)), shape: ['rect', 'round', 'oval', 'arch'].includes(p && p.shape) ? p.shape : 'rect', bl: !!(p && p.bl), pat: PANEL_PATTERNS[p && p.pat] ? p.pat : 'vgroove', gp: r1(n(p && p.gp, 3, 60, 12)), sw: n(p && p.sw, 10, 400, 100), sd: n(p && p.sd, 6, 100, 32), sg: n(p && p.sg, 0, 200, 20), so: p && p.so === 'h' ? 'h' : 'v', pz: r1(n(p && p.pz, 0, 400, 30)), fp: fpOf(p), cat: catId(p && p.cat) }));
   { const rm = S.room || {}, P = Array.isArray(rm.poly) ? rm.poly.map(p => [Number(p[0]), Number(p[1])]) : null;
     o.room = { W: r1(n(rm.W, 100, 1500, 400)), D: r1(n(rm.D, 100, 1500, 300)), H: r1(n(rm.H, 180, 400, 260)), ox: r1(n(rm.ox, -500, 1500, 0)), oz: r1(n(rm.oz, -500, 1500, 0)), rot: [0, 90, 180, 270].includes(rm.rot) ? rm.rot : 0, mag: rm.mag !== false, poly: P && P.every(p => p.every(v => isFinite(v))) && rpValid(P) ? P : null, set: !!rm.set }; }
-  o.units = (Array.isArray(S.units) ? S.units : []).slice(0, 24).map(u => ({ id: uid(), x: r1(n(u && u.x, -600, 1600, 0)), pz: r1(n(u && u.pz, 0, 400, 0)), w: r1(n(u && u.w, 25, 300, 80)), h: r1(n(u && u.h, 30, 200, 100)), d: r1(n(u && u.d, 15, 80, 35)), kind: UNIT_KINDS[u && u.kind] ? u.kind : 'flap', n: n(u && u.n, 1, 8, 2) | 0, fill: ['dsp', 'mdf', 'glass', 'mirror'].includes(u && u.fill) ? u.fill : 'dsp', seat: !!(u && u.seat), legs: r1(n(u && u.legs, 0, 20, 8)), fp: fpOf(u) }));
-  o.beds = (Array.isArray(S.beds) ? S.beds : []).slice(0, 12).map(b => { const k = b && b.kind === 'bunk' ? 'bunk' : 'single', d = mkBed(0, k); return { id: uid(), x: r1(n(b && b.x, -800, 1800, 0)), pz: r1(n(b && b.pz, 0, 500, 0)), rot: b && b.rot === 90 ? 90 : 0, kind: k, mw: r1(n(b && b.mw, 50, 220, d.mw)), ml: r1(n(b && b.ml, 100, 240, d.ml)), mt: r1(n(b && b.mt, 5, 40, d.mt)), style: BED_STYLES[b && b.style] ? b.style : d.style, mcol: n(b && b.mcol, 0, 5, 0) | 0, sh: r1(n(b && b.sh, 10, 60, d.sh)), hh: r1(n(b && b.hh, 20, 220, d.hh)), fh: r1(n(b && b.fh, 10, 220, d.fh)), lg: r1(n(b && b.lg, 0, 40, d.lg)), drw: n(b && b.drw, 0, 4, 0) | 0, lift: !!(b && b.lift), soft: !!(b && b.soft), bedding: !(b && b.bedding === false), lv2: r1(n(b && b.lv2, 80, 200, 150)), rail: r1(n(b && b.rail, 10, 60, 28)), ladder: b && b.ladder === 'side' ? 'side' : 'end', steps: n(b && b.steps, 3, 9, 5) | 0, fp: fpOf(b) }; });
+  o.units = (Array.isArray(S.units) ? S.units : []).slice(0, 24).map(u => ({ id: uid(), x: r1(n(u && u.x, -600, 1600, 0)), pz: r1(n(u && u.pz, 0, 400, 0)), w: r1(n(u && u.w, 25, 300, 80)), h: r1(n(u && u.h, 30, 200, 100)), d: r1(n(u && u.d, 15, 80, 35)), kind: UNIT_KINDS[u && u.kind] ? u.kind : 'flap', n: n(u && u.n, 1, 8, 2) | 0, fill: ['dsp', 'mdf', 'glass', 'mirror'].includes(u && u.fill) ? u.fill : 'dsp', seat: !!(u && u.seat), legs: r1(n(u && u.legs, 0, 20, 8)), fp: fpOf(u), cat: catId(u && u.cat) }));
+  o.beds = (Array.isArray(S.beds) ? S.beds : []).slice(0, 12).map(b => { const k = b && b.kind === 'bunk' ? 'bunk' : 'single', d = mkBed(0, k); return { id: uid(), x: r1(n(b && b.x, -800, 1800, 0)), pz: r1(n(b && b.pz, 0, 500, 0)), rot: b && b.rot === 90 ? 90 : 0, kind: k, mw: r1(n(b && b.mw, 50, 220, d.mw)), ml: r1(n(b && b.ml, 100, 240, d.ml)), mt: r1(n(b && b.mt, 5, 40, d.mt)), style: BED_STYLES[b && b.style] ? b.style : d.style, mcol: n(b && b.mcol, 0, 5, 0) | 0, sh: r1(n(b && b.sh, 10, 60, d.sh)), hh: r1(n(b && b.hh, 20, 220, d.hh)), fh: r1(n(b && b.fh, 10, 220, d.fh)), lg: r1(n(b && b.lg, 0, 40, d.lg)), drw: n(b && b.drw, 0, 4, 0) | 0, lift: !!(b && b.lift), soft: !!(b && b.soft), bedding: !(b && b.bedding === false), lv2: r1(n(b && b.lv2, 80, 200, 150)), rail: r1(n(b && b.rail, 10, 60, 28)), ladder: b && b.ladder === 'side' ? 'side' : 'end', steps: n(b && b.steps, 3, 9, 5) | 0, fp: fpOf(b), cat: catId(b && b.cat) }; });
   o.opens = sanitizeOpens(S.opens, roomPoly(o));
   o.objs = (Array.isArray(S.objs) ? S.objs : []).slice(0, 80).map(q => {
     const kind = q && OBJ_KINDS[q.kind] ? q.kind : 'book', d = mkObj(kind, 0, 0), poly = kind === 'custom' && Array.isArray(q.poly) && q.poly.length >= 3 && q.poly.length <= 40 && q.poly.every(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1])) ? q.poly.map(p => [r1(n(p[0], -2000, 2000, 0)), r1(n(p[1], -2000, 2000, 0))]) : (kind === 'custom' ? CORNER_L.map(p => p.slice()) : null);
-    return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), bd: kind === 'boards' ? ((Array.isArray(q && q.bd) ? q.bd : []).slice(0, 120).filter(b => Array.isArray(b) && b.length >= 4 && b.every(v => isFinite(v))).map(b => [r1(n(b[0], -50, 800, 0)), r1(n(b[1], -50, 400, 0)), r1(n(b[2], .3, 800, 10)), r1(n(b[3], .3, 400, 1.6))]) || []) : undefined, mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };
+    return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), bd: kind === 'boards' ? ((Array.isArray(q && q.bd) ? q.bd : []).slice(0, 120).filter(b => Array.isArray(b) && b.length >= 4 && b.every(v => isFinite(v))).map(b => [r1(n(b[0], -50, 800, 0)), r1(n(b[1], -50, 400, 0)), r1(n(b[2], .3, 800, 10)), r1(n(b[3], .3, 400, 1.6))]) || []) : undefined, cat: catId(q && q.cat), mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };
   }).map(q => { if (q.kind === 'boards') { if (!q.bd || !q.bd.length) q.bd = snakeBoards(4, 80, 40, 1.6); fitBoards(q); } return q; });
   recalcW(o);
   if (Array.isArray(S.mezzes)) S.mezzes.slice(0, 8).forEach(m => { if (m) o.mezzes.push({ id: uid(), x: r1(n(m.x, -100, 900, 0)), w: r1(n(m.w, 20, 900, 60)), h: r1(n(m.h, 15, 120, 40)), y: r1(n(m.y, 0, 340, o.H)), n: n(m.n, 0, 10, 2) | 0, shelves: n(m.shelves, 0, 3, 0) | 0, fill: FILLS[m.fill] ? m.fill : 'dsp', div: (Array.isArray(m.div) ? m.div : []).slice(0, 7).map(v => r1(n(v, 5, 800, 30))), cd: (Array.isArray(m.cd) ? m.cd : []).slice(0, 8).map(v => v == null ? null : n(v, 0, 5, 1) | 0), dir: (Array.isArray(m.dir) ? m.dir : []).slice(0, 8).map(v => ['swing', 'U', 'D'].includes(v) ? v : 'swing') }); });

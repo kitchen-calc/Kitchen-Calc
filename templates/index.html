@@ -24,9 +24,10 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=17'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=18'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script type="module" src="/static/js/shkaf-shape.js?v=5"></script>
   <script type="module" src="/static/js/shkaf-boards.js?v=1"></script>
+  <script src="/static/js/color-catalog.js?v=2"></script>
   <script src="/static/js/sheet-fit.js?v=1"></script>
   <script src="/static/js/sheet-export.js?v=1"></script>
   <script src="/static/js/kis-data.js?v=4"></script>
@@ -2771,7 +2772,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=26');
+        const mod = await import('/static/js/kitchen3d.js?v=28');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3048,11 +3049,11 @@
       h += st(o.kind === 'shelf' ? L3('Толщина', 'Qalinlik') : L3('Высота', 'Balandlik'), 'h', 5, o.h); }
       if (o.kind !== 'shelf' && o.kind !== 'vert' && o.kind !== 'boards') {
         h += st(L3('Полок', 'Tokchalar'), 'n', 1, o.n); if (!cu) h += st(L3('Дверей', 'Eshiklar'), 'dn', 1, o.dn);
+        h += k3Row(L3('Цвет', 'Rang'), k3B(!!o.cat, 'kObjColor()', '🎨 ' + (o.cat && window.KCCAT ? window.KCCAT.name(o.cat) : L3('из каталога', 'katalogdan'))) + (o.cat ? k3B(false, "kObjColorReset()", '✕') : ''));
         h += k3Row(L3('Материал', 'Material'), [['dsp', 'ЛДСП'], ['ply', L3('Фанера', 'Faner')], ['mdf', 'МДФ']].map(([k, n]) => k3B((o.mat || 'dsp') === k, `k3dObjSetF('mat','${k}')`, n)).join(''));
         h += k3Row(L3('Фасад', 'Fasad'), [['dsp', 'ЛДСП'], ['glass', L3('Стекло', 'Oyna')], ['mirror', L3('Зеркало', 'Oyna')]].map(([k, n]) => k3B(o.fill === k, `k3dObjSetF('fill','${k}')`, n)).join(''));
         h += k3Row(L3('Опции', 'Opsiyalar'), k3B(o.back, "k3dObjFlag('back')", L3('спинка', 'orqa')) + k3B(o.handles, "k3dObjFlag('handles')", L3('ручки', 'dasta')));
       }
-      if (E.length) h += `<div class="k3s-sub">${esc(L3('Поставить к стене', 'Devorga qoʻyish'))}</div>` + ['start', 'center', 'end'].map(al => `<div class="k3e-r">${E.map((e, i) => k3B(false, `k3dObjWall(${i},'${al}')`, '№' + (i + 1) + (al === 'start' ? ' ◀' : al === 'end' ? ' ▶' : ' ●'))).join('')}</div>`).join('');
       h += `<div class="k3e-r">${cu ? k3B(false, 'kShapeEdit()', '✏️ ' + L3('Изменить форму', 'Shaklni oʻzgartirish')) : ''}${o.kind === 'boards' ? k3B(false, 'kBoardsEdit()', '✏️ ' + L3('Изменить доски', 'Taxtalarni oʻzgartirish')) : ''}${k3B(false, 'kObjLib()', '💾 ' + L3('В мои шкафчики', 'Kutubxonaga'))}${k3B(false, 'k3dObjDup()', '⧉ ' + L3('Копия', 'Nusxa'))}${k3B(false, `k3dObjDel('${o.id}')`, '🗑 ' + L3('Удалить', 'Oʻchirish'))}${k3B(false, 'k3dObjSel(null)', L3('Готово', 'Tayyor'))}</div>`;
       return h;
     }
@@ -3080,6 +3081,8 @@
     function k3dObjWall(i, align) { const o = kObjs.find(x => x.id === selObjId); if (!o) return; const m = SC().placeAtWall(kRoomS(), r => SC().objFoot(o, r), i, align); if (m) { o.x = m.ox; o.z = m.oz; o.rot = m.rot; kObjChanged(); } }
     function k3dMagnet() { magnetOn = !magnetOn; renderK3dEdit(); }
     function kObjLib() { const o = kObjs.find(x => x.id === selObjId); if (o && window.SHAPE) { const nm = window.SHAPE.libAdd(o, SC().OBJ_KINDS[o.kind].ru + ' ' + Math.round(o.w * 10) + '×' + Math.round(o.d * 10)); if (typeof msToast === 'function') msToast('Сохранено в «Мои шкафчики»: ' + nm); } }
+    function kObjColor() { const o = kObjs.find(x => x.id === selObjId); if (!o || !window.KCCAT) return; window.KCCAT.pick(o.cat || '', id => { if (id) o.cat = id; else delete o.cat; kObjChanged(); }); }
+    function kObjColorReset() { const o = kObjs.find(x => x.id === selObjId); if (o) { delete o.cat; kObjChanged(); } }
     function kBoardsOpen() { if (window.BOARDS) window.BOARDS.open(null); }
     function kBoardsEdit() { const o = kObjs.find(x => x.id === selObjId); if (o && window.BOARDS) window.BOARDS.open(o); }
     function kShapeOpen() { if (window.SHAPE) window.SHAPE.open(null); }
