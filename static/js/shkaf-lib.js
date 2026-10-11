@@ -18,7 +18,7 @@
   function render() {
     var box = $('shapeLib'); if (!box) return; var lib = load();
     if (!lib.length) { box.innerHTML = '<div class="note">Пока пусто. Соберите изделие выше и нажмите «💾 В мои изделия» — оно появится здесь, и его можно будет вставлять в комнату сколько угодно раз.</div>'; return; }
-    box.innerHTML = '<div class="shlib">' + lib.map(function (it, i) { return '<div class="shcard">' + thumb(it.tpl) + '<input type="text" value="' + String(it.name || '').replace(/"/g, '&quot;') + '" data-ren="' + i + '"><div class="shr"><button type="button" class="go" data-ins="' + i + '">Вставить в комнату</button></div><div class="shr">' + (it.tpl.kind === 'parts' ? '<button type="button" data-edit="' + i + '">✏️ Изменить</button>' : '') + '<button type="button" data-del="' + i + '">🗑</button></div></div>'; }).join('') + '</div>';
+    box.innerHTML = '<div class="shlib">' + lib.map(function (it, i) { return '<div class="shcard">' + thumb(it.tpl) + '<input type="text" value="' + String(it.name || '').replace(/"/g, '&quot;') + '" data-ren="' + i + '"><div class="shr"><button type="button" class="go" data-ins="' + i + '">Вставить в комнату</button></div><div class="shr">' + (it.tpl.kind === 'parts' ? '<button type="button" data-edit="' + i + '">✏️ Изменить</button>' : '') + '<button type="button" data-del="' + i + '">🗑 Удалить</button></div></div>'; }).join('') + '</div>';
   }
   function bind() {
     var box = $('shapeLib'); if (!box || box._b) return; box._b = 1;
@@ -26,7 +26,7 @@
       var b = ev.target.closest('button'); if (!b) return; var lib = load();
       if (b.dataset.ins != null) { var it = lib[+b.dataset.ins]; if (it && window.PRO && window.PRO.insertTpl) { window.PRO.insertTpl(it.tpl, it.name); var m = $('p3Msg'); if (m) { m.textContent = '✔ «' + it.name + '» вставлен в комнату — смотрите 3D выше'; setTimeout(function () { m.textContent = ''; }, 3500); } } }
       else if (b.dataset.edit != null) { var it2 = lib[+b.dataset.edit]; if (it2 && window.PART3D) window.PART3D.open(Object.assign({}, it2.tpl, { id: null, name: it2.name })); }
-      else if (b.dataset.del != null) { lib.splice(+b.dataset.del, 1); save(lib); render(); }
+      else if (b.dataset.del != null) { var nm = lib[+b.dataset.del] && lib[+b.dataset.del].name; if (!window.confirm('Удалить «' + (nm || 'изделие') + '» из «Мои изделия»?\n(Уже вставленные в комнату изделия останутся.)')) return; lib.splice(+b.dataset.del, 1); save(lib); render(); }
     });
     box.addEventListener('change', function (ev) { var t = ev.target; if (t.dataset && t.dataset.ren != null) { var lib = load(); if (lib[+t.dataset.ren]) { lib[+t.dataset.ren].name = t.value.trim() || 'Изделие'; save(lib); } } });
   }

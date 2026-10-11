@@ -56,10 +56,26 @@ function boxGeo(w, h, d, uv) {
   return g;
 }
 function mesh(geo, mat, shadow = true) { const m = new THREE.Mesh(geo, mat); m.castShadow = shadow; m.receiveShadow = true; return m; }
+/* фрезеровка фасадов: рейка / филёнка — тонкие тёмные канавки на лицевой стороне (InstancedMesh: одна деталь на фасад) */
+let K_MILL = '';
+const RIB_MAT = new THREE.MeshStandardMaterial({ color: '#16130f', roughness: .9, transparent: true, opacity: .34 });
+const RIB_HI = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .5, transparent: true, opacity: .16 });
+function ribs(m, w, h, d) {
+  const st = K_MILL, pitch = st === 'vfine' ? 1.5 : 3, items = [], hi = [];
+  if (st === 'vgroove' || st === 'vfine') for (let x = pitch; x < w - .4; x += pitch) { items.push([x - w / 2, 0, .5, h - 3]); hi.push([x - w / 2 + .5, 0, .35, h - 3]); }
+  else if (st === 'hgroove') for (let y = pitch; y < h - .4; y += pitch) { items.push([0, y - h / 2, w - 3, .5]); hi.push([0, y - h / 2 + .5, w - 3, .35]); }
+  else if (st === 'frame') { const f = Math.min(6, w / 5, h / 5); [[0, h / 2 - f, w - 2 * f, .5], [0, -h / 2 + f, w - 2 * f, .5], [-w / 2 + f, 0, .5, h - 2 * f], [w / 2 - f, 0, .5, h - 2 * f]].forEach(a => items.push(a)); }
+  [[items, RIB_MAT, .06], [hi, RIB_HI, .12]].forEach(([arr, mt, dz]) => {
+    if (!arr.length) return; const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mt, arr.length), dm = new THREE.Object3D();
+    arr.forEach((a, i) => { dm.position.set(a[0], a[1], d / 2 + dz); dm.scale.set(a[2], a[3], .2); dm.updateMatrix(); im.setMatrixAt(i, dm.matrix); }); im.instanceMatrix.needsUpdate = true; m.add(im);
+  });
+}
 /* коробка с левым-нижним-задним углом в (x,y,z) */
 function box(parent, w, h, d, mat, x, y, z, uv) {
   const m = mesh(boxGeo(Math.max(.05, w), Math.max(.05, h), Math.max(.05, d), uv), mat);
-  m.position.set(x + w / 2, y + h / 2, z + d / 2); parent.add(m); return m;
+  m.position.set(x + w / 2, y + h / 2, z + d / 2); parent.add(m);
+  if (K_MILL && mat && mat.userData && mat.userData.isFacade && Math.abs(d - 1.8) < .01 && w > 14 && h > 14) ribs(m, w, h, d);
+  return m;
 }
 function cyl(parent, r, len, mat, x, y, z, axis) {
   const m = mesh(new THREE.CylinderGeometry(r, r, len, 16), mat);
@@ -143,7 +159,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
       return new THREE.MeshStandardMaterial({ color: t ? '#ffffff' : (c && c.hex) || '#f2f2f2', map: t || null, roughness: rough, metalness: 0, envMapIntensity: .7 });
     };
     return {
-      facade: colorMat(st.colors.facade, .42),
+      facade: (fm => { fm.userData.isFacade = true; return fm; })(colorMat(st.colors.facade, .42)),
       body: colorMat(st.colors.body, .6),
       top: new THREE.MeshStandardMaterial({ map: NOISE_TEX((st.colors.top && st.colors.top.hex) || '#cbb89a'), roughness: .32, metalness: 0, envMapIntensity: .9 }),
       plinth: new THREE.MeshStandardMaterial({ color: '#2d2b29', roughness: .7 }),
@@ -273,6 +289,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
 
   /* ---------- нижний модуль ---------- */
   function lowerModule(g, M, st, s, w, key) {
+    K_MILL = st.millOf ? st.millOf(s) : (st.mill || '');
     const D = st.LD, PL = st.PL, H = st.BOX - PL, open = s.openType || 'handles', zf = D - FT;
     const kind = s.kind || 'door';
     box(g, w - 4, PL, D - 6, M.plinth, 2, 0, 2);
@@ -362,6 +379,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
 
   /* ---------- верхний модуль ---------- */
   function upperModule(g, M, st, s, w, key, y0, h) {
+    K_MILL = st.millOf ? st.millOf(s) : (st.mill || '');
     const D = st.UD, open = s.openType || 'handles', zf = D - FT, kind = s.kind || 'door';
     if (kind === 'open') { carcass(g, M, w, h, D, y0, Math.max(2, s.shelves | 0), { led: s.led | 0 }); return; }
     carcass(g, M, w, h, D, y0, s.shelves | 0, { led: s.led | 0 });
@@ -390,6 +408,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
 
   /* ---------- высокий модуль: холодильник / пенал ---------- */
   function tallModule(g, M, st, s, w, key) {
+    K_MILL = st.millOf ? st.millOf(s) : (st.mill || '');
     const D = st.LD, top = st.TT, open = s.openType || 'handles', zf = D - FT, PL = st.PL;
     if (s.kind === 'fridge' && s.fr !== 'built') {
       const fh = st.FRIDGE_H;
@@ -533,6 +552,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     g.position.set(cx - (w / 2 * Math.cos(th) + d / 2 * Math.sin(th)), y == null ? g.position.y : y, cz - (-w / 2 * Math.sin(th) + d / 2 * Math.cos(th)));
   }
   function island(M, st, bounds) {
+    K_MILL = st.mill || '';
     const I = bounds.isl; if (!I) return null;
     const L = I.L, Wd = I.Wd;
     const g = new THREE.Group(); placeAt(g, L, Wd, I.cx, I.cz, I.r, 0); root.add(g);
@@ -580,10 +600,10 @@ export function createK3D(container, hooks = {}, opts = {}) {
   function Mfor(M, st, s) {
     const p = st.paintOf && st.paintOf(s); if (!p && !s.ctc) return M;
     const mk = (c, rough) => { const t = loadTex(c && c.img); return new THREE.MeshStandardMaterial({ color: t ? '#ffffff' : (c && c.hex) || '#f2f2f2', map: t || null, roughness: rough, metalness: 0, envMapIntensity: .7 }); };
-    const o = Object.assign({}, M);
-    if (p && p.f) o.facade = mk(p.f, .42);
+    const o = Object.assign({}, M), fl = m => { m.userData.isFacade = true; return m; };
+    if (p && p.f) o.facade = fl(mk(p.f, .42));
     if (p && p.b) o.body = mk(p.b, .6);
-    if (p && p.f2) o.facade2 = mk(p.f2, .42);
+    if (p && p.f2) o.facade2 = fl(mk(p.f2, .42));
     if (s.ctc) o.top = new THREE.MeshStandardMaterial({ map: NOISE_TEX(s.ctc), roughness: .32, metalness: 0, envMapIntensity: .9 });
     return o;
   }
