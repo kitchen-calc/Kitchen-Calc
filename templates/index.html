@@ -3268,6 +3268,7 @@
       for (let i = 0; i < nd; i++) { const cur = (s.dsys && s.dsys[i]) || 'tier'; h += k3Row(L3('Ящик', 'Tortma') + ' ' + (i + 1), `<select onchange="k3dDsys(${i}, this.value)">${Object.keys(KIS.drawerSys).map(x => `<option value="${x}" ${x === cur ? 'selected' : ''}>${esc(LANG === 'uz' && window.kcTr ? window.kcTr(KIS.drawerSys[x].ru) : KIS.drawerSys[x].ru)}</option>`).join('')}</select>`); }
       const single = !twoDoors(s, w) && !(s.drawers | 0) && !(s.gasLifts | 0) && ['oven', 'dishwasher', 'washer', 'open', 'cargo', 'corner'].indexOf(k) < 0;
       if (single || k === 'tower') h += k3Row(L3('Петли', 'Ilmoq'), k3B(s.hinge !== 'R', "k3dAct('hinge','L')", L3('слева', 'chapda')) + k3B(s.hinge === 'R', "k3dAct('hinge','R')", L3('справа', 'oʻngda')));
+      h += kSyncHtml(s, tier);
       if (OWNER_ON) h += k3dPaintHtml(s);
       if (!s.fp) h += `<div class="k3s-sub">${esc(L3('Место в ряду', 'Qatordagi joyi'))}</div>`;
       if (!s.fp) h += k3Row(L3('Сдвиг', 'Surish'), k3B(false, "k3dAct('shift',-1)", '◀ 5') + k3B(false, "k3dAct('shift',1)", '5 ▶') + ((s.gap | 0) ? k3B(false, "k3dAct('gap0',0)", L3('без отступа', 'oraliqsiz')) : '') + k3B(false, "k3dAct('swap',-1)", '⇤') + k3B(false, "k3dAct('swap',1)", '⇥'));
@@ -4005,6 +4006,41 @@
       if (!Object.keys(s.pc).length) delete s.pc;
       updateCalculator(); renderK3dEdit();
     }
+    /* ---------- «сделать как этот»: размеры / начинка / фурнитура / цвет — выбранным или всем шкафам яруса ---------- */
+    const kSyncSel = { lower: {}, upper: {} }, kSyncWhat = { size: true, inner: false, hw: false, color: false };
+    const kSyncCount = tier => secsOf(tier).filter(x => x !== selSec && kSyncSel[tier][x.id]).length;
+    function kSyncHtml(s, tier) {
+      const others = secsOf(tier).filter(x => x !== s); if (!others.length) return '';
+      const sel = kSyncSel[tier], pre = tier === 'lower' ? 'Н-' : 'В-', cnt = kSyncCount(tier);
+      const chips = others.map(x => `<button type="button" class="${sel[x.id] ? 'on' : ''}" onclick="k3dSyncTog('${tier}','${x.id}')">${pre}${esc(String(x.id))} · ${esc(x.name || '')} · ${Number(x.width) || 0}</button>`).join('');
+      const W = kSyncWhat, tg = (f, txt) => k3B(W[f], `k3dSyncWhat('${f}')`, (W[f] ? '✓ ' : '') + txt);
+      return `<div class="k3s-sub">${esc(tier === 'lower' ? L3('Сделать как этот: нижние шкафы', 'Shunday qilish: pastki shkaflar') : L3('Сделать как этот: верхние шкафы', 'Shunday qilish: yuqori shkaflar'))}</div>
+        <div class="k3s-note">${esc(L3('Отметьте шкафы, которые должны стать такими же, и что именно повторить.', 'Shu shkafga oʻxshash boʻladigan shkaflarni belgilang.'))}</div>
+        <div class="k3s-grid">${chips}</div>
+        <div class="k3e-r">${k3B(false, `k3dSyncPick('${tier}','all')`, L3('Все', 'Hammasi'))}${k3B(false, `k3dSyncPick('${tier}','kind')`, L3('Такого же типа', 'Shu turdagi'))}${k3B(false, `k3dSyncPick('${tier}','none')`, L3('Снять выбор', 'Tozalash'))}</div>
+        <div class="k3e-r">${tg('size', L3('Размеры', 'Oʻlchamlar'))}${tg('inner', L3('Начинка (ящики, полки, подсветка)', 'Ichi'))}${tg('hw', L3('Фурнитура', 'Furnitura'))}${OWNER_ON ? tg('color', L3('Цвет', 'Rang')) : ''}</div>
+        <div class="k3e-r">${k3B(false, 'k3dSyncApply(false)', '▶ ' + L3('Применить к выбранным', 'Tanlanganlarga') + ' (' + cnt + ')')}${k3B(false, 'k3dSyncApply(true)', L3('Применить ко всем', 'Hammasiga'))}</div>`;
+    }
+    function k3dSyncTog(tier, id) { const m = kSyncSel[tier]; if (m[id]) delete m[id]; else m[id] = 1; renderK3dEdit(); }
+    function k3dSyncWhat(f) { kSyncWhat[f] = !kSyncWhat[f]; renderK3dEdit(); }
+    function k3dSyncPick(tier, how) { const s = selSec, m = kSyncSel[tier] = {}; secsOf(tier).forEach(x => { if (x !== s && (how === 'all' || (how === 'kind' && s && x.kind === s.kind))) m[x.id] = 1; }); renderK3dEdit(); }
+    function k3dSyncApply(all) {
+      const s = selSec; if (!s) return; const tier = tierOf(s), W = kSyncWhat;
+      const targets = secsOf(tier).filter(x => x !== s && (all || kSyncSel[tier][x.id]));
+      if (!targets.length) { if (typeof msToast === 'function') msToast(L3('Сначала отметьте шкафы', 'Avval shkaflarni belgilang')); return; }
+      if (!W.size && !W.inner && !W.hw && !W.color) { if (typeof msToast === 'function') msToast(L3('Отметьте, что повторить', 'Nimani takrorlashni belgilang')); return; }
+      const put = (t, f) => { if (s[f] == null) delete t[f]; else t[f] = JSON.parse(JSON.stringify(s[f])); };
+      targets.forEach(t => {
+        if (W.size && isTall(t) === isTall(s)) ['dp', 'ht', 'ctt', 'ctd', 'ctc'].forEach(f => put(t, f));
+        if (W.inner && t.kind === s.kind) ['drawers', 'shelves', 'led', 'dsys', 'glass', 'gf', 'gt', 'hinge', 'mwTop'].forEach(f => put(t, f));
+        if (W.hw) put(t, 'hx');
+        if (W.color && OWNER_ON) put(t, 'pc');
+      });
+      updateCalculator(); renderK3dEdit();
+      if (typeof msToast === 'function') msToast(L3('Готово: изменено шкафов — ', 'Tayyor: oʻzgartirildi — ') + targets.length);
+    }
+    function k3dPaintSel() { const s = selSec; if (!s || !s.pc) return; const tier = tierOf(s); secsOf(tier).forEach(x => { if (x !== s && kSyncSel[tier][x.id]) x.pc = Object.assign({}, s.pc); }); updateCalculator(); renderK3dEdit(); }
+    function k3dPaintTier(tier) { const s = selSec; if (!s || !s.pc) return; secsOf(tier).forEach(x => { x.pc = Object.assign({}, s.pc); }); updateCalculator(); renderK3dEdit(); }
     function k3dPaintAll() { const s = selSec; if (!s || !s.pc) return; lowerSections.concat(upperSections).forEach(x => { x.pc = Object.assign({}, s.pc); }); updateCalculator(); renderK3dEdit(); }
     function paintSelect(field, cur) {
       const groups = colorCatalog.map((c, ci) => `<optgroup label="${esc(t('cat' + ci))}">${c.items.map(it => `<option value="${it.id}" ${cur === it.id ? 'selected' : ''}>${esc(it.name)} №${it.n}</option>`).join('')}</optgroup>`).join('');
@@ -4017,7 +4053,7 @@
         ${k3Row(L3('Фасад', 'Fasad'), paintSelect('f', pc.f))}
         ${hasDr ? k3Row(L3('Ящики — 2-й цвет', 'Tortmalar — 2-rang'), paintSelect('f2', pc.f2)) : ''}
         <div class="k3s-note">${esc(L3('Если у фасада два цвета: основной — двери, второй — ящики. Цена считается по общему классу материала.', 'Fasad ikki rangli boʻlsa: asosiy — eshiklar, ikkinchisi — tortmalar.'))}</div>
-        ${s.pc ? `<div class="k3e-r">${k3B(false, 'k3dPaintAll()', L3('Этот цвет — всем шкафам', 'Shu rang — hammasiga'))}${k3B(false, "(function(){const x=selSec;if(x){delete x.pc;updateCalculator();renderK3dEdit();}})()", L3('Сбросить', 'Tozalash'))}</div>` : ''}`;
+        ${s.pc ? `<div class="k3e-r">${k3B(false, 'k3dPaintSel()', L3('Этот цвет — выбранным', 'Shu rang — tanlanganlarga') + ' (' + kSyncCount(tierOf(s)) + ')')}${k3B(false, "k3dPaintTier('" + tierOf(s) + "')", tierOf(s) === 'lower' ? L3('Этот цвет — всем нижним', 'Shu rang — hamma pastkilarga') : L3('Этот цвет — всем верхним', 'Shu rang — hamma yuqoridagilarga'))}${k3B(false, 'k3dPaintAll()', L3('Этот цвет — всем шкафам', 'Shu rang — hammasiga'))}${k3B(false, "(function(){const x=selSec;if(x){delete x.pc;updateCalculator();renderK3dEdit();}})()", L3('Сбросить', 'Tozalash'))}</div>` : ''}`;
     }
 
     /* ---------- ЧЕРТЕЖИ КАК В AUTOCAD: 3 вида каждого шкафа (одинаковые — один раз) ---------- */
