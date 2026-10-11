@@ -62,7 +62,7 @@ function wardrobeLocal(S, g, W, D, H, doors) {
 export function wardrobeSolids(S, bp) {
   const items = [], rm = S.room || {}, g = bp.g;
   if (S.cols.some(c => !c.gap && !c.det)) {
-    const W = g.W, H = g.totalH, D = S.D, ft = wfoot(S), doors = doorList(S).filter(d => d.zone === 'main' && !d.sliding);
+    const W = g.W, H = g.totalH, D = S.D, ft = wfoot(S), doors = doorList(S).filter(d => d.zone === 'mezz' || (d.zone === 'main' && (d.ci == null || !S.cols[d.ci].det)));
     const local = wardrobeLocal(S, g, W, D, H, doors);
     items.push({ key: 'main', local, lw: W, ld: D, lh: H, rot: rm.rot || 0, y0: 0, boxes: placeLocal(local, rm.rot || 0, ft.w ? (rm.rot === 90 || rm.rot === 270 ? ft.d : ft.w) : W, D, rm.ox || 0, rm.oz || 0, 0, { x0: 0, x1: W, z0: 0, z1: D }) });
   }
@@ -70,7 +70,10 @@ export function wardrobeSolids(S, bp) {
 }
 export function detSolid(S, ci) {
   const c = S.cols[ci], g = geom(S), gc = g.cols[ci], r = colRect(S, ci), W = gc.w + 2 * S.t, D = gc.D, H = c.H || S.H;
-  const local = [B(0, W, 0, H, 0, D, 'b'), B(S.t, S.t + .1, S.plinth || 0, H, D - .3, D, 'l')];
+  const L0 = gc.xa - S.t, doors = doorList(S).filter(d => d.zone === 'main' && d.ci === ci);
+  const local = [B(0, W, 0, H, 0, D, 'b')];
+  if (doors.length) doors.forEach(d => local.push(B(d.x - L0, d.x - L0 + d.w, d.y, d.y + d.h, D - .4, D + 1.8, 'f')));
+  else local.push(B(S.t, S.t + .1, S.plinth || 0, H, D - .3, D, 'l'));
   return { local, lw: W, ld: D, lh: H, rot: (c.det && c.det.rot) || 0, y0: 0, boxes: placeLocal(local, (c.det && c.det.rot) || 0, W, D, r.x0, r.z0, 0) };
 }
 export function unitSolid(S, u, c) {

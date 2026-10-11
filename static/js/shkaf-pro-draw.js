@@ -1,5 +1,6 @@
 /* Чертежи конструктора шкафа PRO в стиле AutoCAD, лист A4 (альбомный). Размеры на чертежах — в мм. Только для режима мастера. */
 import { OPEN_KINDS, openVariantName, roomEdges, openCenter } from '/static/js/room-open-core.js?v=3';
+import { modelLocal, placeLocal, wardrobeSolids, detSolid, unitSolid, bedSolid, panelSolid, objSolid } from '/static/js/draw-solids.js?v=3';
 import { runInfo, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1, objsParts } from '/static/js/shkaf-pro-core.js?v=21';
 
 const F = 1.4;
@@ -151,64 +152,6 @@ function sheetOverview(S, bp, no, total) {
   o += text(x0 + g.W * k10 / 2, y0 + g.totalH * k10 + 40, 'ВИД СПЕРЕДИ (двери сняты, показано наполнение)', 10, 'middle', 'font-weight="700"');
   o += text(1100, 60, `М 1:${niceScale(sc)}`, 12, 'end', 'font-weight="700"');
   return sheet(o, meta(S, bp), no, total);
-}
-/* ---------- план всей комнаты: шкаф, кровати, тумбы, зеркала, стеллажи и шкафы своей формы ---------- */
-function sheetRoomPlan(S, bp, no, total) {
-  const P = roomPoly(S), bx = Math.max(...P.map(p => p[0])), bz = Math.max(...P.map(p => p[1]));
-  const sc = Math.min(760 / (bx * 10), 460 / (bz * 10), .5), k10 = 10 * sc, x0 = 120, y0 = 90, X = v => x0 + v * k10, Z = v => y0 + v * k10;
-  let o = `<polygon points="${P.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${sty('o', 1)} stroke-width="3" fill="#faf7f0"/>`;
-  { const E = roomEdges(P); (S.opens || []).forEach((q, i) => {
-      const c = openCenter(q, E); if (!c) return; const e = c.e, hw = q.w / 2, k = q.kind, p1 = [c.x - e.ex * hw, c.z - e.ez * hw], p2 = [c.x + e.ex * hw, c.z + e.ez * hw], n = [e.nx, e.nz];
-      const P2 = (p, d) => [X(p[0] + n[0] * d), Z(p[1] + n[1] * d)], ln = (a, b, st) => `<line x1="${N(a[0])}" y1="${N(a[1])}" x2="${N(b[0])}" y2="${N(b[1])}" ${st || ST.o}/>`;
-      if (k === 'door' || k === 'balcony') {
-        o += ln(P2(p1, 0), P2(p2, 0), 'stroke="#faf7f0" stroke-width="7"') + ln(P2(p1, -2), P2(p1, 2)) + ln(P2(p2, -2), P2(p2, 2));
-        const tip = P2(p1, q.w), end = P2(p2, 0), cr = n[0] * e.ez - n[1] * e.ex;
-        o += ln(P2(p1, 0), tip, ST.o) + `<path d="M${N(tip[0])} ${N(tip[1])} A${N(q.w * k10)} ${N(q.w * k10)} 0 0 ${cr > 0 ? 1 : 0} ${N(end[0])} ${N(end[1])}" ${ST.t}/>`;
-      } else if (k === 'window') {
-        o += ln(P2(p1, 0), P2(p2, 0), 'stroke="#faf7f0" stroke-width="7"') + ln(P2(p1, -2.2), P2(p2, -2.2)) + ln(P2(p1, 0), P2(p2, 0), ST.t) + ln(P2(p1, 2.2), P2(p2, 2.2)) + ln(P2(p1, -2.2), P2(p1, 2.2)) + ln(P2(p2, -2.2), P2(p2, 2.2));
-        for (let j = 1; j < (q.n || 1); j++) { const pp = [p1[0] + (p2[0] - p1[0]) * j / q.n, p1[1] + (p2[1] - p1[1]) * j / q.n]; o += ln(P2(pp, -2.2), P2(pp, 2.2)); }
-      } else if (k === 'radiator') {
-        o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, 9), P2(p1, 9)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${sty('o', 1)} fill="url(#h2)"/>`;
-      } else if (k === 'column') {
-        o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, q.d || 40), P2(p1, q.d || 40)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${sty('o', 1)} fill="url(#h1)"/>`;
-      } else {
-        const cc = P2([c.x, c.z], 2.5); o += circ(cc[0], cc[1], k === 'pipe' ? Math.max(2, q.w / 2 * k10) : 3.4, 'o', k === 'pipe' ? '#ddd' : '#fff') + text(cc[0] + n[0] * 9, cc[1] + n[1] * 9 + 2.5, k === 'switch' ? 'В' : (k === 'vent' ? '⌀' : (k === 'pipe' ? 'Т' : 'Р')), 6.2, 'middle', 'font-weight="700"');
-      }
-      const lb = P2([c.x, c.z], -9); o += text(lb[0], lb[1] + 3, String(i + 1), 6.5, 'middle', 'fill="#0b6e8f" font-weight="700"');
-    }); }
-  const items = [], rm = S.room || {}, rotPts = (pts, rot, ox, oz) => { const a = (rot || 0) * Math.PI / 180, c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a)); return pts.map(p => [p[0] * c + p[1] * s + ox, -p[0] * s + p[1] * c + oz]); };
-  const ft = S.__items ? { w: 0, d: 0 } : wfoot(S), wr = { x0: rm.ox || 0, z0: rm.oz || 0 };
-  if (S.cols.some(c => !c.gap && !c.det)) items.push({ n: 'Шкаф', poly: [[wr.x0, wr.z0], [wr.x0 + ft.w, wr.z0], [wr.x0 + ft.w, wr.z0 + ft.d], [wr.x0, wr.z0 + ft.d]], rot: rm.rot || 0, w: bp.g.W, d: ft.d, fill: 'url(#h2)' });
-  const add = (n, w, d, r, rot, fill) => items.push({ n, poly: [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]], rot, w, d, fill });
-  S.cols.forEach((c, ci) => { if (c.det) add('Ш' + (ci + 1), c.w, c.D || S.D, colRect(S, ci), c.det.rot, '#e9ddc4'); });
-  S.units.forEach((u, i) => { const c = u.fp ? u : Object.assign({}, u); if (!c.fp) freeItem(S, 'unit', c); add('Т' + (i + 1), u.w, u.d, itemRect(S, 'unit', c), c.fp.rot, '#efe3c8'); });
-  S.beds.forEach((b, i) => { const c = b.fp ? b : Object.assign({}, b); if (!c.fp) freeItem(S, 'bed', c); const bb = itemBase(S, 'bed', c); add('К' + (i + 1), bb.w, bb.d, itemRect(S, 'bed', c), c.fp.rot, '#dfe8f0'); });
-  S.panels.forEach((p, i) => { const c = p.fp ? p : Object.assign({}, p); if (!c.fp) freeItem(S, 'panel', c); add('З' + (i + 1), p.w, Math.max(3, itemBase(S, 'panel', c).d), itemRect(S, 'panel', c), c.fp.rot, '#d8eef7'); });
-  (S.objs || []).forEach((q, i) => {
-    const f = objFoot(q), poly = q.kind === 'custom' ? rotPts(objPoly(q), q.rot, q.x - f.mx, q.z - f.mz) : null, r = objRect(q);
-    items.push({ n: 'С' + (i + 1), poly: poly || [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]], rot: q.rot, w: q.w, d: q.d, fill: '#ece2cf', kind: OBJ_KINDS[q.kind].ru });
-  });
-  (S.__items || []).forEach(q => items.push({ n: q.n, poly: q.poly || [[q.x0, q.z0], [q.x1, q.z0], [q.x1, q.z1], [q.x0, q.z1]], rot: q.rot || 0, w: q.x1 - q.x0, d: q.z1 - q.z0, fill: q.fill || '#ece2cf', kind: q.kind || q.name, noDim: q.noDim, noLabel: q.noLabel }));
-  const legend = [];
-  items.forEach(it => {
-    o += `<polygon points="${it.poly.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${sty('o', 1)} fill="${it.fill}"/>`;
-    const xs = it.poly.map(p => p[0]), zs = it.poly.map(p => p[1]), ix0 = Math.min(...xs), ix1 = Math.max(...xs), iz0 = Math.min(...zs), iz1 = Math.max(...zs), cx = (ix0 + ix1) / 2, cz = (iz0 + iz1) / 2, a = (it.rot || 0) * Math.PI / 180;
-    o += line(X(cx), Z(cz), X(cx) + Math.sin(a) * 16, Z(cz) + Math.cos(a) * 16, 'o') + circ(X(cx), Z(cz), 2, 'o', '#111');   // стрелка «лицом»
-    if (!it.noLabel) o += text(X(cx), Z(cz) - 6, it.n, 8.5, 'middle', 'font-weight="700"');
-    legend.push([it.n, it.kind || '', mm(ix1 - ix0) + '×' + mm(iz1 - iz0), 'от лев. ' + mm(ix0) + ', от дальн. ' + mm(iz0), (it.rot || 0) + '°']);
-  });
-  items.forEach((it, i) => {   // отступы от стен до каждого предмета, мм
-    if (it.noDim) return;
-    const xs = it.poly.map(p => p[0]), zs = it.poly.map(p => p[1]), ix0 = Math.min(...xs), ix1 = Math.max(...xs), iz0 = Math.min(...zs), iz1 = Math.max(...zs), cxm = (ix0 + ix1) / 2, czm = (iz0 + iz1) / 2, off = (i % 3 - 1) * 9;
-    if (ix0 > 1) o += dimH(X(0), X(ix0), Z(czm) + off, Z(czm) + off, mm(ix0));
-    if (iz0 > 1) o += dimV(Z(0), Z(iz0), X(cxm) + off, X(cxm) + off, mm(iz0));
-    o += dimH(X(ix0), X(ix1), Z(iz1), Z(iz1) + 10 + (i % 2) * 9, mm(ix1 - ix0));
-  });
-  o += dimH(X(0), X(bx), Z(0), Z(0) - 30, mm(bx)) + dimV(Z(0), Z(bz), X(bx), X(bx) + 34, mm(bz));
-  o += text(X(bx / 2), Z(bz) + 36, 'ПЛАН КОМНАТЫ С МЕБЕЛЬЮ (вид сверху) · стрелка — куда смотрит лицо · габариты, мм', 10, 'middle', 'font-weight="700"');
-  const lx = 935, ly = 90; o += text(lx, ly - 6, 'ЭКСПЛИКАЦИЯ', 9, 'start', 'font-weight="700"');
-  legend.slice(0, 22).forEach((r, i) => { o += text(lx, ly + 14 + i * 26, `${r[0]} ${r[1]} ${r[2]}`, 6.6, 'start', 'font-weight="700"') + text(lx + 6, ly + 25 + i * 26, `${r[3]} · поворот ${r[4]}`, 6, 'start', 'fill="#444"'); });
-  return sheet(o, meta(S, bp).slice(0, 3).concat([['Лист', 'План комнаты с мебелью'], ['Предметов', String(items.length)], ['Дата', new Date().toLocaleDateString('ru-RU')]]), no, total);
 }
 function sheetOpenings(S, bp, no, total) {
   const P = roomPoly(S), E = roomEdges(P), hd = ['№', 'Элемент', 'Стена', 'От угла стены до левого края, мм', 'Ширина × высота, мм', 'От пола, мм', 'Выступ, мм'], cw = [44, 200, 100, 300, 200, 110, 90], x0 = 70;
@@ -468,68 +411,166 @@ function sheetBunk(S, bp, bi, no, total) {
   return sheet(o, bedRows(S, bp, b, bi, 'двухъярусная: стойки и лестница'), no, total);
 }
 /* ---------- комната целиком: все предметы с размерами в мм ---------- */
+/* ================== НОВЫЕ ЧЕРТЕЖИ КОМНАТЫ: изделия как они есть, ч/б, размеры без наложений ================== */
+const TH = 'stroke="#fff" stroke-width="2.6" paint-order="stroke" stroke-linejoin="round"';
+const thx = (x, y, t, size, anchor, extra) => text(x, y, t, size, anchor, (extra || '') + ' ' + TH);
+/* размер: линия, засечки и подпись над линией на белой подложке (линии под подписью не мешают) */
+const dH = (x1, x2, y, label, sz) => line(x1, y, x2, y, 'd') + tick(x1, y) + tick(x2, y) + thx((x1 + x2) / 2, y - 3, label, sz || 7.4, 'middle', 'fill="#0b6e8f"');
+const dV = (y1, y2, x, label, sz) => line(x, y1, x, y2, 'd') + tick(x, y1) + tick(x, y2) + `<text transform="translate(${N(x - 3)} ${N((y1 + y2) / 2)}) rotate(-90)" font-size="${N((sz || 7.4) * F)}" text-anchor="middle" font-family="Arial, sans-serif" fill="#0b6e8f" ${TH}>${esc(label)}</text>`;
+const wl = (x1, y1, x2, y2) => line(x1, y1, x2, y2, 't');   // выносная линия
+
+function bxBounds(bs) {
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9, y0 = 1e9, y1 = -1e9;
+  bs.forEach(b => { if (b.poly) b.poly.forEach(p => { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); z0 = Math.min(z0, p[1]); z1 = Math.max(z1, p[1]); }); else { x0 = Math.min(x0, b.x0); x1 = Math.max(x1, b.x1); z0 = Math.min(z0, b.z0); z1 = Math.max(z1, b.z1); } y0 = Math.min(y0, b.y0); y1 = Math.max(y1, b.y1); });
+  return { x0, x1, z0, z1, y0, y1 };
+}
+/* предметы комнаты для чертежей: у каждого есть настоящая геометрия boxes (мировые коробки) и local (в своих осях) */
 function roomItems(S, bp) {
   if (S.__items) return S.__items;
-  const rm = S.room || {}, ft = wfoot(S), out = [];
-  const add = (n, name, r, y0, y1) => out.push({ n, name, x0: r.x0, x1: r.x1, z0: r.z0, z1: r.z1, y0, y1 });
-  if (S.cols.some(c => !c.gap && !c.det)) add('Шкаф', 'Шкаф', { x0: rm.ox || 0, x1: (rm.ox || 0) + ft.w, z0: rm.oz || 0, z1: (rm.oz || 0) + ft.d }, 0, bp.g.totalH);
-  S.cols.forEach((c, ci) => { if (c.det) add('Ш' + (ci + 1), 'Отдельный шкаф ' + (ci + 1), colRect(S, ci), 0, c.H || S.H); });
-  S.units.forEach((u, i) => { const c = u.fp ? u : Object.assign({}, u); if (!c.fp) freeItem(S, 'unit', c); add('Т' + (i + 1), 'Тумба ' + (i + 1), itemRect(S, 'unit', c), 0, u.h); });
-  S.beds.forEach((b, i) => { const c = b.fp ? b : Object.assign({}, b); if (!c.fp) freeItem(S, 'bed', c); add('К' + (i + 1), 'Кровать ' + (i + 1), itemRect(S, 'bed', c), 0, bedDims(b, S.t).H); });
-  S.panels.forEach((p, i) => { const c = p.fp ? p : Object.assign({}, p); if (!c.fp) freeItem(S, 'panel', c); add('З' + (i + 1), 'Зеркало / панель ' + (i + 1), itemRect(S, 'panel', c), p.y, p.y + p.h); });
-  (S.objs || []).forEach((q, i) => { add('С' + (i + 1), OBJ_KINDS[q.kind].ru + ' ' + (i + 1), objRect(q), q.y || 0, (q.y || 0) + q.h); try { const pp = objsParts([q], S.t); out[out.length - 1].parts = pp.parts; out[out.length - 1].hw = pp.hw; } catch (e) {} });
+  const out = [], rm = S.room || {}, ft = wfoot(S);
+  const add = (n, name, sol, r, y0, y1, extra) => { const it = Object.assign({ n, name, x0: r.x0, x1: r.x1, z0: r.z0, z1: r.z1, y0, y1, boxes: sol && sol.boxes, local: sol && sol.local, lw: sol && sol.lw, ld: sol && sol.ld, lh: sol && sol.lh, rot: sol ? sol.rot : 0, sheet: true }, extra || {}); out.push(it); return it; };
+  if (S.cols.some(c => !c.gap && !c.det)) add('Шкаф', 'Шкаф', wardrobeSolids(S, bp)[0], { x0: rm.ox || 0, x1: (rm.ox || 0) + ft.w, z0: rm.oz || 0, z1: (rm.oz || 0) + ft.d }, 0, bp.g.totalH);
+  S.cols.forEach((c, ci) => { if (c.det) add('Ш' + (ci + 1), 'Отдельный шкаф ' + (ci + 1), detSolid(S, ci), colRect(S, ci), 0, c.H || S.H); });
+  S.units.forEach((u, i) => { const c = u.fp ? u : Object.assign({}, u); if (!c.fp) freeItem(S, 'unit', c); add('Т' + (i + 1), 'Тумба ' + (i + 1), unitSolid(S, u, c), itemRect(S, 'unit', c), 0, u.h); });
+  S.beds.forEach((b, i) => { const c = b.fp ? b : Object.assign({}, b); if (!c.fp) freeItem(S, 'bed', c); add('К' + (i + 1), 'Кровать ' + (i + 1), bedSolid(S, b, c), itemRect(S, 'bed', c), 0, bedDims(b, S.t).H); });
+  S.panels.forEach((p, i) => { const c = p.fp ? p : Object.assign({}, p); if (!c.fp) freeItem(S, 'panel', c); add('З' + (i + 1), 'Зеркало / панель ' + (i + 1), panelSolid(S, p, c), itemRect(S, 'panel', c), p.y, p.y + p.h); });
+  (S.objs || []).forEach((q, i) => { const it = add('С' + (i + 1), OBJ_KINDS[q.kind].ru + ' ' + (i + 1), objSolid(q, q.mat === 'ply' ? 1.2 : S.t), objRect(q), q.y || 0, (q.y || 0) + q.h); try { const pp = objsParts([q], S.t); it.parts = pp.parts; it.hw = pp.hw; } catch (e) {} });
   return out;
 }
-/* ---------- аксонометрия комнаты: как на эскизе — две стены, пол, мебель и проёмы ---------- */
+
+/* ---------- условные знаки проёмов на стене (развёртка): ч/б ---------- */
+function openGlyph(q, X, Y, ks) {   // X(u), Y(y) — перевод в бумагу
+  const u0 = q.off, u1 = q.off + q.w, y0 = q.y, y1 = q.y + q.h, k = q.kind; let o = '';
+  const x0 = X(u0), x1 = X(u1), t0 = Y(y1), t1 = Y(y0);
+  if (k === 'window' || k === 'balcony') {
+    o += rect(x0, t0, x1 - x0, t1 - t0, 'o', '#fff') + rect(x0 + 2.5, t0 + 2.5, x1 - x0 - 5, t1 - t0 - 5, 't');
+    for (let j = 1; j < (q.n || 1); j++) { const x = x0 + (x1 - x0) * j / q.n; o += line(x, t0, x, t1, 't'); }
+    if (k === 'balcony') o += rect(x0, t0, x1 - x0, t1 - t0, 'h');
+  } else if (k === 'door') o += rect(x0, t0, x1 - x0, t1 - t0, 'o', '#fff') + line(x0, t0, x1, (t0 + t1) / 2, 'h') + line(x0, t1, x1, (t0 + t1) / 2, 'h');
+  else if (k === 'radiator') o += rect(x0, t0, x1 - x0, t1 - t0, 'o', 'url(#h2)');
+  else if (k === 'column') o += rect(x0, t0, x1 - x0, t1 - t0, 'o', 'url(#h1)');
+  else { const cx = (x0 + x1) / 2, cy = (t0 + t1) / 2, r = Math.max(3.4, Math.min(8, (x1 - x0) / 2)); o += circ(cx, cy, r, 'o', '#fff') + line(cx - r * .45, cy, cx + r * .45, cy, 't') + line(cx, cy - r * .45, cx, cy + r * .45, 't'); }
+  return o;
+}
+
+/* ---------- план комнаты (вид сверху): настоящий контур изделий, ч/б ---------- */
+function planItem(it, X, Z, k10) {
+  let o = ''; const bs = (it.boxes && it.boxes.length ? it.boxes : [{ x0: it.x0, x1: it.x1, z0: it.z0, z1: it.z1, y0: it.y0, y1: it.y1, r: 'b' }]).slice().sort((a, b) => a.y1 - b.y1);
+  bs.forEach(b => {
+    if (b.poly) { o += `<polygon points="${b.poly.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${sty('o', 1)} fill="#fff" stroke-width="1.2"/>`; return; }
+    if (b.r === 'l') return;
+    o += rect(X(b.x0), Z(b.z0), (b.x1 - b.x0) * k10, (b.z1 - b.z0) * k10, 't', b.r === 'a' ? 'url(#h2)' : '#fff');
+  });
+  const bb = bxBounds(bs); return o + rect(X(bb.x0), Z(bb.z0), (bb.x1 - bb.x0) * k10, (bb.z1 - bb.z0) * k10, 'o');
+}
+function chainEdges(vals, lo, hi) {   // уникальные границы (со склейкой ближе 0,5 см), только внутри [lo,hi]
+  const a = [lo, hi]; vals.forEach(v => { if (v > lo + .5 && v < hi - .5) a.push(v); }); a.sort((p, q) => p - q);
+  const out = [a[0]]; for (let i = 1; i < a.length; i++) if (a[i] - out[out.length - 1] > .5) out.push(a[i]); return out;
+}
+function sheetRoomPlan(S, bp, no, total) {
+  const P = roomPoly(S), bx = Math.max(...P.map(p => p[0])), bz = Math.max(...P.map(p => p[1])), items = roomItems(S, bp);
+  const sc = Math.min(700 / (bx * 10), 430 / (bz * 10), .5), k10 = 10 * sc, x0 = 110, y0 = 100, X = v => x0 + v * k10, Z = v => y0 + v * k10;
+  let o = `<polygon points="${P.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${sty('o', 1)} stroke-width="3" fill="#fff"/>`;
+  { const E = roomEdges(P); (S.opens || []).forEach((q, i) => {
+      const c = openCenter(q, E); if (!c) return; const e = c.e, hw = q.w / 2, k = q.kind, p1 = [c.x - e.ex * hw, c.z - e.ez * hw], p2 = [c.x + e.ex * hw, c.z + e.ez * hw], n = [e.nx, e.nz];
+      const P2 = (p, d) => [X(p[0] + n[0] * d), Z(p[1] + n[1] * d)], ln = (a, b, st) => `<line x1="${N(a[0])}" y1="${N(a[1])}" x2="${N(b[0])}" y2="${N(b[1])}" ${st || ST.o}/>`;
+      if (k === 'door' || k === 'balcony') {
+        o += ln(P2(p1, 0), P2(p2, 0), 'stroke="#fff" stroke-width="7"') + ln(P2(p1, -2), P2(p1, 2)) + ln(P2(p2, -2), P2(p2, 2));
+        const tip = P2(p1, q.w), end = P2(p2, 0), cr = n[0] * e.ez - n[1] * e.ex;
+        o += ln(P2(p1, 0), tip, ST.o) + `<path d="M${N(tip[0])} ${N(tip[1])} A${N(q.w * k10)} ${N(q.w * k10)} 0 0 ${cr > 0 ? 1 : 0} ${N(end[0])} ${N(end[1])}" ${ST.t}/>`;
+      } else if (k === 'window') {
+        o += ln(P2(p1, 0), P2(p2, 0), 'stroke="#fff" stroke-width="7"') + ln(P2(p1, -2.2), P2(p2, -2.2)) + ln(P2(p1, 0), P2(p2, 0), ST.t) + ln(P2(p1, 2.2), P2(p2, 2.2)) + ln(P2(p1, -2.2), P2(p1, 2.2)) + ln(P2(p2, -2.2), P2(p2, 2.2));
+        for (let j = 1; j < (q.n || 1); j++) { const pp = [p1[0] + (p2[0] - p1[0]) * j / q.n, p1[1] + (p2[1] - p1[1]) * j / q.n]; o += ln(P2(pp, -2.2), P2(pp, 2.2)); }
+      } else if (k === 'radiator') o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, 9), P2(p1, 9)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${sty('o', 1)} fill="url(#h2)"/>`;
+      else if (k === 'column') o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, q.d || 40), P2(p1, q.d || 40)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${sty('o', 1)} fill="url(#h1)"/>`;
+      else { const cc = P2([c.x, c.z], 2.5); o += circ(cc[0], cc[1], k === 'pipe' ? Math.max(2, q.w / 2 * k10) : 3.4, 'o', '#fff'); }
+      const lb = P2([c.x, c.z], -9); o += thx(lb[0], lb[1] + 3, '№' + (i + 1), 6.5, 'middle', 'font-weight="700"');
+    }); }
+  const legend = [];
+  items.forEach(it => {
+    o += planItem(it, X, Z, k10);
+    const cx = (it.x0 + it.x1) / 2, cz = (it.z0 + it.z1) / 2, a = (it.rot || 0) * Math.PI / 180;
+    o += line(X(cx), Z(cz), X(cx) + Math.sin(a) * 14, Z(cz) + Math.cos(a) * 14, 'o') + circ(X(cx), Z(cz), 2, 'o', '#111');
+    if (!it.noLabel) o += thx(X(cx), Z(cz) - 5, it.n, 8, 'middle', 'font-weight="700"');
+    legend.push([it.n, it.name, mm(it.x1 - it.x0) + '×' + mm(it.z1 - it.z0) + '×' + mm(it.y1 - it.y0), 'от лев. стены ' + mm(it.x0) + ' · от дальней ' + mm(it.z0) + ' · поворот ' + (it.rot || 0) + '°']);
+  });
+  // цепочки размеров по нижней и правой сторонам: границы всех предметов, подписи только там, где влезают
+  const xs = chainEdges(items.flatMap(it => [it.x0, it.x1]), 0, bx), zs = chainEdges(items.flatMap(it => [it.z0, it.z1]), 0, bz);
+  const yb = Z(bz) + 20, xr = X(bx) + 22;
+  for (let i = 0; i < xs.length - 1; i++) { const a = X(xs[i]), b = X(xs[i + 1]); if (b - a >= 20) o += wl(a, Z(bz), a, yb + 3) + wl(b, Z(bz), b, yb + 3) + dH(a, b, yb, String(mm(xs[i + 1] - xs[i])), 6.6); }
+  for (let i = 0; i < zs.length - 1; i++) { const a = Z(zs[i]), b = Z(zs[i + 1]); if (b - a >= 20) o += wl(X(bx), a, xr + 3, a) + wl(X(bx), b, xr + 3, b) + dV(a, b, xr, String(mm(zs[i + 1] - zs[i])), 6.6); }
+  o += wl(X(0), Z(bz), X(0), yb + 22) + wl(X(bx), Z(bz), X(bx), yb + 22) + dH(X(0), X(bx), yb + 19, String(mm(bx)), 8.5);
+  o += wl(X(bx), Z(0), xr + 22, Z(0)) + wl(X(bx), Z(bz), xr + 22, Z(bz)) + dV(Z(0), Z(bz), xr + 19, String(mm(bz)), 8.5);
+  o += text(X(bx / 2), y0 - 28, 'ПЛАН КОМНАТЫ (вид сверху) · стрелка — куда смотрит лицо предмета · размеры в мм', 10, 'middle', 'font-weight="700"');
+  const lx = 880, ly = 96; o += text(lx, ly - 8, 'ЭКСПЛИКАЦИЯ (габарит Ш×Г×В, мм)', 8.6, 'start', 'font-weight="700"');
+  legend.slice(0, 20).forEach((r, i) => { o += text(lx, ly + 12 + i * 26, `${r[0]} ${r[1]}`.slice(0, 44), 6.8, 'start', 'font-weight="700"') + text(lx + 6, ly + 23 + i * 26, `${r[2]} · ${r[3]}`.slice(0, 62), 6, 'start', 'fill="#444"'); });
+  return sheet(o, meta(S, bp).slice(0, 3).concat([['Лист', 'План комнаты (вид сверху)'], ['Предметов', String(items.length)], ['Дата', new Date().toLocaleDateString('ru-RU')]]), no, total);
+}
+
+/* ---------- вид из угла сверху (аксонометрия): 4 листа — по одному на каждый угол комнаты ---------- */
 function sheetIso(S, bp, no, total, vk) {
   vk = vk || 0;
   const P0 = roomPoly(S), H = (S.room && S.room.H) || 260, items0 = roomItems(S, bp), c30 = .866, s30 = .5;
   const bx0 = Math.min(...P0.map(p => p[0])), bx1 = Math.max(...P0.map(p => p[0])), bz0 = Math.min(...P0.map(p => p[1])), bz1 = Math.max(...P0.map(p => p[1])), cxm = (bx0 + bx1) / 2, czm = (bz0 + bz1) / 2;
-  const rot = (x, z) => { let dx = x - cxm, dz = z - czm; for (let i = 0; i < vk; i++) { const t = dx; dx = dz; dz = -t; } return [cxm + dx, czm + dz]; };   // поворот плана на 90° — вид с другого угла
+  const rot = (x, z) => { let dx = x - cxm, dz = z - czm; for (let i = 0; i < vk; i++) { const t = dx; dx = dz; dz = -t; } return [cxm + dx, czm + dz]; };   // поворот плана на 90°: вид из другого угла
   const P = P0.map(p => rot(p[0], p[1])), E = roomEdges(P);
-  const items = items0.map(it => { const a = rot(it.x0, it.z0), b = rot(it.x1, it.z1); return Object.assign({}, it, { x0: Math.min(a[0], b[0]), x1: Math.max(a[0], b[0]), z0: Math.min(a[1], b[1]), z1: Math.max(a[1], b[1]) }); });
+  const D = [];
+  items0.forEach(it => (it.boxes && it.boxes.length ? it.boxes : [{ x0: it.x0, x1: it.x1, z0: it.z0, z1: it.z1, y0: it.y0, y1: it.y1, r: 'b' }]).forEach(b => {
+    if (b.poly) { const pp = b.poly.map(p => rot(p[0], p[1])), xs = pp.map(p => p[0]), zs = pp.map(p => p[1]); D.push({ poly: pp, x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs), y0: b.y0, y1: b.y1, r: b.r, it }); }
+    else { const a = rot(b.x0, b.z0), c = rot(b.x1, b.z1); D.push({ x0: Math.min(a[0], c[0]), x1: Math.max(a[0], c[0]), z0: Math.min(a[1], c[1]), z1: Math.max(a[1], c[1]), y0: b.y0, y1: b.y1, r: b.r, it }); }
+  }));
   const pr = (x, y, z) => [(x - z) * c30, (x + z) * s30 - y], pts = [];
   P.forEach(p => { pts.push(pr(p[0], 0, p[1]), pr(p[0], H, p[1])); });
-  items.forEach(it => { [[it.x0, it.z0], [it.x1, it.z0], [it.x1, it.z1], [it.x0, it.z1]].forEach(c => { pts.push(pr(c[0], it.y0, c[1]), pr(c[0], it.y1, c[1])); }); });
+  D.forEach(d => { [[d.x0, d.z0], [d.x1, d.z0], [d.x1, d.z1], [d.x0, d.z1]].forEach(c => { pts.push(pr(c[0], d.y0, c[1]), pr(c[0], d.y1, c[1])); }); });
   const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), ax0 = Math.min(...xs), ax1 = Math.max(...xs), ay0 = Math.min(...ys), ay1 = Math.max(...ys);
-  const sc = Math.min(760 / (ax1 - ax0 || 1), 560 / (ay1 - ay0 || 1)), ox = 50 - ax0 * sc + (760 - (ax1 - ax0) * sc) / 2, oy = 78 - ay0 * sc;
-  const Q = (x, y, z) => { const p = pr(x, y, z); return [ox + p[0] * sc, oy + p[1] * sc]; }, poly = (arr, st, fill) => `<polygon points="${arr.map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${sty(st ? 't' : 'o', fill)}${fill ? ` fill="${fill}"` : ''}${st === 't' ? ' stroke-width=".8"' : ''}/>`;
-  let o = poly(P.map(p => Q(p[0], 0, p[1])), null, '#f3ecdc');
-  E.forEach(e => {   // стены, видимые изнутри (дальние от зрителя)
+  const sc = Math.min(780 / (ax1 - ax0 || 1), 560 / (ay1 - ay0 || 1)), ox = 46 - ax0 * sc + (780 - (ax1 - ax0) * sc) / 2, oy = 84 - ay0 * sc;
+  const Q = (x, y, z) => { const p = pr(x, y, z); return [ox + p[0] * sc, oy + p[1] * sc]; };
+  const SK = 'stroke="#111" stroke-width="1" stroke-linejoin="round"', SKT = 'stroke="#444" stroke-width=".7" stroke-linejoin="round"';
+  const poly = (arr, fill, st) => `<polygon points="${arr.map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" fill="${fill}" ${st || SK}/>`;
+  let o = poly(P.map(p => Q(p[0], 0, p[1])), '#fff', 'stroke="#111" stroke-width="1.6"');
+  E.forEach(e => {   // две дальние стены, видимые изнутри
     if ((e.nx + e.nz) / Math.SQRT2 < .3) return;
-    o += poly([Q(e.a[0], 0, e.a[1]), Q(e.b[0], 0, e.b[1]), Q(e.b[0], H, e.b[1]), Q(e.a[0], H, e.a[1])], 't', 'rgba(215,210,198,.5)');
-    const mid = Q((e.a[0] + e.b[0]) / 2, 0, (e.a[1] + e.b[1]) / 2); o += text(mid[0] - 10, mid[1] + 24, Math.round(e.L * 10) + '', 7.5, 'middle', 'fill="#0b6e8f" font-weight="700"');
+    o += poly([Q(e.a[0], 0, e.a[1]), Q(e.b[0], 0, e.b[1]), Q(e.b[0], H, e.b[1]), Q(e.a[0], H, e.a[1])], '#fff', 'stroke="#555" stroke-width="1"');
+    if (e.L >= 150) { const mid = Q((e.a[0] + e.b[0]) / 2, H, (e.a[1] + e.b[1]) / 2); o += thx(mid[0], mid[1] - 6, 'стена ' + mm(e.L), 6.6, 'middle', 'fill="#444"'); }
   });
   (S.opens || []).forEach((q, i) => {
     const e = E[q.wall]; if (!e || (e.nx + e.nz) / Math.SQRT2 < .3) return;
-    const W3 = (u, y) => Q(e.a[0] + e.ex * u, y, e.a[1] + e.ez * u), u0 = q.off, u1 = q.off + q.w, y0 = q.y, y1 = q.y + q.h;
-    o += poly([W3(u0, y0), W3(u1, y0), W3(u1, y1), W3(u0, y1)], null, q.kind === 'window' ? 'rgba(160,200,225,.6)' : (q.kind === 'door' || q.kind === 'balcony' ? 'rgba(160,110,70,.45)' : '#fff'));
-    if (q.kind === 'window') for (let j = 1; j < (q.n || 1); j++) { const u = u0 + (u1 - u0) * j / q.n; o += line(W3(u, y0)[0], W3(u, y0)[1], W3(u, y1)[0], W3(u, y1)[1], 't'); }
-    const c = W3((u0 + u1) / 2, (y0 + y1) / 2); o += text(c[0], c[1] + 3, '№' + (i + 1), 6.5, 'middle', 'fill="#0b6e8f" font-weight="700"');
-    if (q.y > 1) { const f0 = W3(u0, 0), f1 = W3(u0, y0); o += line(f0[0] - 5, f0[1], f1[0] - 5, f1[1], 'd') + text(f1[0] - 8, (f0[1] + f1[1]) / 2, mm(q.y), 6, 'end', 'fill="#0b6e8f"'); }
+    const W3 = (u, y) => Q(e.a[0] + e.ex * u, y, e.a[1] + e.ez * u), u0 = q.off, u1 = q.off + q.w, y0 = q.y, y1 = q.y + q.h, k = q.kind;
+    if (k === 'window' || k === 'balcony' || k === 'door' || k === 'radiator' || k === 'column') {
+      o += poly([W3(u0, y0), W3(u1, y0), W3(u1, y1), W3(u0, y1)], k === 'radiator' ? 'url(#h2)' : '#fff');
+      if (k === 'window' || k === 'balcony') { const m = Math.min(3, q.w / 4, q.h / 4); o += poly([W3(u0 + m, y0 + m), W3(u1 - m, y0 + m), W3(u1 - m, y1 - m), W3(u0 + m, y1 - m)], 'none', SKT); for (let j = 1; j < (q.n || 1); j++) { const u = u0 + (u1 - u0) * j / q.n; o += line(W3(u, y0)[0], W3(u, y0)[1], W3(u, y1)[0], W3(u, y1)[1], 't'); } }
+      if (k === 'door') o += line(W3(u0, y1)[0], W3(u0, y1)[1], W3(u1, (y0 + y1) / 2)[0], W3(u1, (y0 + y1) / 2)[1], 'h') + line(W3(u0, y0)[0], W3(u0, y0)[1], W3(u1, (y0 + y1) / 2)[0], W3(u1, (y0 + y1) / 2)[1], 'h');
+    } else { const c = W3((u0 + u1) / 2, (y0 + y1) / 2); o += circ(c[0], c[1], Math.max(2.4, 3 * sc), 'o', '#fff'); }
+    const c = W3((u0 + u1) / 2, y1 + 6); o += thx(c[0], c[1], '№' + (i + 1), 6.5, 'middle', 'font-weight="700"');
   });
-  // размеры по полу: от стены до предмета и между предметами, мм
-  const dimF = (xa, za, xb, zb, label) => { const A = Q(xa, 0, za), B = Q(xb, 0, zb); o += line(A[0], A[1], B[0], B[1], 'd') + circ(A[0], A[1], 1.6, 'd', '#0b6e8f') + circ(B[0], B[1], 1.6, 'd', '#0b6e8f') + text((A[0] + B[0]) / 2 + 3, (A[1] + B[1]) / 2 - 3, label, 6.4, 'middle', 'fill="#0b6e8f" font-weight="700"'); };
-  items.forEach(it => {
-    if (it.noDim) return;
-    const ob = obstacles(P, items, it), xc = (it.x0 + it.x1) / 2, zc = (it.z0 + it.z1) / 2;
-    if (ob.L && ob.L[0] > 1) dimF(it.x0 - ob.L[0], zc, it.x0, zc, mm(ob.L[0]) + (ob.L[1] === 'стена' ? '' : '→' + ob.L[1]));
-    if (ob.U && ob.U[0] > 1) dimF(xc, it.z0 - ob.U[0], xc, it.z0, mm(ob.U[0]) + (ob.U[1] === 'стена' ? '' : '→' + ob.U[1]));
-    if (ob.R && ob.R[0] > 1) dimF(it.x1, zc, it.x1 + ob.R[0], zc, mm(ob.R[0]) + (ob.R[1] === 'стена' ? '' : '→' + ob.R[1]));
-    if (ob.D && ob.D[0] > 1) dimF(xc, it.z1, xc, it.z1 + ob.D[0], mm(ob.D[0]) + (ob.D[1] === 'стена' ? '' : '→' + ob.D[1]));
+  // порядок рисования: от дальних к ближним (граф «кто кого закрывает»)
+  const n = D.length, adj = D.map(() => []), indeg = D.map(() => 0), key = d => d.x0 + d.z0 + d.y0 * .01 + (d.x1 + d.z1) * .5, bf = (a, b) => a.x1 <= b.x0 + .01 || a.z1 <= b.z0 + .01 || a.y1 <= b.y0 + .01;
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+    const ab = bf(D[i], D[j]), ba = bf(D[j], D[i]); let f = 0;
+    if (ab && !ba) f = 1; else if (ba && !ab) f = -1; else f = key(D[i]) <= key(D[j]) ? 1 : -1;
+    if (f > 0) { adj[i].push(j); indeg[j]++; } else { adj[j].push(i); indeg[i]++; }
+  }
+  const ready = []; for (let i = 0; i < n; i++) if (!indeg[i]) ready.push(i);
+  const order = [];
+  while (ready.length) { ready.sort((p, q) => key(D[q]) - key(D[p])); const i = ready.pop(); order.push(i); adj[i].forEach(j => { if (--indeg[j] === 0) ready.push(j); }); }
+  for (let i = 0; i < n; i++) if (!order.includes(i)) order.push(i);
+  order.forEach(i => {
+    const d = D[i];
+    if (d.poly) {   // свой контур: боковые грани, обращённые к зрителю, и крышка
+      let ar = 0; d.poly.forEach((p, k) => { const q = d.poly[(k + 1) % d.poly.length]; ar += p[0] * q[1] - q[0] * p[1]; });
+      d.poly.forEach((p, k) => { const q = d.poly[(k + 1) % d.poly.length], dx = q[0] - p[0], dz = q[1] - p[1], nx = ar > 0 ? dz : -dz, nz = ar > 0 ? -dx : dx; if (nx + nz > 0) o += poly([Q(p[0], d.y0, p[1]), Q(q[0], d.y0, q[1]), Q(q[0], d.y1, q[1]), Q(p[0], d.y1, p[1])], '#fff'); });
+      o += poly(d.poly.map(p => Q(p[0], d.y1, p[1])), '#fff'); return;
+    }
+    const fR = [Q(d.x1, d.y0, d.z0), Q(d.x1, d.y0, d.z1), Q(d.x1, d.y1, d.z1), Q(d.x1, d.y1, d.z0)], fF = [Q(d.x0, d.y0, d.z1), Q(d.x1, d.y0, d.z1), Q(d.x1, d.y1, d.z1), Q(d.x0, d.y1, d.z1)], fT = [Q(d.x0, d.y1, d.z0), Q(d.x1, d.y1, d.z0), Q(d.x1, d.y1, d.z1), Q(d.x0, d.y1, d.z1)];
+    if (d.r === 'l') { o += poly(fF, 'none', SKT); return; }
+    const fill = d.r === 'a' ? 'url(#h2)' : '#fff', st = d.r === 'f' ? SKT : SK;
+    o += poly(fR, fill, st) + poly(fF, fill, st) + poly(fT, '#fff', st);
   });
-  items.slice().sort((a, b) => (a.x0 + a.x1 + a.z0 + a.z1) - (b.x0 + b.x1 + b.z0 + b.z1)).forEach(it => {
-    o += poly([Q(it.x1, it.y0, it.z0), Q(it.x1, it.y0, it.z1), Q(it.x1, it.y1, it.z1), Q(it.x1, it.y1, it.z0)], null, '#e1d8c6');
-    o += poly([Q(it.x0, it.y0, it.z1), Q(it.x1, it.y0, it.z1), Q(it.x1, it.y1, it.z1), Q(it.x0, it.y1, it.z1)], null, '#d3c9b3');
-    o += poly([Q(it.x0, it.y1, it.z0), Q(it.x1, it.y1, it.z0), Q(it.x1, it.y1, it.z1), Q(it.x0, it.y1, it.z1)], null, '#f6f1e6');
-    const tc = Q((it.x0 + it.x1) / 2, it.y1, (it.z0 + it.z1) / 2); o += text(tc[0], tc[1] + 3, it.n, 7.5, 'middle', 'font-weight="700"');
-    const v0 = Q(it.x1, it.y0, it.z1), v1 = Q(it.x1, it.y1, it.z1);   // высота предмета и от пола — у переднего угла
-    o += line(v0[0] + 8, v0[1], v1[0] + 8, v1[1], 'd') + text(v1[0] + 11, (v0[1] + v1[1]) / 2 + 2, mm(it.y1 - it.y0) + (it.y0 > 1 ? ' (от пола ' + mm(it.y0) + ')' : ''), 6.2, 'start', 'fill="#0b6e8f"');
-  });
-  o += text(50 + 380, 56, 'АКСОНОМЕТРИЯ КОМНАТЫ · ВИД ' + (vk === 0 ? '1' : '2 (с противоположного угла)') + ' · синие линии — расстояния от стен и между предметами, мм; справа высота предмета', 8.6, 'middle', 'font-weight="700"');
-  const lx = 850, ly = 90; o += text(lx, ly - 6, 'ЭКСПЛИКАЦИЯ (мм)', 9, 'start', 'font-weight="700"');
-  items.slice(0, 22).forEach((it, i) => { o += text(lx, ly + 14 + i * 26, `${it.n} ${it.name}`, 6.6, 'start', 'font-weight="700"') + text(lx + 6, ly + 25 + i * 26, `${mm(it.x1 - it.x0)}×${mm(it.z1 - it.z0)}×${mm(it.y1 - it.y0)} · от пола ${mm(it.y0)}`, 6, 'start', 'fill="#444"'); });
-  return sheet(o, meta(S, bp).slice(0, 3).concat([['Лист', 'Аксонометрия, вид ' + (vk === 0 ? '1' : '2')], ['Предметов', String(items.length + (S.opens || []).length)], ['Дата', new Date().toLocaleDateString('ru-RU')]]), no, total);
+  items0.forEach(it => { const bb = it.boxes && it.boxes.length ? bxBounds(it.boxes) : it, p = rot((bb.x0 + bb.x1) / 2, (bb.z0 + bb.z1) / 2), c = Q(p[0], bb.y1, p[1]); o += thx(c[0], c[1] + 3, it.n, 7.4, 'middle', 'font-weight="700"'); });
+  o += text(46 + 390, 58, `ВИД ИЗ УГЛА ${vk + 1} ИЗ 4 · комната ${mm(bx1 - bx0)}×${mm(bz1 - bz0)}×${mm(H)} мм · изделия показаны как есть (доски, дверцы, ящики)`, 9, 'middle', 'font-weight="700"');
+  const lx = 850, ly = 96; o += text(lx, ly - 8, 'ЭКСПЛИКАЦИЯ (Ш×Г×В, мм)', 8.6, 'start', 'font-weight="700"');
+  items0.slice(0, 20).forEach((it, i) => { o += text(lx, ly + 12 + i * 26, `${it.n} ${it.name}`.slice(0, 40), 6.8, 'start', 'font-weight="700"') + text(lx + 6, ly + 23 + i * 26, `${mm(it.x1 - it.x0)}×${mm(it.z1 - it.z0)}×${mm(it.y1 - it.y0)} · от пола ${mm(it.y0)}`, 6, 'start', 'fill="#444"'); });
+  return sheet(o, meta(S, bp).slice(0, 3).concat([['Лист', 'Вид из угла ' + (vk + 1) + ' из 4'], ['Предметов', String(items0.length + (S.opens || []).length)], ['Дата', new Date().toLocaleDateString('ru-RU')]]), no, total);
 }
 /* ---------- развёртка стены: проёмы, розетки и мебель с отступами от угла и высотой от пола, мм ---------- */
 function wallElements(S, bp, wi, E, items) {
@@ -545,11 +586,11 @@ function wallElements(S, bp, wi, E, items) {
 function sheetWall(S, bp, wi, items, no, total) {
   const P = roomPoly(S), E = roomEdges(P), e = E[wi], H = (S.room && S.room.H) || 260, L = e.L, els = wallElements(S, bp, wi, E, items);
   const nr = Math.min(els.length, 10), sc = Math.min((1000 - 40 - 24 * Math.min(els.length, 8)) / (L * 10), (560 - 18 * nr) / (H * 10), .45), k10 = 10 * sc, x0 = 80, y0 = 80, X = u => x0 + u * k10, Y = y => y0 + (H - y) * k10;
-  let o = rect(X(0), Y(H), L * k10, H * k10, 't', '#faf7f0') + line(X(-20 / 10), Y(0), X(L + 2), Y(0), 'o');
+  let o = rect(X(0), Y(H), L * k10, H * k10, 't', '#fff') + line(X(-20 / 10), Y(0), X(L + 2), Y(0), 'o');
   els.forEach(el => {
     const w = (el.u1 - el.u0) * k10, h = (el.y1 - el.y0) * k10;
     if (el.open) {
-      o += rect(X(el.u0), Y(el.y1), w, h, 'o', el.kind === 'window' ? '#dbeaf3' : (el.kind === 'door' || el.kind === 'balcony' ? '#e6d2bb' : '#fff'));
+      o += rect(X(el.u0), Y(el.y1), w, h, 'o', el.kind === 'door' || el.kind === 'balcony' ? 'url(#h2)' : '#fff');
       if (el.kind === 'window') for (let j = 1; j < el.ns; j++) o += line(X(el.u0 + (el.u1 - el.u0) * j / el.ns), Y(el.y1), X(el.u0 + (el.u1 - el.u0) * j / el.ns), Y(el.y0), 't');
       if (el.kind === 'door' || el.kind === 'balcony') o += line(X(el.u0), Y(el.y1), X(el.u1), (Y(el.y0) + Y(el.y1)) / 2, 'h') + line(X(el.u0), Y(el.y0), X(el.u1), (Y(el.y0) + Y(el.y1)) / 2, 'h');
     } else o += rect(X(Math.max(0, el.u0)), Y(el.y1), (Math.min(L, el.u1) - Math.max(0, el.u0)) * k10, h, 'o', 'url(#h2)');
@@ -589,46 +630,95 @@ function obstacles(P, items, it) {   // до чего сколько мм в ч�
   Object.keys(hits).forEach(k => { hits[k].sort((p, q) => p[0] - q[0]); res[k] = hits[k][0] || null; });
   return res;
 }
-function sheetItem(S, bp, it, items, no, total) {
-  const P = roomPoly(S), bx = Math.max(...P.map(p => p[0])), bz = Math.max(...P.map(p => p[1])), sc = Math.min(540 / (bx * 10), 430 / (bz * 10)), k10 = 10 * sc, x0 = 70, y0 = 105, X = v => x0 + v * k10, Z = v => y0 + v * k10;
-  let o = `<polygon points="${P.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${sty('o', 1)} stroke-width="2.5" fill="#faf7f0"/>`;
-  items.forEach(q => { if (q !== it) o += rect(X(q.x0), Z(q.z0), (q.x1 - q.x0) * k10, (q.z1 - q.z0) * k10, 't', '#eee6d6') + text(X((q.x0 + q.x1) / 2), Z((q.z0 + q.z1) / 2) + 3, q.n, 6.5, 'middle', 'fill="#777"'); });
-  o += rect(X(it.x0), Z(it.z0), (it.x1 - it.x0) * k10, (it.z1 - it.z0) * k10, 'o', 'url(#h2)') + text(X((it.x0 + it.x1) / 2), Z((it.z0 + it.z1) / 2) + 3, it.n, 9, 'middle', 'font-weight="700"');
-  const ob = obstacles(P, items, it), xc = (it.x0 + it.x1) / 2, zc = (it.z0 + it.z1) / 2;
-  const lab = (v, nm) => mm(v) + (nm !== 'стена' ? ' → ' + nm : '');
-  if (ob.L) o += dimH(X(it.x0 - ob.L[0]), X(it.x0), Z(zc), Z(zc), lab(ob.L[0], ob.L[1]));
-  if (ob.R) o += dimH(X(it.x1), X(it.x1 + ob.R[0]), Z(zc), Z(zc), lab(ob.R[0], ob.R[1]));
-  if (ob.U) o += dimV(Z(it.z0 - ob.U[0]), Z(it.z0), X(xc), X(xc), lab(ob.U[0], ob.U[1]));
-  if (ob.D) o += dimV(Z(it.z1), Z(it.z1 + ob.D[0]), X(xc), X(xc), lab(ob.D[0], ob.D[1]));
-  o += dimH(X(it.x0), X(it.x1), Z(it.z0), Z(it.z0) - 14, mm(it.x1 - it.x0)) + dimV(Z(it.z0), Z(it.z1), X(it.x1), X(it.x1) + 14, mm(it.z1 - it.z0));
-  o += dimH(X(0), X(bx), Z(0), Z(0) - 40, mm(bx)) + dimV(Z(0), Z(bz), X(bx), X(bx) + 34, mm(bz));
-  // проёмы рядом (до 1,5 м): расстояние от предмета, мм
-  const E = roomEdges(P), near = [];
-  (S.opens || []).forEach((q, i) => { const c = openCenter(q, E); if (!c) return; const dx = Math.max(it.x0 - c.x, 0, c.x - it.x1), dz = Math.max(it.z0 - c.z, 0, c.z - it.z1), d = Math.hypot(dx, dz); if (d <= 150) near.push([d, q, i, c]); });
-  near.sort((a, b) => a[0] - b[0]).slice(0, 8).forEach(([d, q, i, c], k) => {
-    o += circ(X(c.x), Z(c.z), 3, 'o', '#fff') + text(X(c.x) + c.e.nx * 8, Z(c.z) + c.e.nz * 8 + 3, '№' + (i + 1), 6.5, 'middle', 'fill="#0b6e8f" font-weight="700"');
+/* ---------- лист предмета: сверху — где стоит; спереди — как выглядит, размеры до стен, окон, дверей, розеток; детали ---------- */
+function itemWall(S, it) {   // у какой стены стоит предмет (до 30 см), иначе null
+  const E = roomEdges(roomPoly(S)); let best = null;
+  E.forEach((e, wi) => {
+    const cs = [[it.x0, it.z0], [it.x1, it.z0], [it.x1, it.z1], [it.x0, it.z1]].map(c => [(c[0] - e.a[0]) * e.ex + (c[1] - e.a[1]) * e.ez, (c[0] - e.a[0]) * e.nx + (c[1] - e.a[1]) * e.nz]);
+    const u0 = Math.min(...cs.map(c => c[0])), u1 = Math.max(...cs.map(c => c[0])), dm = Math.min(...cs.map(c => c[1]));
+    const ov = Math.min(u1, e.L) - Math.max(u0, 0);   // предпочитаем стену, вдоль которой предмет стоит всей шириной, а не торцом
+    if (dm <= 30 && ov > 1 && (!best || ov > best.ov + 1 || (Math.abs(ov - best.ov) <= 1 && dm < best.dm))) best = { wi, e, u0, u1, dm, ov };
   });
-  // справа: вид спереди самого предмета с высотами от пола
-  const w = it.x1 - it.x0, d = it.z1 - it.z0, h = it.y1 - it.y0, fx = 700, fy = 110, sc2 = Math.min(420 / (Math.max(w, d) * 10), 310 / ((it.y1 + 5) * 10), .6), kk = 10 * sc2, FX = v => fx + v * kk, FY = v => fy + (Math.max(it.y1, 100) - v) * kk;
-  const ww = (it.n === 'Шкаф') ? bp.g.W : w;
-  o += line(FX(-6), FY(0), FX(ww + 8), FY(0), 'o') + rect(FX(0), FY(it.y1), ww * kk, h * kk, 'o', 'url(#h2)');
-  if (it.n === 'Шкаф') { o += drawFront(Object.assign({}, S, { cols: S.cols.filter(c => !c.det), beds: [], units: [], panels: [] }), bp.g, FX(0), FY(bp.g.totalH), sc2, { marks: false }); }
-  o += dimH(FX(0), FX(ww), FY(0), FY(0) + 26, mm(ww)) + dimV(FY(it.y1), FY(it.y0), FX(ww), FX(ww) + 30, mm(h));
-  if (it.y0 > .5) o += dimV(FY(it.y0), FY(0), FX(0), FX(0) - 30, 'от пола ' + mm(it.y0));
-  o += text(fx + ww * kk / 2, fy - 24, 'ВИД СПЕРЕДИ · габарит и высоты, мм', 8.5, 'middle', 'font-weight="700"');
-  if (it.parts && it.parts.length) {   // детали изделия, мм, и крепёж
-    const tx = 640, ty = 510, rows = it.parts.slice(0, 9), cf = (it.hw || []).filter(h => /Конфирмат/.test(h.name)).reduce((a, h) => a + h.qty, 0);
-    o += text(tx, ty - 12, 'ДЕТАЛИ ИЗДЕЛИЯ (длина × ширина × толщина, мм)', 7.6, 'start', 'font-weight="700"') + line(tx, ty - 6, 1150, ty - 6, 'o');
-    rows.forEach((r, i) => { const yy = ty + 6 + i * 11.5; o += text(tx, yy, String(r.name).replace(/ \(.*\)$/, '').slice(0, 34), 6.4, 'start') + text(tx + 262, yy, r.qty + ' шт.', 6.4, 'start', 'font-weight="700"') + text(tx + 308, yy, `${Math.round(r.L)} × ${Math.round(r.W)} × ${Math.round(r.t)}`, 6.4, 'start'); });
+  return best;
+}
+function frontBoxes(o, bs, ks, X, Y) {   // проекция коробок (u, y) на лист: от дальних к ближним, ч/б, дверцы — с диагоналями
+  bs.sort((a, b) => a.d - b.d).forEach(b => {
+    const x = X(b.u0), y = Y(b.y1), w = (b.u1 - b.u0) * ks, h = (b.y1 - b.y0) * ks;
+    if (b.r === 'l') { o.s += rect(x, y, w, h, 't'); return; }
+    o.s += rect(x, y, w, h, b.r === 'f' ? 't' : 't', b.r === 'a' ? 'url(#h2)' : '#fff');
+    if (b.r === 'f' && w > 14 && h > 14) o.s += line(x, y, x + w, y + h, 'h') + line(x + w, y, x, y + h, 'h');
+  });
+}
+function sheetItem(S, bp, it, items, no, total) {
+  const P = roomPoly(S), bx = Math.max(...P.map(p => p[0])), bz = Math.max(...P.map(p => p[1]));
+  const w = it.x1 - it.x0, d = it.z1 - it.z0, h = it.y1 - it.y0, H = (S.room && S.room.H) || 260, wall = itemWall(S, it);
+  let o = '';
+  /* ---- слева: план с ближайшими препятствиями ---- */
+  { const sc = Math.min(520 / (bx * 10), 300 / (bz * 10)), k10 = 10 * sc, x0 = 62, y0 = 112, X = v => x0 + v * k10, Z = v => y0 + v * k10;
+    o += `<polygon points="${P.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${sty('o', 1)} stroke-width="2.4" fill="#fff"/>`;
+    items.forEach(q => { if (q !== it) o += planItem(q, X, Z, k10).replace(/stroke-width="1\.5"/g, 'stroke-width=".8"') + thx(X((q.x0 + q.x1) / 2), Z((q.z0 + q.z1) / 2) + 3, q.n, 6.4, 'middle', 'fill="#555"'); });
+    o += planItem(it, X, Z, k10).replace(/fill="#fff"/g, 'fill="url(#h2)"') + thx(X((it.x0 + it.x1) / 2), Z((it.z0 + it.z1) / 2) + 3, it.n, 8.5, 'middle', 'font-weight="700"');
+    const ob = obstacles(P, items, it), xc = (it.x0 + it.x1) / 2, zc = (it.z0 + it.z1) / 2, lab = (v, nm) => mm(v) + (nm && nm !== 'стена' ? ' → ' + nm : '');
+    if (ob.L && ob.L[0] > 1) o += dH(X(it.x0 - ob.L[0]), X(it.x0), Z(zc), lab(ob.L[0], ob.L[1]), 6.6);
+    if (ob.R && ob.R[0] > 1) o += dH(X(it.x1), X(it.x1 + ob.R[0]), Z(zc), lab(ob.R[0], ob.R[1]), 6.6);
+    if (ob.U && ob.U[0] > 1) o += dV(Z(it.z0 - ob.U[0]), Z(it.z0), X(xc), lab(ob.U[0], ob.U[1]), 6.6);
+    if (ob.D && ob.D[0] > 1) o += dV(Z(it.z1), Z(it.z1 + ob.D[0]), X(xc), lab(ob.D[0], ob.D[1]), 6.6);
+    o += wl(X(it.x0), Z(it.z0), X(it.x0), Z(0) - 16) + wl(X(it.x1), Z(it.z0), X(it.x1), Z(0) - 16) + dH(X(it.x0), X(it.x1), Z(0) - 13, String(mm(w)), 7.4);   // ширина предмета над планом
+    o += wl(X(it.x1), Z(it.z0), X(bx) + 16, Z(it.z0)) + wl(X(it.x1), Z(it.z1), X(bx) + 16, Z(it.z1)) + dV(Z(it.z0), Z(it.z1), X(bx) + 13, String(mm(d)), 7.4);   // глубина справа
+    o += dH(X(0), X(bx), Z(bz) + 14, String(mm(bx)), 7) + wl(X(0), Z(bz), X(0), Z(bz) + 16) + wl(X(bx), Z(bz), X(bx), Z(bz) + 16);
+    o += text(x0 + bx * k10 / 2, y0 - 44, 'ПЛАН КОМНАТЫ · где стоит «' + it.name + '», мм', 9, 'middle', 'font-weight="700"');
+  }
+  /* ---- справа: вид спереди ---- */
+  { const rx = 640, ry = 104, rw = 510, rh = 380;
+    if (wall) {   // у стены: развёртка стены с проёмами, расстояния до углов, окон, дверей, розеток
+      const L = wall.e.L, ks = Math.min((rw - 70) / L, (rh - 56) / H), X = u => rx + 34 + u * ks, Y = y => ry + 16 + (H - y) * ks, e = wall.e;
+      o += rect(X(0), Y(H), L * ks, H * ks, 't', '#fff') + line(X(-6), Y(0), X(L + 6), Y(0), 'o');
+      const opens = (S.opens || []).filter(q => q.wall === wall.wi);
+      opens.forEach(q => { o += openGlyph(q, X, Y, ks) + thx(X(q.off + q.w / 2), Y(q.y + q.h) - 4, '№' + (S.opens.indexOf(q) + 1), 6.2, 'middle', 'font-weight="700"'); });
+      const pj = b => { const cs = [[b.x0, b.z0], [b.x1, b.z0], [b.x1, b.z1], [b.x0, b.z1]].map(c => [(c[0] - e.a[0]) * e.ex + (c[1] - e.a[1]) * e.ez, (c[0] - e.a[0]) * e.nx + (c[1] - e.a[1]) * e.nz]); return { u0: Math.min(...cs.map(c => c[0])), u1: Math.max(...cs.map(c => c[0])), d: Math.min(...cs.map(c => c[1])), y0: b.y0, y1: b.y1, r: b.r }; };
+      const near = items.filter(q => q !== it).map(q => Object.assign(pj(q), { q })).filter(v => v.d <= 30 && v.u1 > 0 && v.u0 < L);   // соседи у этой же стены — контуры
+      near.forEach(v => { o += rect(X(Math.max(0, v.u0)), Y(v.y1), (Math.min(L, v.u1) - Math.max(0, v.u0)) * ks, (v.y1 - v.y0) * ks, 't', '#fff') + thx(X((Math.max(0, v.u0) + Math.min(L, v.u1)) / 2), Y((v.y0 + v.y1) / 2) + 3, v.q.n, 6.4, 'middle', 'fill="#555"'); });
+      const bs = (it.boxes && it.boxes.length ? it.boxes : [{ x0: it.x0, x1: it.x1, z0: it.z0, z1: it.z1, y0: it.y0, y1: it.y1, r: 'b' }]).filter(b => !b.poly).map(pj), box = { s: '' };
+      frontBoxes(box, bs, ks, X, Y); o += box.s + rect(X(wall.u0), Y(it.y1), (wall.u1 - wall.u0) * ks, h * ks, 'o');
+      // ряд 1: от угла до предмета, предмет, до другого угла; ряд 2: до ближайших окон/дверей/розеток слева и справа
+      const yA = Y(0) + 16, yB = Y(0) + 34, u0 = Math.max(0, wall.u0), u1 = Math.min(L, wall.u1);
+      if (u0 > .5) o += wl(X(0), Y(0), X(0), yA + 3) + wl(X(u0), Y(0), X(u0), yA + 3) + dH(X(0), X(u0), yA, String(mm(u0)), 7);
+      o += wl(X(u0), Y(0), X(u0), yA + 3) + wl(X(u1), Y(0), X(u1), yA + 3) + dH(X(u0), X(u1), yA, String(mm(u1 - u0)), 7.6);
+      if (L - u1 > .5) o += wl(X(u1), Y(0), X(u1), yA + 3) + wl(X(L), Y(0), X(L), yA + 3) + dH(X(u1), X(L), yA, String(mm(L - u1)), 7);
+      const els = opens.map(q => ({ u0: q.off, u1: q.off + q.w, n: '№' + (S.opens.indexOf(q) + 1), nm: OPEN_KINDS[q.kind].ru })).concat(near.map(v => ({ u0: v.u0, u1: v.u1, n: v.q.n, nm: v.q.name })));
+      const lft = els.filter(v => v.u1 <= u0 + .5).sort((a, b) => b.u1 - a.u1)[0], rgt = els.filter(v => v.u0 >= u1 - .5).sort((a, b) => a.u0 - b.u0)[0];
+      if (lft && u0 - lft.u1 > .5) o += wl(X(lft.u1), Y(0), X(lft.u1), yB + 3) + wl(X(u0), Y(0), X(u0), yB + 3) + dH(X(lft.u1), X(u0), yB, mm(u0 - lft.u1) + ' до ' + lft.n, 6.6);
+      if (rgt && rgt.u0 - u1 > .5) o += wl(X(u1), Y(0), X(u1), yB + 3) + wl(X(rgt.u0), Y(0), X(rgt.u0), yB + 3) + dH(X(u1), X(rgt.u0), yB, mm(rgt.u0 - u1) + ' до ' + rgt.n, 6.6);
+      // вертикали справа: от пола, высота, до потолка; слева — высота стены
+      const xv = X(L) + 14;
+      if (it.y0 > .5) o += wl(X(L), Y(0), xv + 3, Y(0)) + wl(X(L), Y(it.y0), xv + 3, Y(it.y0)) + dV(Y(it.y0), Y(0), xv, 'от пола ' + mm(it.y0), 6.8);
+      o += wl(X(L), Y(it.y0), xv + 3, Y(it.y0)) + wl(X(L), Y(it.y1), xv + 3, Y(it.y1)) + dV(Y(it.y1), Y(it.y0), xv, String(mm(h)), 7.4);
+      if (H - it.y1 > .5) o += wl(X(L), Y(it.y1), xv + 3, Y(it.y1)) + wl(X(L), Y(H), xv + 3, Y(H)) + dV(Y(H), Y(it.y1), xv, 'до потолка ' + mm(H - it.y1), 6.8);
+      o += dV(Y(H), Y(0), X(0) - 12, String(mm(H)), 7) + dH(X(0), X(L), Y(H) - 10, String(mm(L)), 7.4);
+      o += text(rx + rw / 2, ry - 22, `ВИД СПЕРЕДИ · у стены ${wall.wi + 1} (длина ${mm(L)} мм) · расстояния до углов, окон, дверей, розеток`, 8.6, 'middle', 'font-weight="700"');
+      // розетки и выключатели на этой стене: высота от пола и расстояние от предмета — списком
+      const sock = opens.filter(q => ['socket', 'switch', 'outlet', 'tv', 'vent', 'pipe'].includes(q.kind) || !['window', 'door', 'balcony', 'radiator', 'column'].includes(q.kind));
+      if (sock.length) sock.slice(0, 6).forEach((q, i) => { const cu = q.off + q.w / 2, dd = cu < u0 ? u0 - cu : (cu > u1 ? cu - u1 : 0); o += text(rx, ry + rh + 8 + i * 11, `№${S.opens.indexOf(q) + 1} ${OPEN_KINDS[q.kind].ru}: центр на высоте ${mm(q.y + q.h / 2)} мм от пола · ${dd ? mm(dd) + ' мм от края предмета по стене' : 'за предметом'}`, 6.2, 'start'); });
+    } else {   // стоит не у стены: достаточно вида сверху; сам предмет спереди — габариты
+      const lw = it.lw || w, lh = it.lh || h, ks = Math.min((rw - 90) / lw, (rh - 70) / lh), X = u => rx + 50 + u * ks, Y = y => ry + 24 + (lh - y) * ks;
+      const bs = (it.local && it.local.length ? it.local : [{ x0: 0, x1: lw, z0: 0, z1: it.ld || d, y0: 0, y1: lh, r: 'b' }]).filter(b => !b.poly).map(b => ({ u0: b.x0, u1: b.x1, d: -b.z1, y0: b.y0, y1: b.y1, r: b.r })), box = { s: '' };
+      frontBoxes(box, bs, ks, X, Y); o += box.s + rect(X(0), Y(lh), lw * ks, lh * ks, 'o');
+      o += wl(X(0), Y(0), X(0), Y(0) + 17) + wl(X(lw), Y(0), X(lw), Y(0) + 17) + dH(X(0), X(lw), Y(0) + 14, String(mm(lw)), 7.6);
+      o += wl(X(lw), Y(lh), X(lw) + 17, Y(lh)) + wl(X(lw), Y(0), X(lw) + 17, Y(0)) + dV(Y(lh), Y(0), X(lw) + 14, String(mm(lh)), 7.6);
+      if (it.y0 > .5) o += text(X(lw / 2), Y(0) + 34, 'от пола ' + mm(it.y0) + ' мм · глубина ' + mm(it.ld || d) + ' мм', 7, 'middle');
+      else o += text(X(lw / 2), Y(0) + 34, 'глубина ' + mm(it.ld || d) + ' мм', 7, 'middle');
+      o += text(rx + rw / 2, ry - 22, 'ВИД СПЕРЕДИ (лицо) · предмет стоит свободно — расстояния до стен на плане слева, мм', 8.6, 'middle', 'font-weight="700"');
+    }
+  }
+  /* ---- снизу слева: детали изделия и крепёж ---- */
+  if (it.parts && it.parts.length) {
+    const tx = 50, ty = 520, rows = it.parts.slice(0, 13), cf = (it.hw || []).filter(q => /Конфирмат/.test(q.name)).reduce((a, q) => a + q.qty, 0);
+    o += text(tx, ty - 12, 'ДЕТАЛИ ИЗДЕЛИЯ (длина × ширина × толщина, мм)', 7.6, 'start', 'font-weight="700"') + line(tx, ty - 6, 600, ty - 6, 'o');
+    rows.forEach((r, i) => { const yy = ty + 6 + i * 11.5; o += text(tx, yy, String(r.name).replace(/ \(.*\)$/, '').slice(0, 34), 6.4, 'start') + text(tx + 262, yy, r.qty + ' шт.', 6.4, 'start', 'font-weight="700"') + text(tx + 318, yy, `${Math.round(r.L)} × ${Math.round(r.W)} × ${Math.round(r.t)}`, 6.4, 'start'); });
     if (it.parts.length > rows.length) o += text(tx, ty + 6 + rows.length * 11.5, '… и ещё ' + (it.parts.length - rows.length) + ' поз. — в таблице раскроя', 6, 'start', 'fill="#555"');
     if (cf) o += text(tx, ty + 8 + (rows.length + (it.parts.length > rows.length ? 1 : 0)) * 11.5, 'Конфирматы 7×50: ' + cf + ' шт. (по одному через каждые 30 см стыка)', 6.6, 'start', 'font-weight="700" fill="#0b6e8f"');
   }
-  o += text(x0 + bx * k10 / 2, y0 - 62, 'ПЛАН КОМНАТЫ · где стоит «' + it.name + '» и что вокруг, мм', 9, 'middle', 'font-weight="700"');
-  // список ближайших проёмов с расстояниями
-  let ty = 560; o += text(70, ty, 'Рядом с этим предметом:', 7.5, 'start', 'font-weight="700"');
-  [['слева', ob.L], ['справа', ob.R], ['сзади (к дальней стене)', ob.U], ['спереди', ob.D]].forEach(([nm, v], i) => { o += text(80, ty + 14 + i * 12, `${nm}: ${v ? mm(v[0]) + ' мм до ' + (v[1] === 'стена' ? 'стены' : 'предмета ' + v[1]) : '—'}`, 7, 'start'); });
-  near.slice(0, 6).forEach(([dd, q, i], k) => { o += text(330, ty + 14 + k * 12, `№${i + 1} ${OPEN_KINDS[q.kind].ru}: ${mm(dd)} мм от предмета · от пола ${mm(q.y)} мм`, 7, 'start'); });
-  return sheet(o, meta(S, bp).slice(0, 3).concat([['Предмет', it.n + ' · ' + it.name], ['Габарит Ш×Г×В', mm(w) + '×' + mm(d) + '×' + mm(h) + ' мм'], ['От пола / от стен', mm(it.y0) + ' / ' + mm(Math.min(it.x0, it.z0)) + ' мм']]), no, total);
+  return sheet(o, meta(S, bp).slice(0, 3).concat([['Предмет', it.n + ' · ' + it.name], ['Габарит Ш×Г×В', mm(w) + '×' + mm(d) + '×' + mm(h) + ' мм'], ['От пола / стена', mm(it.y0) + ' мм · ' + (wall ? 'у стены ' + (wall.wi + 1) : 'свободно')]]), no, total);
 }
 export function buildSheets(S0) {
   const bpAll = buildParts(S0), pr = pricing(S0, bpAll), S = Object.assign({}, S0, { cols: S0.cols.filter(c => !c.det) }); S.W = geom(S).W;
@@ -643,7 +733,7 @@ export function buildSheets(S0) {
   if ((S0.opens || []).length) add('Элементы стен', n => sheetOpenings(S0, bp, n, total));
   { const items0 = roomItems(S0, bp);
     if (items0.length || (S0.opens || []).length) {
-      add('Аксонометрия комнаты, вид 1', n => sheetIso(S0, bp, n, total, 0)); add('Аксонометрия комнаты, вид 2', n => sheetIso(S0, bp, n, total, 2));
+      [0, 1, 2, 3].forEach(vk => add('Вид из угла ' + (vk + 1), n => sheetIso(S0, bp, n, total, vk)));
       items0.forEach(it => add('Предмет ' + it.n, n => sheetItem(S0, bp, it, items0, n, total)));
     } }
   if (hasMain) { add('Двери', n => sheetDoors(S, bp, n, total)); add('Секции', n => sheetSections(S, bp, n, total)); }
@@ -677,9 +767,11 @@ export function buildExtraSheets(K, startNo) {
   const add = (title, make) => { try { const r = make(no); (Array.isArray(r) ? r : [r]).forEach(x => { out.push(x); no++; }); } catch (e) { console.error('Чертёж «' + title + '»:', e); out.push(sheet(text(600, 200, 'Не удалось построить лист: ' + title, 12), [['Лист', title], ['Ошибка', String(e && e.message || e).slice(0, 40)], ['', '']], no, total)); no++; } };
   add('План комнаты', n => sheetRoomPlan(S, bp, n, total));
   if (S.opens.length) add('Элементы стен', n => sheetOpenings(S, bp, n, total));
-  if (K.items.length || S.opens.length) { add('Аксонометрия 1', n => sheetIso(S, bp, n, total, 0)); add('Аксонометрия 2', n => sheetIso(S, bp, n, total, 2)); }
+  if (K.items.length || S.opens.length) { [0, 1, 2, 3].forEach(vk => add('Вид из угла ' + (vk + 1), n => sheetIso(S, bp, n, total, vk))); }
   K.items.filter(it => it.sheet).forEach(it => add('Предмет ' + it.n, n => sheetItem(S, bp, it, K.items, n, total)));
   const E = roomEdges(roomPoly(S)); E.forEach((e, wi) => { if (S.opens.some(q => q.wall === wi)) add('Стена ' + (wi + 1), n => sheetWall(S, bp, wi, K.items, n, total)); });
   if (K.hw && K.hw.length) add('Крепёж', n => sheetHw(S, bp, K.hw, n, total));
   return out;
 }
+
+export const SOLIDS = { placeLocal, modelLocal, objSolid };
