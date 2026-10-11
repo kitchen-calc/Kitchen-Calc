@@ -24,9 +24,9 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=18'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
-  <script type="module" src="/static/js/shkaf-shape.js?v=5"></script>
-  <script type="module" src="/static/js/shkaf-boards.js?v=1"></script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=19'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script src="/static/js/shkaf-lib.js?v=1"></script>
+  <script type="module" src="/static/js/shkaf-3dpart.js?v=1"></script>
   <script src="/static/js/color-catalog.js?v=2"></script>
   <script src="/static/js/sheet-fit.js?v=1"></script>
   <script src="/static/js/sheet-export.js?v=1"></script>
@@ -874,6 +874,8 @@
     .shape-cv{margin-top:10px;border:1px solid #d8cdb8;border-radius:12px;overflow:hidden;background:#fff;touch-action:none}.shape-cv canvas{display:block;width:100%;height:auto;cursor:crosshair}
     .shlib{display:flex;flex-wrap:wrap;gap:10px}.shcard{border:1px solid #d8cdb8;border-radius:12px;padding:8px;background:#fffdf7;width:180px}.shcard input[type=text]{width:100%;box-sizing:border-box;margin:4px 0;padding:5px 7px;border:1px solid #d8cdb8;border-radius:8px;font:inherit}
     .shape-ui .shr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:14px}.shape-ui button{padding:7px 11px;border:1px solid #cdbba0;background:#fffaf0;border-radius:9px;cursor:pointer;font:inherit}.shape-ui button.go{background:#c8892b;color:#fff;border-color:#c8892b;font-weight:700}.shape-ui button:disabled{opacity:.4}
+    .p3cv{height:460px;border:1px solid #d8cdb8;border-radius:12px;overflow:hidden;margin-top:10px;background:#f1ebe0}.p3g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:6px 0}.p3f{display:flex;flex-direction:column;font-size:12.5px;gap:3px}.p3f .stp{display:flex;gap:4px;align-items:center}.p3f input{width:84px;padding:6px 7px;border:1px solid #d8cdb8;border-radius:8px;font:inherit}.p3f .stp button{width:32px;padding:6px 0}
+    
     /* 3D-окно — в золотой раме */
     .k3d-box { border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(184, 134, 43, 0.35); }
     .r3-tab.on { background: linear-gradient(135deg, #f0cf7f, #c8952f) !important; color: #1b1409 !important; }
@@ -1118,17 +1120,12 @@
 
       <div class="card k-added" id="kAdded" style="display:none"></div>
 
-      <div class="card od-card" id="shapeBox" style="display:none">
-        <div class="od-head"><h3>🛠 Конструктор своих шкафчиков</h3><span>Рисуйте шкафчик сверху: готовые формы (волна, змейка, дуга, зигзаг), точки, линия от руки. Для каждой стороны — стенка, дверца, гнутая стенка или открыто; материал — ЛДСП, фанера или МДФ. Готовое — «В мои шкафчики», оттуда вставляйте в комнату сколько угодно раз.</span></div>
-        <div class="shape-cv"><canvas id="shapeCv" width="640" height="352"></canvas></div>
-        <div id="shapeUi" class="shape-ui"></div><div id="shapeMsg" class="hint"></div>
-        <h4 style="margin:14px 0 6px">📚 Мои шкафчики</h4><div id="shapeLib" class="shape-ui"></div>
-      </div>
 
-  <div class="card od-card" id="brdBox" style="display:none">
-    <div class="od-head"><h3>🐍 Стеллаж из досок — змейка, лесенка, ячейки</h3><span>Рисуйте вид спереди: горизонтальные и вертикальные доски. Как «змейка» из магазина: полки со смещением и боковинами то справа, то слева. Готовое появится в комнате, в раскрое и в цене.</span></div>
-    <div class="shape-cv"><canvas id="brdCv" width="640" height="384"></canvas></div>
-    <div id="brdUi" class="shape-ui"></div><div id="brdMsg" class="hint"></div>
+  <div class="card od-card" id="p3Box" style="display:none">
+    <div class="od-head"><h3>🛠 Конструктор изделий в 3D — шкаф, тумба, стол, стеллаж</h3><span>Отдельная 3D-сцена: соберите изделие из досок, брусков, ножек, дверец на петлях и ящиков или соберите шкаф по размерам. Готовое добавляется в комнату одним предметом (двери и ящики открываются двойным щелчком) и сохраняется в «Мои изделия».</span></div>
+    <div class="p3cv" id="p3Cv"></div>
+    <div id="p3Ui" class="shape-ui"></div><div id="p3Msg" class="hint"></div>
+    <h4 style="margin:14px 0 6px">📚 Мои изделия</h4><div id="shapeLib" class="shape-ui"></div>
   </div>
 
       <!-- СЕКРЕТНО: чертежи мастера (вход: Ctrl+Shift+K или 3 нажатия на логотип) -->
@@ -2772,7 +2769,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=28');
+        const mod = await import('/static/js/kitchen3d.js?v=29');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3035,7 +3032,7 @@
       if (!SC()) return '';
       const K = SC().OBJ_KINDS, chips = kObjs.map((o, i) => `<button type="button" class="${selObjId === o.id ? 'on' : ''}" onclick="k3dObjSel('${o.id}')">🗄 ${K[o.kind].ru.split(' ')[0]} ${i + 1}</button>`).join('');
       return `<div class="k3s-sub">${esc(L3('Свои шкафчики и полки', 'Oʻz shkafchalaringiz'))} (${kObjs.length})</div>${chips ? `<div class="k3s-grid">${chips}</div>` : ''}
-        <div class="k3s-grid">${['book', 'rack', 'low', 'wallcab', 'shelf', 'vert'].map(k => `<button type="button" onclick="k3dObjAdd('${k}')">＋ ${esc(K[k].ru)}</button>`).join('')}<button type="button" onclick="kShapeOpen()">✏️ ${esc(L3('Нарисовать свою форму…', 'Oʻz shaklingizni chizing…'))}</button><button type="button" onclick="kBoardsOpen()">🐍 ${esc(L3('Змейка / стеллаж из досок…', 'Ilon / taxtalardan stellaj…'))}</button></div>
+        <div class="k3s-grid">${['book', 'rack', 'low', 'wallcab', 'shelf', 'vert'].map(k => `<button type="button" onclick="k3dObjAdd('${k}')">＋ ${esc(K[k].ru)}</button>`).join('')}<button type="button" onclick="kPart3dOpen()">🛠 ${esc(L3('Конструктор изделий 3D…', '3D konstruktor…'))}</button></div>
         <div class="k3s-note">${esc(L3('Тяните шкафчик по полу мышью; дверцы — двойной щелчок. Своя форма (волна, змейка, дуга) рисуется в окне «Конструктор своих шкафчиков» ниже 3D (режим мастера).', 'Shkafchani sichqoncha bilan sudrang.'))}</div>`;
     }
     function k3dSideObj() {
@@ -3044,17 +3041,18 @@
       let h = `<div class="k3s-h">🗄 ${esc(K.ru)} ${kObjs.indexOf(o) + 1}</div><div class="k3s-note">${esc(L3('Габарит', 'Oʻlcham'))} ${Math.round(f.w * 10)}×${Math.round(f.d * 10)} ${esc(L3('мм, высота', 'mm, balandlik'))} ${Math.round(o.h * 10)} ${esc(L3('мм. Тяните мышью по полу; двойной щелчок открывает дверцы.', 'mm.'))}</div>`;
       h += k3Row(L3('Магнит', 'Magnit'), k3B(magnetOn, 'k3dMagnet()', magnetOn ? L3('вкл', 'yoq') : L3('выкл', 'oʻch')) + k3B(false, 'k3dObjRot(-90)', '↺ 90°') + k3B(false, 'k3dObjRot(90)', '↻ 90°'));
       h += st(L3('От левой стены', 'Chap devordan'), 'x', 5, o.x) + st(L3('От дальней стены', 'Uzoq devordan'), 'z', 5, o.z) + st(L3('Над полом', 'Polidan'), 'y', 5, o.y);
-      if (o.kind === 'boards') h += st(L3('Глубина', 'Chuqurlik'), 'd', 1, o.d);
+      if (o.kind === 'parts') h += `<div class="k3s-note">${esc(L3('Размеры задаются в 3D-конструкторе.', 'Oʻlchamlar konstruktorda.'))}</div>`;
+      else if (o.kind === 'boards') h += st(L3('Глубина', 'Chuqurlik'), 'd', 1, o.d);
       else { if (!cu) h += st(o.kind === 'vert' ? L3('Толщина', 'Qalinlik') : L3('Ширина', 'Kenglik'), 'w', o.kind === 'vert' ? .2 : 5, o.w) + st(L3('Глубина', 'Chuqurlik'), 'd', 1, o.d);
       h += st(o.kind === 'shelf' ? L3('Толщина', 'Qalinlik') : L3('Высота', 'Balandlik'), 'h', 5, o.h); }
-      if (o.kind !== 'shelf' && o.kind !== 'vert' && o.kind !== 'boards') {
+      if (o.kind !== 'shelf' && o.kind !== 'vert' && o.kind !== 'boards' && o.kind !== 'parts') {
         h += st(L3('Полок', 'Tokchalar'), 'n', 1, o.n); if (!cu) h += st(L3('Дверей', 'Eshiklar'), 'dn', 1, o.dn);
         h += k3Row(L3('Цвет', 'Rang'), k3B(!!o.cat, 'kObjColor()', '🎨 ' + (o.cat && window.KCCAT ? window.KCCAT.name(o.cat) : L3('из каталога', 'katalogdan'))) + (o.cat ? k3B(false, "kObjColorReset()", '✕') : ''));
         h += k3Row(L3('Материал', 'Material'), [['dsp', 'ЛДСП'], ['ply', L3('Фанера', 'Faner')], ['mdf', 'МДФ']].map(([k, n]) => k3B((o.mat || 'dsp') === k, `k3dObjSetF('mat','${k}')`, n)).join(''));
         h += k3Row(L3('Фасад', 'Fasad'), [['dsp', 'ЛДСП'], ['glass', L3('Стекло', 'Oyna')], ['mirror', L3('Зеркало', 'Oyna')]].map(([k, n]) => k3B(o.fill === k, `k3dObjSetF('fill','${k}')`, n)).join(''));
         h += k3Row(L3('Опции', 'Opsiyalar'), k3B(o.back, "k3dObjFlag('back')", L3('спинка', 'orqa')) + k3B(o.handles, "k3dObjFlag('handles')", L3('ручки', 'dasta')));
       }
-      h += `<div class="k3e-r">${cu ? k3B(false, 'kShapeEdit()', '✏️ ' + L3('Изменить форму', 'Shaklni oʻzgartirish')) : ''}${o.kind === 'boards' ? k3B(false, 'kBoardsEdit()', '✏️ ' + L3('Изменить доски', 'Taxtalarni oʻzgartirish')) : ''}${k3B(false, 'kObjLib()', '💾 ' + L3('В мои шкафчики', 'Kutubxonaga'))}${k3B(false, 'k3dObjDup()', '⧉ ' + L3('Копия', 'Nusxa'))}${k3B(false, `k3dObjDel('${o.id}')`, '🗑 ' + L3('Удалить', 'Oʻchirish'))}${k3B(false, 'k3dObjSel(null)', L3('Готово', 'Tayyor'))}</div>`;
+      h += `<div class="k3e-r">${o.kind === 'parts' ? k3B(false, 'kPart3dEdit()', '✏️ ' + L3('Изменить в конструкторе', 'Konstruktorda')) : ''}${k3B(false, 'kObjLib()', '💾 ' + L3('В мои шкафчики', 'Kutubxonaga'))}${k3B(false, 'k3dObjDup()', '⧉ ' + L3('Копия', 'Nusxa'))}${k3B(false, `k3dObjDel('${o.id}')`, '🗑 ' + L3('Удалить', 'Oʻchirish'))}${k3B(false, 'k3dObjSel(null)', L3('Готово', 'Tayyor'))}</div>`;
       return h;
     }
     function kObjChanged(priceToo) { k3dRefresh(); updateShareLinks(); renderK3dEdit(); if (priceToo !== false) updateCalculator(); }
@@ -3083,6 +3081,8 @@
     function kObjLib() { const o = kObjs.find(x => x.id === selObjId); if (o && window.SHAPE) { const nm = window.SHAPE.libAdd(o, SC().OBJ_KINDS[o.kind].ru + ' ' + Math.round(o.w * 10) + '×' + Math.round(o.d * 10)); if (typeof msToast === 'function') msToast('Сохранено в «Мои шкафчики»: ' + nm); } }
     function kObjColor() { const o = kObjs.find(x => x.id === selObjId); if (!o || !window.KCCAT) return; window.KCCAT.pick(o.cat || '', id => { if (id) o.cat = id; else delete o.cat; kObjChanged(); }); }
     function kObjColorReset() { const o = kObjs.find(x => x.id === selObjId); if (o) { delete o.cat; kObjChanged(); } }
+    function kPart3dOpen() { if (window.PART3D) window.PART3D.open(null); }
+    function kPart3dEdit() { const o = kObjs.find(x => x.id === selObjId); if (o && window.PART3D) window.PART3D.open(o); }
     function kBoardsOpen() { if (window.BOARDS) window.BOARDS.open(null); }
     function kBoardsEdit() { const o = kObjs.find(x => x.id === selObjId); if (o && window.BOARDS) window.BOARDS.open(o); }
     function kShapeOpen() { if (window.SHAPE) window.SHAPE.open(null); }
@@ -3980,8 +3980,7 @@
     function ownerApply(on) {
       OWNER_ON = !!on && !VIEW_ONLY;
       const sec = el('ownerDraw'); if (sec) sec.style.display = OWNER_ON ? '' : 'none';
-      const shp = el('shapeBox'); if (shp) shp.style.display = OWNER_ON ? '' : 'none';
-      const brd = el('brdBox'); if (brd) brd.style.display = OWNER_ON ? '' : 'none';
+      const shp = el('p3Box'); if (shp) { shp.style.display = OWNER_ON ? '' : 'none'; if (OWNER_ON && window.PART3D && window.PART3D.show) window.PART3D.show(); }
       if (OWNER_ON) renderOwnerDraw();
       if (K3) renderK3dBar();
       renderK3dEdit(); renderKAdded();

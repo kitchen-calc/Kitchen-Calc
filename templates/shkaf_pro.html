@@ -68,6 +68,7 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
 .shape-ui .shr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:14px}.shape-ui button{padding:7px 11px;border:1px solid #cdbba0;background:#fffaf0;border-radius:9px;cursor:pointer;font:inherit}.shape-ui button.go{background:#c8892b;color:#fff;border-color:#c8892b;font-weight:700}.shape-ui button:disabled{opacity:.4}
 .added{background:#fffaf0;border:1px solid #e3d6bb;border-radius:12px;padding:8px 10px;margin:10px 0;font-size:13px}.added .ah{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-weight:700}.added .ah small{font-weight:400;color:#8a7a5c}
 .added .chips{display:flex;flex-wrap:wrap;gap:5px;max-height:104px;overflow:auto}.added .ch{display:inline-flex;align-items:center;gap:5px;border:1px solid #d8cdb8;background:#fff;border-radius:999px;padding:3px 4px 3px 9px;cursor:pointer;font-size:12.5px}.added .ch.bad{border-color:#d9822b;background:#fff1e0}.added .ch b{font-weight:600;color:#6b5a3a}.added .ch i{font-style:normal;border-radius:50%;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;background:#f0e4cc;font-size:11px}.added .ch i:hover{background:#e8b0a0}.added .ch.on{outline:2px solid #e0a21a}
+.p3cv{height:460px;border:1px solid #d8cdb8;border-radius:12px;overflow:hidden;margin-top:10px;background:#f1ebe0}.p3g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:6px 0}.p3f{display:flex;flex-direction:column;font-size:12.5px;gap:3px}.p3f .stp{display:flex;gap:4px;align-items:center}.p3f input{width:84px;padding:6px 7px;border:1px solid #d8cdb8;border-radius:8px;font:inherit}.p3f .stp button{width:32px;padding:6px 0}
 </style>
 <meta name="robots" content="index,follow" id="robots">
 </head>
@@ -105,16 +106,11 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
     </div>
     <aside class="side" id="side"></aside>
   </div>
-  <div class="card od-card" id="shapeBox">
-    <div class="od-head"><h3>🛠 Конструктор своих шкафчиков</h3><span>Рисуйте шкафчик сверху: готовые формы (волна, змейка, дуга, зигзаг), точки, линия от руки. Для каждой стороны — стенка, дверца, гнутая стенка или открыто; материал — ЛДСП, фанера или МДФ. Готовое — «В мои шкафчики», оттуда вставляйте в комнату сколько угодно раз.</span></div>
-    <div class="shape-cv"><canvas id="shapeCv" width="640" height="352"></canvas></div>
-    <div id="shapeUi" class="shape-ui"></div><div id="shapeMsg" class="hint"></div>
-    <h4 style="margin:14px 0 6px">📚 Мои шкафчики</h4><div id="shapeLib" class="shape-ui"></div>
-  </div>
-  <div class="card od-card" id="brdBox">
-    <div class="od-head"><h3>🐍 Стеллаж из досок — змейка, лесенка, ячейки</h3><span>Рисуйте вид спереди: горизонтальные и вертикальные доски. Как «змейка» из магазина: полки со смещением и боковинами то справа, то слева. Готовое появится в комнате, в раскрое и в цене.</span></div>
-    <div class="shape-cv"><canvas id="brdCv" width="640" height="384"></canvas></div>
-    <div id="brdUi" class="shape-ui"></div><div id="brdMsg" class="hint"></div>
+  <div class="card od-card" id="p3Box">
+    <div class="od-head"><h3>🛠 Конструктор изделий в 3D — шкаф, тумба, стол, стеллаж</h3><span>Отдельная 3D-сцена: соберите изделие из досок, брусков, ножек, дверец на петлях и ящиков или соберите шкаф по размерам. Готовое добавляется в комнату одним предметом (двери и ящики открываются двойным щелчком) и сохраняется в «Мои изделия».</span></div>
+    <div class="p3cv" id="p3Cv"></div>
+    <div id="p3Ui" class="shape-ui"></div><div id="p3Msg" class="hint"></div>
+    <h4 style="margin:14px 0 6px">📚 Мои изделия</h4><div id="shapeLib" class="shape-ui"></div>
   </div>
   <div class="card od-card" id="ownerBox" style="display:none">
     <div class="od-head"><h3>📐 Чертежи и спецификация — режим мастера</h3><span>Видно только вам. Лист A4: общий вид, двери, разрезы, каждый отсек, узлы, список деталей и фурнитуры.</span>
@@ -127,8 +123,8 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
 <script src="/static/js/color-catalog.js?v=2"></script>
 <script src="/static/js/sheet-fit.js?v=1"></script>
 <script src="/static/js/sheet-export.js?v=1"></script>
-<script type="module" src="/static/js/shkaf-shape.js?v=5"></script>
-<script type="module" src="/static/js/shkaf-boards.js?v=1"></script>
-<script type="module" src="/static/js/shkaf-pro.js?v=33"></script>
+<script src="/static/js/shkaf-lib.js?v=1"></script>
+<script type="module" src="/static/js/shkaf-3dpart.js?v=1"></script>
+<script type="module" src="/static/js/shkaf-pro.js?v=34"></script>
 </body>
 </html>

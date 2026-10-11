@@ -127,6 +127,7 @@ export const OBJ_KINDS = {
   rack: { ru: 'Открытый стеллаж', w: 80, d: 35, h: 180, n: 4, dn: 0, back: false, y: 0 },
   low: { ru: 'Низкий стеллаж / тумба ТВ', w: 140, d: 40, h: 55, n: 1, dn: 2, back: true, y: 0 },
   wallcab: { ru: 'Навесной шкафчик', w: 80, d: 30, h: 60, n: 1, dn: 2, back: true, y: 140 },
+  parts: { ru: 'Изделие из деталей (3D-конструктор)', w: 140, d: 80, h: 75, n: 0, dn: 0, back: false, y: 0 },
   boards: { ru: 'Стеллаж из досок (змейка)', w: 80, d: 30, h: 160, n: 0, dn: 0, back: false, y: 0 },
   vert: { ru: 'Вертикальная полка (стойка)', w: 1.6, d: 30, h: 180, n: 0, dn: 0, back: false, y: 0 },
   shelf: { ru: 'Полка к стене', w: 100, d: 25, h: 3, n: 0, dn: 0, back: false, y: 140 },
@@ -146,6 +147,16 @@ export const BOARD_PRESETS = {
   cells: { ru: 'Ячейки (зигзаг)', d: 32, gen: t => { const o = []; for (let r = 0; r < 3; r++) { const ox = r % 2 ? 30 : 0; o.push([ox, r * 35, 60, t], [ox, r * 35 + t, t, 35 - t], [ox + 60 - t, r * 35 + t, t, 35 - t]); } o.push([30, 105, 60, t]); return o; } },
   zig: { ru: 'Полки-зигзаг', d: 25, gen: t => { const o = []; [[0, 0, 70], [25, 38, 70], [0, 76, 70], [25, 114, 70]].forEach(([x, y, l]) => o.push([x, y, l, t])); o.push([0, t, t, 38 - t], [95 - t, 38 + t, t, 38 - t], [0, 76 + t, t, 38 - t]); return o; } }
 };
+export function tablePt(W, D, H, tt, ls, inset) {   // стол: столешница, 4 ножки, 2 царги. Деталь: [вид(0 брус / 1 цилиндр), x, y, z, w, h, d]
+  const o = [[0, 0, H - tt, 0, W, tt, D]], l = H - tt;
+  [[inset, inset], [W - inset - ls, inset], [inset, D - inset - ls], [W - inset - ls, D - inset - ls]].forEach(p => o.push([0, p[0], 0, p[1], ls, l, ls]));
+  o.push([0, inset + ls, H - tt - 8, inset, W - 2 * inset - 2 * ls, 8, 1.6], [0, inset + ls, H - tt - 8, D - inset - 1.6, W - 2 * inset - 2 * ls, 8, 1.6]);
+  return o;
+}
+export function fitParts(o) {
+  const B = o.pt || []; if (!B.length) return o;
+  o.w = Math.round(Math.max(...B.map(b => b[1] + b[4])) * 10) / 10; o.d = Math.round(Math.max(...B.map(b => b[3] + b[6])) * 10) / 10; o.h = Math.round(Math.max(...B.map(b => b[2] + b[5])) * 10) / 10; return o;
+}
 export function fitBoards(o) {   // габарит стеллажа из досок по доскам
   const B = o.bd || []; if (!B.length) return o;
   o.w = Math.round(Math.max(...B.map(b => b[0] + b[2])) * 10) / 10; o.h = Math.round(Math.max(...B.map(b => b[1] + b[3])) * 10) / 10; return o;
@@ -153,7 +164,7 @@ export function fitBoards(o) {   // габарит стеллажа из дос�
 export const CORNER_L = [[0, 0], [120, 0], [120, 40], [40, 40], [40, 120], [0, 120]];
 export function mkObj(kind, x, z, extra) {
   const k = OBJ_KINDS[kind] || OBJ_KINDS.book, poly = kind === 'custom' ? CORNER_L.map(p => p.slice()) : null;
-  return Object.assign({ id: uid(), kind, x: r1(x || 0), z: r1(z || 0), rot: 0, y: k.y, w: k.w, d: k.d, h: k.h, n: k.n, dn: k.dn, dh: 0, back: k.back, fill: 'dsp', mat: 'dsp', color: '', handles: true, poly, ed: poly ? poly.map(() => 0) : null }, extra || {}, kind === 'boards' && !(extra && extra.bd) ? { bd: snakeBoards(4, 80, 40, 1.6), d: 30 } : {});
+  return Object.assign({ id: uid(), kind, x: r1(x || 0), z: r1(z || 0), rot: 0, y: k.y, w: k.w, d: k.d, h: k.h, n: k.n, dn: k.dn, dh: 0, back: k.back, fill: 'dsp', mat: 'dsp', color: '', handles: true, poly, ed: poly ? poly.map(() => 0) : null }, extra || {}, kind === 'boards' && !(extra && extra.bd) ? { bd: snakeBoards(4, 80, 40, 1.6), d: 30 } : (kind === 'parts' && !(extra && extra.pt) ? { pt: tablePt(140, 80, 75, 2.8, 6, 5) } : {}));
 }
 export function objPoly(o) { return o.kind === 'custom' && o.poly ? o.poly : [[0, 0], [o.w, 0], [o.w, o.d], [0, o.d]]; }
 export function objBox(o) { const P = objPoly(o), xs = P.map(p => p[0]), zs = P.map(p => p[1]); return { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) }; }
@@ -543,6 +554,22 @@ export function buildParts(S) {
     const fmat = q.fill === 'dsp' ? body : FILLS[q.fill], fth = q.fill === 'dsp' || q.fill === 'mdf' ? t : .4;
     const door = (name, qty, L, Wd, note) => { if (q.fill === 'dsp') addP(gr, name + lbl, qty, L, Wd, t, fmat, (2 * (L + Wd)) / 100, note); else addP(gr, name + lbl, qty, L, Wd, fth, fmat, (2 * (L + Wd)) / 100, note, q.fill); };
     const addDoorHw = (dn, dh) => { addHw('Двери', 'Петля с доводчиком', dn * (dh <= 90 ? 2 : dh <= 160 ? 3 : 4), 'шт.', T.hinge); if (hnd) addHw('Двери', 'Ручка', dn, 'шт.', T.handle); };
+    if (q.kind === 'parts') {
+      const B = q.pt || [], pm = {}, cm = {}, dm = {}; let doorsN = 0; const groups = new Set();
+      B.forEach(b => {
+        if (b[0] === 1) { const key = Math.round(b[5] * 10) + 'x' + Math.round(b[4] * 10); cm[key] = (cm[key] || 0) + 1; return; }
+        const dd = [b[4], b[5], b[6]].sort((x, y) => x - y), key = Math.round(dd[2] * 10) + 'x' + Math.round(dd[1] * 10) + 'x' + Math.round(dd[0] * 10);
+        if (b[0] >= 2 && b[0] <= 5) { dm[key] = (dm[key] || 0) + 1; doorsN++; return; }
+        if (b[0] === 6 && b[7]) groups.add(b[7]);
+        pm[key] = (pm[key] || 0) + 1;
+      });
+      Object.keys(pm).forEach(k => { const [L, W2, T2] = k.split('x').map(v => v / 10), board = T2 <= 4.5; addP(gr, (board ? 'Доска / щит' : 'Брусок') + lbl, pm[k], L, W2, T2, body, board ? (2 * (L + W2)) / 100 : 0, board ? 'видимая кромка по периметру' : 'брусок: торцы без кромки'); });
+      Object.keys(dm).forEach(k => { const [L, W2, T2] = k.split('x').map(v => v / 10); addP(gr, 'Дверца' + lbl, dm[k], L - .4, W2 - .4, T2, body, (2 * (L + W2)) / 100, 'распашная / откидная, по размеру детали'); });
+      Object.keys(cm).forEach(k => { const [L, dia] = k.split('x').map(v => v / 10); addP(gr, 'Ножка / стойка круглая ⌀' + mm(dia) + lbl, cm[k], L, dia, dia, 'Массив / металл', 0, 'круглая деталь, длина ' + mm(L) + ' мм', 'metal'); addHw('Фурнитура', 'Подпятник / опора круглой ножки', cm[k], 'шт.', 8000); });
+      if (doorsN) { addHw('Двери', 'Петля с доводчиком', doorsN * 2, 'шт.', T.hinge); if (hnd) addHw('Двери', 'Ручка', doorsN, 'шт.', T.handle); }
+      if (groups.size) { addHw('Ящики', 'Направляющие ящика (комплект)', groups.size, 'комплект', T.drawer); if (hnd) addHw('Двери', 'Ручка', groups.size, 'шт.', T.handle); }
+      joints_u += B.length * 3; return;
+    }
     if (q.kind === 'boards') {
       const B = q.bd || [], d = q.d, pm = {}; B.forEach(b => { const L = Math.max(b[2], b[3]), key = Math.round(L * 10); pm[key] = (pm[key] || 0) + 1; });
       Object.keys(pm).map(Number).sort((x, y) => y - x).forEach(k => { const L = k / 10; addP(gr, (L === q.h || L > q.w * .9 ? 'Доска (длинная)' : 'Доска') + lbl, pm[k], L, d, t, body, (2 * (L + d)) / 100, 'видимая кромка по периметру'); });
@@ -733,8 +760,8 @@ export function sanitize(S) {
   o.opens = sanitizeOpens(S.opens, roomPoly(o));
   o.objs = (Array.isArray(S.objs) ? S.objs : []).slice(0, 80).map(q => {
     const kind = q && OBJ_KINDS[q.kind] ? q.kind : 'book', d = mkObj(kind, 0, 0), poly = kind === 'custom' && Array.isArray(q.poly) && q.poly.length >= 3 && q.poly.length <= 40 && q.poly.every(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1])) ? q.poly.map(p => [r1(n(p[0], -2000, 2000, 0)), r1(n(p[1], -2000, 2000, 0))]) : (kind === 'custom' ? CORNER_L.map(p => p.slice()) : null);
-    return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), bd: kind === 'boards' ? ((Array.isArray(q && q.bd) ? q.bd : []).slice(0, 120).filter(b => Array.isArray(b) && b.length >= 4 && b.every(v => isFinite(v))).map(b => [r1(n(b[0], -50, 800, 0)), r1(n(b[1], -50, 400, 0)), r1(n(b[2], .3, 800, 10)), r1(n(b[3], .3, 400, 1.6))]) || []) : undefined, cat: catId(q && q.cat), mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };
-  }).map(q => { if (q.kind === 'boards') { if (!q.bd || !q.bd.length) q.bd = snakeBoards(4, 80, 40, 1.6); fitBoards(q); } return q; });
+    return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), pt: kind === 'parts' ? ((Array.isArray(q && q.pt) ? q.pt : []).slice(0, 200).filter(b => Array.isArray(b) && b.length >= 7 && b.every(v => isFinite(v))).map(b => [Math.max(0, Math.min(6, Math.round(b[0]))), r1(n(b[1], -500, 1500, 0)), r1(n(b[2], -50, 400, 0)), r1(n(b[3], -500, 1500, 0)), r1(n(b[4], .1, 800, 10)), r1(n(b[5], .1, 400, 10)), r1(n(b[6], .1, 800, 10)), b.length > 7 && isFinite(b[7]) ? Math.max(0, Math.min(99, Math.round(b[7]))) : 0])) : undefined, bd: kind === 'boards' ? ((Array.isArray(q && q.bd) ? q.bd : []).slice(0, 120).filter(b => Array.isArray(b) && b.length >= 4 && b.every(v => isFinite(v))).map(b => [r1(n(b[0], -50, 800, 0)), r1(n(b[1], -50, 400, 0)), r1(n(b[2], .3, 800, 10)), r1(n(b[3], .3, 400, 1.6))]) || []) : undefined, cat: catId(q && q.cat), mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };
+  }).map(q => { if (q.kind === 'parts') { if (!q.pt || !q.pt.length) q.pt = tablePt(140, 80, 75, 2.8, 6, 5); fitParts(q); } if (q.kind === 'boards') { if (!q.bd || !q.bd.length) q.bd = snakeBoards(4, 80, 40, 1.6); fitBoards(q); } return q; });
   recalcW(o);
   if (Array.isArray(S.mezzes)) S.mezzes.slice(0, 8).forEach(m => { if (m) o.mezzes.push({ id: uid(), x: r1(n(m.x, -100, 900, 0)), w: r1(n(m.w, 20, 900, 60)), h: r1(n(m.h, 15, 120, 40)), y: r1(n(m.y, 0, 340, o.H)), n: n(m.n, 0, 10, 2) | 0, shelves: n(m.shelves, 0, 3, 0) | 0, fill: FILLS[m.fill] ? m.fill : 'dsp', div: (Array.isArray(m.div) ? m.div : []).slice(0, 7).map(v => r1(n(v, 5, 800, 30))), cd: (Array.isArray(m.cd) ? m.cd : []).slice(0, 8).map(v => v == null ? null : n(v, 0, 5, 1) | 0), dir: (Array.isArray(m.dir) ? m.dir : []).slice(0, 8).map(v => ['swing', 'U', 'D'].includes(v) ? v : 'swing') }); });
   else if (S.mezz && S.mezz.on) {   // старый формат: одна антресоль сверху на всю ширину
@@ -749,6 +776,6 @@ export function objsParts(objs, t) { return buildParts(objsState(objs, t)); }
 export function objsCost(objs, t, tier) {
   if (!objs || !objs.length) return 0;
   const S = objsState(objs, t, tier), bp = buildParts(S), pr = pricing(S, bp);
-  let front = 0; objs.forEach(q => { if (q.kind === 'custom') { front += objEdges(q).reduce((a, e) => a + e.L, 0) * q.h / 1e4 * .6; } else front += q.w * q.h / 1e4; });
+  let front = 0; objs.forEach(q => { if (q.kind === 'parts') { front += (q.w * q.h + q.d * q.h) / 1e4 * .6; } else if (q.kind === 'custom') { front += objEdges(q).reduce((a, e) => a + e.L, 0) * q.h / 1e4 * .6; } else front += q.w * q.h / 1e4; });
   return Math.round((pr.mat * P.K + front * P.laborM2 * P.Klabor) / 10000) * 10000;
 }

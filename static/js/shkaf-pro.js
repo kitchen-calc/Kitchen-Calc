@@ -1,11 +1,11 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=18';
+import * as C from '/static/js/shkaf-pro-core.js?v=19';
 const { SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=3';
 import { openRoomStart, openRoomEditor } from '/static/js/shkaf-room.js?v=2';
 const VIEW = /^\/shkaf\/view\/?$/.test(location.pathname);
-if (VIEW) { ["shapeBox", "brdBox"].forEach(i => { const sb = document.getElementById(i); if (sb) sb.remove(); }); }
+if (VIEW) { ["p3Box"].forEach(i => { const sb = document.getElementById(i); if (sb) sb.remove(); }); }
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/[  ]/g, ' ');
@@ -332,17 +332,17 @@ function sideObj() {
   h += `<div class="r">${btn(S.room.mag, 'PRO.magnet()', '🧲 Магнит: ' + (S.room.mag ? 'вкл' : 'выкл'))}${btn(0, 'PRO.obRot(-90)', '↺ 90°')}${btn(0, 'PRO.obRot(90)', '↻ 90°')}${btn(0, 'PRO.obMag()', 'К ближайшей стене')}</div>`;
   h += stepper('От левой стены, см', 'ob.x', o.x, 5) + stepper('От дальней стены, см', 'ob.z', o.z, 5) + stepper('Высота над полом, см', 'ob.y', o.y, 5);
   h += `<div class="r"><span>Материал</span><select onchange="PRO.obMat(this.value)">${[['dsp', 'ЛДСП'], ['ply', 'Фанера 12 мм'], ['mdf', 'МДФ крашеный']].map(([k, n]) => `<option value="${k}" ${(o.mat || 'dsp') === k ? 'selected' : ''}>${n}</option>`).join('')}</select><input type="color" value="${o.color || '#d8bd8a'}" onchange="PRO.obColor(this.value)" title="цвет"></div>`;
-  if (o.kind === 'boards') h += stepper('Глубина', 'ob.d', o.d, 1) + `<div class="r">${btn(0, 'PRO.boardsEdit()', '✏️ Изменить доски')}</div>`;
+  if (o.kind === 'parts') h += `<div class="note">Размеры задаются в 3D-конструкторе: нажмите «Изменить».</div><div class="r">${btn(0, 'PRO.part3dEdit()', '✏️ Изменить в 3D-конструкторе')}</div>`;
+  else if (o.kind === 'boards') h += stepper('Глубина', 'ob.d', o.d, 1);
   else if (!cu) h += stepper(o.kind === 'vert' ? 'Толщина' : 'Ширина', 'ob.w', o.w, o.kind === 'vert' ? .2 : 1) + stepper(o.kind === 'vert' ? 'Ширина (вглубь)' : 'Глубина', 'ob.d', o.d, 1);
-  if (o.kind !== 'boards') h += stepper(o.kind === 'shelf' ? 'Толщина' : 'Высота', 'ob.h', o.h, 1);
-  if (o.kind !== 'shelf' && o.kind !== 'vert' && o.kind !== 'boards') {
+  if (o.kind !== 'boards' && o.kind !== 'parts') h += stepper(o.kind === 'shelf' ? 'Толщина' : 'Высота', 'ob.h', o.h, 1);
+  if (o.kind !== 'shelf' && o.kind !== 'vert' && o.kind !== 'boards' && o.kind !== 'parts') {
     h += stepper('Полок внутри', 'ob.n', o.n, 1);
     if (!cu) h += stepper('Дверей', 'ob.dn', o.dn, 1) + (o.dn > 0 ? stepper('Высота дверей (0 = во всю)', 'ob.dh', o.dh, 1) : '');
     h += `<div class="r">${btn(o.back, 'PRO.obToggle(\'back\')', 'Задняя стенка')}${btn(o.handles, 'PRO.obToggle(\'handles\')', 'Ручки')}</div>`;
     h += `<div class="r"><span>Фасад</span><select onchange="PRO.obFill(this.value)">${[['dsp', 'ЛДСП'], ['mdf', 'Фрезерованный МДФ'], ['glass', 'Стекло'], ['mirror', 'Зеркало']].map(([k, n]) => `<option value="${k}" ${o.fill === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`;
   }
   h += wallChips();
-  if (cu) h += `<div class="r">${btn(0, 'PRO.shapeEdit()', '✏️ Изменить форму (окно ниже)')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.libSaveSel()', '💾 В мои шкафчики')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.obDup()', '⧉ Копия')}${btn(0, 'PRO.obDel()', '🗑 Удалить')}${btn(0, 'PRO.selGlobal()', 'Готово')}</div>`;
   return h;
@@ -350,7 +350,7 @@ function sideObj() {
 function sideObjList() {
   const mk = k => `<button type="button" onclick="PRO.addObj('${k}')">${OBJ_KINDS[k].ru}</button>`;
   return `<div class="sub">Отдельные шкафы, полки и стеллажи (${S.objs.length})</div><div class="cols">${S.objs.map((o, i) => `<button type="button" class="colchip ${multi.includes('o:' + o.id) ? 'on' : ''}" onclick="PRO.selObj(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.obDelAt(${i})">✕</span>${OBJ_KINDS[o.kind].ru.split(' ')[0]} ${i + 1}<b>${Math.round(o.w * 10)}</b></button>`).join('')}</div>`
-    + `<div class="r">${['book', 'rack', 'low', 'wallcab', 'shelf', 'vert'].map(mk).join('')}<button type="button" onclick="PRO.shapeOpen()">✏️ Своя форма…</button><button type="button" onclick="PRO.boardsOpen()">🐍 Змейка из досок…</button></div>`
+    + `<div class="r">${['book', 'rack', 'low', 'wallcab', 'shelf', 'vert'].map(mk).join('')}<button type="button" onclick="PRO.part3dOpen()">🛠 Конструктор изделий 3D…</button></div>`
     + `<div class="r">${btn(multiOn, 'PRO.multiToggle()', '☑ Выбрать несколько (или Ctrl+клик)')}${multi.length ? `<small>выбрано: ${multi.length}</small>` : ''}</div><div class="note">Выбрав несколько, потяните любой из них по полу — все поедут вместе, как стояли. Магнит к стенам включён в блоке «Комната».</div>`;
 }
 let multiOn = false, moveOn = false;
@@ -452,7 +452,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=22');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=23');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -595,7 +595,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=16');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=18');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -710,6 +710,8 @@ window.PRO = {
   obRot: d => mutate(() => { const o = S.objs[sel.oi]; if (!o) return; const f = objFoot(o), cx = o.x + f.w / 2, cz = o.z + f.d / 2; o.rot = (((o.rot || 0) + d) % 360 + 360) % 360; const n2 = objFoot(o); o.x = r1(cx - n2.w / 2); o.z = r1(cz - n2.d / 2); if (S.room.mag) { const m = objMagnet(S, o, o.x, o.z, 200, o.rot); if (m) { o.x = m.ox; o.z = m.oz; } } }),
   obMag: () => mutate(() => { const o = S.objs[sel.oi]; if (!o) return; const m = objMagnet(S, o, o.x, o.z, 9999); if (m) { o.x = m.ox; o.z = m.oz; o.rot = m.rot; } }),
   multiToggle: () => { multiOn = !multiOn; if (K) K.setMulti(multiOn); renderSide(); },
+  part3dOpen: () => { window.PART3D && window.PART3D.open(null); },
+  part3dEdit: () => { const o = S.objs[sel.oi]; if (o) window.PART3D && window.PART3D.open(o); },
   boardsOpen: () => { window.BOARDS && window.BOARDS.open(null); },
   boardsEdit: () => { const o = S.objs[sel.oi]; if (o) window.BOARDS && window.BOARDS.open(o); },
   shapeOpen: () => { window.SHAPE && window.SHAPE.open(null); },

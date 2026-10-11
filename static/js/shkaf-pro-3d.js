@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall } from '/static/js/room-open.js?v=4';
-import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=18';
+import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=19';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -346,6 +346,26 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       };
       if (q.kind === 'shelf') { bx(w, t, d, BM, 0, 0, 0); return; }
       if (q.kind === 'vert') { bx(Math.max(.3, w), h, d, BM, 0, 0, 0); return; }
+      if (q.kind === 'parts') {
+        const groups = {};
+        (q.pt || []).forEach((b, idx) => {
+          const k = b[0], x = b[1], y = b[2], z = b[3], pw = b[4], ph = b[5], pd = b[6], gi = b[7] || 0, key = 'o' + q.id + '.p' + idx, meta = Object.assign({ key }, base);
+          if (k === 1) { const m = new THREE.Mesh(new THREE.CylinderGeometry(pw / 2, pw / 2, ph, 24), BM); m.position.set(x + pw / 2, y + ph / 2, z + pd / 2); m.castShadow = m.receiveShadow = true; m.userData.sel = base; picks.push(m); og.add(m); return; }
+          if (k >= 2 && k <= 5) {
+            const pv = new THREE.Group(); og.add(pv);
+            if (k === 2) { pv.position.set(x, y, z + pd); bx(pw, ph, pd, fmat, 0, 0, -pd, meta, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = -105 * DEG * f; } }); }
+            else if (k === 3) { pv.position.set(x + pw, y, z + pd); bx(pw, ph, pd, fmat, -pw, 0, -pd, meta, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = 105 * DEG * f; } }); }
+            else if (k === 4) { pv.position.set(x, y + ph, z + pd); bx(pw, ph, pd, fmat, 0, -ph, -pd, meta, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = -100 * DEG * f; } }); }
+            else { pv.position.set(x, y, z + pd); bx(pw, ph, pd, fmat, 0, 0, -pd, meta, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = 95 * DEG * f; } }); }
+            if (hnd) bx(Math.min(14, pw * .5), 1.4, 1.2, M.chrome, k === 3 ? -pw + 3 : 3, ph - 5, 0, meta, pv);
+            return;
+          }
+          if (k === 6 && gi) { const gk = 'o' + q.id + '.g' + gi; if (!groups[gi]) { groups[gi] = { g: new THREE.Group(), dmax: 0, key: gk }; og.add(groups[gi].g); } groups[gi].dmax = Math.max(groups[gi].dmax, pd); bx(pw, ph, pd, BM, x, y, z, Object.assign({ key: gk }, base), groups[gi].g); return; }
+          bx(pw, ph, pd, BM, x, y, z);
+        });
+        Object.keys(groups).forEach(gi => { const G = groups[gi]; doorsAnim.push({ key: G.key, apply: f => { G.g.position.z = f * G.dmax * .8; } }); });
+        return;
+      }
       if (q.kind === 'boards') { (q.bd || []).forEach(r => bx(r[2], r[3], d, BM, r[0], r[1], 0)); return; }
       if (q.kind === 'custom') {
         const E = objEdges(q), P = objPoly(q);

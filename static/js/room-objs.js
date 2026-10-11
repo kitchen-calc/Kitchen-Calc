@@ -1,7 +1,7 @@
 /* Общий 3D-сборщик «своих шкафчиков» (стеллаж, книжный шкаф, навесной шкафчик, полка, шкаф своей формы) — для кухни.
    Локальные оси: начало в левом заднем углу габарита, x вправо, z вперёд (к комнате), y вверх. Контур, стороны и двери — из shkaf-pro-core.js. */
 import * as THREE from 'three';
-import { objEdges, objPoly } from '/static/js/shkaf-pro-core.js?v=18';
+import { objEdges, objPoly } from '/static/js/shkaf-pro-core.js?v=19';
 
 const DEG = Math.PI / 180;
 /* ctx: { t, body, back, glass, mirror, chrome, edge (LineBasicMaterial|null), keyBase, onDoor(key, apply), mark(mesh) } */
@@ -16,6 +16,26 @@ export function buildObjGroup(q, ctx) {
   };
   if (q.kind === 'shelf') { bx(w, t, d, BM, 0, 0, 0); return og; }
   if (q.kind === 'vert') { bx(Math.max(.3, w), h, d, BM, 0, 0, 0); return og; }
+  if (q.kind === 'parts') {
+    const groups = {}, DEGR = Math.PI / 180;
+    (q.pt || []).forEach((b, idx) => {
+      const k = b[0], x = b[1], y = b[2], z = b[3], w = b[4], h = b[5], d = b[6], gi = b[7] || 0;
+      if (k === 1) { const m = new THREE.Mesh(new THREE.CylinderGeometry(w / 2, w / 2, h, 24), BM); m.position.set(x + w / 2, y + h / 2, z + d / 2); add(og, m); return; }
+      if (k >= 2 && k <= 5) {   // дверца на петлях: слева / справа / сверху / снизу
+        const pv = new THREE.Group(); og.add(pv);
+        if (k === 2) { pv.position.set(x, y, z + d); bx(w, h, d, fmat, 0, 0, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.y = -105 * DEGR * f; }); }
+        else if (k === 3) { pv.position.set(x + w, y, z + d); bx(w, h, d, fmat, -w, 0, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.y = 105 * DEGR * f; }); }
+        else if (k === 4) { pv.position.set(x, y + h, z + d); bx(w, h, d, fmat, 0, -h, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.x = -100 * DEGR * f; }); }
+        else { pv.position.set(x, y, z + d); bx(w, h, d, fmat, 0, 0, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.x = 95 * DEGR * f; }); }
+        if (hnd) bx(Math.min(14, w * .5), 1.4, 1.2, ctx.chrome, k === 3 ? -w + 3 : 3, h - 5, 0, pv);
+        return;
+      }
+      if (k === 6 && gi) { if (!groups[gi]) { groups[gi] = { g: new THREE.Group(), dmax: 0 }; og.add(groups[gi].g); } groups[gi].dmax = Math.max(groups[gi].dmax, d); bx(w, h, d, BM, x, y, z, groups[gi].g); return; }
+      bx(w, h, d, BM, x, y, z);
+    });
+    Object.keys(groups).forEach(gi => { const G = groups[gi]; ctx.onDoor(ctx.keyBase + ':g' + gi, f => { G.g.position.z = f * G.dmax * .8; }); });
+    return og;
+  }
   if (q.kind === 'boards') { (q.bd || []).forEach(r => bx(r[2], r[3], d, BM, r[0], r[1], 0)); return og; }
   if (q.kind === 'custom') {
     const E = objEdges(q), P = objPoly(q);
