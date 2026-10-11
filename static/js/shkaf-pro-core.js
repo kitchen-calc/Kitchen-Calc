@@ -157,6 +157,28 @@ export function tablePt(W, D, H, tt, ls, inset) {   // стол: столешн�
   o.push([0, inset + ls, H - tt - 8, inset, W - 2 * inset - 2 * ls, 8, 1.6], [0, inset + ls, H - tt - 8, D - inset - 1.6, W - 2 * inset - 2 * ls, 8, 1.6]);
   return o;
 }
+/* материал детали из конструктора: id цвета каталога, либо 'glass' / 'mirror' */
+export const partMatKey = v => (v === 'glass' || v === 'mirror') ? v : catId(v);
+/* подсветка изделия: режим 0 — нет, 1 — под верхней доской, 2 — под каждой полкой, 3 — по боковым линиям; полосы в осях изделия */
+export const LED_MODES = [[0, 'Нет'], [1, 'Под верхней доской'], [2, 'Под каждой полкой'], [3, 'По боковым линиям']];
+export function ledStrips(q) {
+  const mode = (q && q.led) | 0; if (!mode) return []; const out = [], S1 = (x, y, z, w, h, d) => { if (w > .2 && h > .2 && d > .2) out.push({ x, y, z, w, h, d }); };
+  if (q.kind === 'parts') {
+    const A = (q.pt || []).filter(b => b[0] === 0).map(ptAabb);
+    const hz = A.filter(a => a[4] - a[1] <= 3.4 && a[3] - a[0] >= 15 && a[5] - a[2] >= 10).sort((p, c) => c[1] - p[1]), vt = A.filter(a => a[3] - a[0] <= 3.4 && a[4] - a[1] >= 30 && a[5] - a[2] >= 10);
+    const under = a => S1(a[0] + 1, a[1] - .8, a[5] - 3.5, a[3] - a[0] - 2, .6, 1.2);
+    if (mode === 1 && hz.length) under(hz[0]);
+    else if (mode === 2) hz.slice(0, Math.max(1, hz.length - 1)).forEach(under);
+    else if (mode === 3 && vt.length) { const cx = (Math.min(...vt.map(v => v[0])) + Math.max(...vt.map(v => v[3]))) / 2; vt.forEach(a => S1((a[0] + a[3]) / 2 < cx ? a[3] : a[0] - .6, a[1] + 2, a[5] - 1.6, .6, a[4] - a[1] - 4, .9)); }
+  } else if (q.kind === 'shelf') S1(1, -.8, q.d - 3.5, q.w - 2, .6, 1.2);
+  else if (['book', 'rack', 'low', 'wallcab'].includes(q.kind)) {
+    const t = q.mat === 'ply' ? 1.2 : 1.6, w = q.w, d = q.d, h = q.h, n = q.n | 0;
+    if (mode === 3) { S1(t, t + 2, d - 1.6, .6, h - 2 * t - 4, .9); S1(w - t - .6, t + 2, d - 1.6, .6, h - 2 * t - 4, .9); }
+    else { S1(t + 1, h - t - .8, d - 3.5, w - 2 * t - 2, .6, 1.2); if (mode === 2) for (let k = 1; k <= n; k++) S1(t + 1, (h - t) * k / (n + 1) - .8, d - 4.5, w - 2 * t - 2, .6, 1.2); }
+  }
+  return out;
+}
+export const ledLen = q => ledStrips(q).reduce((a, s) => a + Math.max(s.w, s.h, s.d), 0) / 100;
 /* конфирматы 7×50: на каждый стык — по одному через каждые 30 см длины стыка, но не меньше двух */
 export const cfN = L => Math.max(2, Math.ceil(L / 30 - 1e-6));
 export function ptJoints(B) {   // стыки между досками изделия из деталей: касание граней → длина стыка = большая сторона площади касания
@@ -589,6 +611,7 @@ export function buildParts(S) {
     const body = q.mat === 'ply' ? OBJ_MATS.ply : q.mat === 'mdf' ? 'МДФ крашеный ' + mm(S.t) + ' мм' : 'ЛДСП ' + mm(S.t) + ' мм' + (q.cat ? ' · ' + catName(q.cat) : '');
     const addP = (grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind) => { if (okind && !kind) add(grp, name, qty, L, Wd, tt, mat, 0, (note ? note + '; ' : '') + (okind === 'ply' ? 'торцы: шлифовка + масло/лак' : 'торцы: шпаклёвка + покраска'), okind); else add(grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind); };
     const gr = OBJ_KINDS[q.kind].ru + ' ' + (i + 1), lbl = ' (' + OBJ_KINDS[q.kind].ru.toLowerCase() + ' ' + (i + 1) + ')', hnd = q.handles !== false;
+    if (q.led) { const Lm = ledLen(q); if (Lm > 0) { addHw('Свет', 'LED-лента 12 В (подсветка изделия' + lbl + ')', Math.round(Lm * 100) / 100, 'м', T.led); addHw('Свет', 'Блок питания и датчик' + lbl, 1, 'шт.', T.ledKit); } }
     const fmat = q.fill === 'dsp' ? body : FILLS[q.fill] + (q.fill === 'mdf' ? millName(S) : ''), fth = q.fill === 'dsp' || q.fill === 'mdf' ? t : .4;
     const door = (name, qty, L, Wd, note) => { if (q.fill === 'dsp') addP(gr, name + lbl, qty, L, Wd, t, fmat, (2 * (L + Wd)) / 100, note); else addP(gr, name + lbl, qty, L, Wd, fth, fmat, (2 * (L + Wd)) / 100, note, q.fill); };
     const addDoorHw = (dn, dh) => { addHw('Двери', HN, dn * (dh <= 90 ? 2 : dh <= 160 ? 3 : 4), 'шт.', HP); if (hnd) addHw('Двери', HDN, dn, 'шт.', HDP); };
@@ -596,14 +619,15 @@ export function buildParts(S) {
       const B = q.pt || [], pm = {}, cm = {}, dm = {}; let doorsN = 0; const groups = new Set();
       B.forEach(b => {
         if (b[0] === 1) { const key = Math.round(b[5] * 10) + 'x' + Math.round(b[4] * 10); cm[key] = (cm[key] || 0) + 1; return; }
-        const dd = [b[4], b[5], b[6]].sort((x, y) => x - y), key = Math.round(dd[2] * 10) + 'x' + Math.round(dd[1] * 10) + 'x' + Math.round(dd[0] * 10) + '|' + (catId(b[11]) || '');
+        const dd = [b[4], b[5], b[6]].sort((x, y) => x - y), key = Math.round(dd[2] * 10) + 'x' + Math.round(dd[1] * 10) + 'x' + Math.round(dd[0] * 10) + '|' + (partMatKey(b[11]) || '');
         if (b[0] >= 2 && b[0] <= 5) { dm[key] = (dm[key] || 0) + 1; doorsN++; return; }
         if (b[0] === 6 && b[7]) groups.add(b[7]);
         pm[key] = (pm[key] || 0) + 1;
       });
       const mt = c => c ? body.replace(/ · .*$/, '') + ' · ' + catName(c) : body;
-      Object.keys(pm).forEach(k => { const [dk, ck] = k.split('|'), [L, W2, T2] = dk.split('x').map(v => v / 10), board = T2 <= 4.5; addP(gr, (board ? 'Доска / щит' : 'Брусок') + lbl, pm[k], L, W2, T2, mt(ck), board ? (2 * (L + W2)) / 100 : 0, board ? 'видимая кромка по периметру' : 'брусок: торцы без кромки'); });
-      Object.keys(dm).forEach(k => { const [dk, ck] = k.split('|'), [L, W2, T2] = dk.split('x').map(v => v / 10); addP(gr, 'Дверца' + lbl, dm[k], L - .4, W2 - .4, T2, mt(ck), (2 * (L + W2)) / 100, 'распашная / откидная, по размеру детали'); });
+      const gl = (ck, nm, qty, L, W2) => addP(gr, (ck === 'glass' ? 'Стекло' : 'Зеркало') + nm + lbl, qty, L, W2, .4, FILLS[ck], (2 * (L + W2)) / 100, 'полировка кромки', ck);
+      Object.keys(pm).forEach(k => { const [dk, ck] = k.split('|'), [L, W2, T2] = dk.split('x').map(v => v / 10), board = T2 <= 4.5; if (ck === 'glass' || ck === 'mirror') { gl(ck, '', pm[k], L, W2); return; } addP(gr, (board ? 'Доска / щит' : 'Брусок') + lbl, pm[k], L, W2, T2, mt(ck), board ? (2 * (L + W2)) / 100 : 0, board ? 'видимая кромка по периметру' : 'брусок: торцы без кромки'); });
+      Object.keys(dm).forEach(k => { const [dk, ck] = k.split('|'), [L, W2, T2] = dk.split('x').map(v => v / 10); if (ck === 'glass' || ck === 'mirror') { gl(ck, ' в дверце', dm[k], L - .4, W2 - .4); return; } addP(gr, 'Дверца' + lbl, dm[k], L - .4, W2 - .4, T2, mt(ck), (2 * (L + W2)) / 100, 'распашная / откидная, по размеру детали'); });
       Object.keys(cm).forEach(k => { const [L, dia] = k.split('x').map(v => v / 10); addP(gr, 'Ножка / стойка круглая ⌀' + mm(dia) + lbl, cm[k], L, dia, dia, 'Массив / металл', 0, 'круглая деталь, длина ' + mm(L) + ' мм', 'metal'); addHw('Фурнитура', 'Подпятник / опора круглой ножки', cm[k], 'шт.', 8000); });
       if (doorsN) { addHw('Двери', HN, doorsN * 2, 'шт.', HP); if (hnd) addHw('Двери', HDN, doorsN, 'шт.', HDP); }
       if (groups.size) { addHw('Ящики', 'Направляющие ящика (комплект)', groups.size, 'комплект', DRP); if (hnd) addHw('Двери', HDN, groups.size, 'шт.', HDP); }
@@ -806,7 +830,7 @@ export function sanitize(S) {
   o.opens = sanitizeOpens(S.opens, roomPoly(o));
   o.objs = (Array.isArray(S.objs) ? S.objs : []).slice(0, 80).map(q => {
     const kind = q && OBJ_KINDS[q.kind] ? q.kind : 'book', d = mkObj(kind, 0, 0), poly = kind === 'custom' && Array.isArray(q.poly) && q.poly.length >= 3 && q.poly.length <= 40 && q.poly.every(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1])) ? q.poly.map(p => [r1(n(p[0], -2000, 2000, 0)), r1(n(p[1], -2000, 2000, 0))]) : (kind === 'custom' ? CORNER_L.map(p => p.slice()) : null);
-    return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), pt: kind === 'parts' ? ((Array.isArray(q && q.pt) ? q.pt : []).slice(0, 200).filter(b => Array.isArray(b) && b.length >= 7 && b.every(v => isFinite(v))).map(b => [Math.max(0, Math.min(6, Math.round(b[0]))), r1(n(b[1], -500, 1500, 0)), r1(n(b[2], -50, 400, 0)), r1(n(b[3], -500, 1500, 0)), r1(n(b[4], .1, 800, 10)), r1(n(b[5], .1, 400, 10)), r1(n(b[6], .1, 800, 10)), b.length > 7 && isFinite(b[7]) ? Math.max(0, Math.min(99, Math.round(b[7]))) : 0, r1(n(b[8], -360, 360, 0)), r1(n(b[9], -360, 360, 0)), r1(n(b[10], -360, 360, 0)), catId(b[11]) || 0])) : undefined, bd: kind === 'boards' ? ((Array.isArray(q && q.bd) ? q.bd : []).slice(0, 120).filter(b => Array.isArray(b) && b.length >= 4 && b.every(v => isFinite(v))).map(b => [r1(n(b[0], -50, 800, 0)), r1(n(b[1], -50, 400, 0)), r1(n(b[2], .3, 800, 10)), r1(n(b[3], .3, 400, 1.6))]) || []) : undefined, cat: catId(q && q.cat), mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };
+    return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), led: [0, 1, 2, 3].includes(q && q.led) ? q.led : 0, pt: kind === 'parts' ? ((Array.isArray(q && q.pt) ? q.pt : []).slice(0, 200).filter(b => Array.isArray(b) && b.length >= 7 && b.slice(0, 11).every(v => isFinite(v))).map(b => [Math.max(0, Math.min(6, Math.round(b[0]))), r1(n(b[1], -500, 1500, 0)), r1(n(b[2], -50, 400, 0)), r1(n(b[3], -500, 1500, 0)), r1(n(b[4], .1, 800, 10)), r1(n(b[5], .1, 400, 10)), r1(n(b[6], .1, 800, 10)), b.length > 7 && isFinite(b[7]) ? Math.max(0, Math.min(99, Math.round(b[7]))) : 0, r1(n(b[8], -360, 360, 0)), r1(n(b[9], -360, 360, 0)), r1(n(b[10], -360, 360, 0)), partMatKey(b[11]) || 0])) : undefined, bd: kind === 'boards' ? ((Array.isArray(q && q.bd) ? q.bd : []).slice(0, 120).filter(b => Array.isArray(b) && b.length >= 4 && b.every(v => isFinite(v))).map(b => [r1(n(b[0], -50, 800, 0)), r1(n(b[1], -50, 400, 0)), r1(n(b[2], .3, 800, 10)), r1(n(b[3], .3, 400, 1.6))]) || []) : undefined, cat: catId(q && q.cat), mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };
   }).map(q => { if (q.kind === 'parts') { if (!q.pt || !q.pt.length) q.pt = tablePt(140, 80, 75, 2.8, 6, 5); fitParts(q); } if (q.kind === 'boards') { if (!q.bd || !q.bd.length) q.bd = snakeBoards(4, 80, 40, 1.6); fitBoards(q); } return q; });
   recalcW(o);
   if (Array.isArray(S.mezzes)) S.mezzes.slice(0, 8).forEach(m => { if (m) o.mezzes.push({ id: uid(), x: r1(n(m.x, -100, 900, 0)), w: r1(n(m.w, 20, 900, 60)), h: r1(n(m.h, 15, 120, 40)), y: r1(n(m.y, 0, 340, o.H)), n: n(m.n, 0, 10, 2) | 0, shelves: n(m.shelves, 0, 3, 0) | 0, fill: FILLS[m.fill] ? m.fill : 'dsp', div: (Array.isArray(m.div) ? m.div : []).slice(0, 7).map(v => r1(n(v, 5, 800, 30))), cd: (Array.isArray(m.cd) ? m.cd : []).slice(0, 8).map(v => v == null ? null : n(v, 0, 5, 1) | 0), dir: (Array.isArray(m.dir) ? m.dir : []).slice(0, 8).map(v => ['swing', 'U', 'D'].includes(v) ? v : 'swing') }); });

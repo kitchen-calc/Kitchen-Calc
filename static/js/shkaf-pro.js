@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=24';
-const { uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
+import * as C from '/static/js/shkaf-pro-core.js?v=25';
+const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=4';
 import { openRoomStart, openRoomEditor } from '/static/js/shkaf-room.js?v=2';
@@ -360,6 +360,7 @@ function sideObj() {
     h += `<div class="r">${btn(o.back, 'PRO.obToggle(\'back\')', 'Задняя стенка')}${btn(o.handles, 'PRO.obToggle(\'handles\')', 'Ручки')}</div>`;
     h += `<div class="r"><span>Фасад</span><select onchange="PRO.obFill(this.value)">${[['dsp', 'ЛДСП'], ['mdf', 'Фрезерованный МДФ'], ['glass', 'Стекло'], ['mirror', 'Зеркало']].map(([k, n]) => `<option value="${k}" ${o.fill === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`;
   }
+  if (['parts', 'book', 'rack', 'low', 'wallcab', 'shelf'].includes(o.kind)) h += `<div class="r"><span>Подсветка</span><select onchange="PRO.obLed(this.value)">${LED_MODES.map(([k, n]) => `<option value="${k}" ${(o.led | 0) === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`;
   h += wallChips();
   h += `<div class="r">${btn(0, 'PRO.libSaveSel()', '💾 В мои шкафчики')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.obDup()', '⧉ Копия')}${btn(0, 'PRO.obDel()', '🗑 Удалить')}${btn(0, 'PRO.selGlobal()', 'Готово')}</div>`;
@@ -472,7 +473,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=32');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=33');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -616,7 +617,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=34');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=35');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -742,6 +743,7 @@ window.PRO = {
   },
   hwSet: (f, v) => mutate(() => { S.hw = Object.assign({}, S.hw, { [f]: v }); }),
   mill: v => mutate(() => { S.doors.mp = v; }),
+  obLed: v => mutate(() => { const o = S.objs[sel.oi]; if (o) o.led = +v | 0; }),
   obFill: v => mutate(() => { const o = S.objs[sel.oi]; if (o) o.fill = v; }),
   obRot: d => mutate(() => { const o = S.objs[sel.oi]; if (!o) return; const f = objFoot(o), cx = o.x + f.w / 2, cz = o.z + f.d / 2; o.rot = (((o.rot || 0) + d) % 360 + 360) % 360; const n2 = objFoot(o); o.x = r1(cx - n2.w / 2); o.z = r1(cz - n2.d / 2); if (S.room.mag) { const m = objMagnet(S, o, o.x, o.z, 200, o.rot); if (m) { o.x = m.ox; o.z = m.oz; } } }),
   obMag: () => mutate(() => { const o = S.objs[sel.oi]; if (!o) return; const m = objMagnet(S, o, o.x, o.z, 9999); if (m) { o.x = m.ox; o.z = m.oz; o.rot = m.rot; } }),

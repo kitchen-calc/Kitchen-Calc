@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall } from '/static/js/room-open.js?v=6';
-import { MILL_PITCH } from '/static/js/shkaf-pro-core.js?v=24';
-import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=24';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=25';
+import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=25';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -342,6 +342,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       og.position.set(q.x - f.mx, q.y || 0, q.z - f.mz); og.rotation.y = (q.rot || 0) * DEG; root.add(og); objGroups.set(q.id, og); keyGroups.set('o:' + q.id, og);
       const fmat = q.fill === 'dsp' || q.fill === 'mdf' ? BM : (q.fill === 'glass' ? M.glassClear : M.mirror), hnd = q.handles !== false;
       const bx = (bw, bh, bd, mat, x, y, z, meta, par) => box(bw, bh, bd, mat, x, y, z, meta || base, par || og);
+      ledStrips(q).forEach(sx => { const lm = new THREE.Mesh(new THREE.BoxGeometry(sx.w, sx.h, sx.d), M.led); lm.position.set(sx.x + sx.w / 2, sx.y + sx.h / 2, sx.z + sx.d / 2); og.add(lm); });   // подсветка изделия
       const slab = (poly, y, th, mat) => {   // плита по контуру (дно, крышка, полка)
         const sh = new THREE.Shape(poly.map(p => new THREE.Vector2(p[0], -p[1]))), geo = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false });
         geo.rotateX(-Math.PI / 2); const m = new THREE.Mesh(geo, mat); m.position.y = y; m.castShadow = m.receiveShadow = true;
@@ -353,7 +354,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         const groups = {};
         (q.pt || []).forEach((b, idx) => {
           const k = b[0], x = b[1], y = b[2], z = b[3], pw = b[4], ph = b[5], pd = b[6], gi = b[7] || 0, key = 'o' + q.id + '.p' + idx, meta = Object.assign({ key }, base);
-          const pmc = b[11] ? catM(b[11]) : null, BMp = pmc || BM, fm = pmc || fmat;
+          const pmc = b[11] === 'glass' ? M.glassClear : (b[11] === 'mirror' ? M.mirror : (b[11] ? catM(b[11]) : null)), BMp = pmc || BM, fm = pmc || fmat;
           const rot = m => { if (b[8] || b[9] || b[10]) { m.rotation.order = 'YXZ'; m.rotation.set((b[9] || 0) * DEG, (b[8] || 0) * DEG, (b[10] || 0) * DEG); } return m; };
           if (k === 1) { const m = new THREE.Mesh(new THREE.CylinderGeometry(pw / 2, pw / 2, ph, 24), BMp); m.position.set(x + pw / 2, y + ph / 2, z + pd / 2); rot(m); m.castShadow = m.receiveShadow = true; m.userData.sel = base; picks.push(m); og.add(m); return; }
           if (k >= 2 && k <= 5) {

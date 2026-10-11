@@ -1,11 +1,17 @@
 /* Общий 3D-сборщик «своих шкафчиков» (стеллаж, книжный шкаф, навесной шкафчик, полка, шкаф своей формы) — для кухни.
    Локальные оси: начало в левом заднем углу габарита, x вправо, z вперёд (к комнате), y вверх. Контур, стороны и двери — из shkaf-pro-core.js. */
 import * as THREE from 'three';
-import { objEdges, objPoly } from '/static/js/shkaf-pro-core.js?v=24';
+import { ledStrips, objEdges, objPoly } from '/static/js/shkaf-pro-core.js?v=25';
 
 const DEG = Math.PI / 180;
 /* ctx: { t, body, back, glass, mirror, chrome, edge (LineBasicMaterial|null), keyBase, onDoor(key, apply), mark(mesh) } */
+/* подсветка изделия: светящиеся полосы по режиму q.led (материал ctx.led — общий с подсветкой кухни) */
 export function buildObjGroup(q, ctx) {
+  const og = buildObj0(q, ctx);
+  if (q.led && ctx.led) ledStrips(q).forEach(sx => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx.w, sx.h, sx.d), ctx.led); m.position.set(sx.x + sx.w / 2, sx.y + sx.h / 2, sx.z + sx.d / 2); og.add(m); });
+  return og;
+}
+function buildObj0(q, ctx) {
   const og = new THREE.Group(), t = ctx.t, w = q.w, d = q.d, h = q.h, BM = ctx.body;
   const fmat = q.fill === 'glass' ? ctx.glass : (q.fill === 'mirror' ? ctx.mirror : BM), hnd = q.handles !== false;
   const add = (par, m) => { m.castShadow = m.receiveShadow = true; if (ctx.edge) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), ctx.edge)); if (ctx.mark) ctx.mark(m); par.add(m); return m; };
@@ -20,7 +26,7 @@ export function buildObjGroup(q, ctx) {
     const groups = {}, DEGR = Math.PI / 180;
     (q.pt || []).forEach((b, idx) => {
       const k = b[0], x = b[1], y = b[2], z = b[3], w = b[4], h = b[5], d = b[6], gi = b[7] || 0;
-      const pm = b[11] && ctx.catMat ? ctx.catMat(b[11]) : null, BMp = pm || BM, fm = pm || fmat;
+      const pm = b[11] === 'glass' ? ctx.glass : (b[11] === 'mirror' ? ctx.mirror : (b[11] && ctx.catMat ? ctx.catMat(b[11]) : null)), BMp = pm || BM, fm = pm || fmat;
       const rot = m => { if (b[8] || b[9] || b[10]) { m.rotation.order = 'YXZ'; m.rotation.set((b[9] || 0) * DEGR, (b[8] || 0) * DEGR, (b[10] || 0) * DEGR); } return m; };
       if (k === 1) { const m = new THREE.Mesh(new THREE.CylinderGeometry(w / 2, w / 2, h, 24), BMp); m.position.set(x + w / 2, y + h / 2, z + d / 2); rot(m); add(og, m); return; }
       if (k >= 2 && k <= 5) {   // дверца на петлях: слева / справа / сверху / снизу
