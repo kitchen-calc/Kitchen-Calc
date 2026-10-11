@@ -2,7 +2,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { geom, doorList, shelfSpans, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=10';
+import { buildOpenings, pickWall } from '/static/js/room-open.js?v=1';
+import { geom, doorList, shelfSpans, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=11';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -40,7 +41,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   function setLeds(on) { ledsOn = !!on; ledBoost(lastM); invalidate(); }
   let needs = true; const invalidate = () => { needs = true; };
   let root = new THREE.Group(); scene.add(root);
-  let wg = null, keyGroups = new Map(), objGroups = new Map(), multiKeys = [], multiBoxes = [], multiMode = false, moveMode = false, state = null, sel = null, picks = [], doorsAnim = [], openTarget = new Map(), openAmt = new Map(), selBox = null, first = true;
+  let wg = null, openGroups = new Map(), keyGroups = new Map(), objGroups = new Map(), multiKeys = [], multiBoxes = [], multiMode = false, moveMode = false, state = null, sel = null, picks = [], doorsAnim = [], openTarget = new Map(), openAmt = new Map(), selBox = null, first = true;
 
   const mats = {};
   const stdMat = (hex, o) => new THREE.MeshStandardMaterial(Object.assign({ color: hex, roughness: .55, metalness: 0, envMapIntensity: .6 }, o || {}));
@@ -97,6 +98,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     const z0 = .3, bd = D - z0;
     // стены и пол помещения
     buildRoom(S);
+    openGroups = buildOpenings(root, S.opens || [], roomPoly(S), { mat: stdMat, glass: () => M.glassClear, picks, meta: i => ({ k: 'open', i, id: S.opens[i].id }) });
     // корпус: секции (между проёмами), перегородки, антресоли — каждая отдельным блоком
     const selK = { k: 'global' }, n = g.cols.length;
     g.runs.forEach(r => inCol(r.det ? r.a : -1, () => {
@@ -415,6 +417,11 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       const l = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(sz.x + 1.5, sz.y + 1.5, sz.z + 1.5)), new THREE.LineBasicMaterial({ color: '#2f9bd8' })); l.position.copy(ct); root.add(l); multiBoxes.push(l);
     });
     if (!sel || sel.k === 'global') return;
+    if (sel.k === 'open') {
+      const grp = openGroups.get(sel.id); if (!grp) return;
+      const b = new THREE.Box3().setFromObject(grp), sz = b.getSize(new THREE.Vector3()), ct = b.getCenter(new THREE.Vector3());
+      selBox = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(sz.x + 1.5, sz.y + 1.5, sz.z + 1.5)), new THREE.LineBasicMaterial({ color: '#e0a21a' })); selBox.position.copy(ct); root.add(selBox); return;
+    }
     if (sel.k === 'obj') {
       const grp = objGroups.get(sel.id); if (!grp) return;
       const b = new THREE.Box3().setFromObject(grp), sz = b.getSize(new THREE.Vector3()), ct = b.getCenter(new THREE.Vector3());
@@ -437,6 +444,10 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   renderer.domElement.addEventListener('pointerdown', e => {
     downAt = [e.clientX, e.clientY]; drag = null; if (viewOnly) return;
     const h = hit(e); if (!h) return;
+    if (h.sel.k === 'open' && hooks.onOpenDrag && !(e.ctrlKey || e.metaKey)) {   // дверь / окно / розетку тянем по стенам
+      if (hooks.onSelect) hooks.onSelect(h.sel, false);
+      drag = { open: true, i: h.sel.i, moved: false }; controls.enabled = false; try { renderer.domElement.setPointerCapture(e.pointerId); } catch (er) {} return;
+    }
     if (e.ctrlKey || e.metaKey || multiMode) return;   // выбор нескольких — обрабатывается при отпускании
     const hci = h.sel.k === 'col' ? h.sel.i : (h.sel.k === 'item' ? h.sel.col : -1);   // отсек, на который нажали (в том числе через предмет внутри)
     const selCol = hci >= 0 && sel && sel.k === 'col' && sel.i === hci;   // первый клик выбирает шкаф, дальше зажать и тянуть — двигать именно его
@@ -458,6 +469,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) return;
     drag.moved = true; rayFrom(e);
+    if (drag.open) { const r = pickWall(ray.ray, roomPoly(state), (state.room && state.room.H) || 260); if (r) setHud(hooks.onOpenDrag(drag.i, r.wall, r.s, r.y) || ''); invalidate(); return; }
     if (drag.floor && drag.detach >= 0) { const k = hooks.onDetach(drag.detach); drag.detach = -1; if (k) { drag.key = k; hitP.copy(drag.p0); } }
     if (drag.floor) { plane.set(new THREE.Vector3(0, 1, 0), -drag.y); if (!ray.ray.intersectPlane(plane, hitP)) return; setHud(hooks.onMoveAll(hitP.x - drag.p0.x, hitP.z - drag.p0.z, drag.key) || ''); invalidate(); return; }
     const rr = (state && state.room && state.room.rot) || 0, side = rr === 90 || rr === 270;

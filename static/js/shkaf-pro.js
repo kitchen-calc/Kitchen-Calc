@@ -1,7 +1,8 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=10';
+import * as C from '/static/js/shkaf-pro-core.js?v=11';
 const { BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
+import { OPEN_KINDS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=1';
 import { openRoomStart, openRoomEditor } from '/static/js/shkaf-room.js?v=2';
 const VIEW = /^\/shkaf\/view\/?$/.test(location.pathname);
 if (VIEW) { const sb = document.getElementById("shapeBox"); if (sb) sb.remove(); }
@@ -23,7 +24,7 @@ const snap = () => JSON.stringify(S);
 function pushUndo() { undo.push(snap()); if (undo.length > 60) undo.shift(); redo = []; }
 function doUndo() { if (!undo.length) return; redo.push(snap()); S = sanitize(JSON.parse(undo.pop())); fixSel(); refresh(); }
 function doRedo() { if (!redo.length) return; undo.push(snap()); S = sanitize(JSON.parse(redo.pop())); fixSel(); refresh(); }
-function fixSel() { if (sel.k === 'item' && !findItem(sel.id)) sel = { k: 'global' }; if (sel.k === 'col' && sel.i >= S.cols.length) sel = { k: 'global' }; if (sel.k === 'mezz' && !S.mezzes[sel.mi]) sel = { k: 'global' }; if (sel.k === 'panel' && !S.panels[sel.pi]) sel = { k: 'global' }; if (sel.k === 'unit' && !S.units[sel.ui]) sel = { k: 'global' }; if (sel.k === 'bed' && !S.beds[sel.bi]) sel = { k: 'global' }; if (sel.k === 'obj' && !S.objs[sel.oi]) sel = { k: 'global' }; multi = multi.filter(k => k === 'w' || S.objs.some(o => 'o:' + o.id === k) || S.cols.some(c => c.det && 'c:' + c.id === k) || (k[1] === ':' && itemByKey(k))); }
+function fixSel() { if (sel.k === 'item' && !findItem(sel.id)) sel = { k: 'global' }; if (sel.k === 'col' && sel.i >= S.cols.length) sel = { k: 'global' }; if (sel.k === 'mezz' && !S.mezzes[sel.mi]) sel = { k: 'global' }; if (sel.k === 'panel' && !S.panels[sel.pi]) sel = { k: 'global' }; if (sel.k === 'unit' && !S.units[sel.ui]) sel = { k: 'global' }; if (sel.k === 'bed' && !S.beds[sel.bi]) sel = { k: 'global' }; if (sel.k === 'obj' && !S.objs[sel.oi]) sel = { k: 'global' }; if (sel.k === 'open' && !S.opens[sel.oi]) sel = { k: 'global' }; multi = multi.filter(k => k === 'w' || S.objs.some(o => 'o:' + o.id === k) || S.cols.some(c => c.det && 'c:' + c.id === k) || (k[1] === ':' && itemByKey(k))); }
 let multi = [];
 const ITEM_RU = { unit: 'тумба', bed: 'кровать', panel: 'зеркало/панель' };
 function itemByKey(key) {
@@ -39,7 +40,7 @@ function findItem(id) { for (let ci = 0; ci < S.cols.length; ci++) { const it = 
 const toast = (t) => { const e = $('toast'); if (!e) return; e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2600); };
 
 /* ---------- ввод чисел ---------- */
-const RANGE = { 'dt.x': [-800, 2500], 'dt.z': [-800, 2500], 'dt.rot': [-90, 450], 'fp.x': [-800, 2500], 'fp.z': [-800, 2500], 'fp.rot': [-90, 450], 'ob.x': [-800, 2500], 'ob.z': [-800, 2500], 'ob.y': [0, 300], 'ob.w': [.5, 600], 'ob.d': [5, 120], 'ob.h': [1, 320], 'ob.n': [0, 12], 'ob.dn': [0, 4], 'ob.dh': [0, 320], 'ob.rot': [-90, 450], W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [15, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [15, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 3], 'col.H': [60, 320], 'col.D': [25, 90], 'room.W': [100, 1500], 'room.D': [100, 1500], 'room.H': [180, 400], 'room.oz': [-500, 1500], 'room.rot': [-90, 450], 'room.ox': [-500, 1500], 'pn.sw': [10, 400], 'pn.sd': [6, 100], 'pn.sg': [0, 200], 'pn.pz': [0, 400], 'pn.gp': [3, 60], 'bd.x': [-800, 1800], 'bd.pz': [0, 500], 'bd.mw': [50, 220], 'bd.ml': [100, 240], 'bd.mt': [5, 40], 'bd.sh': [10, 60], 'bd.hh': [20, 220], 'bd.fh': [10, 220], 'bd.lg': [0, 40], 'bd.drw': [0, 4], 'bd.lv2': [80, 200], 'bd.rail': [10, 60], 'bd.steps': [3, 9], 'un.x': [-600, 1600], 'un.pz': [0, 400], 'un.w': [25, 300], 'un.h': [30, 200], 'un.d': [15, 80], 'un.n': [1, 8], 'un.legs': [0, 20] };
+const RANGE = { 'op.off': [0, 3000], 'op.w': [2, 600], 'op.h': [2, 400], 'op.y': [0, 400], 'op.d': [0, 200], 'dt.x': [-800, 2500], 'dt.z': [-800, 2500], 'dt.rot': [-90, 450], 'fp.x': [-800, 2500], 'fp.z': [-800, 2500], 'fp.rot': [-90, 450], 'ob.x': [-800, 2500], 'ob.z': [-800, 2500], 'ob.y': [0, 300], 'ob.w': [.5, 600], 'ob.d': [5, 120], 'ob.h': [1, 320], 'ob.n': [0, 12], 'ob.dn': [0, 4], 'ob.dh': [0, 320], 'ob.rot': [-90, 450], W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [15, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [15, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 3], 'col.H': [60, 320], 'col.D': [25, 90], 'room.W': [100, 1500], 'room.D': [100, 1500], 'room.H': [180, 400], 'room.oz': [-500, 1500], 'room.rot': [-90, 450], 'room.ox': [-500, 1500], 'pn.sw': [10, 400], 'pn.sd': [6, 100], 'pn.sg': [0, 200], 'pn.pz': [0, 400], 'pn.gp': [3, 60], 'bd.x': [-800, 1800], 'bd.pz': [0, 500], 'bd.mw': [50, 220], 'bd.ml': [100, 240], 'bd.mt': [5, 40], 'bd.sh': [10, 60], 'bd.hh': [20, 220], 'bd.fh': [10, 220], 'bd.lg': [0, 40], 'bd.drw': [0, 4], 'bd.lv2': [80, 200], 'bd.rail': [10, 60], 'bd.steps': [3, 9], 'un.x': [-600, 1600], 'un.pz': [0, 400], 'un.w': [25, 300], 'un.h': [30, 200], 'un.d': [15, 80], 'un.n': [1, 8], 'un.legs': [0, 20] };
 function stepper(label, path, val, step, unit) {
   return `<div class="r"><span>${esc(label)}</span><span class="stp"><button type="button" onpointerdown="PRO.hold(event,'${path}',${-step})">−</button><input type="number" step="any" value="${r1(val)}" onfocus="this.select()" onchange="PRO.set('${path}',this.value)"><button type="button" onpointerdown="PRO.hold(event,'${path}',${step})">+</button><small>${esc(unit || 'см')}</small></span></div>`;
 }
@@ -53,6 +54,7 @@ function getVal(path) {
   if (path.startsWith('bd.')) { const b = S.beds[sel.bi]; return b ? b[path.slice(3)] : 0; }
   if (path.startsWith('ob.')) { const o = objIdx(); return o ? o[path.slice(3)] : 0; }
   if (path.startsWith('dt.')) { const c = S.cols[sel.i]; return c && c.det ? c.det[path.slice(3)] : 0; }
+  if (path.startsWith('op.')) { const o = S.opens[sel.oi]; return o ? o[path.slice(3)] : 0; }
   if (path.startsWith('fp.')) { const si = selItem(); return si && si.it && si.it.fp ? si.it.fp[path.slice(3)] : 0; }
   if (path.startsWith('room.')) return S.room[path.slice(5)];
   if (path === 'col.H' || path === 'col.D') { const c = S.cols[sel.i]; return c ? (c[path.slice(4)] || S[path.slice(4)]) : 0; }
@@ -69,6 +71,7 @@ function setVal(path, v) {
     if (path.startsWith('mzd.')) { const m = S.mezzes[sel.mi]; if (m && m.div) m.div[+path.slice(4)] = r1(clamp(v, 5, Math.max(5, m.w - 3 * S.t - 5))); return; }
     if (path.startsWith('mzc.')) { const m = S.mezzes[sel.mi]; if (m) { m.cd = m.cd || []; m.cd[+path.slice(4)] = Math.round(clamp(v, 0, 5)); } return; }
     if (path.startsWith('pn.')) { const p = S.panels[sel.pi]; if (p) p[path.slice(3)] = r1(v); return; }
+    if (path.startsWith('op.')) { const o = S.opens[sel.oi]; if (o) { const E = roomEdges(roomPoly(S)), L = E[o.wall] ? E[o.wall].L : 9999; o[path.slice(3)] = r1(v); o.off = r1(Math.max(0, Math.min(Math.max(0, L - o.w), o.off))); } return; }
     if (path.startsWith('dt.')) { const c = S.cols[sel.i]; if (!c || !c.det) return; const k = path.slice(3);
       if (k === 'rot') { const f = colFoot(S, sel.i), cx = c.det.x + f.w / 2, cz = c.det.z + f.d / 2; c.det.rot = (((Math.round(v / 90) * 90) % 360) + 360) % 360; const n2 = colFoot(S, sel.i); c.det.x = r1(cx - n2.w / 2); c.det.z = r1(cz - n2.d / 2); } else c.det[k] = r1(v); return; }
     if (path.startsWith('fp.')) { const si = selItem(); if (!si || !si.it) return; const fp = freeItem(S, si.kind, si.it), k = path.slice(3);
@@ -157,7 +160,7 @@ function selectItem(id) { const f = findItem(id); if (!f) return; sel = { k: 'it
 function selectGlobal() { sel = { k: 'global' }; refresh(false); }
 
 /* ---------- панель ---------- */
-function selMeta() { return sel.k === 'item' ? { k: 'item', id: sel.id } : (sel.k === 'col' ? { k: 'col', i: sel.i } : (sel.k === 'mezz' ? { k: 'mezz', i: sel.mi } : (sel.k === 'obj' ? { k: 'obj', i: sel.oi, id: S.objs[sel.oi] && S.objs[sel.oi].id } : sel.k === 'bed' ? { k: 'bed', i: sel.bi } : (sel.k === 'unit' ? { k: 'unit', i: sel.ui } : (sel.k === 'panel' ? { k: 'panel', i: sel.pi } : (sel.k === 'doors' ? { k: 'doors' } : { k: 'global' })))))); }
+function selMeta() { return sel.k === 'item' ? { k: 'item', id: sel.id } : (sel.k === 'col' ? { k: 'col', i: sel.i } : (sel.k === 'mezz' ? { k: 'mezz', i: sel.mi } : (sel.k === 'open' ? { k: 'open', i: sel.oi, id: S.opens[sel.oi] && S.opens[sel.oi].id } : sel.k === 'obj' ? { k: 'obj', i: sel.oi, id: S.objs[sel.oi] && S.objs[sel.oi].id } : sel.k === 'bed' ? { k: 'bed', i: sel.bi } : (sel.k === 'unit' ? { k: 'unit', i: sel.ui } : (sel.k === 'panel' ? { k: 'panel', i: sel.pi } : (sel.k === 'doors' ? { k: 'doors' } : { k: 'global' })))))); }
 const btn = (on, act, txt, cls) => `<button type="button" class="${on ? 'on ' : ''}${cls || ''}" onclick="${act}">${txt}</button>`;
 function sideGlobal() {
   const g = geom(S), T = P.tiers;
@@ -185,6 +188,7 @@ function sideGlobal() {
   h += `<div class="sub">Кровати (${S.beds.length})</div><div class="cols">${S.beds.map((b, i) => `<button type="button" class="colchip" onclick="PRO.selBed(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.delBedAt(${i})">✕</span>К${i + 1}<b>${Math.round(b.mw * 10)}</b><small>${b.kind === 'bunk' ? '2 яруса' : 'кровать'}</small></button>`).join('')}</div><div class="r">${btn(0, "PRO.addBed('single')", '＋ Кровать')}${btn(0, "PRO.addBed('bunk')", '＋ Двухъярусная детская')}</div>`;
   h += `<div class="sub">Тумбы-обувницы (${S.units.length})</div><div class="cols">${S.units.map((u, i) => `<button type="button" class="colchip" onclick="PRO.selUnit(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.delUnitAt(${i})">✕</span>Т${i + 1}<b>${Math.round(u.w * 10)}</b><small>${UNIT_KINDS[u.kind].split(' ')[0]}</small></button>`).join('')}</div><div class="r">${btn(0, 'PRO.addUnit()', '＋ Тумба-обувница')}</div><div class="note">Отдельная низкая тумба: откидные створки, двери или ящики. Двигайте мышью вдоль стены, размеры любые.</div>`;
   h += sideObjList();
+  h += sideOpenList();
   h += `<div class="sub">Шаблоны</div><div class="r">${btn(0, "PRO.tpl('S')", 'Прямой шкаф')}${btn(0, "PRO.tpl('P')", 'П-образный')}</div>`;
   h += `<div class="sub">Двери</div><div class="r">${btn(S.doors.kind === 'none', "PRO.doors('none')", 'Без дверей')}${btn(S.doors.kind === 'swing', "PRO.doors('swing')", 'Распашные')}${btn(S.doors.kind === 'sliding', "PRO.doors('sliding')", 'Купе')}</div>`;
   if (S.doors.kind !== 'none') {
@@ -358,10 +362,40 @@ function freeBlock() {
   h += `<div class="r">${btn(0, 'PRO.itBack()', '↩ Вернуть к шкафу')}</div>`;
   return h;
 }
+function sideOpen() {
+  const o = S.opens[sel.oi]; if (!o) return sideGlobal(); const k = OPEN_KINDS[o.kind], rp = roomPoly(S), E = roomEdges(rp), e = E[o.wall];
+  let h = `<div class="sh">${k.icon} ${k.ru} ${sel.oi + 1}</div><div class="note">Стена ${o.wall + 1} (${mm(e ? e.L : 0)} мм) · от угла стены ${mm(o.off)} мм · от пола ${mm(o.y)} мм. Тяните мышью по любой стене или впишите цифры.</div>`;
+  h += `<div class="r"><span>Стена</span>${rp.map((p, i) => btn(o.wall === i, `PRO.opWall(${i})`, '№' + (i + 1))).join('')}</div>`;
+  h += stepper('От угла стены до левого края, см', 'op.off', o.off, 5) + stepper('Ширина, см', 'op.w', o.w, 1) + stepper('Высота, см', 'op.h', o.h, 1) + stepper('От пола, см', 'op.y', o.y, 5);
+  if (o.kind === 'column') h += stepper('Выступ от стены, см', 'op.d', o.d, 1);
+  h += `<div class="r">${btn(0, 'PRO.opCenter()', 'По центру стены')}${btn(0, 'PRO.opDup()', '⧉ Копия')}${btn(0, 'PRO.opDelAt(' + sel.oi + ')', '🗑 Удалить')}${btn(0, 'PRO.selGlobal()', 'Готово')}</div>`;
+  return h;
+}
+function sideOpenList() {
+  return `<div class="sub">Двери, окна, розетки (${S.opens.length})</div><div class="cols">${S.opens.map((o, i) => `<button type="button" class="colchip" onclick="PRO.selOpen(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.opDelAt(${i})">✕</span>${OPEN_KINDS[o.kind].icon} ${i + 1}<b>ст.${o.wall + 1}</b></button>`).join('')}</div><div class="r">${Object.keys(OPEN_KINDS).map(k => `<button type="button" onclick="PRO.addOpen('${k}')">${OPEN_KINDS[k].icon} ${OPEN_KINDS[k].ru}</button>`).join('')}</div><div class="note">Элементы ставятся на стену; тяните их мышью по любым стенам. Двери и колонны отмечаются в предупреждениях, если мебель мешает.</div>`;
+}
+/* ---- строка «что добавлено»: всё, что есть в проекте, видно и удаляется (в чертежи попадает только то, что здесь есть) ---- */
+function addedList() {
+  const P = roomPoly(S), out = [], pushI = (cat, icon, name, size, bad, sel_, del) => out.push({ cat, icon, name, size, bad, sel: sel_, del });
+  S.cols.forEach((c, i) => { if (c.gap) return pushI('c', '▭', 'Проём ' + (i + 1), mm(c.w), c.w < 3, `PRO.selCol(${i})`, `PRO.delCol(${i})`); const oor = c.det && !rpRectIn(P, colRect(S, i)); pushI('c', c.det ? '⇱' : '▯', (c.det ? 'Отдельный шкаф ' : 'Отсек ') + (i + 1), mm(c.w), oor || c.w < 5, `PRO.selCol(${i})`, `PRO.delCol(${i})`); });
+  S.mezzes.forEach((m, i) => pushI('m', '▭', 'Антресоль ' + (i + 1), mm(m.w), m.w < 5 || m.h < 5, `PRO.selMezz(${i})`, `PRO.delMezzAt(${i})`));
+  S.panels.forEach((p, i) => pushI('p', '🪞', 'Панель ' + (i + 1), mm(p.w) + '×' + mm(p.h), p.w < 3 || p.h < 3 || (p.fp && !rpRectIn(P, itemRect(S, 'panel', p))), `PRO.selPanel(${i})`, `PRO.delPanelAt(${i})`));
+  S.units.forEach((u, i) => pushI('u', '👟', 'Тумба ' + (i + 1), mm(u.w), u.fp && !rpRectIn(P, itemRect(S, 'unit', u)), `PRO.selUnit(${i})`, `PRO.delUnitAt(${i})`));
+  S.beds.forEach((b, i) => pushI('b', '🛏', 'Кровать ' + (i + 1), mm(b.mw) + '×' + mm(b.ml), b.fp && !rpRectIn(P, itemRect(S, 'bed', b)), `PRO.selBed(${i})`, `PRO.delBedAt(${i})`));
+  S.objs.forEach((o, i) => pushI('o', '🗄', OBJ_KINDS[o.kind].ru.split(' ')[0] + ' ' + (i + 1), mm(o.w) + '×' + mm(o.d), !rpRectIn(P, objRect(o)) || o.w < 1 || o.h < 1, `PRO.selObj(${i})`, `PRO.obDelAt(${i})`));
+  S.opens.forEach((o, i) => pushI('e', OPEN_KINDS[o.kind].icon, OPEN_KINDS[o.kind].ru + ' ' + (i + 1), mm(o.w), false, `PRO.selOpen(${i})`, `PRO.opDelAt(${i})`));
+  S.cols.forEach((c, ci) => { if (c.gap) return; const H = c.H || S.H; c.items.forEach(it => { const dup = c.items.some(x => x !== it && x.type === it.type && Math.abs(x.y - it.y) < .3 && (it.type === 'shelf' || it.type === 'rod' || it.type === 'led' || it.type === 'hook')); const hid = it.y < -0.1 || it.y > H - 1 || (it.y1 != null && it.y1 < it.y + 1); if (dup || hid) pushI('i', ITEM_ICON[it.type], ITEM_TYPES[it.type] + ' (отсек ' + (ci + 1) + ')', hid ? 'вне отсека' : 'дубль', true, `PRO.selItem('${it.id}')`, `PRO.delItemId('${it.id}')`); }); });
+  return out;
+}
+function renderAdded() {
+  const e = $('addedBar'); if (!e) return; if (!OWNER || VIEW) { e.style.display = 'none'; return; }
+  const L = addedList(), bad = L.filter(x => x.bad).length; e.style.display = '';
+  e.innerHTML = `<div class="ah"><span>🧾 Что добавлено в проект: ${L.length}</span><small>${bad ? '⚠ требуют внимания: ' + bad + ' — ' : ''}нажмите, чтобы найти в 3D; ✕ — убрать из проекта и чертежей</small></div><div class="chips">${L.map(x => `<span class="ch ${x.bad ? 'bad' : ''}" onclick="${x.sel}">${x.icon} ${esc(x.name)} <b>${esc(x.size)}</b>${x.bad ? ' ⚠' : ''}<i title="Удалить" onclick="event.stopPropagation(); ${x.del}">✕</i></span>`).join('') || '<span class="note">Пока ничего</span>'}</div>`;
+}
 function renderSide() {
   const box = $('side'); if (!box) return;
   if (VIEW) { box.innerHTML = sideView(); return; }
-  box.innerHTML = sel.k === 'item' ? sideItem() : (sel.k === 'col' ? sideCol() : (sel.k === 'mezz' ? sideMezz() : (sel.k === 'panel' ? sidePanel() + freeBlock() : (sel.k === 'unit' ? sideUnit() + freeBlock() : (sel.k === 'bed' ? sideBed() + freeBlock() : (sel.k === 'obj' ? sideObj() : sideGlobal()))))));
+  box.innerHTML = sel.k === 'item' ? sideItem() : (sel.k === 'col' ? sideCol() : (sel.k === 'mezz' ? sideMezz() : (sel.k === 'panel' ? sidePanel() + freeBlock() : (sel.k === 'unit' ? sideUnit() + freeBlock() : (sel.k === 'bed' ? sideBed() + freeBlock() : (sel.k === 'obj' ? sideObj() : (sel.k === 'open' ? sideOpen() : sideGlobal())))))));
 }
 function sideView() {
   const pr = pricing(S), g = geom(S);
@@ -382,6 +416,10 @@ function renderPrice() {
 function renderWarn() {
   const e = $('warn'); if (!e || VIEW) return; const w = warnings(S);
   { const g = geom(S), P = roomPoly(S); if (g.cols.length && !rpRectIn(P, wardrobeRect(S))) w.push('Шкаф выходит за пределы комнаты — сдвиньте его или увеличьте комнату'); }
+  { const P = roomPoly(S), E = roomEdges(P), ov = (a, b) => a.x0 < b.x1 - 1 && a.x1 > b.x0 + 1 && a.z0 < b.z1 - 1 && a.z1 > b.z0 + 1;
+    const rects = []; if (S.cols.some(c => !c.gap && !c.det)) rects.push(['Шкаф', wardrobeRect(S)]); S.cols.forEach((c, ci) => { if (c.det) rects.push(['Отдельный шкаф ' + (ci + 1), colRect(S, ci)]); });
+    S.objs.forEach((o, i) => rects.push(['Предмет ' + (i + 1), objRect(o)])); [['unit', S.units, 'Тумба'], ['bed', S.beds, 'Кровать']].forEach(([kd, arr, nm]) => arr.forEach((it, i) => { if (it.fp) rects.push([nm + ' ' + (i + 1), itemRect(S, kd, it)]); }));
+    S.opens.forEach((o, oi) => { const r = openRect2D(o, E); if (!r) return; rects.forEach(([nm, rr]) => { if (ov(r, rr)) w.push(nm + ' мешает: ' + OPEN_KINDS[o.kind].ru.toLowerCase() + ' ' + (oi + 1) + (o.kind === 'column' ? '' : ' (открывание двери)')); }); }); }
   { const P = roomPoly(S); S.cols.forEach((c, ci) => { if (c.det && !rpRectIn(P, colRect(S, ci))) w.push('Отдельный шкаф ' + (ci + 1) + ' выходит за пределы комнаты'); }); }
   { const P = roomPoly(S); [['unit', S.units], ['bed', S.beds], ['panel', S.panels]].forEach(([kd, arr]) => arr.forEach((it, i) => { if (it.fp && !rpRectIn(P, itemRect(S, kd, it))) w.push(({ unit: 'Тумба', bed: 'Кровать', panel: 'Зеркало/панель' })[kd] + ' ' + (i + 1) + ' выходит за пределы комнаты'); })); }
   { const P = roomPoly(S); (S.objs || []).forEach((o, i) => { if (!rpRectIn(P, objRect(o))) w.push(OBJ_KINDS[o.kind].ru + ' ' + (i + 1) + ' выходит за пределы комнаты'); }); }
@@ -391,13 +429,13 @@ let odT = null;
 function refresh(full) {
   if (full !== false) { recalcW(S); save(); try { history.replaceState(null, '', location.pathname + '#p=' + encodeState(S)); } catch (e) {} }
   if (K) { if (full !== false) K.update(S); K.select(selMeta()); }   // выбор не пересобирает сцену: двойной щелчок по двери всегда срабатывает
-  renderSide(); renderPrice(); renderWarn();
+  renderSide(); renderPrice(); renderWarn(); renderAdded();
   if (OWNER && full !== false) { clearTimeout(odT); odT = setTimeout(renderOwner, 350); }
 }
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=15');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=16');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -408,7 +446,7 @@ async function init3D() {
         if (K) K.setMultiKeys(multi); renderSide(); return;
       }
       if (!mod && !(key && multi.includes(key))) { if (multi.length) { multi = []; if (K) K.setMultiKeys([]); } }
-      sel = !s ? { k: 'global' } : (s.k === 'item' ? { k: 'item', id: s.id, col: s.col } : (s.k === 'col' ? { k: 'col', i: s.i } : (s.k === 'mezz' ? { k: 'mezz', mi: s.i } : (s.k === 'panel' ? { k: 'panel', pi: s.i } : (s.k === 'unit' ? { k: 'unit', ui: s.i } : (s.k === 'bed' ? { k: 'bed', bi: s.i } : (s.k === 'obj' ? { k: 'obj', oi: s.i } : { k: 'global' }))))))); refresh(false); },
+      sel = !s ? { k: 'global' } : (s.k === 'item' ? { k: 'item', id: s.id, col: s.col } : (s.k === 'col' ? { k: 'col', i: s.i } : (s.k === 'mezz' ? { k: 'mezz', mi: s.i } : (s.k === 'panel' ? { k: 'panel', pi: s.i } : (s.k === 'unit' ? { k: 'unit', ui: s.i } : (s.k === 'bed' ? { k: 'bed', bi: s.i } : (s.k === 'obj' ? { k: 'obj', oi: s.i } : (s.k === 'open' ? { k: 'open', oi: s.i } : { k: 'global' })))))))); refresh(false); },
     onMoveAll: (dx, dz, key) => {   // тянем весь шкаф / предметы по полу (несколько сразу, если выбраны через Ctrl)
       const keys = multi.includes(key) ? multi.slice() : [key];
       if (!dragState || !dragState.all) {
@@ -453,6 +491,14 @@ async function init3D() {
       pushUndo(); c.det = detachPos(S, i); recalcW(S); const ni = S.cols.findIndex(q => q.id === c.id); sel = { k: 'col', i: ni };
       dragState = { all: true, from: { ['c:' + c.id]: [c.det.x, c.det.z] } }; K.update(S); K.select(selMeta()); renderSide(); toast('Отсек отделён — ставьте куда нужно');
       return 'c:' + c.id;
+    },
+    onOpenDrag: (i, wall, sx, y) => {   // дверь / окно / розетка: тянем мышью по стенам
+      const o = S.opens[i]; if (!o) return ''; if (!dragState || dragState.open !== i) { pushUndo(); dragState = { open: i }; }
+      const E = roomEdges(roomPoly(S)), e = E[wall]; if (!e) return '';
+      o.wall = wall; o.off = r1(Math.round(Math.max(0, Math.min(Math.max(0, e.L - o.w), sx - o.w / 2))));
+      if (!['door', 'balcony', 'pipe', 'column'].includes(o.kind)) o.y = r1(Math.round(Math.max(0, Math.min(((S.room && S.room.H) || 260) - o.h, y - o.h / 2)) / 5) * 5);
+      K.update(S); K.select(selMeta()); renderWarn(); renderAdded();
+      return OPEN_KINDS[o.kind].ru + ': стена ' + (wall + 1) + ', от угла ' + mm(o.off) + ' мм, от пола ' + mm(o.y) + ' мм';
     },
     onMoveEnd: () => { dragState = null; refresh(); },
     onDrag: (s, dy, hx, dx) => {
@@ -528,11 +574,11 @@ async function ownerUnlock() {
   if (await ownerVerify(key)) { try { localStorage.setItem('kc_owner', key); } catch (e) {} ownerApply(true); toast('Режим мастера включён'); } else toast('Неверный ключ');
 }
 async function ownerBoot() { if (VIEW) return; ownerApply(true); }   // страница открывается только мастеру (cookie), поэтому режим включён сразу
-function ownerApply(on) { OWNER = !!on && !VIEW; const b = $('ownerBox'); if (b) b.style.display = OWNER ? '' : 'none'; const cl = $('clientBtn'); if (cl) cl.style.display = OWNER ? '' : 'none'; const ct = $('clientTg'); if (ct) ct.style.display = OWNER ? '' : 'none'; if (OWNER) renderOwner(); }
+function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { renderAdded(); } catch (e) {} }, 0); const b = $('ownerBox'); if (b) b.style.display = OWNER ? '' : 'none'; const cl = $('clientBtn'); if (cl) cl.style.display = OWNER ? '' : 'none'; const ct = $('clientTg'); if (ct) ct.style.display = OWNER ? '' : 'none'; if (OWNER) renderOwner(); }
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=8');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=10');
   const r = drawMod.buildSheets(S); lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
 }
@@ -675,6 +721,13 @@ window.PRO = {
     else { const m = placeAtWall(S, r => wfoot(S, r), i, align); if (m) { S.room.ox = m.ox; S.room.oz = m.oz; S.room.rot = m.rot; } }
   }),
   shSide: v => mutate(() => { const f = findItem(sel.id); if (f && f.it.type === 'shelf') { if (v) f.it.sd = v; else delete f.it.sd; } }),
+  addOpen: kind => mutate(() => { const rp = roomPoly(S), E = roomEdges(rp); let wi = 0; const o = mkOpen(kind, 0, 0); for (let i = 0; i < E.length; i++) if (E[i].L > E[wi].L) wi = i; o.wall = wi; o.off = r1(Math.max(0, (E[wi].L - o.w) / 2)); S.opens.push(o); sel = { k: 'open', oi: S.opens.length - 1 }; }),
+  selOpen: i => { sel = { k: 'open', oi: i }; refresh(false); },
+  opDelAt: i => mutate(() => { S.opens.splice(i, 1); sel = { k: 'global' }; }),
+  opDup: () => mutate(() => { const o = S.opens[sel.oi]; if (!o) return; const c = JSON.parse(JSON.stringify(o)); c.id = 'o' + Math.random().toString(36).slice(2, 7); const L = (roomEdges(roomPoly(S))[o.wall] || { L: 9999 }).L; c.off = r1(Math.min(Math.max(0, L - o.w), o.off + o.w + 10)); S.opens.push(c); sel = { k: 'open', oi: S.opens.length - 1 }; }),
+  opWall: i => mutate(() => { const o = S.opens[sel.oi]; if (!o) return; const L = (roomEdges(roomPoly(S))[i] || { L: 9999 }).L; o.wall = i; o.off = r1(Math.max(0, Math.min(Math.max(0, L - o.w), o.off))); }),
+  opCenter: () => mutate(() => { const o = S.opens[sel.oi]; if (!o) return; const L = (roomEdges(roomPoly(S))[o.wall] || { L: 9999 }).L; o.off = r1(Math.max(0, (L - o.w) / 2)); }),
+  delItemId: id => mutate(() => { S.cols.forEach(c => { c.items = c.items.filter(i => i.id !== id); }); sel = { k: 'global' }; }),
   colDp: () => mutate(() => { const c = S.cols[sel.i]; if (c) { if (c.dp === false) delete c.dp; else c.dp = false; } }),
   dtRot: d => mutate(() => { const c = S.cols[sel.i]; if (!c || !c.det) return; const ci = sel.i, f = colFoot(S, ci), cx = c.det.x + f.w / 2, cz = c.det.z + f.d / 2; c.det.rot = (((c.det.rot || 0) + d) % 360 + 360) % 360; const n2 = colFoot(S, ci); c.det.x = r1(cx - n2.w / 2); c.det.z = r1(cz - n2.d / 2); if (S.room.mag) { const m = rectMagnet(S, c.det.x, c.det.z, r => colFoot(S, ci, r), c.det.rot, 200, c.det.rot); if (m) { c.det.x = m.ox; c.det.z = m.oz; } } }),
   magnet: () => mutate(() => { S.room.mag = !S.room.mag; if (S.room.mag) { const m = wardrobeMagnet(S, S.room.ox || 0, S.room.oz || 0, 120); if (m) { S.room.ox = m.ox; S.room.oz = m.oz; S.room.rot = m.rot; } } }),

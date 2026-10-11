@@ -1,3 +1,4 @@
+import { sanitizeOpens } from '/static/js/room-open-core.js?v=1';
 /* Конструктор шкафа PRO: модель, геометрия, список деталей, цена. Без DOM — можно проверять в node. Размеры в см. */
 
 export const P = {
@@ -196,7 +197,7 @@ export function mkItem(type, y, extra) {
   return Object.assign(b, extra || {});
 }
 export function defState() {
-  const S = { v: 2, W: 240, H: 200, D: 60, t: 1.6, plinth: 8, tier: 1, color: 0, custom: null, cols: [], mezzes: [], panels: [], units: [], beds: [], objs: [], room: { W: 400, D: 300, H: 260, ox: 0, oz: 0, rot: 0, mag: true, poly: null, set: false },
+  const S = { v: 2, W: 240, H: 200, D: 60, t: 1.6, plinth: 8, tier: 1, color: 0, custom: null, cols: [], mezzes: [], panels: [], units: [], beds: [], objs: [], opens: [], room: { W: 400, D: 300, H: 260, ox: 0, oz: 0, rot: 0, mag: true, poly: null, set: false },
     doors: { kind: 'none', n: 3, fills: ['dsp', 'mirror', 'dsp', 'mirror', 'dsp', 'mirror', 'dsp', 'mirror'], laco: 0, handles: true, gf: 4 }, led: false, name: 'Мой шкаф' };
   S.cols = [
     { id: uid(), w: 78, items: [mkItem('rod', 185), mkItem('shelf', 193), mkItem('shelf', 40), mkItem('shelf', 100)] },
@@ -658,6 +659,7 @@ export function sanitize(S) {
     o.room = { W: r1(n(rm.W, 100, 1500, 400)), D: r1(n(rm.D, 100, 1500, 300)), H: r1(n(rm.H, 180, 400, 260)), ox: r1(n(rm.ox, -500, 1500, 0)), oz: r1(n(rm.oz, -500, 1500, 0)), rot: [0, 90, 180, 270].includes(rm.rot) ? rm.rot : 0, mag: rm.mag !== false, poly: P && P.every(p => p.every(v => isFinite(v))) && rpValid(P) ? P : null, set: !!rm.set }; }
   o.units = (Array.isArray(S.units) ? S.units : []).slice(0, 24).map(u => ({ id: uid(), x: r1(n(u && u.x, -600, 1600, 0)), pz: r1(n(u && u.pz, 0, 400, 0)), w: r1(n(u && u.w, 25, 300, 80)), h: r1(n(u && u.h, 30, 200, 100)), d: r1(n(u && u.d, 15, 80, 35)), kind: UNIT_KINDS[u && u.kind] ? u.kind : 'flap', n: n(u && u.n, 1, 8, 2) | 0, fill: ['dsp', 'mdf', 'glass', 'mirror'].includes(u && u.fill) ? u.fill : 'dsp', seat: !!(u && u.seat), legs: r1(n(u && u.legs, 0, 20, 8)), fp: fpOf(u) }));
   o.beds = (Array.isArray(S.beds) ? S.beds : []).slice(0, 12).map(b => { const k = b && b.kind === 'bunk' ? 'bunk' : 'single', d = mkBed(0, k); return { id: uid(), x: r1(n(b && b.x, -800, 1800, 0)), pz: r1(n(b && b.pz, 0, 500, 0)), rot: b && b.rot === 90 ? 90 : 0, kind: k, mw: r1(n(b && b.mw, 50, 220, d.mw)), ml: r1(n(b && b.ml, 100, 240, d.ml)), mt: r1(n(b && b.mt, 5, 40, d.mt)), style: BED_STYLES[b && b.style] ? b.style : d.style, mcol: n(b && b.mcol, 0, 5, 0) | 0, sh: r1(n(b && b.sh, 10, 60, d.sh)), hh: r1(n(b && b.hh, 20, 220, d.hh)), fh: r1(n(b && b.fh, 10, 220, d.fh)), lg: r1(n(b && b.lg, 0, 40, d.lg)), drw: n(b && b.drw, 0, 4, 0) | 0, lift: !!(b && b.lift), soft: !!(b && b.soft), bedding: !(b && b.bedding === false), lv2: r1(n(b && b.lv2, 80, 200, 150)), rail: r1(n(b && b.rail, 10, 60, 28)), ladder: b && b.ladder === 'side' ? 'side' : 'end', steps: n(b && b.steps, 3, 9, 5) | 0, fp: fpOf(b) }; });
+  o.opens = sanitizeOpens(S.opens, roomPoly(o));
   o.objs = (Array.isArray(S.objs) ? S.objs : []).slice(0, 80).map(q => {
     const kind = q && OBJ_KINDS[q.kind] ? q.kind : 'book', d = mkObj(kind, 0, 0), poly = kind === 'custom' && Array.isArray(q.poly) && q.poly.length >= 3 && q.poly.length <= 40 && q.poly.every(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1])) ? q.poly.map(p => [r1(n(p[0], -2000, 2000, 0)), r1(n(p[1], -2000, 2000, 0))]) : (kind === 'custom' ? CORNER_L.map(p => p.slice()) : null);
     return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };

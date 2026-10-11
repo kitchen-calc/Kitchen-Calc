@@ -1,5 +1,6 @@
 /* Чертежи конструктора шкафа PRO в стиле AutoCAD, лист A4 (альбомный). Размеры на чертежах — в мм. Только для режима мастера. */
-import { shelfSpans, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1 } from '/static/js/shkaf-pro-core.js?v=10';
+import { OPEN_KINDS, roomEdges, openCenter } from '/static/js/room-open-core.js?v=1';
+import { shelfSpans, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1 } from '/static/js/shkaf-pro-core.js?v=11';
 
 const F = 1.4;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -151,6 +152,24 @@ function sheetRoomPlan(S, bp, no, total) {
   const P = roomPoly(S), bx = Math.max(...P.map(p => p[0])), bz = Math.max(...P.map(p => p[1]));
   const sc = Math.min(760 / (bx * 10), 460 / (bz * 10), .5), k10 = 10 * sc, x0 = 120, y0 = 90, X = v => x0 + v * k10, Z = v => y0 + v * k10;
   let o = `<polygon points="${P.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${ST.o} stroke-width="3" fill="#faf7f0"/>`;
+  { const E = roomEdges(P); (S.opens || []).forEach((q, i) => {
+      const c = openCenter(q, E); if (!c) return; const e = c.e, hw = q.w / 2, k = q.kind, p1 = [c.x - e.ex * hw, c.z - e.ez * hw], p2 = [c.x + e.ex * hw, c.z + e.ez * hw], n = [e.nx, e.nz];
+      const P2 = (p, d) => [X(p[0] + n[0] * d), Z(p[1] + n[1] * d)], ln = (a, b, st) => `<line x1="${N(a[0])}" y1="${N(a[1])}" x2="${N(b[0])}" y2="${N(b[1])}" ${st || ST.o}/>`;
+      if (k === 'door' || k === 'balcony') {
+        o += ln(P2(p1, 0), P2(p2, 0), 'stroke="#faf7f0" stroke-width="7"') + ln(P2(p1, -2), P2(p1, 2)) + ln(P2(p2, -2), P2(p2, 2));
+        const tip = P2(p1, q.w), end = P2(p2, 0), cr = n[0] * e.ez - n[1] * e.ex;
+        o += ln(P2(p1, 0), tip, ST.o) + `<path d="M${N(tip[0])} ${N(tip[1])} A${N(q.w * k10)} ${N(q.w * k10)} 0 0 ${cr > 0 ? 1 : 0} ${N(end[0])} ${N(end[1])}" ${ST.t}/>`;
+      } else if (k === 'window') {
+        o += ln(P2(p1, 0), P2(p2, 0), 'stroke="#faf7f0" stroke-width="7"') + ln(P2(p1, -2.2), P2(p2, -2.2)) + ln(P2(p1, 0), P2(p2, 0), ST.t) + ln(P2(p1, 2.2), P2(p2, 2.2)) + ln(P2(p1, -2.2), P2(p1, 2.2)) + ln(P2(p2, -2.2), P2(p2, 2.2));
+      } else if (k === 'radiator') {
+        o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, 9), P2(p1, 9)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${ST.o} fill="url(#h2)"/>`;
+      } else if (k === 'column') {
+        o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, q.d || 40), P2(p1, q.d || 40)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${ST.o} fill="url(#h1)"/>`;
+      } else {
+        const cc = P2([c.x, c.z], 2.5); o += circ(cc[0], cc[1], k === 'pipe' ? Math.max(2, q.w / 2 * k10) : 3.4, 'o', k === 'pipe' ? '#ddd' : '#fff') + text(cc[0] + n[0] * 9, cc[1] + n[1] * 9 + 2.5, k === 'switch' ? 'В' : (k === 'vent' ? '⌀' : (k === 'pipe' ? 'Т' : 'Р')), 6.2, 'middle', 'font-weight="700"');
+      }
+      const lb = P2([c.x, c.z], -9); o += text(lb[0], lb[1] + 3, String(i + 1), 6.5, 'middle', 'fill="#0b6e8f" font-weight="700"');
+    }); }
   const items = [], rm = S.room || {}, rotPts = (pts, rot, ox, oz) => { const a = (rot || 0) * Math.PI / 180, c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a)); return pts.map(p => [p[0] * c + p[1] * s + ox, -p[0] * s + p[1] * c + oz]); };
   const ft = wfoot(S), wr = { x0: rm.ox || 0, z0: rm.oz || 0 };
   items.push({ n: 'Шкаф', poly: [[wr.x0, wr.z0], [wr.x0 + ft.w, wr.z0], [wr.x0 + ft.w, wr.z0 + ft.d], [wr.x0, wr.z0 + ft.d]], rot: rm.rot || 0, w: bp.g.W, d: ft.d, fill: 'url(#h2)' });
@@ -176,6 +195,18 @@ function sheetRoomPlan(S, bp, no, total) {
   const lx = 935, ly = 90; o += text(lx, ly - 6, 'ЭКСПЛИКАЦИЯ', 9, 'start', 'font-weight="700"');
   legend.slice(0, 22).forEach((r, i) => { o += text(lx, ly + 14 + i * 26, `${r[0]} ${r[1]} ${r[2]}`, 6.6, 'start', 'font-weight="700"') + text(lx + 6, ly + 25 + i * 26, `${r[3]} · поворот ${r[4]}`, 6, 'start', 'fill="#444"'); });
   return sheet(o, meta(S, bp).slice(0, 3).concat([['Лист', 'План комнаты с мебелью'], ['Предметов', String(items.length)], ['Дата', new Date().toLocaleDateString('ru-RU')]]), no, total);
+}
+function sheetOpenings(S, bp, no, total) {
+  const P = roomPoly(S), E = roomEdges(P), hd = ['№', 'Элемент', 'Стена', 'От угла стены до левого края, мм', 'Ширина × высота, мм', 'От пола, мм', 'Выступ, мм'], cw = [44, 200, 100, 300, 200, 110, 90], x0 = 70;
+  let o = '', y = 80, xs = [x0]; cw.forEach(w => xs.push(xs[xs.length - 1] + w));
+  o += text(x0, 62, 'ДВЕРИ, ОКНА, РОЗЕТКИ И ДРУГИЕ ЭЛЕМЕНТЫ СТЕН (номера — как на плане комнаты)', 10, 'start', 'font-weight="700"');
+  o += rect(x0, y, xs[xs.length - 1] - x0, 26, 'o', '#f0e9d8'); hd.forEach((t, i) => { o += text(xs[i] + 6, y + 17, t, 7.6, 'start', 'font-weight="700"'); if (i) o += line(xs[i], y, xs[i], y + 26 + 26 * Math.min(S.opens.length, 24)); });
+  S.opens.slice(0, 24).forEach((q, i) => {
+    const yy = y + 26 + i * 26, e = E[q.wall], k = OPEN_KINDS[q.kind];
+    o += rect(x0, yy, xs[xs.length - 1] - x0, 26, 't');
+    [i + 1, k.ru, '№' + (q.wall + 1) + ' · ' + mm(e ? e.L : 0), mm(q.off), mm(q.w) + ' × ' + mm(q.h), mm(q.y), q.kind === 'column' ? mm(q.d) : '—'].forEach((t, j) => { o += text(xs[j] + 6, yy + 17, String(t), 8, 'start'); });
+  });
+  return sheet(o, meta(S, bp).slice(0, 3).concat([['Лист', 'Элементы стен'], ['Элементов', String(S.opens.length)], ['Дата', new Date().toLocaleDateString('ru-RU')]]), no, total);
 }
 function sheetDoors(S, bp, no, total) {
   const g = bp.g, sc = Math.min(1000 / (g.W * 10), 470 / (g.totalH * 10), .5), x0 = 105, y0 = 80, k10 = 10 * sc, X = v => x0 + v * k10, Y = v => y0 + (g.totalH - v) * k10;
@@ -425,7 +456,8 @@ export function buildSheets(S0) {
   const total = '__T__';
   let no = 1;
   const sheets = [sheetOverview(S, bp, no++, total)];
-  if (S.objs.length || S.beds.length || S.units.length || S.panels.length || S.room.rot || S.room.oz || S0.cols.some(c => c.det)) sheets.push(sheetRoomPlan(S0, bp, no++, total));
+  if (S.objs.length || S.beds.length || S.units.length || S.panels.length || S.room.rot || S.room.oz || S0.cols.some(c => c.det) || (S0.opens || []).length) sheets.push(sheetRoomPlan(S0, bp, no++, total));
+  if ((S0.opens || []).length) sheets.push(sheetOpenings(S0, bp, no++, total));
   sheets.push(sheetDoors(S, bp, no++, total), sheetSections(S, bp, no++, total));
   S.cols.forEach((c, i) => { if (!c.gap) sheets.push(sheetColumn(S, bp, i, no++, total)); });
   S.mezzes.forEach((m, i) => sheets.push(sheetMezz(S, bp, i, no++, total)));

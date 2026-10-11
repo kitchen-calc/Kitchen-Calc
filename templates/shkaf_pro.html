@@ -66,6 +66,8 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
 .shape-cv{margin-top:10px;border:1px solid #d8cdb8;border-radius:12px;overflow:hidden;background:#fff;touch-action:none}.shape-cv canvas{display:block;width:100%;height:auto;cursor:crosshair}
 .shlib{display:flex;flex-wrap:wrap;gap:10px}.shcard{border:1px solid #d8cdb8;border-radius:12px;padding:8px;background:#fffdf7;width:180px}.shcard input[type=text]{width:100%;box-sizing:border-box;margin:4px 0;padding:5px 7px;border:1px solid #d8cdb8;border-radius:8px;font:inherit}
 .shape-ui .shr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:14px}.shape-ui button{padding:7px 11px;border:1px solid #cdbba0;background:#fffaf0;border-radius:9px;cursor:pointer;font:inherit}.shape-ui button.go{background:#c8892b;color:#fff;border-color:#c8892b;font-weight:700}.shape-ui button:disabled{opacity:.4}
+.added{background:#fffaf0;border:1px solid #e3d6bb;border-radius:12px;padding:8px 10px;margin:10px 0;font-size:13px}.added .ah{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-weight:700}.added .ah small{font-weight:400;color:#8a7a5c}
+.added .chips{display:flex;flex-wrap:wrap;gap:5px;max-height:104px;overflow:auto}.added .ch{display:inline-flex;align-items:center;gap:5px;border:1px solid #d8cdb8;background:#fff;border-radius:999px;padding:3px 4px 3px 9px;cursor:pointer;font-size:12.5px}.added .ch.bad{border-color:#d9822b;background:#fff1e0}.added .ch b{font-weight:600;color:#6b5a3a}.added .ch i{font-style:normal;border-radius:50%;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;background:#f0e4cc;font-size:11px}.added .ch i:hover{background:#e8b0a0}.added .ch.on{outline:2px solid #e0a21a}
 </style>
 <meta name="robots" content="index,follow" id="robots">
 </head>
@@ -88,6 +90,7 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
         <div id="p3d"></div><div class="load" id="p3dLoad">Загрузка 3D…</div>
         <div class="bar"><label class="rot"><input type="checkbox" checked onchange="PRO.rot(this.checked); this.nextSibling.textContent = this.checked ? ' 🔄 Вращать' : ' ✋ Двигать картинку'"> 🔄 Вращать</label><button type="button" onclick="PRO.openAll(true)">↔ Открыть всё</button><button type="button" onclick="PRO.openAll(false)">Закрыть</button><button type="button" id="lightBtn" onclick="PRO.light()">💡 Свет: вкл</button><button type="button" id="ledBtn" onclick="PRO.leds()">✨ Подсветка: вкл</button><span class="sp"></span><button type="button" id="sideBtn" style="display:none" onclick="PRO.sideToggle()">⚙ Скрыть панель</button><button type="button" id="fsBtn" onclick="PRO.full()">⛶ На весь экран</button></div>
       </div>
+      <div class="added" id="addedBar" style="display:none"></div>
       <div class="price" id="price"></div>
       <div class="warn" id="warn"></div>
       <div class="card lead">
@@ -116,6 +119,6 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
 <div class="toast" id="toast"></div>
 <script>if (/^\/shkaf\/view/.test(location.pathname)) document.getElementById('robots').content = 'noindex,nofollow';</script>
 <script type="module" src="/static/js/shkaf-shape.js?v=3"></script>
-<script type="module" src="/static/js/shkaf-pro.js?v=18"></script>
+<script type="module" src="/static/js/shkaf-pro.js?v=21"></script>
 </body>
 </html>
