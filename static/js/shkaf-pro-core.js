@@ -173,27 +173,32 @@ export function buildParts(S) {
   const g = geom(S), t = S.t, W = g.W, H = S.H, D = S.D, mm = v => Math.round(v * 10), T = P.tiers[S.tier];
   const parts = [], hw = [];
   const body = 'ЛДСП ' + mm(t) + ' мм';
-  const add = (grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind) => parts.push({ grp, name, qty, L: mm(Math.max(L, Wd)), W: mm(Math.min(L, Wd)), t: mm(tt), mat, kind: kind || 'dsp', edgeM: Math.round(edgeEach * qty * 100) / 100, note: note || '' });
+  const add = (grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind) => {
+    const lg = Math.max(L, Wd), sh = Math.min(L, Wd), e = edgeEach * 100, facade = /^(Дверь|Фасад|Вставка)/.test(name);
+    let desc = '—';
+    if (edgeEach > 0) desc = Math.abs(e - 2 * (L + Wd)) < .6 ? 'по периметру (4 стороны)' : Math.abs(e - lg) < .6 ? '1 длинная сторона' : Math.abs(e - sh) < .6 ? '1 короткая сторона' : Math.abs(e - lg - sh) < .6 ? '2 стороны (длинная + короткая)' : Math.round(e) / 100 + ' м на деталь';
+    parts.push({ grp, name, qty, L: mm(lg), W: mm(sh), t: mm(tt), mat, kind: kind || 'dsp', edgeM: Math.round(edgeEach * qty * 100) / 100, edgeT: edgeEach > 0 ? (facade ? '2' : '0,4') : '', edgeDesc: desc, note: note || '' });
+  };
   const addHw = (grp, name, qty, unit, price, note) => { qty = Math.round(qty * 100) / 100; if (qty > 0) hw.push({ grp, name, qty, unit: unit || 'шт.', price: Math.round(price || 0), note: note || '' }); };
   const bd = D - .3, ph = S.plinth, hs = H - ph;
   let joints = 8, feet = 0, hinges0 = 0, handles0 = 0;
   g.runs.forEach((r, ri) => {
     const rw = r.x1 - r.x0, k = r.b - r.a + 1, lbl = g.runs.length > 1 ? ' (секция ' + (ri + 1) + ')' : '';
-    add('Корпус', 'Боковина' + lbl, 2, hs, bd, t, body, hs / 100, 'кромка по переднему торцу');
-    add('Корпус', 'Крышка (верх)' + lbl, 1, rw - 2 * t, bd, t, body, (rw - 2 * t) / 100);
-    add('Корпус', 'Дно' + lbl, 1, rw - 2 * t, bd, t, body, (rw - 2 * t) / 100);
-    if (k > 1) add('Корпус', 'Перегородка отсека' + lbl, k - 1, g.y1 - g.y0, bd, t, body, (g.y1 - g.y0) / 100, 'между дном и крышкой');
-    add('Корпус', 'Задняя стенка' + lbl, 1, rw - .4, hs - .4, .3, 'ХДФ 3 мм', 0, 'в паз / на скобу', 'hdf');
-    add('Корпус', 'Цоколь' + lbl, 1, rw - 2 * t, ph, t, body, (rw - 2 * t) / 100);
+    add('Корпус', 'Дно' + lbl, 1, rw, D, t, body, rw / 100, 'на всю ширину: боковины и спинка стоят на дне');
+    add('Корпус', 'Боковина' + lbl, 2, hs - t, D, t, body, (hs - t) / 100, 'стоит на дне; кромка по переднему торцу');
+    add('Корпус', 'Крышка (верх)' + lbl, 1, rw - 2 * t, D, t, body, (rw - 2 * t) / 100, 'между боковинами');
+    if (k > 1) add('Корпус', 'Перегородка отсека' + lbl, k - 1, hs - 2 * t, D, t, body, (hs - 2 * t) / 100, 'стоит на дне, под крышкой');
+    add('Корпус', 'Задняя стенка' + lbl, 1, rw - 2 * t, hs - 2 * t, .3, 'ХДФ 3 мм', 0, 'ставится на дно между боковин', 'hdf');
+    add('Корпус', 'Цоколь' + lbl, 1, rw - 2 * t, ph, t, body, (rw - 2 * t) / 100, 'кромка по верхней длинной стороне');
     joints += k * 8 + 8; feet += Math.max(2, Math.ceil(rw / 60) * 2);
   });
   g.mz.forEach((m, mi) => {
     const lbl = ' (антресоль ' + (mi + 1) + ')', gr = 'Антресоль ' + (mi + 1);
-    add(gr, 'Боковина' + lbl, 2, m.h, bd, t, body, m.h / 100);
-    add(gr, 'Крышка' + lbl, 1, m.w - 2 * t, bd, t, body, (m.w - 2 * t) / 100);
-    add(gr, 'Дно' + lbl, 1, m.w - 2 * t, bd, t, body, (m.w - 2 * t) / 100);
-    if (m.dv.length) add(gr, 'Перегородка' + lbl, m.dv.length, m.h - 2 * t, bd, t, body, (m.h - 2 * t) / 100, 'вертикальная, в антресоли');
-    add(gr, 'Задняя стенка' + lbl, 1, m.w - .4, m.h - .4, .3, 'ХДФ 3 мм', 0, '', 'hdf');
+    add(gr, 'Дно' + lbl, 1, m.w, D, t, body, m.w / 100, 'на всю ширину; боковины стоят на дне');
+    add(gr, 'Боковина' + lbl, 2, m.h - t, D, t, body, (m.h - t) / 100, 'стоит на дне');
+    add(gr, 'Крышка' + lbl, 1, m.w - 2 * t, D, t, body, (m.w - 2 * t) / 100, 'между боковинами');
+    if (m.dv.length) add(gr, 'Перегородка' + lbl, m.dv.length, m.h - 2 * t, D, t, body, (m.h - 2 * t) / 100, 'вертикальная, стоит на дне');
+    add(gr, 'Задняя стенка' + lbl, 1, m.w - 2 * t, m.h - 2 * t, .3, 'ХДФ 3 мм', 0, 'ставится на дно между боковин', 'hdf');
     m.comp.forEach((c, ci) => { for (let k = 0; k < (m.shelves | 0); k++) add(gr, 'Полка' + lbl + (m.comp.length > 1 ? ' отд. ' + (ci + 1) : ''), 1, c.x1 - c.x0 - .2, D - 2.5, t, body, (c.x1 - c.x0 - .2) / 100, 'на 4 полкодержателя'); });
     joints += 16 + (m.shelves | 0) * 4 + m.dv.length * 8;
   });
@@ -263,6 +268,13 @@ export function buildParts(S) {
   return { parts, hw, doors, g };
 }
 
+// итоги по кромке: метры по видам (0,4 мм на корпус, 2 мм на фасады), площади материалов
+export function edgeTotals(parts) {
+  const e = { '0,4': 0, '2': 0 }; let dsp = 0, facade = 0, hdf = 0;
+  parts.forEach(p => { if (p.edgeT) e[p.edgeT] = (e[p.edgeT] || 0) + p.edgeM; const a = p.L * p.W * p.qty / 1e6; if (p.kind === 'hdf') hdf += a; else if (p.kind === 'dsp') { if (/^(Дверь|Фасад)/.test(p.name)) facade += a; else dsp += a; } });
+  const r = v => Math.round(v * 100) / 100;
+  return { e04: r(e['0,4']), e2: r(e['2']), total: r(e['0,4'] + e['2']), dsp: r(dsp), facade: r(facade), hdf: r(hdf) };
+}
 export function pricing(S, bp) {
   bp = bp || buildParts(S);
   const T = P.tiers[S.tier], pm = T.sheet / P.sheetArea * P.waste + P.cutM2 + 3 * P.edgeM, lines = [];

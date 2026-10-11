@@ -72,9 +72,9 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     const selK = { k: 'global' }, n = g.cols.length;
     g.runs.forEach(r => {
       const rw = r.x1 - r.x0;
-      box(t, H - ph, bd, M.body, r.x0, ph, z0, selK); box(t, H - ph, bd, M.body, r.x1 - t, ph, z0, selK);
-      box(rw - 2 * t, t, bd, M.body, r.x0 + t, H - t, z0, selK); box(rw - 2 * t, t, bd, M.body, r.x0 + t, ph, z0, selK);
-      box(rw, H - ph, .3, M.back, r.x0, ph, 0);
+      box(t, H - ph - t, bd, M.body, r.x0, ph + t, z0, selK); box(t, H - ph - t, bd, M.body, r.x1 - t, ph + t, z0, selK);
+      box(rw - 2 * t, t, bd, M.body, r.x0 + t, H - t, z0, selK); box(rw, t, bd, M.body, r.x0, ph, z0, selK);
+      box(rw - 2 * t, H - ph - 2 * t, .3, M.back, r.x0 + t, ph + t, 0);
       box(rw - 2 * t, ph - .2, t, M.plinth, r.x0 + t, 0, D - 6);
     });
     g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === n) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap) return; box(t, g.y1 - g.y0, bd, M.body, b.x, g.y0, z0, { k: 'col', i: k - 1 }); });
@@ -83,9 +83,9 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     });
     g.mz.forEach(m => {
       const meta = { k: 'mezz', i: m.mi }, mbd = bd;
-      box(t, m.h, mbd, M.body, m.x0, m.yb, z0, meta); box(t, m.h, mbd, M.body, m.x1 - t, m.yb, z0, meta);
-      box(m.w - 2 * t, t, mbd, M.body, m.x0 + t, m.yt - t, z0, meta); box(m.w - 2 * t, t, mbd, M.body, m.x0 + t, m.yb, z0, meta);
-      box(m.w, m.h, .3, M.back, m.x0, m.yb, 0, meta);
+      box(t, m.h - t, mbd, M.body, m.x0, m.yb + t, z0, meta); box(t, m.h - t, mbd, M.body, m.x1 - t, m.yb + t, z0, meta);
+      box(m.w - 2 * t, t, mbd, M.body, m.x0 + t, m.yt - t, z0, meta); box(m.w, t, mbd, M.body, m.x0, m.yb, z0, meta);
+      box(m.w - 2 * t, m.h - 2 * t, .3, M.back, m.x0 + t, m.yb + t, 0, meta);
       m.dv.forEach(off => box(t, m.h - 2 * t, mbd, M.body, m.ix0 + off, m.iy0, z0, meta));
       m.comp.forEach(c => { for (let k = 1; k <= (m.shelves | 0); k++) box(c.x1 - c.x0 - .2, t, D - 2.5, M.body, c.x0 + .1, m.iy0 + (m.iy1 - m.iy0) * k / ((m.shelves | 0) + 1), z0, meta); });
     });

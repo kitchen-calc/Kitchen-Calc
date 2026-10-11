@@ -1,5 +1,5 @@
 /* Чертежи конструктора шкафа PRO в стиле AutoCAD, лист A4 (альбомный). Размеры на чертежах — в мм. Только для режима мастера. */
-import { geom, ext, doorList, buildParts, pricing, ITEM_TYPES, PALETTE, FILLS, r1 } from '/static/js/shkaf-pro-core.js?v=1';
+import { geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1 } from '/static/js/shkaf-pro-core.js?v=1';
 
 const F = 1.4;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -240,22 +240,29 @@ function sheetDetails(S, bp, no, total) {
   return sheet(o, meta(S, bp), no, total);
 }
 function tableSheets(S, bp, pr, startNo, total) {
-  const out = [], rowsPerPage = 31;
-  // детали
+  const out = [], rowsPerPage = 29, et = edgeTotals(bp.parts), fm = v => String(v).replace('.', ',');
   const groups = []; let last = null; bp.parts.forEach(p => { if (p.grp !== last) { groups.push({ h: p.grp }); last = p.grp; } groups.push(p); });
   let page = 0, idx = 0, n = 0;
+  const edgeLine = `КРОМКА: 0,4 мм — ${fm(et.e04)} м · 2 мм (фасады) — ${fm(et.e2)} м · всего ${fm(et.total)} м (с запасом 10% — ${fm(Math.round(et.total * 110) / 100)} м)`;
   while (idx < groups.length) {
-    let o = text(60, 62, 'СПЕЦИФИКАЦИЯ ДЕТАЛЕЙ (раскрой)', 10, 'start', 'font-weight="700"');
-    const cols = [60, 100, 400, 460, 540, 620, 690, 880, 980], head = ['№', 'Деталь', 'Кол', 'Длина', 'Шир.', 'Толщ.', 'Материал', 'Кромка м', 'Примечание'];
-    head.forEach((h, i) => o += text(cols[i] + 2, 90, h, 7.6, 'start', 'font-weight="700"')); o += line(54, 96, 1150, 96, 'o');
+    let o = text(60, 62, 'РАСКРОЙ ДЕТАЛЕЙ · ЛДСП ' + Math.round(S.t * 10) + ' мм · кромка на видимых сторонах', 10, 'start', 'font-weight="700"');
+    o += text(1150, 62, edgeLine.split(' · ')[2] ? 'Кромка всего: ' + fm(et.total) + ' м' : '', 9, 'end', 'font-weight="700" fill="#b3261e"');
+    const cols = [60, 92, 372, 410, 468, 526, 576, 740, 880, 950], head = ['№', 'Деталь', 'Кол', 'Длина', 'Шир.', 'Толщ.', 'Материал', 'Кромка (где)', 'Кромка, м', 'Примечание'];
+    head.forEach((h, i) => o += text(cols[i] + 2, 90, h, 7.4, 'start', 'font-weight="700"')); o += line(54, 96, 1150, 96, 'o');
     let y = 112, k = 0;
     while (idx < groups.length && k < rowsPerPage) {
       const r = groups[idx++]; k++;
-      if (r.h) { o += rect(54, y - 11, 1096, 15, 't', '#eef3f6') + text(60, y, r.h.toUpperCase(), 7.6, 'start', 'font-weight="700"'); y += 16; continue; }
-      n++; [n, r.name, r.qty, r.L, r.W, r.t, r.mat, r.edgeM || '', r.note].forEach((v, i) => o += text(cols[i] + 2, y, String(v), 7.2, 'start'));
+      if (r.h) { o += rect(54, y - 11, 1096, 15, 't', '#eef3f6') + text(60, y, r.h.toUpperCase(), 7.4, 'start', 'font-weight="700"'); y += 16; continue; }
+      n++; [n, r.name, r.qty, r.L, r.W, r.t, r.mat, r.edgeDesc && r.edgeDesc !== '—' ? r.edgeDesc + ' (' + r.edgeT + ')' : '—', r.edgeM || '', r.note].forEach((v, i) => o += text(cols[i] + 2, y, String(i === 8 && v !== '' ? fm(v) : v).slice(0, i === 9 ? 30 : 60), 7, 'start'));
       o += line(54, y + 4, 1150, y + 4, 't'); y += 16;
     }
-    out.push(sheet(o, meta(S, bp).slice(0, 2).concat([['Таблица', 'Детали, лист ' + (++page)], ['Всего деталей', bp.parts.reduce((a, p) => a + p.qty, 0) + ' шт.'], ['ЛДСП', pr.dspM2.toFixed(2) + ' м²'], ['Дата', new Date().toLocaleDateString('ru-RU')]]), startNo + out.length, total));
+    if (idx >= groups.length) {   // последний лист раскроя — итоги по материалам и кромке
+      y += 8; o += rect(54, y - 12, 1096, 66, 'o', '#fffaf0');
+      o += text(62, y, 'ИТОГО: деталей ' + bp.parts.reduce((a, p) => a + p.qty, 0) + ' шт. · ЛДСП корпус ' + fm(et.dsp.toFixed(2)) + ' м² · фасады ' + fm(et.facade.toFixed(2)) + ' м² · ХДФ ' + fm(et.hdf.toFixed(2)) + ' м²', 8, 'start', 'font-weight="700"');
+      o += text(62, y + 16, edgeLine, 8, 'start', 'font-weight="700" fill="#b3261e"');
+      o += text(62, y + 32, 'Правило сборки: боковины, спинка и перегородки стоят на дне; крышка — между боковинами. Кромка — на видимых сторонах: передний торец, фасады по периметру.', 7, 'start');
+    }
+    out.push(sheet(o, meta(S, bp).slice(0, 2).concat([['Таблица', 'Раскрой, лист ' + (++page)], ['Всего деталей', bp.parts.reduce((a, p) => a + p.qty, 0) + ' шт.'], ['Кромка', fm(et.total) + ' м (0,4 мм: ' + fm(et.e04) + ', 2 мм: ' + fm(et.e2) + ')'], ['Дата', new Date().toLocaleDateString('ru-RU')]]), startNo + out.length, total));
   }
   // фурнитура и цена
   let o = text(60, 62, 'ФУРНИТУРА И КРЕПЁЖ', 10, 'start', 'font-weight="700"');
