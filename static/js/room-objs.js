@@ -1,7 +1,7 @@
 /* Общий 3D-сборщик «своих шкафчиков» (стеллаж, книжный шкаф, навесной шкафчик, полка, шкаф своей формы) — для кухни.
    Локальные оси: начало в левом заднем углу габарита, x вправо, z вперёд (к комнате), y вверх. Контур, стороны и двери — из shkaf-pro-core.js. */
 import * as THREE from 'three';
-import { objEdges, objPoly } from '/static/js/shkaf-pro-core.js?v=12';
+import { objEdges, objPoly } from '/static/js/shkaf-pro-core.js?v=16';
 
 const DEG = Math.PI / 180;
 /* ctx: { t, body, back, glass, mirror, chrome, edge (LineBasicMaterial|null), keyBase, onDoor(key, apply), mark(mesh) } */
@@ -16,6 +16,7 @@ export function buildObjGroup(q, ctx) {
   };
   if (q.kind === 'shelf') { bx(w, t, d, BM, 0, 0, 0); return og; }
   if (q.kind === 'vert') { bx(Math.max(.3, w), h, d, BM, 0, 0, 0); return og; }
+  if (q.kind === 'boards') { (q.bd || []).forEach(r => bx(r[2], r[3], d, BM, r[0], r[1], 0)); return og; }
   if (q.kind === 'custom') {
     const E = objEdges(q), P = objPoly(q);
     slab(P, 0, t, BM); slab(P, h - t, t, BM);

@@ -97,6 +97,7 @@ function draw() {
   P.forEach((q, i) => { const [a, b] = px(q); cx.beginPath(); cx.arc(a, b, i === st.selV || i === hoverV ? 7 : (small ? 3 : 6), 0, 7); cx.fillStyle = i === 0 ? '#2a9d4a' : (i === st.selV ? '#2f9bd8' : '#fff'); cx.fill(); cx.strokeStyle = '#333'; cx.lineWidth = small ? 1 : 2; cx.stroke(); });
 }
 function thumb(o) {
+  if (o.kind === 'boards' && o.bd && o.bd.length) { const xs = o.bd.map(b => b[0] + b[2]), ys = o.bd.map(b => b[1] + b[3]), k = Math.min(86 / Math.max(...xs), 46 / Math.max(...ys)); return `<svg width="96" height="56" viewBox="0 0 96 56">${o.bd.map(b => `<rect x="${(5 + b[0] * k).toFixed(1)}" y="${(51 - (b[1] + b[3]) * k).toFixed(1)}" width="${Math.max(1.5, b[2] * k).toFixed(1)}" height="${Math.max(1.5, b[3] * k).toFixed(1)}" fill="#e6d9c0" stroke="#444" stroke-width="1"/>`).join('')}</svg>`; }
   const P = o.poly && o.poly.length ? o.poly : [[0, 0], [o.w || 100, 0], [o.w || 100, o.d || 40], [0, o.d || 40]], xs = P.map(p => p[0]), zs = P.map(p => p[1]), x0 = Math.min(...xs), z0 = Math.min(...zs), w = Math.max(...xs) - x0 || 1, d = Math.max(...zs) - z0 || 1, k = Math.min(86 / w, 46 / d);
   return `<svg width="96" height="56" viewBox="0 0 96 56"><polygon points="${P.map(p => (5 + (p[0] - x0) * k).toFixed(1) + ',' + (5 + (p[1] - z0) * k).toFixed(1)).join(' ')}" fill="#e6d9c0" stroke="#444" stroke-width="1.4"/></svg>`;
 }
@@ -160,7 +161,7 @@ function bind() {
     const b = ev.target.closest('button'); if (!b) return;
     if (b.dataset.pre) { const pr = PRESETS[b.dataset.pre]; st.p = pr.p.map(q => q.slice()); st.ed = pr.ed.slice(); if (pr.n != null) st.n = pr.n; st.closed = true; st.free = false; st.selE = st.selV = -1; fit(); ui(); draw(); return; }
     if (b.dataset.ins != null) { const it = loadLib()[+b.dataset.ins]; if (it && window.PRO && window.PRO.insertTpl) { window.PRO.insertTpl(it.tpl, it.name); msg('✔ «' + it.name + '» вставлен в комнату — смотрите 3D выше'); } return; }
-    if (b.dataset.edit != null) { const it = loadLib()[+b.dataset.edit]; if (it) { st = newState(Object.assign({}, it.tpl, { id: null, name: it.name })); st.name = it.name; st.libIdx = +b.dataset.edit; fit(); ui(); draw(); $('shapeCv').scrollIntoView({ behavior: 'smooth', block: 'center' }); } return; }
+    if (b.dataset.edit != null) { const it = loadLib()[+b.dataset.edit]; if (it && it.tpl.kind === 'boards' && window.BOARDS) { window.BOARDS.open(Object.assign({}, it.tpl, { id: null, name: it.name })); return; } if (it) { st = newState(Object.assign({}, it.tpl, { id: null, name: it.name })); st.name = it.name; st.libIdx = +b.dataset.edit; fit(); ui(); draw(); $('shapeCv').scrollIntoView({ behavior: 'smooth', block: 'center' }); } return; }
     if (b.dataset.del != null) { const lib = loadLib(); lib.splice(+b.dataset.del, 1); saveLib(lib); ui(); return; }
     const a = b.dataset.act;
     if (a === 'freehand') { st.free = !st.free; if (st.free) { st.p = []; st.ed = []; st.closed = false; } ui(); draw(); }

@@ -1,4 +1,4 @@
-import { sanitizeOpens } from '/static/js/room-open-core.js?v=1';
+import { sanitizeOpens } from '/static/js/room-open-core.js?v=3';
 /* Конструктор шкафа PRO: модель, геометрия, список деталей, цена. Без DOM — можно проверять в node. Размеры в см. */
 
 export const P = {
@@ -127,14 +127,33 @@ export const OBJ_KINDS = {
   rack: { ru: 'Открытый стеллаж', w: 80, d: 35, h: 180, n: 4, dn: 0, back: false, y: 0 },
   low: { ru: 'Низкий стеллаж / тумба ТВ', w: 140, d: 40, h: 55, n: 1, dn: 2, back: true, y: 0 },
   wallcab: { ru: 'Навесной шкафчик', w: 80, d: 30, h: 60, n: 1, dn: 2, back: true, y: 140 },
+  boards: { ru: 'Стеллаж из досок (змейка)', w: 80, d: 30, h: 160, n: 0, dn: 0, back: false, y: 0 },
   vert: { ru: 'Вертикальная полка (стойка)', w: 1.6, d: 30, h: 180, n: 0, dn: 0, back: false, y: 0 },
   shelf: { ru: 'Полка к стене', w: 100, d: 25, h: 3, n: 0, dn: 0, back: false, y: 140 },
   custom: { ru: 'Шкаф своей формы', w: 100, d: 50, h: 200, n: 3, dn: 0, back: true, y: 0 }
 };
+export function snakeBoards(n, W, step, t) {   // «змейка»: горизонтальные доски на всю ширину, между ними боковины то справа, то слева
+  const out = [];
+  for (let i = 0; i <= n; i++) out.push([0, i * step, W, t]);
+  for (let i = 0; i < n; i++) out.push([i % 2 === 0 ? W - t : 0, i * step + t, t, step - t]);
+  return out;
+}
+export const BOARD_PRESETS = {
+  snake: { ru: '🐍 Змейка (4 яруса)', d: 30, gen: t => snakeBoards(4, 80, 40, t) },
+  snake6: { ru: '🐍 Змейка узкая (6 ярусов)', d: 25, gen: t => snakeBoards(6, 60, 32, t) },
+  snakeZ: { ru: '🐍 Змейка Z (зеркально)', d: 30, gen: t => snakeBoards(4, 80, 40, t).map(b => [80 - b[0] - b[2], b[1], b[2], b[3]]) },
+  stairs: { ru: 'Лесенка', d: 30, gen: t => { const o = []; for (let i = 0; i < 5; i++) { o.push([i * 20, i * 30, 100 - i * 20, t]); if (i) o.push([i * 20 - t / 2 - .4, (i - 1) * 30 + t, t, 30 - t]); } o.push([0, 0, t, 5 * 30 - 30]); return o; } },
+  cells: { ru: 'Ячейки (зигзаг)', d: 32, gen: t => { const o = []; for (let r = 0; r < 3; r++) { const ox = r % 2 ? 30 : 0; o.push([ox, r * 35, 60, t], [ox, r * 35 + t, t, 35 - t], [ox + 60 - t, r * 35 + t, t, 35 - t]); } o.push([30, 105, 60, t]); return o; } },
+  zig: { ru: 'Полки-зигзаг', d: 25, gen: t => { const o = []; [[0, 0, 70], [25, 38, 70], [0, 76, 70], [25, 114, 70]].forEach(([x, y, l]) => o.push([x, y, l, t])); o.push([0, t, t, 38 - t], [95 - t, 38 + t, t, 38 - t], [0, 76 + t, t, 38 - t]); return o; } }
+};
+export function fitBoards(o) {   // габарит стеллажа из досок по доскам
+  const B = o.bd || []; if (!B.length) return o;
+  o.w = Math.round(Math.max(...B.map(b => b[0] + b[2])) * 10) / 10; o.h = Math.round(Math.max(...B.map(b => b[1] + b[3])) * 10) / 10; return o;
+}
 export const CORNER_L = [[0, 0], [120, 0], [120, 40], [40, 40], [40, 120], [0, 120]];
 export function mkObj(kind, x, z, extra) {
   const k = OBJ_KINDS[kind] || OBJ_KINDS.book, poly = kind === 'custom' ? CORNER_L.map(p => p.slice()) : null;
-  return Object.assign({ id: uid(), kind, x: r1(x || 0), z: r1(z || 0), rot: 0, y: k.y, w: k.w, d: k.d, h: k.h, n: k.n, dn: k.dn, dh: 0, back: k.back, fill: 'dsp', mat: 'dsp', color: '', handles: true, poly, ed: poly ? poly.map(() => 0) : null }, extra || {});
+  return Object.assign({ id: uid(), kind, x: r1(x || 0), z: r1(z || 0), rot: 0, y: k.y, w: k.w, d: k.d, h: k.h, n: k.n, dn: k.dn, dh: 0, back: k.back, fill: 'dsp', mat: 'dsp', color: '', handles: true, poly, ed: poly ? poly.map(() => 0) : null }, extra || {}, kind === 'boards' && !(extra && extra.bd) ? { bd: snakeBoards(4, 80, 40, 1.6), d: 30 } : {});
 }
 export function objPoly(o) { return o.kind === 'custom' && o.poly ? o.poly : [[0, 0], [o.w, 0], [o.w, o.d], [0, o.d]]; }
 export function objBox(o) { const P = objPoly(o), xs = P.map(p => p[0]), zs = P.map(p => p[1]); return { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) }; }
@@ -320,6 +339,34 @@ export function warnings(S) {
 }
 
 /* ---- двери ---- */
+export function runInfo(S, g, r) {   // что убрано у секции: левый / правый бок, спинка по отсекам, перегородки
+  const main = g.runs.filter(x => !x.det), noL = !!S.nsl && main[0] === r, noR = !!S.nsr && main[main.length - 1] === r, segs = [];
+  let cur = null;
+  for (let i = r.a; i <= r.b; i++) {
+    const c = g.cols[i], col = S.cols[i];
+    if (S.nb || !c || c.gap || (col && col.nk)) { if (cur) { segs.push(cur); cur = null; } continue; }
+    if (!cur) cur = [c.xa, c.xb]; else cur[1] = c.xb;
+  }
+  if (cur) segs.push(cur);
+  let rmPart = 0; for (let i = r.a + 1; i <= r.b; i++) if (S.cols[i] && S.cols[i].nl && !g.cols[i].gap && !g.cols[i].split) rmPart++;
+  return { noL, noR, segs, rmPart };
+}
+export const SPLITTABLE = ['rod', 'drawer', 'shoe', 'pant', 'basket', 'hook', 'led'];
+export function itemSpans(S, col, wcol, it) {   // куски предмета отсека: вертикальные панели делят его; сторона sd: L / R / обе
+  const [a, b] = ext(it, S), t = S.t; let sp = [[0, wcol]];
+  (col.items || []).forEach(v => {
+    if (v.type !== 'vpanel' || !(a < v.y1 - .05 && b > v.y + .05)) return;
+    const nx = []; sp.forEach(([x0, x1]) => { if (v.x > x0 + 4 && v.x + t < x1 - 4) nx.push([x0, v.x], [v.x + t, x1]); else nx.push([x0, x1]); }); sp = nx;
+  });
+  if (sp.length > 1) { if (it.sd === 'L') sp = [sp[0]]; else if (it.sd === 'R') sp = [sp[sp.length - 1]]; }
+  return sp.map(([x0, x1]) => ({ x0, x1, w: x1 - x0 }));
+}
+export function idoorSpan(col, wcol, t, it) {   // дверца в отсеке не заходит за вертикальную панель
+  let w = Math.min(it.w || (wcol - it.x), wcol - it.x);
+  const vp = (col.items || []).filter(v => v.type === 'vpanel' && it.y < v.y1 - .05 && it.y1 > v.y + .05 && v.x > it.x + 5 && v.x < it.x + w - 1).sort((a, b) => a.x - b.x)[0];
+  if (vp) w = vp.x - it.x - .2;
+  return { x: it.x, w: Math.max(5, w) };
+}
 export function shelfSpans(col, wcol, t, it) {   // куски полки: вертикальные панели делят её; сторона sd: L — только слева от панели, R — только справа, иначе обе стороны
   let sp = [[0, wcol]];
   (col.items || []).forEach(v => {
@@ -382,10 +429,11 @@ export function buildParts(S) {
   g.runs.forEach((r, ri) => {
     const rw = r.x1 - r.x0, k = r.b - r.a + 1, D = r.D, hs = r.H - ph, lbl = g.runs.length > 1 ? ' (секция ' + (ri + 1) + ')' : '';
     add('Корпус', 'Дно' + lbl, 1, rw, D, t, body, (rw + 2 * D) / 100, 'на всю ширину: боковины и спинка стоят на дне; кромка перед + 2 торца');
-    add('Корпус', 'Боковина' + lbl, 2, hs - t, D, t, body, (hs - t) / 100, 'стоит на дне; кромка по переднему торцу');
+    const ri2 = runInfo(S, g, r), nSides = 2 - (ri2.noL ? 1 : 0) - (ri2.noR ? 1 : 0), nPart = k - 1 - ri2.rmPart;
+    if (nSides > 0) add('Корпус', 'Боковина' + lbl, nSides, hs - t, D, t, body, (hs - t) / 100, 'стоит на дне; кромка по переднему торцу');
     add('Корпус', 'Крышка (верх)' + lbl, 1, rw - 2 * t, D, t, body, (rw - 2 * t) / 100, 'между боковинами');
-    if (k > 1) add('Корпус', 'Перегородка отсека' + lbl, k - 1, hs - 2 * t, D, t, body, (hs - 2 * t) / 100, 'стоит на дне, под крышкой');
-    add('Корпус', 'Задняя стенка' + lbl, 1, rw - 2 * t, hs - 2 * t, .3, 'ХДФ 3 мм', 0, 'ставится на дно между боковин', 'hdf');
+    if (nPart > 0) add('Корпус', 'Перегородка отсека' + lbl, nPart, hs - 2 * t, D, t, body, (hs - 2 * t) / 100, 'стоит на дне, под крышкой');
+    ri2.segs.forEach((sg, si) => add('Корпус', 'Задняя стенка' + lbl + (ri2.segs.length > 1 ? ' (часть ' + (si + 1) + ')' : ''), 1, sg[1] - sg[0], hs - 2 * t, .3, 'ХДФ 3 мм', 0, 'ставится на дно между боковин', 'hdf'));
     add('Корпус', 'Цоколь' + lbl, 1, rw - 2 * t, ph, t, body, (rw - 2 * t) / 100, 'кромка по верхней длинной стороне');
     joints += k * 8 + 8; feet += Math.max(2, Math.ceil(rw / 60) * 2);
   });
@@ -490,6 +538,12 @@ export function buildParts(S) {
     const fmat = q.fill === 'dsp' ? body : FILLS[q.fill], fth = q.fill === 'dsp' || q.fill === 'mdf' ? t : .4;
     const door = (name, qty, L, Wd, note) => { if (q.fill === 'dsp') addP(gr, name + lbl, qty, L, Wd, t, fmat, (2 * (L + Wd)) / 100, note); else addP(gr, name + lbl, qty, L, Wd, fth, fmat, (2 * (L + Wd)) / 100, note, q.fill); };
     const addDoorHw = (dn, dh) => { addHw('Двери', 'Петля с доводчиком', dn * (dh <= 90 ? 2 : dh <= 160 ? 3 : 4), 'шт.', T.hinge); if (hnd) addHw('Двери', 'Ручка', dn, 'шт.', T.handle); };
+    if (q.kind === 'boards') {
+      const B = q.bd || [], d = q.d, pm = {}; B.forEach(b => { const L = Math.max(b[2], b[3]), key = Math.round(L * 10); pm[key] = (pm[key] || 0) + 1; });
+      Object.keys(pm).map(Number).sort((x, y) => y - x).forEach(k => { const L = k / 10; addP(gr, (L === q.h || L > q.w * .9 ? 'Доска (длинная)' : 'Доска') + lbl, pm[k], L, d, t, body, (2 * (L + d)) / 100, 'видимая кромка по периметру'); });
+      joints_u += B.length * 3; addHw('Крепёж', q.y > 0 ? 'Скрытое крепление стеллажа к стене (пара)' : 'Уголок мебельный для крепления к стене', q.y > 0 ? Math.max(2, Math.ceil(q.w / 60)) : 2, q.y > 0 ? 'шт.' : 'шт.', 18000);
+      return;
+    }
     if (q.kind === 'vert') { addP(gr, 'Вертикальная полка' + lbl, 1, q.h, q.d, q.w, body, (2 * (q.h + q.d)) / 100, 'стоит на полу/крепится к стене, кромка по периметру'); addHw('Крепёж', 'Уголок мебельный для крепления к стене/полу', 2, 'шт.', 6000); return; }
     if (q.kind === 'shelf') { addP(gr, 'Полка' + lbl, 1, q.w, q.d, t, body, (q.w + 2 * q.d) / 100, 'кромка перед + 2 торца'); addHw('Крепёж', 'Скрытое крепление полки (штанга-кронштейн)', 2, 'шт.', 18000); return; }
     if (q.kind === 'custom') {
@@ -531,24 +585,30 @@ export function buildParts(S) {
         if (sp) { const sw = (c.w - .2 - sp * t) / (sp + 1); add('Наполнение', 'Полка' + lbl + ' (между перегородками)', sp + 1, sw, d, t, body, sw / 100, 'на 4 полкодержателя'); pins += 4 * (sp + 1); }
         else { const spans = shelfSpans(c, c.w, t, it); spans.forEach((ss, k) => { const sw = ss.w - .2, side = spans.length > 1 ? (k === 0 ? ' (слева от панели)' : ' (справа от панели)') : (ss.w < c.w - .5 ? (ss.x0 > 0 ? ' (справа от панели)' : ' (слева от панели)') : ''); add('Наполнение', 'Полка' + lbl + side, 1, sw, d, t, body, sw / 100, 'на 4 полкодержателя'); pins += 4; }); }
       }
-      else if (it.type === 'rod') { rods++; add('Наполнение', 'Штанга ⌀25' + lbl, 1, c.w - .6, 2.5, 2.5, 'Хром, труба 25×15', 0, 'длина ' + mm(c.w - .6) + ' мм', 'metal'); }
-      else if (it.type === 'drawer') {
-        const bw = c.w - .4;
-        add('Ящики', 'Фасад ящика' + lbl, 1, bw, it.fh - .3, t, body, (2 * (bw + it.fh)) / 100);
-        if (it.sys === 'tier') { add('Ящики', 'Боковина ящика' + lbl, 2, D - 8, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Задняя ящика' + lbl, 1, bw - 5.4, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Дно ящика' + lbl, 1, bw - 3.6, D - 9, .3, 'ХДФ 3 мм', 0, '', 'hdf'); }
-        drw[it.sys] = (drw[it.sys] || 0) + 1;
+      else if (SPLITTABLE.includes(it.type)) {
+        const spans = itemSpans(S, c, c.w, it), spL = (k, ss) => spans.length > 1 ? (k === 0 ? ' (слева от панели)' : ' (справа от панели)') : (ss.w < c.w - .5 ? (ss.x0 > 0 ? ' (справа от панели)' : ' (слева от панели)') : '');
+        spans.forEach((ss, k) => {
+          const cw = ss.w, sl = spL(k, ss);
+          if (it.type === 'rod') { rods++; add('Наполнение', 'Штанга ⌀25' + lbl + sl, 1, cw - .6, 2.5, 2.5, 'Хром, труба 25×15', 0, 'длина ' + mm(cw - .6) + ' мм', 'metal'); }
+          else if (it.type === 'drawer') {
+            const bw = cw - .4;
+            add('Ящики', 'Фасад ящика' + lbl + sl, 1, bw, it.fh - .3, t, body, (2 * (bw + it.fh)) / 100);
+            if (it.sys === 'tier') { add('Ящики', 'Боковина ящика' + lbl + sl, 2, D - 8, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Задняя ящика' + lbl + sl, 1, bw - 5.4, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Дно ящика' + lbl + sl, 1, bw - 3.6, D - 9, .3, 'ХДФ 3 мм', 0, '', 'hdf'); }
+            drw[it.sys] = (drw[it.sys] || 0) + 1;
+          }
+          else if (it.type === 'shoe') { for (let q = 0; q < it.n; q++) add('Наполнение', 'Обувная полка (наклонная)' + lbl + sl, 1, cw - .2, D - 6, t, body, (cw - .2) / 100, 'угол ≈ 12°'); pins += it.n * 4; }
+          else if (it.type === 'pant') pant++;
+          else if (it.type === 'basket') basket++;
+          else if (it.type === 'hook') { hooks++; add('Наполнение', 'Планка для крючков' + lbl + sl, 1, cw - .4, 4, t, body, (cw - .4) / 100); }
+          else if (it.type === 'led') ledM += cw / 100;
+        });
       }
       else if (it.type === 'idoor') {
-        const iw = it.w || (c.w - it.x), ih = it.y1 - it.y;
-        add('Двери', 'Дверца в отсеке' + lbl, 1, ih - .4, iw - .4, t, body, (2 * (ih + iw)) / 100, 'открывание: ' + ({ L: 'влево', R: 'вправо', U: 'вверх', D: 'вниз' }[it.dir] || 'влево'));
+        const iw = idoorSpan(c, c.w, t, it).w, ih = it.y1 - it.y;
+        add('Двери', 'Дверца в отсеке' + lbl, 1, ih - .4, iw - .4, t, body, (2 * (ih + iw)) / 100, 'открывание: ' + ({ L: 'влево', R: 'вправо', U: 'вверх', D: 'вниз' }[it.dir] || 'влево') + (iw < (it.w || (c.w - it.x)) - .5 ? '; до вертикальной панели' : ''));
         if (it.dir === 'U') lifts += 2; else if (it.dir === 'D') lowers += 2; else hinges0 += ih <= 90 ? 2 : ih <= 160 ? 3 : 4;
         handles0++;
       }
-      else if (it.type === 'shoe') { for (let k = 0; k < it.n; k++) add('Наполнение', 'Обувная полка (наклонная)' + lbl, 1, c.w - .2, D - 6, t, body, (c.w - .2) / 100, 'угол ≈ 12°'); pins += it.n * 4; }
-      else if (it.type === 'pant') pant++;
-      else if (it.type === 'basket') basket++;
-      else if (it.type === 'hook') { hooks++; add('Наполнение', 'Планка для крючков' + lbl, 1, c.w - .4, 4, t, body, (c.w - .4) / 100); }
-      else if (it.type === 'led') ledM += c.w / 100;
       else if (it.type === 'vpanel') add('Наполнение', 'Вертикальная панель' + lbl, 1, it.y1 - it.y, D - 2.5, t, body, (it.y1 - it.y) / 100);
     });
   });
@@ -630,13 +690,15 @@ export function sanitize(S) {
   const o = { v: 2, W: n(S.W, 60, 800, 240), H: n(S.H, 100, 320, 200), D: n(S.D, 25, 90, 60), t: S.t === 1.8 ? 1.8 : 1.6, plinth: n(S.plinth, 0, 20, 8), tier: n(S.tier, 0, 2, 1) | 0, color: n(S.color, 0, 99, 0) | 0, custom: /^#[0-9a-f]{6}$/i.test(S.custom || '') ? S.custom : null,
     mezzes: [],
     doors: { kind: ['none', 'swing', 'sliding'].includes(S.doors && S.doors.kind) ? S.doors.kind : 'none', n: n(S.doors && S.doors.n, 1, 8, 3) | 0, fills: (S.doors && Array.isArray(S.doors.fills) ? S.doors.fills : D.doors.fills).map(f => FILLS[f] ? f : 'dsp').slice(0, 8), laco: n(S.doors && S.doors.laco, 0, 5, 0) | 0, handles: !(S.doors && S.doors.handles === false), gf: n(S.doors && S.doors.gf, 2, 30, 4), dir: (S.doors && Array.isArray(S.doors.dir) ? S.doors.dir : []).slice(0, 8).map(v => ['auto', 'L', 'R', 'U', 'D'].includes(v) ? v : 'auto') },
-    led: !!S.led, name: String(S.name || 'Мой шкаф').slice(0, 60), cols: [] };
+    led: !!S.led, nb: !!S.nb, nsl: !!S.nsl, nsr: !!S.nsr, name: String(S.name || 'Мой шкаф').slice(0, 60), cols: [] };
   while (o.doors.fills.length < 8) o.doors.fills.push('dsp');
   S.cols.slice(0, 14).forEach(c => {
     const col = { id: uid(), w: n(c && c.w, 15, 250, 60), items: [] };
     if (c && c.gap) col.gap = true;
     if (c && c.dn != null) col.dn = n(c.dn, 0, 4, 1) | 0;
     if (c && c.dp === false) col.dp = false;
+    if (c && c.nk) col.nk = true;
+    if (c && c.nl) col.nl = true;
     if (c && c.det && isFinite(c.det.x) && isFinite(c.det.z)) col.det = { x: r1(n(c.det.x, -1500, 3000, 0)), z: r1(n(c.det.z, -1500, 3000, 0)), rot: [0, 90, 180, 270].includes(c.det.rot) ? c.det.rot : 0 };
     if (c && FILLS[c.df] && c.df !== 'dsp') col.df = c.df;
     if (c && ['L', 'R', 'U', 'D'].includes(c.dd)) col.dd = c.dd;
@@ -644,7 +706,8 @@ export function sanitize(S) {
       if (it && it.type === 'drawers') { const cnt = n(it.n, 1, 8, 3) | 0, fh0 = n(it.fh, 8, 40, 18); for (let k = 0; k < cnt; k++) { const b0 = mkItem('drawer', n(it.y, 0, 330, 10) + k * fh0); b0.fh = fh0; b0.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; col.items.push(b0); } return; }
       if (!it || !ITEM_TYPES[it.type]) return;
       const b = mkItem(it.type, n(it.y, 0, 330, 50));
-      if (it.type === 'shelf') { b.d = it.d ? n(it.d, 15, 85, 57.5) : null; if (it.sd === 'L' || it.sd === 'R') b.sd = it.sd; }
+      if (it.type === 'shelf') b.d = it.d ? n(it.d, 15, 85, 57.5) : null;
+      if ((it.type === 'shelf' || SPLITTABLE.includes(it.type)) && (it.sd === 'L' || it.sd === 'R')) b.sd = it.sd;
       if (it.type === 'drawer') { b.fh = n(it.fh, 8, 40, 18); b.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; }
       if (it.type === 'idoor') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 250, 0); b.w = it.w ? n(it.w, 8, 250, 40) : null; b.dir = ['L', 'R', 'U', 'D'].includes(it.dir) ? it.dir : 'L'; }
       if (it.type === 'shoe') b.n = n(it.n, 1, 6, 3) | 0;
@@ -664,8 +727,8 @@ export function sanitize(S) {
   o.opens = sanitizeOpens(S.opens, roomPoly(o));
   o.objs = (Array.isArray(S.objs) ? S.objs : []).slice(0, 80).map(q => {
     const kind = q && OBJ_KINDS[q.kind] ? q.kind : 'book', d = mkObj(kind, 0, 0), poly = kind === 'custom' && Array.isArray(q.poly) && q.poly.length >= 3 && q.poly.length <= 40 && q.poly.every(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1])) ? q.poly.map(p => [r1(n(p[0], -2000, 2000, 0)), r1(n(p[1], -2000, 2000, 0))]) : (kind === 'custom' ? CORNER_L.map(p => p.slice()) : null);
-    return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };
-  });
+    return { id: uid(), kind, x: r1(n(q && q.x, -800, 2500, 0)), z: r1(n(q && q.z, -800, 2500, 0)), rot: [0, 90, 180, 270].includes(q && q.rot) ? q.rot : 0, y: r1(n(q && q.y, 0, 300, d.y)), w: r1(n(q && q.w, 1, 600, d.w)), d: r1(n(q && q.d, 5, 120, d.d)), h: r1(n(q && q.h, 1, 320, d.h)), n: n(q && q.n, 0, 12, d.n) | 0, dn: n(q && q.dn, 0, 4, d.dn) | 0, dh: r1(n(q && q.dh, 0, 320, 0)), back: q ? q.back !== false : d.back, fill: ['dsp', 'glass', 'mdf', 'mirror'].includes(q && q.fill) ? q.fill : 'dsp', handles: !(q && q.handles === false), bd: kind === 'boards' ? ((Array.isArray(q && q.bd) ? q.bd : []).slice(0, 120).filter(b => Array.isArray(b) && b.length >= 4 && b.every(v => isFinite(v))).map(b => [r1(n(b[0], -50, 800, 0)), r1(n(b[1], -50, 400, 0)), r1(n(b[2], .3, 800, 10)), r1(n(b[3], .3, 400, 1.6))]) || []) : undefined, mat: ['dsp', 'ply', 'mdf'].includes(q && q.mat) ? q.mat : 'dsp', color: q && /^#[0-9a-fA-F]{6}$/.test(q.color || '') ? q.color : '', poly, ed: poly ? poly.map((_, i) => (q && Array.isArray(q.ed) ? Math.max(0, Math.min(3, q.ed[i] | 0)) : 0)) : null };
+  }).map(q => { if (q.kind === 'boards') { if (!q.bd || !q.bd.length) q.bd = snakeBoards(4, 80, 40, 1.6); fitBoards(q); } return q; });
   recalcW(o);
   if (Array.isArray(S.mezzes)) S.mezzes.slice(0, 8).forEach(m => { if (m) o.mezzes.push({ id: uid(), x: r1(n(m.x, -100, 900, 0)), w: r1(n(m.w, 20, 900, 60)), h: r1(n(m.h, 15, 120, 40)), y: r1(n(m.y, 0, 340, o.H)), n: n(m.n, 0, 10, 2) | 0, shelves: n(m.shelves, 0, 3, 0) | 0, fill: FILLS[m.fill] ? m.fill : 'dsp', div: (Array.isArray(m.div) ? m.div : []).slice(0, 7).map(v => r1(n(v, 5, 800, 30))), cd: (Array.isArray(m.cd) ? m.cd : []).slice(0, 8).map(v => v == null ? null : n(v, 0, 5, 1) | 0), dir: (Array.isArray(m.dir) ? m.dir : []).slice(0, 8).map(v => ['swing', 'U', 'D'].includes(v) ? v : 'swing') }); });
   else if (S.mezz && S.mezz.on) {   // старый формат: одна антресоль сверху на всю ширину

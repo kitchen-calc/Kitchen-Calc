@@ -5,8 +5,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildOpenings, pickWall } from '/static/js/room-open.js?v=1';
-import { buildObjGroup } from '/static/js/room-objs.js?v=1';
+import { buildOpenings, pickWall } from '/static/js/room-open.js?v=3';
+import { buildObjGroup } from '/static/js/room-objs.js?v=2';
 
 const DEG = Math.PI / 180;
 const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;

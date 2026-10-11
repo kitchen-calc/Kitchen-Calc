@@ -24,9 +24,11 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=1'; import * as C from '/static/js/shkaf-pro-core.js?v=12'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
-  <script type="module" src="/static/js/shkaf-shape.js?v=4"></script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=16'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module" src="/static/js/shkaf-shape.js?v=5"></script>
+  <script type="module" src="/static/js/shkaf-boards.js?v=1"></script>
   <script src="/static/js/sheet-fit.js?v=1"></script>
+  <script src="/static/js/sheet-export.js?v=1"></script>
   <script src="/static/js/kis-data.js?v=4"></script>
   <script src="/static/js/kis-art.js?v=2"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
@@ -1122,10 +1124,16 @@
         <h4 style="margin:14px 0 6px">📚 Мои шкафчики</h4><div id="shapeLib" class="shape-ui"></div>
       </div>
 
+  <div class="card od-card" id="brdBox" style="display:none">
+    <div class="od-head"><h3>🐍 Стеллаж из досок — змейка, лесенка, ячейки</h3><span>Рисуйте вид спереди: горизонтальные и вертикальные доски. Как «змейка» из магазина: полки со смещением и боковинами то справа, то слева. Готовое появится в комнате, в раскрое и в цене.</span></div>
+    <div class="shape-cv"><canvas id="brdCv" width="640" height="384"></canvas></div>
+    <div id="brdUi" class="shape-ui"></div><div id="brdMsg" class="hint"></div>
+  </div>
+
       <!-- СЕКРЕТНО: чертежи мастера (вход: Ctrl+Shift+K или 3 нажатия на логотип) -->
       <div class="card od-card" id="ownerDraw" style="display:none">
         <div class="od-head"><h3>📐 Чертежи — режим мастера</h3><span>Видно только вам. 3 вида каждого шкафа; одинаковые шкафы — один чертёж.</span>
-          <span class="od-t">ЛДСП: <button type="button" id="cutT16" onclick="ownerSetT(16)">16 мм</button><button type="button" id="cutT18" onclick="ownerSetT(18)">18 мм</button></span><button type="button" onclick="ownerPrint()">🖨 Печать (A4)</button><button type="button" onclick="ownerUnlock()">🔒 Выйти</button></div>
+          <span class="od-t">ЛДСП: <button type="button" id="cutT16" onclick="ownerSetT(16)">16 мм</button><button type="button" id="cutT18" onclick="ownerSetT(18)">18 мм</button></span><button type="button" onclick="ownerPrint()">🖨 Печать (A4)</button><button type="button" onclick="ownerExport('pdf')">📄 В PDF</button><button type="button" onclick="ownerExport('docx')">📝 В Word</button><button type="button" onclick="ownerUnlock()">🔒 Выйти</button></div>
         <div id="ownerDrawBody" class="od-body"></div>
       </div>
 
@@ -2763,7 +2771,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=21');
+        const mod = await import('/static/js/kitchen3d.js?v=25');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3026,7 +3034,7 @@
       if (!SC()) return '';
       const K = SC().OBJ_KINDS, chips = kObjs.map((o, i) => `<button type="button" class="${selObjId === o.id ? 'on' : ''}" onclick="k3dObjSel('${o.id}')">🗄 ${K[o.kind].ru.split(' ')[0]} ${i + 1}</button>`).join('');
       return `<div class="k3s-sub">${esc(L3('Свои шкафчики и полки', 'Oʻz shkafchalaringiz'))} (${kObjs.length})</div>${chips ? `<div class="k3s-grid">${chips}</div>` : ''}
-        <div class="k3s-grid">${['book', 'rack', 'low', 'wallcab', 'shelf', 'vert'].map(k => `<button type="button" onclick="k3dObjAdd('${k}')">＋ ${esc(K[k].ru)}</button>`).join('')}<button type="button" onclick="kShapeOpen()">✏️ ${esc(L3('Нарисовать свою форму…', 'Oʻz shaklingizni chizing…'))}</button></div>
+        <div class="k3s-grid">${['book', 'rack', 'low', 'wallcab', 'shelf', 'vert'].map(k => `<button type="button" onclick="k3dObjAdd('${k}')">＋ ${esc(K[k].ru)}</button>`).join('')}<button type="button" onclick="kShapeOpen()">✏️ ${esc(L3('Нарисовать свою форму…', 'Oʻz shaklingizni chizing…'))}</button><button type="button" onclick="kBoardsOpen()">🐍 ${esc(L3('Змейка / стеллаж из досок…', 'Ilon / taxtalardan stellaj…'))}</button></div>
         <div class="k3s-note">${esc(L3('Тяните шкафчик по полу мышью; дверцы — двойной щелчок. Своя форма (волна, змейка, дуга) рисуется в окне «Конструктор своих шкафчиков» ниже 3D (режим мастера).', 'Shkafchani sichqoncha bilan sudrang.'))}</div>`;
     }
     function k3dSideObj() {
@@ -3035,16 +3043,17 @@
       let h = `<div class="k3s-h">🗄 ${esc(K.ru)} ${kObjs.indexOf(o) + 1}</div><div class="k3s-note">${esc(L3('Габарит', 'Oʻlcham'))} ${Math.round(f.w * 10)}×${Math.round(f.d * 10)} ${esc(L3('мм, высота', 'mm, balandlik'))} ${Math.round(o.h * 10)} ${esc(L3('мм. Тяните мышью по полу; двойной щелчок открывает дверцы.', 'mm.'))}</div>`;
       h += k3Row(L3('Магнит', 'Magnit'), k3B(magnetOn, 'k3dMagnet()', magnetOn ? L3('вкл', 'yoq') : L3('выкл', 'oʻch')) + k3B(false, 'k3dObjRot(-90)', '↺ 90°') + k3B(false, 'k3dObjRot(90)', '↻ 90°'));
       h += st(L3('От левой стены', 'Chap devordan'), 'x', 5, o.x) + st(L3('От дальней стены', 'Uzoq devordan'), 'z', 5, o.z) + st(L3('Над полом', 'Polidan'), 'y', 5, o.y);
-      if (!cu) h += st(o.kind === 'vert' ? L3('Толщина', 'Qalinlik') : L3('Ширина', 'Kenglik'), 'w', o.kind === 'vert' ? .2 : 5, o.w) + st(L3('Глубина', 'Chuqurlik'), 'd', 1, o.d);
-      h += st(o.kind === 'shelf' ? L3('Толщина', 'Qalinlik') : L3('Высота', 'Balandlik'), 'h', 5, o.h);
-      if (o.kind !== 'shelf' && o.kind !== 'vert') {
+      if (o.kind === 'boards') h += st(L3('Глубина', 'Chuqurlik'), 'd', 1, o.d);
+      else { if (!cu) h += st(o.kind === 'vert' ? L3('Толщина', 'Qalinlik') : L3('Ширина', 'Kenglik'), 'w', o.kind === 'vert' ? .2 : 5, o.w) + st(L3('Глубина', 'Chuqurlik'), 'd', 1, o.d);
+      h += st(o.kind === 'shelf' ? L3('Толщина', 'Qalinlik') : L3('Высота', 'Balandlik'), 'h', 5, o.h); }
+      if (o.kind !== 'shelf' && o.kind !== 'vert' && o.kind !== 'boards') {
         h += st(L3('Полок', 'Tokchalar'), 'n', 1, o.n); if (!cu) h += st(L3('Дверей', 'Eshiklar'), 'dn', 1, o.dn);
         h += k3Row(L3('Материал', 'Material'), [['dsp', 'ЛДСП'], ['ply', L3('Фанера', 'Faner')], ['mdf', 'МДФ']].map(([k, n]) => k3B((o.mat || 'dsp') === k, `k3dObjSetF('mat','${k}')`, n)).join(''));
         h += k3Row(L3('Фасад', 'Fasad'), [['dsp', 'ЛДСП'], ['glass', L3('Стекло', 'Oyna')], ['mirror', L3('Зеркало', 'Oyna')]].map(([k, n]) => k3B(o.fill === k, `k3dObjSetF('fill','${k}')`, n)).join(''));
         h += k3Row(L3('Опции', 'Opsiyalar'), k3B(o.back, "k3dObjFlag('back')", L3('спинка', 'orqa')) + k3B(o.handles, "k3dObjFlag('handles')", L3('ручки', 'dasta')));
       }
       if (E.length) h += `<div class="k3s-sub">${esc(L3('Поставить к стене', 'Devorga qoʻyish'))}</div>` + ['start', 'center', 'end'].map(al => `<div class="k3e-r">${E.map((e, i) => k3B(false, `k3dObjWall(${i},'${al}')`, '№' + (i + 1) + (al === 'start' ? ' ◀' : al === 'end' ? ' ▶' : ' ●'))).join('')}</div>`).join('');
-      h += `<div class="k3e-r">${cu ? k3B(false, 'kShapeEdit()', '✏️ ' + L3('Изменить форму', 'Shaklni oʻzgartirish')) : ''}${k3B(false, 'kObjLib()', '💾 ' + L3('В мои шкафчики', 'Kutubxonaga'))}${k3B(false, 'k3dObjDup()', '⧉ ' + L3('Копия', 'Nusxa'))}${k3B(false, `k3dObjDel('${o.id}')`, '🗑 ' + L3('Удалить', 'Oʻchirish'))}${k3B(false, 'k3dObjSel(null)', L3('Готово', 'Tayyor'))}</div>`;
+      h += `<div class="k3e-r">${cu ? k3B(false, 'kShapeEdit()', '✏️ ' + L3('Изменить форму', 'Shaklni oʻzgartirish')) : ''}${o.kind === 'boards' ? k3B(false, 'kBoardsEdit()', '✏️ ' + L3('Изменить доски', 'Taxtalarni oʻzgartirish')) : ''}${k3B(false, 'kObjLib()', '💾 ' + L3('В мои шкафчики', 'Kutubxonaga'))}${k3B(false, 'k3dObjDup()', '⧉ ' + L3('Копия', 'Nusxa'))}${k3B(false, `k3dObjDel('${o.id}')`, '🗑 ' + L3('Удалить', 'Oʻchirish'))}${k3B(false, 'k3dObjSel(null)', L3('Готово', 'Tayyor'))}</div>`;
       return h;
     }
     function kObjChanged(priceToo) { k3dRefresh(); updateShareLinks(); renderK3dEdit(); if (priceToo !== false) updateCalculator(); }
@@ -3071,6 +3080,8 @@
     function k3dObjWall(i, align) { const o = kObjs.find(x => x.id === selObjId); if (!o) return; const m = SC().placeAtWall(kRoomS(), r => SC().objFoot(o, r), i, align); if (m) { o.x = m.ox; o.z = m.oz; o.rot = m.rot; kObjChanged(); } }
     function k3dMagnet() { magnetOn = !magnetOn; renderK3dEdit(); }
     function kObjLib() { const o = kObjs.find(x => x.id === selObjId); if (o && window.SHAPE) { const nm = window.SHAPE.libAdd(o, SC().OBJ_KINDS[o.kind].ru + ' ' + Math.round(o.w * 10) + '×' + Math.round(o.d * 10)); if (typeof msToast === 'function') msToast('Сохранено в «Мои шкафчики»: ' + nm); } }
+    function kBoardsOpen() { if (window.BOARDS) window.BOARDS.open(null); }
+    function kBoardsEdit() { const o = kObjs.find(x => x.id === selObjId); if (o && window.BOARDS) window.BOARDS.open(o); }
     function kShapeOpen() { if (window.SHAPE) window.SHAPE.open(null); }
     function kShapeEdit() { const o = kObjs.find(x => x.id === selObjId); if (o && window.SHAPE) window.SHAPE.open(o); }
     // адаптер для окна «Конструктор своих шкафчиков»
@@ -3102,9 +3113,15 @@
       return `<div class="k3s-h">${K.icon} ${esc(K.ru)} ${kOpens.indexOf(o) + 1}</div>
         <div class="k3s-note">${esc(L3('Стена', 'Devor'))} ${o.wall + 1} (${Math.round(e ? e.L : 0)} ${cmU()}) · ${esc(L3('от угла стены', 'burchakdan'))} ${Math.round(o.off)} ${cmU()} · ${esc(L3('от пола', 'polidan'))} ${Math.round(o.y)} ${cmU()}. ${esc(L3('Тяните мышью по стенам.', 'Devorlar boʻylab sudrang.'))}</div>
         ${k3Row(L3('Стена', 'Devor'), E.map((x, i) => k3B(o.wall === i, `k3dOpenWall(${i})`, '№' + (i + 1))).join(''))}
+        ${(window.ROPEN.OPEN_VARIANTS[o.kind]) ? k3Row(L3('Вид', 'Turi'), window.ROPEN.OPEN_VARIANTS[o.kind].map(([k, n]) => k3B(o.v === k, `k3dOpenV('${k}')`, n)).join('')) : ''}
+        ${(window.ROPEN.OPEN_COLORS[o.kind]) ? `<div class="k3e-r"><span>${esc(L3('Цвет', 'Rang'))}</span>${window.ROPEN.OPEN_COLORS[o.kind].map((c, i) => `<button type="button" class="k3sw ${(o.c | 0) === i ? 'on' : ''}" style="background:${c[0]}" title="${c[1]}" onclick="k3dOpenC(${i})"></button>`).join('')}</div>` : ''}
+        ${(o.kind === 'window' || o.kind === 'balcony') ? k3Row(L3('Створок', 'Qanotlar'), [1, 2, 3, 4, 5, 6].map(k => k3B((o.n || 1) === k, `k3dOpenN(${k})`, String(k))).join('')) : ''}
         ${st([L3('От угла', 'Burchakdan'), 'off'], 5, o.off)}${st([L3('Ширина', 'Kenglik'), 'w'], 5, o.w)}${st([L3('Высота', 'Balandlik'), 'h'], 5, o.h)}${st([L3('От пола', 'Polidan'), 'y'], 5, o.y)}
         <div class="k3e-r">${k3B(false, 'k3dOpenCenter()', L3('По центру стены', 'Devor markazida'))}${k3B(false, 'k3dOpenDup()', '⧉ ' + L3('Копия', 'Nusxa'))}${k3B(false, `k3dOpenDel('${o.id}')`, '🗑 ' + L3('Удалить', 'Oʻchirish'))}${k3B(false, 'k3dOpenSel(null)', L3('Готово', 'Tayyor'))}</div>`;
     }
+    function k3dOpenV(v) { const o = kOpens.find(x => x.id === selOpenId); if (!o) return; o.v = v; if (o.kind === 'window') { if (v === 'pano') { o.y = 0; o.h = Math.max(o.h, 230); } else if (v === 'round') { const d = Math.min(o.w, o.h, 100); o.w = d; o.h = d; } else if (v === 'arch') o.h = Math.max(o.h, o.w / 2 + 70); else if (v === 'transom') o.h = Math.max(o.h, 150); } if (o.kind === 'door') { if (v === 'double' || v === 'sliding') o.w = Math.max(o.w, 120); if (v === 'arch') o.w = Math.max(o.w, 90); } const E = kEdges(), L = E[o.wall] ? E[o.wall].L : 9999; o.off = Math.max(0, Math.min(Math.max(0, L - o.w), o.off)); k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
+    function k3dOpenC(i) { const o = kOpens.find(x => x.id === selOpenId); if (!o) return; o.c = i; k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
+    function k3dOpenN(k) { const o = kOpens.find(x => x.id === selOpenId); if (!o) return; const old = o.n || 1, per = o.kind === 'window' ? 60 : 80; if (o.kind === 'window' && Math.abs(o.w - old * per) < 1) { const E = kEdges(), L = E[o.wall] ? E[o.wall].L : 9999; o.w = Math.min(L, k * per); o.off = Math.max(0, Math.min(Math.max(0, L - o.w), o.off)); } o.n = k; k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
     function k3dOpenSel(id) { selObjId = null; selOpenId = id; if (id) { selSec = null; selIsland = false; } renderPlanner(); k3dRefresh(); renderK3dEdit(); }
     function k3dOpenAdd(kind) {
       if (!window.ROPEN) return; const E = kEdges(); let wi = 0; E.forEach((e, i) => { if (e.L > E[wi].L) wi = i; });
@@ -3961,6 +3978,7 @@
       OWNER_ON = !!on && !VIEW_ONLY;
       const sec = el('ownerDraw'); if (sec) sec.style.display = OWNER_ON ? '' : 'none';
       const shp = el('shapeBox'); if (shp) shp.style.display = OWNER_ON ? '' : 'none';
+      const brd = el('brdBox'); if (brd) brd.style.display = OWNER_ON ? '' : 'none';
       if (OWNER_ON) renderOwnerDraw();
       if (K3) renderK3dBar();
       renderK3dEdit(); renderKAdded();
@@ -4371,6 +4389,7 @@
       if (window.fitSheetsIn) { window.fitSheetsIn(box); box._sheets = Array.from(box.querySelectorAll('.od-sheet')).map(d => d.innerHTML); } else box._sheets = sheets;
       [16, 18].forEach(v => { const b = el('cutT' + v); if (b) b.classList.toggle('on', CUT_T === v); });
     }
+    function ownerExport(kind) { const b = el('ownerDrawBody'); if (!b || !b._sheets || !b._sheets.length) { if (typeof msToast === 'function') msToast('Чертежи ещё строятся — подождите секунду'); return; } window.exportSheets(b._sheets, kind, 'Кухня', m => { if (typeof msToast === 'function') msToast(m); }); }
     function ownerPrint() {
       const box = el('ownerDrawBody'); if (!box || !box._sheets) return;
       const w = window.open('', '_blank'); if (!w) return;
@@ -5847,7 +5866,7 @@
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
         tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
-        ox: kOpens.map(o => [o.kind, o.wall, o.off, o.w, o.h, o.y, o.d]), oj: kObjs.length ? kObjs : 0,
+        ox: kOpens.map(o => [o.kind, o.wall, o.off, o.w, o.h, o.y, o.d, o.n || 1, o.v || '', o.c | 0]), oj: kObjs.length ? kObjs : 0,
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW], kh: KHW, ch: s.counterH, ug: s.upperGap };
     }
     function b64urlEncode(str) {
@@ -5929,7 +5948,7 @@
       topColorHex = typeof st.tc === 'string' && /^#[0-9a-f]{6}$/i.test(st.tc) ? st.tc.toLowerCase() : '';
       roomPoly = null;
       if (Array.isArray(st.rp) && st.rp.length >= 8 && st.rp.length % 2 === 0 && st.rp.every(v => isFinite(v))) { const Q = []; for (let i = 0; i < st.rp.length; i += 2) Q.push([+st.rp[i], +st.rp[i + 1]]); if (rpValid(Q)) roomPoly = Q; }
-      kOpens = window.ROPEN && Array.isArray(st.ox) ? window.ROPEN.sanitizeOpens(st.ox.slice(0, 80).map(a => Array.isArray(a) ? { kind: a[0], wall: a[1], off: a[2], w: a[3], h: a[4], y: a[5], d: a[6] } : {}), roomPoly || [[0, 0], [Math.max(60, +st.m || 240), 0], [Math.max(60, +st.m || 240), 600], [0, 600]]) : []; selOpenId = null;
+      kOpens = window.ROPEN && Array.isArray(st.ox) ? window.ROPEN.sanitizeOpens(st.ox.slice(0, 80).map(a => Array.isArray(a) ? { kind: a[0], wall: a[1], off: a[2], w: a[3], h: a[4], y: a[5], d: a[6], n: a[7], v: a[8], c: a[9] } : {}), roomPoly || [[0, 0], [Math.max(60, +st.m || 240), 0], [Math.max(60, +st.m || 240), 600], [0, 600]]) : []; selOpenId = null;
       kObjs = window.SCORE && Array.isArray(st.oj) && st.oj.length ? (window.SCORE.sanitize({ cols: [], objs: st.oj.slice(0, 60), room: { poly: roomPoly } }) || { objs: [] }).objs : []; selObjId = null;
       selSec = null;
       addMenuWall = null;
