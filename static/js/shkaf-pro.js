@@ -578,9 +578,10 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=10');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=11');
   const r = drawMod.buildSheets(S); lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
+  if (window.fitSheetsIn) { window.fitSheetsIn($('ownerBody')); lastSheets = Array.from($('ownerBody').querySelectorAll('.od-sheet')).map(d => d.innerHTML); }
 }
 function ownerPrint() {
   if (!lastSheets.length) return; const w = window.open('', '_blank'); if (!w) return;

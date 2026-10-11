@@ -26,6 +26,7 @@
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
   <script type="module">import * as R from '/static/js/room-open-core.js?v=1'; import * as C from '/static/js/shkaf-pro-core.js?v=12'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script type="module" src="/static/js/shkaf-shape.js?v=4"></script>
+  <script src="/static/js/sheet-fit.js?v=1"></script>
   <script src="/static/js/kis-data.js?v=4"></script>
   <script src="/static/js/kis-art.js?v=2"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
@@ -4121,7 +4122,7 @@
       return out;
     }
     function odSheet(inner, rows, no, total) {
-      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1190 840" width="100%" style="background:#fff;display:block" font-family="Arial, sans-serif">${odDefs}${odRect(10, 10, 1170, 820, 'o')}${odRect(30, 30, 1130, 800 - 40, 't')}${inner}${odTitle(rows, no, total)}</svg>`;
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1190 840" width="100%" style="background:#fff;display:block" font-family="Arial, sans-serif">${odDefs}${odRect(10, 10, 1170, 820, 'o')}${odRect(30, 30, 1130, 800 - 40, 't')}<g class="ct">${inner}</g>${odTitle(rows, no, total)}</svg>`;
     }
     function odNiceScale(sc) { const px = 1190 / 420, N = px / sc, nice = [1, 2, 2.5, 4, 5, 8, 10, 15, 20, 25, 50]; let b = nice[0]; nice.forEach(n => { if (Math.abs(n - N) < Math.abs(b - N)) b = n; }); return b; }
     function odCabSheet(g, geo, no, total) {
@@ -4339,7 +4340,7 @@
       sheets = sheets.concat(odCutSheets(cutParts, sheets.length + 1, total));
       sheets = sheets.map(x => x.split('__T__').join(String(sheets.length)));
       box.innerHTML = sheets.map(sv => `<div class="od-sheet">${sv}</div>`).join('');
-      box._sheets = sheets;
+      if (window.fitSheetsIn) { window.fitSheetsIn(box); box._sheets = Array.from(box.querySelectorAll('.od-sheet')).map(d => d.innerHTML); } else box._sheets = sheets;
       [16, 18].forEach(v => { const b = el('cutT' + v); if (b) b.classList.toggle('on', CUT_T === v); });
     }
     function ownerPrint() {
