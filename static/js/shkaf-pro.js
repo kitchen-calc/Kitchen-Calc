@@ -155,7 +155,7 @@ function setColor(i) { mutate(() => { S.color = i; S.custom = null; }); }
 function setCustom(h) { mutate(() => { S.custom = /^#[0-9a-f]{6}$/i.test(h) ? h : null; }); }
 const setDoors = k => mutate(() => { S.doors.kind = k; });
 const setFill = (i, v) => mutate(() => { S.doors.fills[i] = v; });
-function selectCol(i) { sel = { k: 'col', i }; refresh(false); }
+function selectCol(i) { if (!S.cols[i]) return; sel = { k: 'col', i }; refresh(false); }
 function selectItem(id) { const f = findItem(id); if (!f) return; sel = { k: 'item', id, col: f.ci }; refresh(false); }
 function selectGlobal() { sel = { k: 'global' }; refresh(false); }
 
@@ -578,8 +578,9 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=11');
-  const r = drawMod.buildSheets(S); lastSheets = r.sheets;
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=12');
+  let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
+  lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
   if (window.fitSheetsIn) { window.fitSheetsIn($('ownerBody')); lastSheets = Array.from($('ownerBody').querySelectorAll('.od-sheet')).map(d => d.innerHTML); }
 }

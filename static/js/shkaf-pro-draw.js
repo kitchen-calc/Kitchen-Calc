@@ -172,7 +172,7 @@ function sheetRoomPlan(S, bp, no, total) {
     }); }
   const items = [], rm = S.room || {}, rotPts = (pts, rot, ox, oz) => { const a = (rot || 0) * Math.PI / 180, c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a)); return pts.map(p => [p[0] * c + p[1] * s + ox, -p[0] * s + p[1] * c + oz]); };
   const ft = wfoot(S), wr = { x0: rm.ox || 0, z0: rm.oz || 0 };
-  items.push({ n: 'Шкаф', poly: [[wr.x0, wr.z0], [wr.x0 + ft.w, wr.z0], [wr.x0 + ft.w, wr.z0 + ft.d], [wr.x0, wr.z0 + ft.d]], rot: rm.rot || 0, w: bp.g.W, d: ft.d, fill: 'url(#h2)' });
+  if (S.cols.some(c => !c.gap && !c.det)) items.push({ n: 'Шкаф', poly: [[wr.x0, wr.z0], [wr.x0 + ft.w, wr.z0], [wr.x0 + ft.w, wr.z0 + ft.d], [wr.x0, wr.z0 + ft.d]], rot: rm.rot || 0, w: bp.g.W, d: ft.d, fill: 'url(#h2)' });
   const add = (n, w, d, r, rot, fill) => items.push({ n, poly: [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]], rot, w, d, fill });
   S.cols.forEach((c, ci) => { if (c.det) add('Ш' + (ci + 1), c.w, c.D || S.D, colRect(S, ci), c.det.rot, '#e9ddc4'); });
   S.units.forEach((u, i) => { const c = u.fp ? u : Object.assign({}, u); if (!c.fp) freeItem(S, 'unit', c); add('Т' + (i + 1), u.w, u.d, itemRect(S, 'unit', c), c.fp.rot, '#efe3c8'); });
@@ -452,22 +452,24 @@ function sheetBunk(S, bp, bi, no, total) {
 }
 export function buildSheets(S0) {
   const bpAll = buildParts(S0), pr = pricing(S0, bpAll), S = Object.assign({}, S0, { cols: S0.cols.filter(c => !c.det) }); S.W = geom(S).W;
-  const bp = buildParts(S);
-  const total = '__T__';
+  const bp = buildParts(S), total = '__T__', sheets = [], hasMain = S.cols.some(c => !c.gap);
   let no = 1;
-  const sheets = [sheetOverview(S, bp, no++, total)];
-  if (S.objs.length || S.beds.length || S.units.length || S.panels.length || S.room.rot || S.room.oz || S0.cols.some(c => c.det) || (S0.opens || []).length) sheets.push(sheetRoomPlan(S0, bp, no++, total));
-  if ((S0.opens || []).length) sheets.push(sheetOpenings(S0, bp, no++, total));
-  sheets.push(sheetDoors(S, bp, no++, total), sheetSections(S, bp, no++, total));
-  S.cols.forEach((c, i) => { if (!c.gap) sheets.push(sheetColumn(S, bp, i, no++, total)); });
-  S.mezzes.forEach((m, i) => sheets.push(sheetMezz(S, bp, i, no++, total)));
-  S.beds.forEach((b, bi) => { sheets.push(sheetBedMain(S, bp, bi, no++, total)); sheets.push(sheetBedDetails(S, bp, bi, no++, total)); if (b.kind === 'bunk') sheets.push(sheetBunk(S, bp, bi, no++, total)); });
-  sheets.push(sheetDetails(S, bp, no++, total));
+  const add = (title, make) => {   // один неудавшийся лист не должен ломать все чертежи
+    try { const r = make(no); (Array.isArray(r) ? r : [r]).forEach(x => { sheets.push(x); no++; }); }
+    catch (e) { console.error('Чертёж «' + title + '»:', e); sheets.push(sheet(text(600, 200, 'Не удалось построить лист: ' + title, 12) + text(600, 230, String(e && e.message || e).slice(0, 120), 9), [['Лист', title], ['Ошибка', String(e && e.message || e).slice(0, 40)]], no, total)); no++; }
+  };
+  if (hasMain) add('Общий вид', n => sheetOverview(S, bp, n, total));
+  if (S.objs.length || S.beds.length || S.units.length || S.panels.length || S.room.rot || S.room.oz || S0.cols.some(c => c.det) || (S0.opens || []).length || !hasMain) add('План комнаты', n => sheetRoomPlan(S0, bp, n, total));
+  if ((S0.opens || []).length) add('Элементы стен', n => sheetOpenings(S0, bp, n, total));
+  if (hasMain) { add('Двери', n => sheetDoors(S, bp, n, total)); add('Секции', n => sheetSections(S, bp, n, total)); }
+  S.cols.forEach((c, i) => { if (!c.gap) add('Отсек ' + (i + 1), n => sheetColumn(S, bp, i, n, total)); });
+  S.mezzes.forEach((m, i) => add('Антресоль ' + (i + 1), n => sheetMezz(S, bp, i, n, total)));
+  S.beds.forEach((b, bi) => { add('Кровать ' + (bi + 1), n => sheetBedMain(S, bp, bi, n, total)); add('Кровать ' + (bi + 1) + ': узлы', n => sheetBedDetails(S, bp, bi, n, total)); if (b.kind === 'bunk') add('Двухъярусная ' + (bi + 1), n => sheetBunk(S, bp, bi, n, total)); });
+  if (hasMain || S.beds.length) add('Узлы и детали', n => sheetDetails(S, bp, n, total));
   S0.cols.filter(c => c.det).forEach((c, di) => {   // отдельные шкафы: свои листы
-    const Sd = Object.assign({}, S0, { cols: [Object.assign({}, c, { det: undefined })], mezzes: [], panels: [], units: [], beds: [], objs: [], name: 'Отдельный шкаф ' + (di + 1), room: Object.assign({}, S0.room, { ox: 0, oz: 0, rot: 0 }) }); delete Sd.cols[0].det; Sd.W = geom(Sd).W;
-    const bpd = buildParts(Sd); sheets.push(sheetOverview(Sd, bpd, no++, total)); sheets.push(sheetColumn(Sd, bpd, 0, no++, total));
+    const Sd = Object.assign({}, S0, { cols: [Object.assign({}, c, { det: undefined })], mezzes: [], panels: [], units: [], beds: [], objs: [], opens: [], name: 'Отдельный шкаф ' + (di + 1), room: Object.assign({}, S0.room, { ox: 0, oz: 0, rot: 0 }) }); delete Sd.cols[0].det; Sd.W = geom(Sd).W;
+    const bpd = buildParts(Sd); add('Отдельный шкаф ' + (di + 1), n => sheetOverview(Sd, bpd, n, total)); add('Отдельный шкаф ' + (di + 1) + ': отсек', n => sheetColumn(Sd, bpd, 0, n, total));
   });
-  const tbl = tableSheets(S0, bpAll, pr, no, total);
-  tbl.forEach(t => sheets.push(t));
+  add('Раскрой и спецификация', n => tableSheets(S0, bpAll, pr, n, total));
   return { sheets: sheets.map(x => x.split('__T__').join(String(sheets.length))), bp: bpAll, pr };
 }
