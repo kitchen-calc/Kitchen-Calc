@@ -1,5 +1,5 @@
 /* Комната для конструктора шкафа: стартовое окно с размерами и редактор «нарисуй комнату» (Г-, П-образная и любая прямоугольная форма). */
-import { rpRect, rpEdgeLen, rpNormalize, rpValid, rpEditLen } from '/static/js/shkaf-pro-core.js?v=19';
+import { rpRect, rpEdgeLen, rpNormalize, rpValid, rpEditLen } from '/static/js/shkaf-pro-core.js?v=20';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let st = null, cssDone = false;

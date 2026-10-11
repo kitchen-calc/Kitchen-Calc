@@ -153,6 +153,18 @@ export function tablePt(W, D, H, tt, ls, inset) {   // стол: столешн�
   o.push([0, inset + ls, H - tt - 8, inset, W - 2 * inset - 2 * ls, 8, 1.6], [0, inset + ls, H - tt - 8, D - inset - 1.6, W - 2 * inset - 2 * ls, 8, 1.6]);
   return o;
 }
+/* конфирматы 7×50: на каждый стык — по одному через каждые 30 см длины стыка, но не меньше двух */
+export const cfN = L => Math.max(2, Math.ceil(L / 30 - 1e-6));
+export function ptJoints(B) {   // стыки между досками изделия из деталей: касание граней → длина стыка = большая сторона площади касания
+  const A = (B || []).filter(b => b[0] === 0).map(ptAabb); let n = 0, len = 0, eps = .35;
+  for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) for (let ax = 0; ax < 3; ax++) {
+    if (Math.abs(A[i][ax + 3] - A[j][ax]) < eps || Math.abs(A[j][ax + 3] - A[i][ax]) < eps) {
+      const o = [0, 1, 2].filter(k => k !== ax).map(k => Math.min(A[i][k + 3], A[j][k + 3]) - Math.max(A[i][k], A[j][k]));
+      if (o[0] > .5 && o[1] > .5) { const L = Math.max(o[0], o[1]); n += cfN(L); len += L; }
+    }
+  }
+  return { n, len };
+}
 export function ptAabb(b) {   // габарит детали с учётом поворота: ry — по горизонтали (вокруг вертикальной оси), rx / rz — наклоны; порядок Y·X·Z как в three.js
   const ry = (b[8] || 0) * Math.PI / 180, rx = (b[9] || 0) * Math.PI / 180, rz = (b[10] || 0) * Math.PI / 180;
   if (!ry && !rx && !rz) return [b[1], b[2], b[3], b[1] + b[4], b[2] + b[5], b[3] + b[6]];
@@ -451,7 +463,8 @@ export function buildParts(S) {
   };
   const addHw = (grp, name, qty, unit, price, note) => { qty = Math.round(qty * 100) / 100; if (qty > 0) hw.push({ grp, name, qty, unit: unit || 'шт.', price: Math.round(price || 0), note: note || '' }); };
   const bd = D - .3, ph = S.plinth, hs = H - ph;
-  let joints = 8, feet = 0, hinges0 = 0, handles0 = 0, joints_u = 0;
+  const hasMain0 = (S.cols || []).some(c => !c.gap);
+  let joints = hasMain0 ? 8 : 0, feet = 0, hinges0 = 0, handles0 = 0, joints_u = 0;
   g.runs.forEach((r, ri) => {
     const rw = r.x1 - r.x0, k = r.b - r.a + 1, D = r.D, hs = r.H - ph, lbl = g.runs.length > 1 ? ' (секция ' + (ri + 1) + ')' : '';
     add('Корпус', 'Дно' + lbl, 1, rw, D, t, body, (rw + 2 * D) / 100, 'на всю ширину: боковины и спинка стоят на дне; кромка перед + 2 торца');
@@ -581,12 +594,12 @@ export function buildParts(S) {
       Object.keys(cm).forEach(k => { const [L, dia] = k.split('x').map(v => v / 10); addP(gr, 'Ножка / стойка круглая ⌀' + mm(dia) + lbl, cm[k], L, dia, dia, 'Массив / металл', 0, 'круглая деталь, длина ' + mm(L) + ' мм', 'metal'); addHw('Фурнитура', 'Подпятник / опора круглой ножки', cm[k], 'шт.', 8000); });
       if (doorsN) { addHw('Двери', 'Петля с доводчиком', doorsN * 2, 'шт.', T.hinge); if (hnd) addHw('Двери', 'Ручка', doorsN, 'шт.', T.handle); }
       if (groups.size) { addHw('Ящики', 'Направляющие ящика (комплект)', groups.size, 'комплект', T.drawer); if (hnd) addHw('Двери', 'Ручка', groups.size, 'шт.', T.handle); }
-      joints_u += B.length * 3; return;
+      joints_u += ptJoints(B).n; return;
     }
     if (q.kind === 'boards') {
       const B = q.bd || [], d = q.d, pm = {}; B.forEach(b => { const L = Math.max(b[2], b[3]), key = Math.round(L * 10); pm[key] = (pm[key] || 0) + 1; });
       Object.keys(pm).map(Number).sort((x, y) => y - x).forEach(k => { const L = k / 10; addP(gr, (L === q.h || L > q.w * .9 ? 'Доска (длинная)' : 'Доска') + lbl, pm[k], L, d, t, body, (2 * (L + d)) / 100, 'видимая кромка по периметру'); });
-      joints_u += B.length * 3; addHw('Крепёж', q.y > 0 ? 'Скрытое крепление стеллажа к стене (пара)' : 'Уголок мебельный для крепления к стене', q.y > 0 ? Math.max(2, Math.ceil(q.w / 60)) : 2, q.y > 0 ? 'шт.' : 'шт.', 18000);
+      joints_u += B.length * cfN(d); addHw('Крепёж', q.y > 0 ? 'Скрытое крепление стеллажа к стене (пара)' : 'Уголок мебельный для крепления к стене', q.y > 0 ? Math.max(2, Math.ceil(q.w / 60)) : 2, q.y > 0 ? 'шт.' : 'шт.', 18000);
       return;
     }
     if (q.kind === 'vert') { addP(gr, 'Вертикальная полка' + lbl, 1, q.h, q.d, q.w, body, (2 * (q.h + q.d)) / 100, 'стоит на полу/крепится к стене, кромка по периметру'); addHw('Крепёж', 'Уголок мебельный для крепления к стене/полу', 2, 'шт.', 6000); return; }
@@ -602,7 +615,7 @@ export function buildParts(S) {
       E.forEach(e => { if (e.curved) { run += e.L; runN++; return; } flush(); if (e.open) return; const L = Math.max(5, e.L - (e.door ? .4 : 2 * t)); if (e.door) { door('Дверь', 1, q.h - .4, L, 'распашная, сторона ' + (e.i + 1)); addDoorHw(1, q.h); } else addP(gr, 'Стенка (сторона ' + (e.i + 1) + ')' + lbl, 1, q.h - 2 * t, L, t, body, (q.h - 2 * t) / 100, 'видимая кромка по высоте'); });
       flush();
       if (q.back) addP(gr, 'Задняя стенка' + lbl, 1, E.reduce((a, e) => Math.max(a, e.L), 0), q.h - 2 * t, .3, 'ХДФ 3 мм', 0, 'ХДФ по самой длинной стороне у стены', 'hdf');
-      joints_u += 8 + E.length * 4;
+      joints_u += E.reduce((a, e) => a + (e.open ? 0 : cfN(q.h) + 2 * cfN(e.L)), 0);
       return;
     }
     const w = q.w, d = q.d, h = q.h;
@@ -613,12 +626,12 @@ export function buildParts(S) {
     if (q.back) addP(gr, 'Задняя стенка' + lbl, 1, w - 2 * t, h - 2 * t, .3, 'ХДФ 3 мм', 0, 'ставится на дно между боковин', 'hdf');
     if (q.dn > 0) { const dh = q.dh > 0 ? Math.min(q.dh, h - 2 * t) : h - 2 * t, dw = w / q.dn - .3; door('Дверь', q.dn, dh - .4, dw, 'распашная'); addDoorHw(q.dn, dh); }
     if (q.kind === 'wallcab') addHw('Крепёж', 'Навес для шкафа (регулируемый, пара)', 1, 'пара', 40000);
-    joints_u += 10;
+    joints_u += 4 * cfN(d);   // дно и крышка к двум боковинам; полки — на полкодержателях
   });
   addHw('Крепёж', 'Крепёж зеркальных / стеклянных панелей (подвесы, клей)', (S.panels || []).length, 'шт.', 35000);
   addHw('Крепёж', 'Конфирмат 7×50', joints + joints_u, 'шт.', 600);
   addHw('Крепёж', 'Опора-ножка цоколя', feet, 'шт.', 6000);
-  addHw('Крепёж', 'Уголок крепления к стене', 4 * Math.max(1, g.runs.length) + 2 * g.mz.length, 'шт.', 3000);
+  addHw('Крепёж', 'Уголок крепления к стене', hasMain0 ? 4 * Math.max(1, g.runs.length) + 2 * g.mz.length : 0, 'шт.', 3000);
   let rods = 0, hooks = 0, ledM = 0, basket = 0, pant = 0, pins = g.mz.reduce((a, m) => a + (m.shelves | 0) * 4 * m.comp.length, 0), lifts = 0, lowers = 0; const drw = {};
   S.cols.forEach((c, ci) => {
     if (c.gap) return;

@@ -24,7 +24,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=19'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=20'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script src="/static/js/shkaf-lib.js?v=1"></script>
   <script type="module" src="/static/js/shkaf-3dpart.js?v=5"></script>
   <script src="/static/js/color-catalog.js?v=3"></script>
@@ -3985,7 +3985,7 @@
       OWNER_ON = !!on && !VIEW_ONLY;
       const sec = el('ownerDraw'); if (sec) sec.style.display = OWNER_ON ? '' : 'none';
       const shp = el('p3Box'); if (shp) { shp.style.display = OWNER_ON ? '' : 'none'; if (OWNER_ON && window.PART3D && window.PART3D.show) window.PART3D.show(); }
-      if (OWNER_ON) renderOwnerDraw();
+      if (OWNER_ON) { renderOwnerDraw(); loadProDraw(); }
       if (K3) renderK3dBar();
       renderK3dEdit(); renderKAdded();
     }
@@ -4416,6 +4416,18 @@
       return out;
     }
 
+    // данные кухни для общих листов (план комнаты, аксонометрия, стены с проёмами, листы своих деталей) — как в «Шкафы PRO»
+    function kitchenSheetCtx(geo) {
+      const items = [], odH = (s, tier) => odModel(s, tier, geo).H / 10, add = (n, name, f, y0, y1, extra) => items.push(Object.assign({ n, name, x0: f.x0, x1: f.x1, z0: f.z0, z1: f.z1, y0, y1 }, extra || {}));
+      lowerSections.forEach(s => { const it = { s, sec: s, tier: 'lower' }, p = getTarget(it, geo), y0 = Math.max(0, +p.y || 0); add('Н-' + s.id, s.name, footprint(p), y0, y0 + odH(s, 'lower'), { fill: '#efe3c8', noDim: true }); });
+      if (chk('hasIsland')) { const p = getTarget({ tier: 'island', sec: null }, geo); add('Остров', 'Остров', footprint(p), 0, geo.G.BOX + geo.G.CT, { fill: '#f3ecd9', noDim: true }); }
+      if (geo.hasUp) upperSections.forEach(s => { const it = { s, sec: s, tier: 'upper' }, p = getTarget(it, geo), y0 = +p.y || 0; add('В-' + s.id, s.name, footprint(p), y0, y0 + odH(s, 'upper'), { fill: 'rgba(11,110,143,.10)', noDim: true, noLabel: true }); });
+      const tObj = CUT_T === 18 ? 1.8 : 1.6, hwAll = {};
+      kObjs.forEach((o, i) => { const r = SC().objRect(o); let pp = null; try { pp = SC().objsParts([o], tObj); } catch (e) {} add('С' + (i + 1), SC().OBJ_KINDS[o.kind].ru + ' ' + (i + 1), r, o.y || 0, (o.y || 0) + o.h, { rot: o.rot || 0, kind: SC().OBJ_KINDS[o.kind].ru, sheet: true, parts: pp && pp.parts, hw: pp && pp.hw });
+        (pp ? pp.hw : []).forEach(h => { const k = h.name + '|' + h.unit; if (!hwAll[k]) hwAll[k] = { grp: 'С' + (i + 1), name: h.name, qty: 0, unit: h.unit }; else if (hwAll[k].grp.indexOf('С' + (i + 1)) < 0) hwAll[k].grp += ', С' + (i + 1); hwAll[k].qty += h.qty; }); });
+      return { name: 'Кухня на заказ', poly: kWallPolyCache || kWallPoly(), H: geo.roomH, opens: kOpens, items, hw: Object.keys(hwAll).map(k => hwAll[k]), meta: [['Проект', 'Кухня на заказ'], ['Помещение', Math.round(geo.W * 10) + ' × ' + Math.round(geo.roomD * 10) + ' мм · высота ' + Math.round(geo.roomH * 10)], ['Материал', 'ЛДСП ' + CUT_T + ' мм']] };
+    }
+    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=25').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
     function renderOwnerDraw() {
       const box = el('ownerDrawBody'); if (!box || !OWNER_ON) return;
       const geo = k3dGeo(), groups = new Map();
@@ -4424,6 +4436,7 @@
       const list = Array.from(groups.values()), walls = ['main', 'left', 'right'].filter(w => { const r = geo.LAY[w]; return r && (r.lower.length || (geo.hasUp && r.upper.length)); });
       const total = '__T__', cutParts = kitchenCut();
       let sheets = [odRoomSheet(geo, list, 1, total)].concat(walls.map((w, i) => odWallSheet(geo, w, i + 2, total))).concat(list.map((g, i) => odCabSheet(g, geo, i + 2 + walls.length, total)));
+      try { if (window.PRODRAW) sheets = sheets.concat(window.PRODRAW.buildExtraSheets(kitchenSheetCtx(geo), sheets.length + 1)); } catch (e) { console.error('Чертежи комнаты:', e); }
       sheets = sheets.concat(odCutSheets(cutParts, sheets.length + 1, total));
       sheets = sheets.map(x => x.split('__T__').join(String(sheets.length)));
       box.innerHTML = sheets.map(sv => `<div class="od-sheet">${sv}</div>`).join('');
