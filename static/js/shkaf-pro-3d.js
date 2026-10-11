@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { geom, doorList, PALETTE, LACO } from '/static/js/shkaf-pro-core.js?v=1';
+import { geom, doorList, PALETTE, LACO, roomPoly } from '/static/js/shkaf-pro-core.js?v=1';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -51,23 +51,23 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       alu: stdMat('#b8bec4', { roughness: .3, metalness: .85 }),
       glass: n => new THREE.MeshStandardMaterial({ color: (LACO[n] || LACO[0])[1], roughness: .12, metalness: .1, envMapIntensity: .9 })
     };
+    const ox = (S.room && S.room.ox) || 0, wg = new THREE.Group(); wg.position.set(ox, 0, 0); root.add(wg);
     const edgeMat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: .22 });
     const box = (w, h, d, mat, x, y, z, meta, parent) => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(Math.max(.05, w), Math.max(.05, h), Math.max(.05, d)), mat); m.castShadow = m.receiveShadow = true;
       m.position.set(x + w / 2, y + h / 2, z + d / 2);
       m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), edgeMat));
       if (meta) { m.userData.sel = meta; picks.push(m); }
-      (parent || root).add(m); return m;
+      (parent || wg).add(m); return m;
     };
     const cyl = (r, len, mat, x, y, z, axis, meta) => {
       const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 16), mat); m.castShadow = true;
       if (axis === 'x') m.rotation.z = Math.PI / 2; else if (axis === 'z') m.rotation.x = Math.PI / 2;
-      m.position.set(x, y, z); if (meta) { m.userData.sel = meta; picks.push(m); } root.add(m); return m;
+      m.position.set(x, y, z); if (meta) { m.userData.sel = meta; picks.push(m); } wg.add(m); return m;
     };
     const z0 = .3, bd = D - z0;
     // стены и пол помещения
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(W + 400, D + 400), stdMat('#cdb48e', { roughness: .7 })); floor.rotation.x = -Math.PI / 2; floor.position.set(W / 2, 0, D / 2 + 100); floor.receiveShadow = true; root.add(floor);
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(W + 400, 360), stdMat('#efe8dc', { roughness: .95 })); wall.position.set(W / 2, 180, -.4); root.add(wall);
+    buildRoom(S);
     // корпус: секции (между проёмами), перегородки, антресоли — каждая отдельным блоком
     const selK = { k: 'global' }, n = g.cols.length;
     g.runs.forEach(r => {
@@ -79,7 +79,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     });
     g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === n) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap || R.split) return; box(t, L.y1 - g.y0, L.D - z0, M.body, b.x, g.y0, z0, { k: 'col', i: k - 1 }); });
     g.cols.forEach((c, i) => {
-      const pl = new THREE.Mesh(new THREE.PlaneGeometry(c.w, c.y1 - g.y0), new THREE.MeshBasicMaterial({ visible: false })); pl.position.set(c.xa + c.w / 2, (g.y0 + c.y1) / 2, 1); pl.userData.sel = { k: 'col', i }; picks.push(pl); root.add(pl);
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(c.w, c.y1 - g.y0), new THREE.MeshBasicMaterial({ visible: false })); pl.position.set(c.xa + c.w / 2, (g.y0 + c.y1) / 2, 1); pl.userData.sel = { k: 'col', i }; picks.push(pl); wg.add(pl);
     });
     g.mz.forEach(m => {
       const meta = { k: 'mezz', i: m.mi }, mbd = bd;
@@ -101,7 +101,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
           [c.xa + .1, c.xb - 2.9].forEach(x => box(2.8, 3.4, 2.4, M.steel, x, it.y - 1.7, D / 2 - 1.2, meta));
         }
         else if (it.type === 'drawer') {
-          const y = it.y, fh = it.fh, key = 'w' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, grp = new THREE.Group(); root.add(grp);
+          const y = it.y, fh = it.fh, key = 'w' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, grp = new THREE.Group(); wg.add(grp);
           box(c.w - .4, fh - .3, t, M.body, c.xa + .2, y + .15, D - t, dm, grp);
           box(1.2, fh - 4, D - 12, M.steel, c.xa + 1.2, y + 1.5, 6, dm, grp); box(1.2, fh - 4, D - 12, M.steel, c.xb - 2.4, y + 1.5, 6, dm, grp);
           box(c.w - 4.8, fh - 4, 1.2, M.inner, c.xa + 2.4, y + 1.5, 6, dm, grp); box(c.w - 4.8, 1, D - 12, M.inner, c.xa + 2.4, y + 1.2, 6, dm, grp);
@@ -110,7 +110,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         }
         else if (it.type === 'idoor') {
           const key = 'i' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, iw = Math.min(it.w || (c.w - it.x), c.w - it.x), ih = it.y1 - it.y, x0 = c.xa + it.x, z = D - 1.2;
-          const pv = new THREE.Group(); root.add(pv);
+          const pv = new THREE.Group(); wg.add(pv);
           if (it.dir === 'R') { pv.position.set(x0 + iw, it.y, z); box(iw - .2, ih - .2, 1.6, M.body, -iw + .1, .1, 0, dm, pv); box(.9, Math.min(20, ih * .3), 1.6, M.chrome, -iw + 3, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = 105 * DEG * f; } }); }
           else if (it.dir === 'U') { pv.position.set(x0, it.y + ih, z); box(iw - .2, ih - .2, 1.6, M.body, .1, -ih + .1, 0, dm, pv); box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, -ih + 3, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = -100 * DEG * f; } }); }
           else if (it.dir === 'D') { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, M.body, .1, .1, 0, dm, pv); box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, ih - 4, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = 95 * DEG * f; } }); }
@@ -118,8 +118,8 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         }
         else if (it.type === 'shoe') {
           for (let k = 0; k < it.n; k++) {
-            const m = box(c.w - .2, t, D - 6, M.body, -(c.w - .2) / 2, -t / 2, -(D - 6) / 2, meta); root.remove(m);
-            const gr = new THREE.Group(); gr.add(m); m.position.set(0, 0, 0); gr.position.set(c.xa + c.w / 2, it.y + k * 12 + 6, z0 + (D - 6) / 2); gr.rotation.x = 12 * DEG; root.add(gr);
+            const m = box(c.w - .2, t, D - 6, M.body, -(c.w - .2) / 2, -t / 2, -(D - 6) / 2, meta); wg.remove(m);
+            const gr = new THREE.Group(); gr.add(m); m.position.set(0, 0, 0); gr.position.set(c.xa + c.w / 2, it.y + k * 12 + 6, z0 + (D - 6) / 2); gr.rotation.x = 12 * DEG; wg.add(gr);
             const lip = box(c.w - .2, 3, .8, M.steel, -(c.w - .2) / 2, -1.5, (D - 6) / 2 - .4, meta, gr); void lip;
           }
         }
@@ -157,12 +157,12 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       const face = (par, dx, dy) => { if (!gl) { box(d.w, d.h, th, mat, dx, dy, 0, meta, par); return; } const f = Math.min(Math.max(1, S.doors.gf || 4), d.w / 2 - .6, d.h / 2 - .6); box(d.w - 2 * f, d.h - 2 * f, .5, M.glassClear, dx + f, dy + f, .5, meta, par); box(d.w, f, 1.8, M.alu, dx, dy, 0, meta, par); box(d.w, f, 1.8, M.alu, dx, dy + d.h - f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx, dy + f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx + d.w - f, dy + f, 0, meta, par); };
       const key = mz ? 'm' + d.mi + '.' + d.i : 'd' + d.i, meta = mz ? { k: 'mezz', i: d.mi, key } : (d.ci != null ? { k: 'col', i: d.ci, key } : { k: 'doors', key });
       if (d.sliding) {
-        const layer = d.ri % 2, z = D + .4 + layer * 3.4, grp = new THREE.Group(); grp.position.set(d.x, 0, z); root.add(grp);
+        const layer = d.ri % 2, z = D + .4 + layer * 3.4, grp = new THREE.Group(); grp.position.set(d.x, 0, z); wg.add(grp);
         face(grp, 0, d.y);
         if (d.fill !== 'dsp' && !gl) { box(d.w, 2.2, th + .4, M.steel, 0, d.y, -.2, null, grp); box(d.w, 2.2, th + .4, M.steel, 0, d.y + d.h - 2.2, -.2, null, grp); }
         doorsAnim.push({ key, apply: f => { grp.position.x = d.x + (layer === 1 ? (d.w - 2.5) * f * (d.left ? -1 : 1) : 0); } });
       } else {
-        const hg = d.hinge || (d.left ? 'L' : 'R'), pv = new THREE.Group(); root.add(pv);
+        const hg = d.hinge || (d.left ? 'L' : 'R'), pv = new THREE.Group(); wg.add(pv);
         if (hg === 'L' || hg === 'R') {
           const left = hg === 'L'; pv.position.set(left ? d.x : d.x + d.w, d.y, D + .3);
           const dx = left ? 0 : -d.w;
@@ -182,16 +182,29 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     });
     if (S.led && !S.cols.some(c => c.items.some(i => i.type === 'led'))) g.cols.forEach(c => { if (!c.gap) box(c.w - 1, .6, 1.4, M.led, c.xa + .5, g.y1 - t - .8, D - 6); });
     // свет
-    sun.position.set(W / 2 - 220, g.totalH + 260, D + 340); sun.target.position.set(W / 2, H / 3, D / 2);
+    const sx = W / 2 + ox; sun.position.set(sx - 220, g.totalH + 260, D + 340); sun.target.position.set(sx, H / 3, D / 2);
     const sc = sun.shadow.camera, sp = Math.max(W, g.totalH) * 1.1; sc.left = -sp; sc.right = sp; sc.top = sp; sc.bottom = -sp; sc.near = 10; sc.far = 1400; sc.updateProjectionMatrix();
     applyDoors(); highlight();
     if (first) { frame(); first = false; }
     invalidate();
   }
+  function buildRoom(S) {   // пол и стены комнаты по углам (прямоугольник или нарисованная форма)
+    const P = roomPoly(S), H = (S.room && S.room.H) || 260, n = P.length;
+    const inside = (x, z) => { let c = false; for (let i = 0, j = n - 1; i < n; j = i++) { const a = P[i], b = P[j]; if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; };
+    const fl = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(P.map(p => new THREE.Vector2(p[0], -p[1])))), stdMat('#cdb48e', { roughness: .7 }));
+    fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; root.add(fl);
+    const wallM = stdMat('#efe8dc', { roughness: .95 }), skM = stdMat('#e4dccb', { roughness: .8 });
+    for (let i = 0; i < n; i++) {
+      const a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+      let nx = -dz / len, nz = dx / len; if (!inside(mx + nx * 2, mz + nz * 2)) { nx = -nx; nz = -nz; }
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(len, H), wallM); w.receiveShadow = true; w.rotation.y = Math.atan2(nx, nz); w.position.set(mx - nx * .8, H / 2, mz - nz * .8); root.add(w);
+      const sk = new THREE.Mesh(new THREE.BoxGeometry(len, 7, 1.4), skM); sk.rotation.y = Math.atan2(nx, nz); sk.position.set(mx + nx * .1, 3.5, mz + nz * .1); root.add(sk);
+    }
+  }
   function applyDoors() { doorsAnim.forEach(a => a.apply(ease(openAmt.get(a.key) || 0))); }
   function frame() {
     if (!state) return; const g = geom(state), W = g.W, H = g.totalH, dist = Math.max(W * 1.55, H * 1.75, 330);
-    controls.target.set(W / 2, H * .46, state.D / 2); camera.position.set(W / 2 + dist * .28, H * .6, state.D / 2 + dist); controls.update(); invalidate();
+    const cx = W / 2 + ((state.room && state.room.ox) || 0); controls.target.set(cx, H * .46, state.D / 2); camera.position.set(cx + dist * .28, H * .6, state.D / 2 + dist); controls.update(); invalidate();
   }
   function highlight() {
     if (selBox) { root.remove(selBox); selBox = null; }

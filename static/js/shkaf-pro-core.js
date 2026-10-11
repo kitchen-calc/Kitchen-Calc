@@ -28,6 +28,54 @@ export const uid = () => 'i' + (seq++) + Math.random().toString(36).slice(2, 5);
 export const r1 = v => Math.round(v * 10) / 10;
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
+/* ---- комната: углы по часовой стрелке [[x, z]] в см; первая стена — основная (у неё шкаф), от (0,0) вправо ---- */
+export const rpRect = (W, D) => [[0, 0], [W, 0], [W, D], [0, D]];
+export const rpEdgeLen = (P, i) => { const a = P[i], b = P[(i + 1) % P.length]; return Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]); };
+export function rpArea(P) { let a = 0; P.forEach((p, i) => { const q = P[(i + 1) % P.length]; a += p[0] * q[1] - q[0] * p[1]; }); return a / 2; }
+export function rpClean(P) {
+  const q = P.filter((p, i) => { const n = P[(i + 1) % P.length]; return !(p[0] === n[0] && p[1] === n[1]); });
+  let ch = true;
+  while (ch && q.length > 3) { ch = false; for (let i = 0; i < q.length; i++) { const a = q[(i + q.length - 1) % q.length], b = q[i], c = q[(i + 1) % q.length]; if ((a[0] === b[0] && b[0] === c[0]) || (a[1] === b[1] && b[1] === c[1])) { q.splice(i, 1); ch = true; break; } } }
+  return q;
+}
+const rpCross = (a, b, c, d) => { const ov = (p, q, r, s2) => Math.max(Math.min(p, q), Math.min(r, s2)) <= Math.min(Math.max(p, q), Math.max(r, s2)) + 1e-9; return ov(a[0], b[0], c[0], d[0]) && ov(a[1], b[1], c[1], d[1]); };
+export function rpValid(P) {
+  if (!P || P.length < 4 || P.length > 24) return false;
+  const n = P.length;
+  for (let i = 0; i < n; i++) { const a = P[i], b = P[(i + 1) % n]; if (!(a[0] === b[0] || a[1] === b[1]) || rpEdgeLen(P, i) < 10) return false; }
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { if (j === i + 1 || (i === 0 && j === n - 1)) continue; if (rpCross(P[i], P[(i + 1) % n], P[j], P[(j + 1) % n])) return false; }
+  return Math.abs(rpArea(P)) > 1000;
+}
+export function rpNormalize(P) {
+  P = rpClean(P.map(p => [Math.round(p[0]), Math.round(p[1])])); if (P.length < 4) return null;
+  const dx = Math.sign(P[1][0] - P[0][0]), dz = Math.sign(P[1][1] - P[0][1]);
+  let f = p => p;
+  if (dx === 0 && dz > 0) f = p => [p[1], -p[0]]; else if (dx < 0) f = p => [-p[0], -p[1]]; else if (dx === 0 && dz < 0) f = p => [-p[1], p[0]];
+  P = P.map(f);
+  if (rpArea(P) < 0) P = P.map(p => [p[0], -p[1]]);
+  const o = P[0]; return P.map(p => [p[0] - o[0], p[1] - o[1]]);
+}
+export function rpPointIn(P, x, z) { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const a = P[i], b = P[j]; if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; }
+export function rpRectIn(P, f) {   // прямоугольник f {x0,x1,z0,z1} целиком в комнате
+  const e = .3, r = { x0: f.x0 + e, x1: f.x1 - e, z0: f.z0 + e, z1: f.z1 - e };
+  if (![[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]].every(c => rpPointIn(P, c[0], c[1]))) return false;
+  for (let i = 0; i < P.length; i++) {
+    const a = P[i], b = P[(i + 1) % P.length];
+    if (a[1] === b[1]) { if (a[1] > r.z0 && a[1] < r.z1 && Math.max(Math.min(a[0], b[0]), r.x0) < Math.min(Math.max(a[0], b[0]), r.x1)) return false; }
+    else if (a[0] > r.x0 && a[0] < r.x1 && Math.max(Math.min(a[1], b[1]), r.z0) < Math.min(Math.max(a[1], b[1]), r.z1)) return false;
+  }
+  return true;
+}
+export function rpEditLen(P0, i, v) {   // длина стены i = v: соседняя перпендикулярная стена сдвигается
+  const P = P0.map(p => p.slice()), n = P.length, a = P[i], b = P[(i + 1) % n], horiz = a[1] === b[1];
+  v = Math.round(parseFloat(String(v).replace(',', '.')) || 0); if (v < 10) return null;
+  const dir = horiz ? Math.sign(b[0] - a[0]) : Math.sign(b[1] - a[1]), delta = (v - rpEdgeLen(P, i)) * dir;
+  [(i + 1) % n, (i + 2) % n].forEach(j => { if (horiz) P[j][0] += delta; else P[j][1] += delta; });
+  const o = P[0], Q = P.map(p => [p[0] - o[0], p[1] - o[1]]);
+  return rpValid(Q) ? Q : null;
+}
+export const roomPoly = S => (S.room && S.room.poly) ? S.room.poly : rpRect((S.room && S.room.W) || 400, (S.room && S.room.D) || 300);
+
 /* ---- состояние ---- */
 export function mkItem(type, y, extra) {
   const b = { id: uid(), type, y: r1(y) };
@@ -40,7 +88,7 @@ export function mkItem(type, y, extra) {
   return Object.assign(b, extra || {});
 }
 export function defState() {
-  const S = { v: 2, W: 240, H: 200, D: 60, t: 1.6, plinth: 8, tier: 1, color: 0, custom: null, cols: [], mezzes: [], panels: [],
+  const S = { v: 2, W: 240, H: 200, D: 60, t: 1.6, plinth: 8, tier: 1, color: 0, custom: null, cols: [], mezzes: [], panels: [], room: { W: 400, D: 300, H: 260, ox: 0, poly: null, set: false },
     doors: { kind: 'none', n: 3, fills: ['dsp', 'mirror', 'dsp', 'mirror', 'dsp', 'mirror', 'dsp', 'mirror'], laco: 0, handles: true, gf: 4 }, led: false, name: 'Мой шкаф' };
   S.cols = [
     { id: uid(), w: 78, items: [mkItem('rod', 185), mkItem('shelf', 193), mkItem('shelf', 40), mkItem('shelf', 100)] },
@@ -340,6 +388,8 @@ export function sanitize(S) {
   });
   if (o.cols.length && !o.cols.some(c => !c.gap)) o.cols[0].gap = false;
   o.panels = (Array.isArray(S.panels) ? S.panels : []).slice(0, 8).map(p => ({ id: uid(), x: r1(n(p && p.x, -300, 1200, 0)), y: r1(n(p && p.y, 0, 340, 20)), w: r1(n(p && p.w, 10, 400, 60)), h: r1(n(p && p.h, 10, 340, 180)), kind: ['mirror', 'film', 'sand', 'glass', 'laco', 'dsp'].includes(p && p.kind) ? p.kind : 'mirror', mount: p && p.mount === 'front' ? 'front' : 'wall', frame: !!(p && p.frame), fw: r1(n(p && p.fw, 1, 15, 3)) }));
+  { const rm = S.room || {}, P = Array.isArray(rm.poly) ? rm.poly.map(p => [Number(p[0]), Number(p[1])]) : null;
+    o.room = { W: r1(n(rm.W, 100, 1500, 400)), D: r1(n(rm.D, 100, 1500, 300)), H: r1(n(rm.H, 180, 400, 260)), ox: r1(n(rm.ox, -500, 1500, 0)), poly: P && P.every(p => p.every(v => isFinite(v))) && rpValid(P) ? P : null, set: !!rm.set }; }
   recalcW(o);
   if (Array.isArray(S.mezzes)) S.mezzes.slice(0, 8).forEach(m => { if (m) o.mezzes.push({ id: uid(), x: r1(n(m.x, -100, 900, 0)), w: r1(n(m.w, 20, 900, 60)), h: r1(n(m.h, 15, 120, 40)), y: r1(n(m.y, 0, 340, o.H)), n: n(m.n, 0, 10, 2) | 0, shelves: n(m.shelves, 0, 3, 0) | 0, fill: FILLS[m.fill] ? m.fill : 'dsp', div: (Array.isArray(m.div) ? m.div : []).slice(0, 7).map(v => r1(n(v, 5, 800, 30))), cd: (Array.isArray(m.cd) ? m.cd : []).slice(0, 8).map(v => v == null ? null : n(v, 0, 5, 1) | 0), dir: (Array.isArray(m.dir) ? m.dir : []).slice(0, 8).map(v => ['swing', 'U', 'D'].includes(v) ? v : 'swing') }); });
   else if (S.mezz && S.mezz.on) {   // старый формат: одна антресоль сверху на всю ширину

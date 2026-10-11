@@ -1,7 +1,8 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
 import * as C from '/static/js/shkaf-pro-core.js?v=1';
-const { levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
+const { rpRectIn, roomPoly, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
+import { openRoomStart, openRoomEditor } from '/static/js/shkaf-room.js?v=1';
 const VIEW = /^\/shkaf\/view\/?$/.test(location.pathname);
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -27,7 +28,7 @@ function findItem(id) { for (let ci = 0; ci < S.cols.length; ci++) { const it = 
 const toast = (t) => { const e = $('toast'); if (!e) return; e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2600); };
 
 /* ---------- ввод чисел ---------- */
-const RANGE = { W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [15, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [15, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 3], 'col.H': [60, 320], 'col.D': [25, 90] };
+const RANGE = { W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [15, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [15, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 3], 'col.H': [60, 320], 'col.D': [25, 90], 'room.W': [100, 1500], 'room.D': [100, 1500], 'room.H': [180, 400], 'room.ox': [-500, 1500] };
 function stepper(label, path, val, step, unit) {
   return `<div class="r"><span>${esc(label)}</span><span class="stp"><button type="button" onpointerdown="PRO.hold(event,'${path}',${-step})">−</button><input type="number" step="any" value="${r1(val)}" onfocus="this.select()" onchange="PRO.set('${path}',this.value)"><button type="button" onpointerdown="PRO.hold(event,'${path}',${step})">+</button><small>${esc(unit || 'см')}</small></span></div>`;
 }
@@ -37,6 +38,7 @@ function getVal(path) {
   if (path.startsWith('mzc.')) { const m = S.mezzes[sel.mi], ci = +path.slice(4); return m ? (m.cd && m.cd[ci] != null ? m.cd[ci] : geom(S).mz[sel.mi].comp.length ? Math.max(1, Math.round((geom(S).mz[sel.mi].comp[ci].x1 - geom(S).mz[sel.mi].comp[ci].x0) / 60)) : 1) : 0; }
   if (path.startsWith('mz.')) { const m = S.mezzes[sel.mi]; return m ? m[path.slice(3)] : 0; }
   if (path.startsWith('pn.')) { const p = S.panels[sel.pi]; return p ? p[path.slice(3)] : 0; }
+  if (path.startsWith('room.')) return S.room[path.slice(5)];
   if (path === 'col.H' || path === 'col.D') { const c = S.cols[sel.i]; return c ? (c[path.slice(4)] || S[path.slice(4)]) : 0; }
   if (path === 'col.dn') { const c = S.cols[sel.i], g = geom(S); return c ? (c.dn != null ? c.dn : (c.w > 65 ? 2 : 1)) : 0; }
   if (path === 'col.w') return S.cols[sel.i] ? S.cols[sel.i].w : 0;
@@ -52,6 +54,7 @@ function setVal(path, v) {
     if (path.startsWith('mzc.')) { const m = S.mezzes[sel.mi]; if (m) { m.cd = m.cd || []; m.cd[+path.slice(4)] = Math.round(clamp(v, 0, 5)); } return; }
     if (path.startsWith('pn.')) { const p = S.panels[sel.pi]; if (p) p[path.slice(3)] = r1(v); return; }
     if (path.startsWith('mz.')) { const m = S.mezzes[sel.mi]; if (!m) return; const k = path.slice(3); m[k] = ['n', 'shelves'].includes(k) ? Math.round(v) : r1(v); return; }
+    if (path.startsWith('room.')) { S.room[path.slice(5)] = r1(v); S.room.set = true; return; }
     if (path === 'col.H' || path === 'col.D') { S.cols[sel.i][path.slice(4)] = r1(v); return; }
     if (path === 'col.dn') { S.cols[sel.i].dn = Math.round(clamp(v, 0, 3)); return; }
     if (path === 'col.w') { S.cols[sel.i].w = r1(v); return; }
@@ -122,6 +125,12 @@ const btn = (on, act, txt, cls) => `<button type="button" class="${on ? 'on ' : 
 function sideGlobal() {
   const g = geom(S), T = P.tiers;
   let h = `<div class="sh">${esc(S.name)}</div><div class="note">Нажмите на отсек или предмет в 3D, предметы можно тащить вверх-вниз и в соседний отсек. Камера: галочка «Вращать» вверху — вращать, без галочки — двигать картинку (мышь: правая кнопка или Shift+ЛКМ — двигать, колесо — приблизить).</div>`;
+  { const rp = roomPoly(S), custom = !!S.room.poly;
+    h += `<div class="sub">Комната</div>`;
+    if (custom) h += `<div class="cols">${rp.map((p, i) => `<button type="button" class="colchip" onclick="PRO.room()">Стена ${i + 1}<b>${Math.round(rpEdgeLen(rp, i))}</b></button>`).join('')}</div>`;
+    else h += stepper('Ширина стены', 'room.W', S.room.W, 5) + stepper('Глубина комнаты', 'room.D', S.room.D, 5);
+    h += stepper('Высота потолка', 'room.H', S.room.H, 5) + `<div class="r">${btn(0, 'PRO.room()', '✏️ Нарисовать комнату (Г, П и др.)')}</div>`;
+    h += stepper('Шкаф от левого угла комнаты', 'room.ox', S.room.ox, 5) + `<div class="r">${btn(0, 'PRO.centerWall()', 'По центру стены')}${btn(0, 'PRO.leftWall()', 'К левому углу')}${btn(0, 'PRO.rightWall()', 'К правому углу')}</div>`; }
   h += `<div class="sub">Размеры шкафа</div>` + stepper('Ширина', 'W', g.W, 1) + stepper('Высота корпуса', 'H', S.H, 1) + stepper('Глубина', 'D', S.D, 1) + stepper('Цоколь', 'plinth', S.plinth, 1);
   h += `<div class="r"><span>ЛДСП</span>${btn(S.t === 1.6, 'PRO.t(1.6)', '16 мм')}${btn(S.t === 1.8, 'PRO.t(1.8)', '18 мм')}</div>`;
   h += `<div class="sub">Цвет корпуса</div><div class="sw">${PALETTE.map((c, i) => `<button type="button" class="swb ${!S.custom && S.color === i ? 'on' : ''}" style="background:${c[1]}" title="${c[0]}" onclick="PRO.color(${i})"></button>`).join('')}<input type="color" value="${S.custom || '#cdbba0'}" onchange="PRO.custom(this.value)" title="свой цвет"></div>`;
@@ -239,6 +248,7 @@ function renderPrice() {
 }
 function renderWarn() {
   const e = $('warn'); if (!e || VIEW) return; const w = warnings(S);
+  { const g = geom(S), P = roomPoly(S), ox = S.room.ox || 0, mz = Math.max(...S.cols.filter(c => !c.gap).map(c => c.D || S.D), 0); if (g.cols.length && !rpRectIn(P, { x0: ox, x1: ox + g.W, z0: 0, z1: mz })) w.push('Шкаф выходит за пределы комнаты — сдвиньте его или увеличьте комнату'); }
   e.innerHTML = w.length ? w.map(x => `<div>⚠ ${esc(x)}</div>`).join('') : '<div class="ok">✔ Всё размещено, пересечений нет</div>';
 }
 let odT = null;
@@ -257,7 +267,7 @@ async function init3D() {
     onDrag: (s, dy, hx, dx) => {
       if (s.k === 'col') {   // отсек двигаем вдоль шкафа: меняется порядок отсеков и проёмов
         const g = geom(S), cur = s.i; if (!dragState || dragState.col !== s.id0) { pushUndo(); dragState = { col: s.id0 }; }
-        let j = g.cols.findIndex(c => hx >= c.xa - S.t && hx <= c.xb + S.t); if (j < 0) j = hx < 0 ? 0 : S.cols.length - 1;
+        const hxl = hx - (S.room.ox || 0); let j = g.cols.findIndex(c => hxl >= c.xa - S.t && hxl <= c.xb + S.t); if (j < 0) j = hxl < 0 ? 0 : S.cols.length - 1;
         if (j !== cur && j >= 0) { const c = S.cols.splice(cur, 1)[0]; S.cols.splice(j, 0, c); s.i = j; sel = { k: 'col', i: j }; recalcW(S); K.update(S); K.select(selMeta()); renderWarn(); renderSide(); }
         return `отсек ${s.i + 1}: тяните вдоль шкафа · от левого края ${mm(geom(S).cols[s.i].xa)} мм`;
       }
@@ -395,6 +405,9 @@ window.PRO = {
   sys: v => mutate(() => { const f = findItem(sel.id); if (f) f.it.sys = v; }),
   toggleDoors: () => { if (K) { K.toggleDoors(); setTimeout(renderSide, 50); } }, openAll: on => { if (K) { K.toggleDoors(on); setTimeout(renderSide, 50); } },
   cdf: v => mutate(() => { const c = S.cols[sel.i]; if (c) { if (v === 'dsp') delete c.df; else c.df = v; } }), cdd: v => mutate(() => { const c = S.cols[sel.i]; if (c) { if (v === 'auto') delete c.dd; else c.dd = v; } }), allDf: v => mutate(() => { S.cols.forEach(c => { if (!c.gap) { if (v === 'dsp') delete c.df; else c.df = v; } }); }),
+  room: () => openRoomEditor({ poly: S.room.poly, W: S.room.W, D: S.room.D, onApply: P => mutate(() => { if (P) { S.room.poly = P; S.room.W = Math.round(rpEdgeLen(P, 0)); S.room.D = Math.round(Math.max(...P.map(p => p[1]))); } else S.room.poly = null; S.room.set = true; }) }),
+  centerWall: () => mutate(() => { S.room.ox = r1(Math.max(0, (rpEdgeLen(roomPoly(S), 0) - geom(S).W) / 2)); }),
+  leftWall: () => mutate(() => { S.room.ox = 0; }), rightWall: () => mutate(() => { S.room.ox = r1(Math.max(0, rpEdgeLen(roomPoly(S), 0) - geom(S).W)); }),
   colReset: i => mutate(() => { delete S.cols[i].H; delete S.cols[i].D; }),
   rot: on => { if (K) K.setRotate(on); }, sideToggle, drawerAbove: () => drawerNear(1), drawerBelow: () => drawerNear(-1), between, vpCenter: () => mutate(() => { const f = findItem(sel.id); if (f) f.it.x = r1(f.col.w / 2 - S.t / 2); }), idoorDir: v => mutate(() => { const f = findItem(sel.id); if (f) f.it.dir = v; }),
   addDiv: () => mutate(() => { const m = S.mezzes[sel.mi]; m.div = m.div || []; const w = m.w - 2 * S.t, pts = [0].concat(m.div.slice().sort((a, b) => a - b).map(v => v + S.t), [w]); let bi = 0, bw = -1; for (let i = 0; i < pts.length - 1; i++) if (pts[i + 1] - pts[i] > bw) { bw = pts[i + 1] - pts[i]; bi = i; } m.div.push(r1(pts[bi] + (pts[bi + 1] - pts[bi] - S.t) / 2)); m.div.sort((a, b) => a - b); m.cd = []; }),
@@ -407,9 +420,14 @@ window.PRO = {
   reset: () => { if (confirm('Начать заново с шаблона?')) mutate(() => { S = defState(); sel = { k: 'global' }; }); }
 };
 
+const FRESH = (() => { if (VIEW) return false; if (/^#p=/.test(location.hash)) return false; try { return !localStorage.getItem('kc_pro'); } catch (e) { return false; } })();
 S = load();
 if (VIEW) document.body.classList.add('view');
 init3D().catch(e => { console.warn(e); const l = $('p3dLoad'); if (l) l.textContent = '3D недоступно в этом браузере'; });
 refresh(false);
 ownerBoot();
+if (FRESH && !S.room.set) setTimeout(() => {   // в начале — размер комнаты, как на кухне
+  const done = r => mutate(() => { if (r) { S.room.W = r.W; S.room.D = r.D; S.room.H = r.H; } S.room.set = true; S.room.ox = r1(Math.max(0, (S.room.W - geom(S).W) / 2)); }, true);
+  openRoomStart(S.room, done, () => window.PRO.room());
+}, 600);
 if (/[?&]master\b/.test(location.search) && !VIEW) setTimeout(() => { if (!OWNER) ownerUnlock(); }, 600);
