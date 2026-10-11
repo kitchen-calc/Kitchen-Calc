@@ -319,10 +319,14 @@ export function warnings(S) {
 }
 
 /* ---- двери ---- */
-export function shelfSpan(col, wcol, t, it) {   // полка рядом с вертикальной панелью есть только с выбранной стороны: слева или справа от неё
-  let x0 = 0, x1 = wcol;
-  (col.items || []).forEach(v => { if (v.type === 'vpanel' && it.y >= v.y - .05 && it.y <= v.y1 + .05) { if ((v.sh || 'L') === 'L') x1 = Math.min(x1, v.x); else x0 = Math.max(x0, v.x + t); } });
-  return { x0, x1, w: Math.max(5, x1 - x0) };
+export function shelfSpans(col, wcol, t, it) {   // куски полки: вертикальные панели делят её; сторона sd: L — только слева от панели, R — только справа, иначе обе стороны
+  let sp = [[0, wcol]];
+  (col.items || []).forEach(v => {
+    if (v.type !== 'vpanel' || it.y < v.y - .05 || it.y > v.y1 + .05) return;
+    const nx = []; sp.forEach(([a, b]) => { if (v.x > a + 4 && v.x + t < b - 4) { nx.push([a, v.x], [v.x + t, b]); } else nx.push([a, b]); }); sp = nx;
+  });
+  if (sp.length > 1) { if (it.sd === 'L') sp = [sp[0]]; else if (it.sd === 'R') sp = [sp[sp.length - 1]]; }
+  return sp.map(([x0, x1]) => ({ x0, x1, w: x1 - x0 }));
 }
 export function colSplits(S, g, ci) {   // перегородки «у каждой двери»: при 3–4 дверях в отсеке у каждой своя секция
   const c = g.cols[ci], col = S.cols[ci], t = S.t; if (!c || c.gap || !col || S.doors.kind !== 'swing') return [];
@@ -519,7 +523,11 @@ export function buildParts(S) {
     const lbl = ' (отсек ' + (ci + 1) + ')', D = g.cols[ci].D, splitsN = colSplits(S, g, ci).length;
     if (splitsN) { add('Наполнение', 'Перегородка под двери' + lbl, splitsN, g.cols[ci].y1 - g.y0 - S.plinth * 0 - 2 * t, D - .3, t, body, (g.cols[ci].y1 - g.y0 - 2 * t) / 100, 'у каждой двери своя секция; кромка по переднему торцу'); joints_u += splitsN * 4; }
     c.items.forEach(it => {
-      if (it.type === 'shelf') { const d = it.d || D - 2.5, sp = splitsN, ss = shelfSpan(c, c.w, t, it), sw = sp ? (c.w - .2 - sp * t) / (sp + 1) : ss.w - .2, vside = !sp && ss.w < c.w - .5 ? (ss.x0 > 0 ? ' (справа от панели)' : ' (слева от панели)') : ''; add('Наполнение', 'Полка' + lbl + (sp ? ' (между перегородками)' : '') + vside, sp + 1, sw, d, t, body, sw / 100, 'на 4 полкодержателя'); pins += 4 * (sp + 1); }
+      if (it.type === 'shelf') {
+        const d = it.d || D - 2.5, sp = splitsN;
+        if (sp) { const sw = (c.w - .2 - sp * t) / (sp + 1); add('Наполнение', 'Полка' + lbl + ' (между перегородками)', sp + 1, sw, d, t, body, sw / 100, 'на 4 полкодержателя'); pins += 4 * (sp + 1); }
+        else { const spans = shelfSpans(c, c.w, t, it); spans.forEach((ss, k) => { const sw = ss.w - .2, side = spans.length > 1 ? (k === 0 ? ' (слева от панели)' : ' (справа от панели)') : (ss.w < c.w - .5 ? (ss.x0 > 0 ? ' (справа от панели)' : ' (слева от панели)') : ''); add('Наполнение', 'Полка' + lbl + side, 1, sw, d, t, body, sw / 100, 'на 4 полкодержателя'); pins += 4; }); }
+      }
       else if (it.type === 'rod') { rods++; add('Наполнение', 'Штанга ⌀25' + lbl, 1, c.w - .6, 2.5, 2.5, 'Хром, труба 25×15', 0, 'длина ' + mm(c.w - .6) + ' мм', 'metal'); }
       else if (it.type === 'drawer') {
         const bw = c.w - .4;
@@ -633,7 +641,7 @@ export function sanitize(S) {
       if (it && it.type === 'drawers') { const cnt = n(it.n, 1, 8, 3) | 0, fh0 = n(it.fh, 8, 40, 18); for (let k = 0; k < cnt; k++) { const b0 = mkItem('drawer', n(it.y, 0, 330, 10) + k * fh0); b0.fh = fh0; b0.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; col.items.push(b0); } return; }
       if (!it || !ITEM_TYPES[it.type]) return;
       const b = mkItem(it.type, n(it.y, 0, 330, 50));
-      if (it.type === 'shelf') b.d = it.d ? n(it.d, 15, 85, 57.5) : null;
+      if (it.type === 'shelf') { b.d = it.d ? n(it.d, 15, 85, 57.5) : null; if (it.sd === 'L' || it.sd === 'R') b.sd = it.sd; }
       if (it.type === 'drawer') { b.fh = n(it.fh, 8, 40, 18); b.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; }
       if (it.type === 'idoor') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 250, 0); b.w = it.w ? n(it.w, 8, 250, 40) : null; b.dir = ['L', 'R', 'U', 'D'].includes(it.dir) ? it.dir : 'L'; }
       if (it.type === 'shoe') b.n = n(it.n, 1, 6, 3) | 0;

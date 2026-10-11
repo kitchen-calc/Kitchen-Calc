@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { geom, doorList, shelfSpan, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=9';
+import { geom, doorList, shelfSpans, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=10';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -125,7 +125,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       colSplits(S, g, ci).forEach(x => box(t, c.y1 - g.y0 - 2 * t, D - z0, M.body, x - t / 2, g.y0 + t, z0, { k: 'col', i: ci }));
       col.items.forEach(it => {
         const meta = { k: 'item', id: it.id, col: ci };
-        if (it.type === 'shelf') { const ss = shelfSpan(col, c.w, t, it); box(ss.w - .2, t, it.d || D - 2.5, M.body, c.xa + ss.x0 + .1, it.y, z0, meta); }
+        if (it.type === 'shelf') shelfSpans(col, c.w, t, it).forEach(ss => box(ss.w - .2, t, it.d || D - 2.5, M.body, c.xa + ss.x0 + .1, it.y, z0, meta));
         else if (it.type === 'rod') {
           cyl(1.25, c.w - .6, M.chrome, c.xa + c.w / 2, it.y, D / 2, 'x', meta);
           [c.xa + .1, c.xb - 2.9].forEach(x => box(2.8, 3.4, 2.4, M.steel, x, it.y - 1.7, D / 2 - 1.2, meta));
