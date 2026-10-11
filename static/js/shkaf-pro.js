@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
 import * as C from '/static/js/shkaf-pro-core.js?v=22';
-const { MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
+const { uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=3';
 import { openRoomStart, openRoomEditor } from '/static/js/shkaf-room.js?v=2';
@@ -225,8 +225,16 @@ function sideCol() {
   } else h += `<div class="r">${btn(0, "PRO.doors('swing')", '🚪 Включить двери по отсекам')}</div>`;
   h += `<div class="sub">Добавить в отсек</div>` + addButtons();
   h += `<div class="r"><span>Полки поровну</span><input type="number" min="0" max="12" value="${c.items.filter(x => x.type === 'shelf').length}" onchange="PRO.even(this.value)" style="width:56px"><small>шт</small></div>`;
+  h += colSyncHtml(i);
   h += `<div class="sub">Содержимое (сверху вниз)</div><div class="ilist">${items.map(it => `<button type="button" class="iit" onclick="PRO.selItem('${it.id}')">${ITEM_ICON[it.type]} ${ITEM_TYPES[it.type]}<b>${Math.round(ext(it, S)[0] * 10)} мм</b></button>`).join('') || '<div class="note">Пусто — добавьте полки, штангу, ящики…</div>'}</div>`;
   return h;
+}
+/* «Сделать как этот отсек»: высота/глубина, двери и наполнение — выбранным отсекам или всем сразу (как в кухне) */
+const colSync = { sel: {}, what: { size: true, doors: true, items: false } };
+function colSyncHtml(i) {
+  const others = S.cols.map((c, ci) => ({ c, ci })).filter(x => x.ci !== i && !x.c.gap); if (!others.length) return '';
+  const chips = others.map(x => `<button type="button" class="${colSync.sel[x.c.id] ? 'on' : ''}" onclick="PRO.csTog('${x.c.id}')">Отсек ${x.ci + 1} · ${mm(x.c.w)}</button>`).join(''), W = colSync.what, tg = (f, t) => btn(W[f], `PRO.csWhat('${f}')`, (W[f] ? '✔ ' : '') + t), cnt = others.filter(x => colSync.sel[x.c.id]).length;
+  return `<div class="sub">Сделать как этот отсек</div><div class="note">Отметьте отсеки, которые должны стать такими же, и что повторить.</div><div class="r">${chips}</div><div class="r">${btn(0, "PRO.csPick('all')", 'Все')}${btn(0, "PRO.csPick('none')", 'Снять выбор')}</div><div class="r">${tg('size', 'Высота и глубина')}${tg('doors', 'Двери')}${tg('items', 'Наполнение (полки, штанги, ящики)')}</div><div class="r">${btn(0, 'PRO.csApply(false)', '▶ Применить к выбранным (' + cnt + ')')}${btn(0, 'PRO.csApply(true)', 'Применить ко всем')}</div>`;
 }
 function sideItem() {
   const f = findItem(sel.id); if (!f) return sideGlobal();
@@ -710,6 +718,19 @@ window.PRO = {
   obDup: () => mutate(() => { const o = JSON.parse(JSON.stringify(S.objs[sel.oi])); o.id = C.uid(); o.x = r1(o.x + 20); o.z = r1(o.z + 20); S.objs.push(o); sel = { k: 'obj', oi: S.objs.length - 1 }; }),
   obToggle: k => mutate(() => { const o = S.objs[sel.oi]; if (o) o[k] = !o[k]; }),
   obMat: v => mutate(() => { const o = S.objs[sel.oi]; if (o) o.mat = v; }), obColor: v => mutate(() => { const o = S.objs[sel.oi]; if (o) o.color = v; }),
+  csTog: id => { if (colSync.sel[id]) delete colSync.sel[id]; else colSync.sel[id] = 1; refresh(); },
+  csWhat: f => { colSync.what[f] = !colSync.what[f]; refresh(); },
+  csPick: how => { colSync.sel = {}; if (how === 'all') S.cols.forEach((c, ci) => { if (ci !== sel.i && !c.gap) colSync.sel[c.id] = 1; }); refresh(); },
+  csApply: all => {
+    const src = S.cols[sel.i]; if (!src) return; const W = colSync.what, ts = S.cols.filter((c, ci) => ci !== sel.i && !c.gap && (all || colSync.sel[c.id]));
+    if (!ts.length) { alert('Сначала отметьте отсеки'); return; } if (!W.size && !W.doors && !W.items) { alert('Отметьте, что повторить'); return; }
+    mutate(() => ts.forEach(t => {
+      const put = f => { if (src[f] == null) delete t[f]; else t[f] = JSON.parse(JSON.stringify(src[f])); };
+      if (W.size) { put('H'); put('D'); }
+      if (W.doors) { put('dn'); put('df'); put('dd'); put('dp'); }
+      if (W.items) { t.items = JSON.parse(JSON.stringify(src.items || [])).map(it => Object.assign(it, { id: uid() })); }
+    }));
+  },
   mill: v => mutate(() => { S.doors.mp = v; }),
   obFill: v => mutate(() => { const o = S.objs[sel.oi]; if (o) o.fill = v; }),
   obRot: d => mutate(() => { const o = S.objs[sel.oi]; if (!o) return; const f = objFoot(o), cx = o.x + f.w / 2, cz = o.z + f.d / 2; o.rot = (((o.rot || 0) + d) % 360 + 360) % 360; const n2 = objFoot(o); o.x = r1(cx - n2.w / 2); o.z = r1(cz - n2.d / 2); if (S.room.mag) { const m = objMagnet(S, o, o.x, o.z, 200, o.rot); if (m) { o.x = m.ox; o.z = m.oz; } } }),
