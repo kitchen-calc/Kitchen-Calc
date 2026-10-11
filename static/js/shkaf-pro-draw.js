@@ -36,13 +36,13 @@ function drawFront(S, g, x0, y0, sc, o) {
   o = o || {};
   const k10 = 10 * sc, X = v => x0 + v * k10, Y = v => y0 + (g.totalH - v) * k10, out = [], t = S.t;
   g.runs.forEach(r => {
-    const rw = r.x1 - r.x0;
-    out.push(rect(X(r.x0), Y(S.H), rw * k10, (S.H - S.plinth) * k10, 'o'));
-    out.push(rect(X(r.x0), Y(S.H), t * k10, (S.H - S.plinth) * k10, 'o', 'url(#h1)'), rect(X(r.x1 - t), Y(S.H), t * k10, (S.H - S.plinth) * k10, 'o', 'url(#h1)'));
-    out.push(rect(X(r.x0 + t), Y(S.H), (rw - 2 * t) * k10, t * k10, 'o', 'url(#h1)'), rect(X(r.x0 + t), Y(S.plinth + t), (rw - 2 * t) * k10, t * k10, 'o', 'url(#h1)'));
+    const rw = r.x1 - r.x0, RH = r.H;
+    out.push(rect(X(r.x0), Y(RH), rw * k10, (RH - S.plinth) * k10, 'o'));
+    out.push(rect(X(r.x0), Y(RH), t * k10, (RH - S.plinth) * k10, 'o', 'url(#h1)'), rect(X(r.x1 - t), Y(RH), t * k10, (RH - S.plinth) * k10, 'o', 'url(#h1)'));
+    out.push(rect(X(r.x0 + t), Y(RH), (rw - 2 * t) * k10, t * k10, 'o', 'url(#h1)'), rect(X(r.x0 + t), Y(S.plinth + t), (rw - 2 * t) * k10, t * k10, 'o', 'url(#h1)'));
     out.push(rect(X(r.x0 + t), Y(S.plinth), (rw - 2 * t) * k10, S.plinth * k10, 't', '#efefef'), text(X((r.x0 + r.x1) / 2), Y(S.plinth / 2) + 3, 'цоколь ' + mm(S.plinth), 7));
   });
-  g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === g.cols.length) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap) return; out.push(rect(X(b.x), Y(g.y1), t * k10, (g.y1 - g.y0) * k10, 'o', 'url(#h1)')); });
+  g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === g.cols.length) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap || R.split) return; out.push(rect(X(b.x), Y(L.y1), t * k10, (L.y1 - g.y0) * k10, 'o', 'url(#h1)')); });
   g.cols.forEach(c => { if (c.gap) out.push(text(X((c.xa + c.xb) / 2), Y(S.H / 2), 'проём ' + mm(c.w), 8, 'middle', 'fill="#555"'), line(X(c.xa), Y(S.H / 2) + 6, X(c.xb), Y(S.H / 2) + 6, 'c')); });
   g.mz.forEach(m => {
     out.push(rect(X(m.x0), Y(m.yt), m.w * k10, m.h * k10, 'o'));
@@ -73,10 +73,10 @@ function drawFront(S, g, x0, y0, sc, o) {
 }
 
 function drawSection(S, g, ci, x0, y0, sc) {
-  const k10 = 10 * sc, X = v => x0 + v * k10, Y = v => y0 + (g.totalH - v) * k10, out = [], t = S.t, D = S.D, col = S.cols[ci], c = g.cols[ci];
-  out.push(rect(X(0), Y(S.H), D * k10, (S.H - S.plinth) * k10, 'o'));
-  out.push(rect(X(0), Y(S.H), .3 * k10, (S.H - S.plinth) * k10, 'o', 'url(#h1)'));
-  out.push(rect(X(.3), Y(S.H), (D - .3) * k10, t * k10, 'o', 'url(#h1)'), rect(X(.3), Y(S.plinth + t), (D - .3) * k10, t * k10, 'o', 'url(#h1)'));
+  const k10 = 10 * sc, X = v => x0 + v * k10, Y = v => y0 + (g.totalH - v) * k10, out = [], t = S.t, col = S.cols[ci], c = g.cols[ci], D = c.D;
+  out.push(rect(X(0), Y(c.H), D * k10, (c.H - S.plinth) * k10, 'o'));
+  out.push(rect(X(0), Y(c.H), .3 * k10, (c.H - S.plinth) * k10, 'o', 'url(#h1)'));
+  out.push(rect(X(.3), Y(c.H), (D - .3) * k10, t * k10, 'o', 'url(#h1)'), rect(X(.3), Y(S.plinth + t), (D - .3) * k10, t * k10, 'o', 'url(#h1)'));
   out.push(rect(X(D - 6 - t), Y(S.plinth), t * k10, S.plinth * k10, 'o', 'url(#h1)'));
   g.mz.filter(m => m.x0 < c.xb && m.x1 > c.xa).forEach(m => {
     out.push(rect(X(0), Y(m.yt), D * k10, m.h * k10, 'o'), rect(X(0), Y(m.yt), .3 * k10, m.h * k10, 'o', 'url(#h1)'), rect(X(.3), Y(m.yt), (D - .3) * k10, t * k10, 'o', 'url(#h1)'), rect(X(.3), Y(m.yb + t), (D - .3) * k10, t * k10, 'o', 'url(#h1)'));
@@ -92,7 +92,7 @@ function drawSection(S, g, ci, x0, y0, sc) {
     else if (it.type === 'pant') out.push(rect(X(6), Y(it.y + 10), (D - 12) * k10, 100 * sc, 'h'));
     else if (it.type === 'hook') out.push(rect(X(.3), Y(it.y + 4), 16 * sc, 40 * sc, 'o', 'url(#h1)'), line(X(1.9), Y(it.y + 2), X(7), Y(it.y + 2), 'o'));
   });
-  const dd = doorList(S).find(d => d.zone === 'main'); if (dd) out.push(rect(X(D + .3), Y(dd.y + dd.h), 16 * sc, dd.h * k10, 'o', 'url(#h2)'), text(X(D) + 6, Y(S.H / 2), 'дверь', 7, 'start'));
+  const dd = doorList(S).find(d => d.zone === 'main'); if (dd) out.push(rect(X(D + .3), Y(dd.y + dd.h), 16 * sc, dd.h * k10, 'o', 'url(#h2)'), text(X(D) + 6, Y(c.H / 2), 'дверь', 7, 'start'));
   out.push(dimH(X(0), X(D), Y(g.totalH), Y(g.totalH) - 24, mm(D)), dimV(Y(g.totalH), Y(0), X(D) + 16 * sc, X(D) + 70 * sc + 24, mm(g.totalH)));
   const ys = col.items.filter(i => i.type !== 'led').map(i => ext(i, S)[0]).sort((a, b) => a - b);
   ys.forEach((yv, k) => { out.push(dimV(Y(yv), Y(0), X(0), X(0) - 24 - (k % 3) * 22, mm(yv))); });
@@ -103,6 +103,7 @@ function drawPlan(S, g, x0, y0, sc) {
   const k10 = 10 * sc, X = v => x0 + v * k10, Y = v => y0 + v * k10, out = [], t = S.t, D = S.D, W = g.W;
   g.runs.forEach(r => {
     const rw = r.x1 - r.x0;
+    const D = r.D;
     out.push(rect(X(r.x0), Y(0), rw * k10, D * k10, 'o'));
     out.push(rect(X(r.x0), Y(0), t * k10, D * k10, 'o', 'url(#h1)'), rect(X(r.x1 - t), Y(0), t * k10, D * k10, 'o', 'url(#h1)'), rect(X(r.x0), Y(0), rw * k10, .3 * k10, 'o', 'url(#h1)'));
   });
@@ -155,18 +156,18 @@ function sheetSections(S, bp, no, total) {
   return sheet(o, meta(S, bp), no, total);
 }
 function sheetColumn(S, bp, ci, no, total) {
-  const g = bp.g, c = g.cols[ci], col = S.cols[ci], sc = Math.min(470 / (S.H * 10), 360 / (c.w * 10), .5), x0 = 230, y0 = 80, X = v => x0 + (v - c.xa + 2) * 10 * sc, Y = v => y0 + (S.H - v) * 10 * sc;
+  const g = bp.g, c = g.cols[ci], col = S.cols[ci], sc = Math.min(470 / (c.H * 10), 360 / (c.w * 10), .5), x0 = 230, y0 = 80, X = v => x0 + (v - c.xa + 2) * 10 * sc, Y = v => y0 + (c.H - v) * 10 * sc;
   let o = '';
   const T = S.t;
-  o += rect(X(c.xa - T), Y(S.H), T * 10 * sc, (S.H - S.plinth) * 10 * sc, 'o', 'url(#h1)') + rect(X(c.xb), Y(S.H), T * 10 * sc, (S.H - S.plinth) * 10 * sc, 'o', 'url(#h1)');
-  o += rect(X(c.xa - T), Y(S.H), (c.w + 2 * T) * 10 * sc, T * 10 * sc, 'o', 'url(#h1)') + rect(X(c.xa - T), Y(S.plinth + T), (c.w + 2 * T) * 10 * sc, T * 10 * sc, 'o', 'url(#h1)');
+  o += rect(X(c.xa - T), Y(c.H), T * 10 * sc, (c.H - S.plinth) * 10 * sc, 'o', 'url(#h1)') + rect(X(c.xb), Y(c.H), T * 10 * sc, (c.H - S.plinth) * 10 * sc, 'o', 'url(#h1)');
+  o += rect(X(c.xa - T), Y(c.H), (c.w + 2 * T) * 10 * sc, T * 10 * sc, 'o', 'url(#h1)') + rect(X(c.xa - T), Y(S.plinth + T), (c.w + 2 * T) * 10 * sc, T * 10 * sc, 'o', 'url(#h1)');
   const sub = { xa: c.xa, xb: c.xb, w: c.w };
   const fake = Object.assign({}, S, { cols: [col] }), gg = Object.assign({}, g, { cols: [sub] });
   // наполнение отсека
   const items = col.items.slice().sort((a, b) => ext(a, S)[0] - ext(b, S)[0]), lines = [];
   items.forEach(it => {
     const [a, b] = ext(it, S), w = c.w, xa = c.xa, xb = c.xb;
-    if (it.type === 'shelf') { o += rect(X(xa), Y(it.y + T), w * 10 * sc, T * 10 * sc, 'o', 'url(#h1)'); lines.push([it.y + T / 2, `Полка ${mm(T)}×${mm(w - .2)}×${mm(it.d || S.D - 2.5)}`]); }
+    if (it.type === 'shelf') { o += rect(X(xa), Y(it.y + T), w * 10 * sc, T * 10 * sc, 'o', 'url(#h1)'); lines.push([it.y + T / 2, `Полка ${mm(T)}×${mm(w - .2)}×${mm(it.d || c.D - 2.5)}`]); }
     else if (it.type === 'rod') { o += line(X(xa + .3), Y(it.y), X(xb - .3), Y(it.y), 'o') + rect(X(xa), Y(it.y + 1.7), 28 * sc, 34 * sc, 't') + rect(X(xb - 2.8), Y(it.y + 1.7), 28 * sc, 34 * sc, 't'); lines.push([it.y, `Штанга ⌀25, L=${mm(w - .6)}`]); }
     else if (it.type === 'drawer') { for (let k = 0; k < 1; k++) { const yy = it.y + k * it.fh; o += rect(X(xa + .2), Y(yy + it.fh - .15), (w - .4) * 10 * sc, (it.fh - .3) * 10 * sc, 'o', '#fff') + rect(X(xa + w / 2 - 7), Y(yy + it.fh - 4), 140 * sc, 8 * sc, 't', '#ddd'); } lines.push([(a + b) / 2, `Ящик · фасад ${mm(w - .4)}×${mm(it.fh - .3)}`]); }
     else if (it.type === 'shoe') { for (let k = 0; k < it.n; k++) o += line(X(xa), Y(it.y + k * 12 + 3), X(xb), Y(it.y + k * 12 + 3), 'o'); lines.push([(a + b) / 2, `Обувные полки ${it.n} шт.`]); }
@@ -174,7 +175,7 @@ function sheetColumn(S, bp, ci, no, total) {
     else if (it.type === 'basket') { o += rect(X(xa + 1.5), Y(it.y + it.h), (w - 3) * 10 * sc, it.h * 10 * sc, 'h'); lines.push([it.y + it.h / 2, `Корзина h=${mm(it.h)}`]); }
     else if (it.type === 'hook') { o += rect(X(xa + .2), Y(it.y + 4), (w - .4) * 10 * sc, 40 * sc, 'o', '#fff'); lines.push([it.y + 2, 'Планка с крючками']); }
     else if (it.type === 'led') { o += line(X(xa + .5), Y(it.y), X(xb - .5), Y(it.y), 'c'); lines.push([it.y, 'LED-подсветка']); }
-    else if (it.type === 'vpanel') { o += rect(X(xa + it.x), Y(it.y1), T * 10 * sc, (it.y1 - it.y) * 10 * sc, 'o', 'url(#h1)'); lines.push([(it.y + it.y1) / 2, `Вертикальная панель ${mm(it.y1 - it.y)}×${mm(S.D - 2.5)}`]); }
+    else if (it.type === 'vpanel') { o += rect(X(xa + it.x), Y(it.y1), T * 10 * sc, (it.y1 - it.y) * 10 * sc, 'o', 'url(#h1)'); lines.push([(it.y + it.y1) / 2, `Вертикальная панель ${mm(it.y1 - it.y)}×${mm(c.D - 2.5)}`]); }
     else if (it.type === 'idoor') { const iw = Math.min(it.w || (w - it.x), w - it.x); o += rect(X(xa + it.x), Y(it.y1), iw * 10 * sc, (it.y1 - it.y) * 10 * sc, 'o', '#fff'); lines.push([(it.y + it.y1) / 2, `Дверца ${mm(iw - .4)}×${mm(it.y1 - it.y - .4)} · открывание ${({ L: 'влево', R: 'вправо', U: 'вверх', D: 'вниз' })[it.dir] || 'влево'}`]); }
   });
   // выноски справа
@@ -185,8 +186,8 @@ function sheetColumn(S, bp, ci, no, total) {
   const levels = [S.plinth + T]; items.forEach(it => { if (it.type === 'led') return; const [a, b] = ext(it, S); levels.push(a, b); });
   levels.push(g.y1); const uniq = Array.from(new Set(levels.map(v => r1(v)))).sort((a, b) => a - b);
   for (let k = 0; k < uniq.length - 1; k++) { const a = uniq[k], b = uniq[k + 1]; if (b - a < 2.2) continue; o += dimV(Y(b), Y(a), X(c.xa - T), X(c.xa - T) - 30, mm(b - a)); }
-  o += dimV(Y(S.H), Y(0), X(c.xa - T), X(c.xa - T) - 74, mm(S.H));
-  o += dimH(X(c.xa), X(c.xb), Y(S.H), Y(S.H) - 26, mm(c.w)) + dimH(X(c.xa - T), X(c.xb + T), Y(S.H), Y(S.H) - 54, mm(c.w + 2 * T));
+  o += dimV(Y(c.H), Y(0), X(c.xa - T), X(c.xa - T) - 74, mm(c.H));
+  o += dimH(X(c.xa), X(c.xb), Y(c.H), Y(c.H) - 26, mm(c.w)) + dimH(X(c.xa - T), X(c.xb + T), Y(c.H), Y(c.H) - 54, mm(c.w + 2 * T));
   o += text(X(c.xa + c.w / 2), Y(0) + 38, 'ОТСЕК ' + (ci + 1) + ' · ВНУТРЕННИЕ РАЗМЕРЫ И ПРОСВЕТЫ (мм)', 10, 'middle', 'font-weight="700"') + text(1100, 60, `М 1:${niceScale(sc)}`, 12, 'end', 'font-weight="700"');
   void fake; void gg;
   const rows = meta(S, bp).slice(0, 3).concat([['Отсек', `№${ci + 1} · ширина ${mm(c.w)} мм`], ['Наполнение', col.items.length + ' поз.'], ['Дата', new Date().toLocaleDateString('ru-RU')]]);

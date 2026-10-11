@@ -73,16 +73,22 @@ export function recalcW(S) { S.W = r1(S.t * (S.cols.length + 1) + S.cols.reduce(
 
 /* ---- геометрия ---- */
 export function geom(S) {
-  const t = S.t; let x = t;
-  const cols = S.cols.map(c => { const a = { xa: x, xb: x + c.w, w: c.w, gap: !!c.gap }; x += c.w + t; return a; });
+  const t = S.t; let x = t, prev = null;
+  const cols = S.cols.map(c => {
+    const H = Number(c.H) || S.H, D = Number(c.D) || S.D, gap = !!c.gap;
+    const split = !!(prev && !prev.gap && !gap && (prev.H !== H || prev.D !== D));   // другая высота/глубина — отдельная коробка со своими боковинами
+    if (split) x += t;
+    const a = { xa: x, xb: x + c.w, w: c.w, gap, H, D, y1: H - t, split };
+    x += c.w + t; prev = a; return a;
+  });
   const n = cols.length, bnd = [];
   for (let k = 0; k <= n; k++) { const L = cols[k - 1], R = cols[k]; bnd.push({ k, x: k === 0 ? 0 : cols[k - 1].xb, has: !!((L && !L.gap) || (R && !R.gap)) }); }
   const runs = []; let cur = null;
-  cols.forEach((c, i) => { if (c.gap) { if (cur) { runs.push(cur); cur = null; } } else { if (!cur) cur = { a: i, b: i, x0: bnd[i].x, x1: 0 }; cur.b = i; cur.x1 = bnd[i + 1].x + t; } });
+  cols.forEach((c, i) => { if (c.gap) { if (cur) { runs.push(cur); cur = null; } } else { if (cur && c.split) { runs.push(cur); cur = null; } if (!cur) cur = { a: i, b: i, x0: c.xa - t, x1: 0, H: c.H, D: c.D }; cur.b = i; cur.x1 = c.xb + t; } });
   if (cur) runs.push(cur);
   const compOf = m => { const ix0 = m.x + t, ix1 = m.x + m.w - t, dv = (m.div || []).map(v => clamp(v, 5, Math.max(5, m.w - 2 * t - t - 5))).sort((a, b) => a - b), comp = []; let a = ix0; dv.forEach(off => { comp.push({ x0: a, x1: ix0 + off }); a = ix0 + off + t; }); comp.push({ x0: a, x1: ix1 }); return { dv, comp }; };
   const mz = (S.mezzes || []).map((m, mi) => Object.assign(compOf(m), { id: m.id, mi, fill: m.fill, cd: m.cd, dir: m.dir, x: m.x, w: m.w, h: m.h, y: m.y, n: m.n, shelves: m.shelves, x0: m.x, x1: m.x + m.w, yb: m.y, yt: m.y + m.h, ix0: m.x + t, ix1: m.x + m.w - t, iy0: m.y + t, iy1: m.y + m.h - t }));
-  const totalH = Math.max(S.H, ...mz.map(m => m.yt), ...(S.panels || []).map(p => p.y + p.h));
+  const totalH = Math.max(S.H, ...cols.map(c => c.H), ...mz.map(m => m.yt), ...(S.panels || []).map(p => p.y + p.h));
   return { t, y0: S.plinth + t, y1: S.H - t, cols, W: x, bnd, runs, mz, totalH, doorTop: S.H };
 }
 export function ext(it, S) {   // вертикальный размах предмета [низ, верх]
@@ -104,16 +110,16 @@ export function ext(it, S) {   // вертикальный размах пред
 const BLOCK = { drawer: 1, shoe: 1, pant: 1, basket: 1 };
 // уровни для перегородки: «дно», полки (низ и верх), «верх» — чтобы выбрать, между какими полками стоит панель
 export function levels(S, col) {
-  const g = geom(S), L = [{ label: 'дно', top: g.y0, bot: g.y0 }];
+  const g = geom(S), ci = S.cols.indexOf(col), y1 = ci >= 0 ? g.cols[ci].y1 : g.y1, L = [{ label: 'дно', top: g.y0, bot: g.y0 }];
   col.items.filter(i => i.type === 'shelf').sort((a, b) => a.y - b.y).forEach((sh, k) => L.push({ label: 'полка ' + (k + 1) + ' (' + Math.round(sh.y * 10) + ' мм)', top: r1(sh.y + S.t), bot: sh.y }));
-  L.push({ label: 'верх', top: g.y1, bot: g.y1 });
+  L.push({ label: 'верх', top: y1, bot: y1 });
   return L;
 }
 export function freeY(S, col, h) {   // первое свободное место высотой h в отсеке
   const g = geom(S), blocks = col.items.filter(i => BLOCK[i.type]).map(i => ext(i, S)).sort((a, b) => a[0] - b[0]);
-  let y = g.y0;
+  const ci = S.cols.indexOf(col), y1 = ci >= 0 ? g.cols[ci].y1 : g.y1; let y = g.y0;
   for (const b of blocks) { if (b[0] - y >= h) return r1(y); y = Math.max(y, b[1]); }
-  return g.y1 - y >= h ? r1(y) : null;
+  return y1 - y >= h ? r1(y) : null;
 }
 export function warnings(S) {
   const g = geom(S), out = [];
@@ -122,7 +128,7 @@ export function warnings(S) {
     const label = 'Отсек ' + (ci + 1);
     c.items.forEach(it => {
       const [a, b] = ext(it, S);
-      if (a < g.y0 - .01 || b > g.y1 + .01) out.push(`${label}: «${ITEM_TYPES[it.type]}» выходит за пределы отсека`);
+      if (a < g.y0 - .01 || b > g.cols[ci].y1 + .01) out.push(`${label}: «${ITEM_TYPES[it.type]}» выходит за пределы отсека`);
     });
     const bl = c.items.filter(i => BLOCK[i.type]);
     for (let i = 0; i < bl.length; i++) for (let j = i + 1; j < bl.length; j++) { const A = ext(bl[i], S), B = ext(bl[j], S); if (A[0] < B[1] - .01 && B[0] < A[1] - .01) out.push(`${label}: «${ITEM_TYPES[bl[i].type]}» и «${ITEM_TYPES[bl[j].type]}» пересекаются`); }
@@ -142,7 +148,7 @@ export function warnings(S) {
 export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, left, hinge:'L'|'R'|'U'|'D', n, sliding}]
   const g = geom(S), d = S.doors, out = [], t = S.t;
   if (d.kind !== 'none' && g.runs.length) {
-    const hh = S.H - S.plinth - .4, tot = g.runs.reduce((a, r) => a + (r.x1 - r.x0), 0), sliding = d.kind === 'sliding' && g.runs.length === 1; let idx = 0;
+    const hh = (g.runs[0] ? g.runs[0].H : S.H) - S.plinth - .4, tot = g.runs.reduce((a, r) => a + (r.x1 - r.x0), 0), sliding = d.kind === 'sliding' && g.runs.length === 1; let idx = 0;
     g.runs.forEach(r => {
       const rw = r.x1 - r.x0, n = sliding ? d.n : Math.max(1, Math.round(d.n * rw / tot));
       if (sliding) { const w = (rw + (n - 1) * 2.5) / n; for (let i = 0; i < n; i++) { out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + i * (w - 2.5), w, h: hh, y: S.plinth + .2, fill: d.fills[idx] || 'dsp', sliding: true, left: i < n / 2, hinge: 'L', gf: d.gf || 4 }); idx++; } }
@@ -153,7 +159,7 @@ export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, le
       g.cols.forEach((c, ci) => {
         if (c.gap) return; const col = S.cols[ci], L = ci === 0 || g.cols[ci - 1].gap ? c.xa - t : c.xa - t / 2, R = ci === g.cols.length - 1 || g.cols[ci + 1].gap ? c.xb + t : c.xb + t / 2, cw = R - L;
         const n = col.dn != null ? col.dn : (c.w > 65 ? 2 : 1), fill = col.df || 'dsp', dr = col.dd || 'auto';
-        for (let i = 0; i < n; i++) { const hinge = dr === 'auto' ? (n === 1 ? 'L' : (i < n / 2 ? 'L' : 'R')) : dr; out.push({ zone: 'main', i: k++, ci, ri: i, n, x: L + i * (cw / n) + .15, w: cw / n - .3, h: hh, y: S.plinth + .2, fill, sliding: false, left: hinge === 'L', hinge, gf: d.gf || 4 }); }
+        for (let i = 0; i < n; i++) { const hinge = dr === 'auto' ? (n === 1 ? 'L' : (i < n / 2 ? 'L' : 'R')) : dr; out.push({ zone: 'main', i: k++, ci, ri: i, n, x: L + i * (cw / n) + .15, w: cw / n - .3, h: c.H - S.plinth - .4, y: S.plinth + .2, fill, sliding: false, left: hinge === 'L', hinge, gf: d.gf || 4 }); }
       });
     }
   }
@@ -183,7 +189,7 @@ export function buildParts(S) {
   const bd = D - .3, ph = S.plinth, hs = H - ph;
   let joints = 8, feet = 0, hinges0 = 0, handles0 = 0;
   g.runs.forEach((r, ri) => {
-    const rw = r.x1 - r.x0, k = r.b - r.a + 1, lbl = g.runs.length > 1 ? ' (секция ' + (ri + 1) + ')' : '';
+    const rw = r.x1 - r.x0, k = r.b - r.a + 1, D = r.D, hs = r.H - ph, lbl = g.runs.length > 1 ? ' (секция ' + (ri + 1) + ')' : '';
     add('Корпус', 'Дно' + lbl, 1, rw, D, t, body, (rw + 2 * D) / 100, 'на всю ширину: боковины и спинка стоят на дне; кромка перед + 2 торца');
     add('Корпус', 'Боковина' + lbl, 2, hs - t, D, t, body, (hs - t) / 100, 'стоит на дне; кромка по переднему торцу');
     add('Корпус', 'Крышка (верх)' + lbl, 1, rw - 2 * t, D, t, body, (rw - 2 * t) / 100, 'между боковинами');
@@ -214,7 +220,7 @@ export function buildParts(S) {
   let rods = 0, hooks = 0, ledM = 0, basket = 0, pant = 0, pins = g.mz.reduce((a, m) => a + (m.shelves | 0) * 4 * m.comp.length, 0), lifts = 0, lowers = 0; const drw = {};
   S.cols.forEach((c, ci) => {
     if (c.gap) return;
-    const lbl = ' (отсек ' + (ci + 1) + ')';
+    const lbl = ' (отсек ' + (ci + 1) + ')', D = g.cols[ci].D;
     c.items.forEach(it => {
       if (it.type === 'shelf') { const d = it.d || D - 2.5; add('Наполнение', 'Полка' + lbl, 1, c.w - .2, d, t, body, (c.w - .2) / 100, 'на 4 полкодержателя'); pins += 4; }
       else if (it.type === 'rod') { rods++; add('Наполнение', 'Штанга ⌀25' + lbl, 1, c.w - .6, 2.5, 2.5, 'Хром, труба 25×15', 0, 'длина ' + mm(c.w - .6) + ' мм', 'metal'); }
@@ -305,7 +311,7 @@ export function decodeState(str) {
   } catch (e) { return null; }
 }
 export function sanitize(S) {
-  if (!S || typeof S !== 'object' || !Array.isArray(S.cols) || !S.cols.length) return null;
+  if (!S || typeof S !== 'object' || !Array.isArray(S.cols)) return null;
   const D = defState(), n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? clamp(v, a, b) : d; };
   const o = { v: 2, W: n(S.W, 60, 800, 240), H: n(S.H, 100, 320, 200), D: n(S.D, 25, 90, 60), t: S.t === 1.8 ? 1.8 : 1.6, plinth: n(S.plinth, 0, 20, 8), tier: n(S.tier, 0, 2, 1) | 0, color: n(S.color, 0, 99, 0) | 0, custom: /^#[0-9a-f]{6}$/i.test(S.custom || '') ? S.custom : null,
     mezzes: [],
@@ -332,7 +338,7 @@ export function sanitize(S) {
     });
     o.cols.push(col);
   });
-  if (!o.cols.some(c => !c.gap)) o.cols[0].gap = false;
+  if (o.cols.length && !o.cols.some(c => !c.gap)) o.cols[0].gap = false;
   o.panels = (Array.isArray(S.panels) ? S.panels : []).slice(0, 8).map(p => ({ id: uid(), x: r1(n(p && p.x, -300, 1200, 0)), y: r1(n(p && p.y, 0, 340, 20)), w: r1(n(p && p.w, 10, 400, 60)), h: r1(n(p && p.h, 10, 340, 180)), kind: ['mirror', 'film', 'sand', 'glass', 'laco', 'dsp'].includes(p && p.kind) ? p.kind : 'mirror', mount: p && p.mount === 'front' ? 'front' : 'wall', frame: !!(p && p.frame), fw: r1(n(p && p.fw, 1, 15, 3)) }));
   recalcW(o);
   if (Array.isArray(S.mezzes)) S.mezzes.slice(0, 8).forEach(m => { if (m) o.mezzes.push({ id: uid(), x: r1(n(m.x, -100, 900, 0)), w: r1(n(m.w, 20, 900, 60)), h: r1(n(m.h, 15, 120, 40)), y: r1(n(m.y, 0, 340, o.H)), n: n(m.n, 0, 10, 2) | 0, shelves: n(m.shelves, 0, 3, 0) | 0, fill: FILLS[m.fill] ? m.fill : 'dsp', div: (Array.isArray(m.div) ? m.div : []).slice(0, 7).map(v => r1(n(v, 5, 800, 30))), cd: (Array.isArray(m.cd) ? m.cd : []).slice(0, 8).map(v => v == null ? null : n(v, 0, 5, 1) | 0), dir: (Array.isArray(m.dir) ? m.dir : []).slice(0, 8).map(v => ['swing', 'U', 'D'].includes(v) ? v : 'swing') }); });

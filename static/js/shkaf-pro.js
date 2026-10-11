@@ -27,7 +27,7 @@ function findItem(id) { for (let ci = 0; ci < S.cols.length; ci++) { const it = 
 const toast = (t) => { const e = $('toast'); if (!e) return; e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2600); };
 
 /* ---------- ввод чисел ---------- */
-const RANGE = { W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [15, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [15, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 3] };
+const RANGE = { W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [15, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [15, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 3], 'col.H': [60, 320], 'col.D': [25, 90] };
 function stepper(label, path, val, step, unit) {
   return `<div class="r"><span>${esc(label)}</span><span class="stp"><button type="button" onpointerdown="PRO.hold(event,'${path}',${-step})">−</button><input type="number" step="any" value="${r1(val)}" onfocus="this.select()" onchange="PRO.set('${path}',this.value)"><button type="button" onpointerdown="PRO.hold(event,'${path}',${step})">+</button><small>${esc(unit || 'см')}</small></span></div>`;
 }
@@ -37,6 +37,7 @@ function getVal(path) {
   if (path.startsWith('mzc.')) { const m = S.mezzes[sel.mi], ci = +path.slice(4); return m ? (m.cd && m.cd[ci] != null ? m.cd[ci] : geom(S).mz[sel.mi].comp.length ? Math.max(1, Math.round((geom(S).mz[sel.mi].comp[ci].x1 - geom(S).mz[sel.mi].comp[ci].x0) / 60)) : 1) : 0; }
   if (path.startsWith('mz.')) { const m = S.mezzes[sel.mi]; return m ? m[path.slice(3)] : 0; }
   if (path.startsWith('pn.')) { const p = S.panels[sel.pi]; return p ? p[path.slice(3)] : 0; }
+  if (path === 'col.H' || path === 'col.D') { const c = S.cols[sel.i]; return c ? (c[path.slice(4)] || S[path.slice(4)]) : 0; }
   if (path === 'col.dn') { const c = S.cols[sel.i], g = geom(S); return c ? (c.dn != null ? c.dn : (c.w > 65 ? 2 : 1)) : 0; }
   if (path === 'col.w') return S.cols[sel.i] ? S.cols[sel.i].w : 0;
   if (path === 'W') return geom(S).W;
@@ -51,6 +52,7 @@ function setVal(path, v) {
     if (path.startsWith('mzc.')) { const m = S.mezzes[sel.mi]; if (m) { m.cd = m.cd || []; m.cd[+path.slice(4)] = Math.round(clamp(v, 0, 5)); } return; }
     if (path.startsWith('pn.')) { const p = S.panels[sel.pi]; if (p) p[path.slice(3)] = r1(v); return; }
     if (path.startsWith('mz.')) { const m = S.mezzes[sel.mi]; if (!m) return; const k = path.slice(3); m[k] = ['n', 'shelves'].includes(k) ? Math.round(v) : r1(v); return; }
+    if (path === 'col.H' || path === 'col.D') { S.cols[sel.i][path.slice(4)] = r1(v); return; }
     if (path === 'col.dn') { S.cols[sel.i].dn = Math.round(clamp(v, 0, 3)); return; }
     if (path === 'col.w') { S.cols[sel.i].w = r1(v); return; }
     if (path === 'W') { const g = geom(S), inner0 = g.W - (S.cols.length + 1) * S.t, inner1 = v - (S.cols.length + 1) * S.t; if (inner1 < S.cols.length * 15) return; const full = S.mezzes.filter(m => Math.abs(m.x) < .6 && Math.abs(m.w - g.W) < .6); S.cols.forEach(c => { c.w = r1(c.w * inner1 / inner0); }); const drift = r1(inner1 - S.cols.reduce((x, c) => x + c.w, 0)); S.cols[S.cols.length - 1].w = r1(S.cols[S.cols.length - 1].w + drift); recalcW(S); full.forEach(m => { m.w = S.W; }); return; }
@@ -73,10 +75,10 @@ function addItem(type) {
   if (type === 'drawer' || type === 'shoe' || type === 'pant' || type === 'basket') {
     const h = { drawer: 18, shoe: 36, pant: 10, basket: 18 }[type]; y = freeY(S, col, h);
     if (y == null) { toast('В отсеке нет свободного места для этого элемента'); return; }
-  } else if (type === 'rod') y = r1(g.y1 - 14);
+  } else if (type === 'rod') y = r1(g.cols[ci].y1 - 14);
   else if (type === 'vpanel' || type === 'idoor') y = g.y0;
-  else y = r1((g.y0 + g.y1) / 2);
-  mutate(() => { it = mkItem(type, y); if (type === 'vpanel') { it.y1 = r1(g.y1); it.x = r1(col.w / 2); } if (type === 'idoor') { it.y1 = r1(g.y1); it.x = 0; it.w = null; } col.items.push(it); sel = { k: 'item', id: it.id, col: ci }; });
+  else y = r1((g.y0 + g.cols[ci].y1) / 2);
+  mutate(() => { it = mkItem(type, y); if (type === 'vpanel') { it.y1 = r1(g.cols[ci].y1); it.x = r1(col.w / 2); } if (type === 'idoor') { it.y1 = r1(g.cols[ci].y1); it.x = 0; it.w = null; } col.items.push(it); sel = { k: 'item', id: it.id, col: ci }; });
 }
 function delItem() { const f = findItem(sel.id); if (!f) return; mutate(() => { f.col.items = f.col.items.filter(i => i !== f.it); sel = { k: 'col', i: f.ci }; }); }
 function dupItem() { const f = findItem(sel.id); if (!f) return; mutate(() => { const c = JSON.parse(JSON.stringify(f.it)); c.id = C.uid(); c.y = r1(c.y + (ext(f.it, S)[1] - ext(f.it, S)[0]) + 2); if (c.y1 != null) c.y1 = r1(c.y1 + 2); f.col.items.push(c); sel = { k: 'item', id: c.id, col: f.ci }; }); }
@@ -93,15 +95,15 @@ function addMezz() { const g = geom(S); mutate(() => { const m = mkMezz(0, g.W, 
 function delMezz() { mutate(() => { S.mezzes.splice(sel.mi, 1); sel = { k: 'global' }; }); }
 function dupMezz() { mutate(() => { const m = Object.assign({}, S.mezzes[sel.mi], { id: C.uid(), y: r1(S.mezzes[sel.mi].y + S.mezzes[sel.mi].h) }); S.mezzes.push(m); sel = { k: 'mezz', mi: S.mezzes.length - 1 }; }); }
 function mezzFull() { mutate(() => { const m = S.mezzes[sel.mi]; m.x = 0; m.w = geom(S).W; m.n = Math.max(1, Math.round(m.w / 60)); }); }
-function mezzOver(i) { mutate(() => { const m = S.mezzes[sel.mi], c = geom(S).cols[i]; m.x = r1(c.xa - S.t); m.w = r1(c.w + 2 * S.t); m.y = S.H; m.n = Math.max(1, Math.round(m.w / 60)); }); }
+function mezzOver(i) { mutate(() => { const m = S.mezzes[sel.mi], c = geom(S).cols[i]; m.x = r1(c.xa - S.t); m.w = r1(c.w + 2 * S.t); m.y = c.H; m.n = Math.max(1, Math.round(m.w / 60)); }); }
 function mezzMove(dx, dy) { mutate(() => { const m = S.mezzes[sel.mi]; m.x = r1(m.x + dx); m.y = r1(Math.max(0, m.y + dy)); }); }
 function selectMezz(i) { sel = { k: 'mezz', mi: i }; refresh(false); }
 function loadTemplate(kind) { if (!confirm('Заменить текущий проект шаблоном?')) return; mutate(() => { S = kind === 'P' ? presetP() : defState(); sel = { k: 'global' }; }); if (K) K.frame(); }
-function addCol(side) { mutate(() => { const w = r1(Math.min(80, S.cols[S.cols.length - 1].w)); const at = sel.k === 'col' && side ? sel.i + (side > 0 ? 1 : 0) : S.cols.length; S.cols.splice(at, 0, { id: C.uid(), w, items: [mkItem('shelf', 70), mkItem('shelf', 140)] }); sel = { k: 'col', i: at }; }); }
+function addCol(side) { mutate(() => { const w = r1(S.cols.length ? Math.min(80, S.cols[S.cols.length - 1].w) : 80); const at = sel.k === 'col' && side ? sel.i + (side > 0 ? 1 : 0) : S.cols.length; S.cols.splice(at, 0, { id: C.uid(), w, items: [mkItem('shelf', 70), mkItem('shelf', 140)] }); sel = { k: 'col', i: at }; }); }
 function dupCol(i) { mutate(() => { const c = JSON.parse(JSON.stringify(S.cols[i])); c.id = C.uid(); c.items.forEach(it => { it.id = C.uid(); }); S.cols.splice(i + 1, 0, c); sel = { k: 'col', i: i + 1 }; }); }
-function delCol(i) { if (S.cols.length <= 1) { toast('Должен остаться хотя бы один отсек'); return; } mutate(() => { S.cols.splice(i, 1); sel = { k: 'global' }; }); }
+function delCol(i) { mutate(() => { S.cols.splice(i, 1); sel = { k: 'global' }; }); }
 function moveCol(i, d) { const j = i + d; if (j < 0 || j >= S.cols.length) return; mutate(() => { const t = S.cols[i]; S.cols[i] = S.cols[j]; S.cols[j] = t; sel = { k: 'col', i: j }; }); }
-function eqCols() { mutate(() => { const g = geom(S), inner = g.W - (S.cols.length + 1) * S.t, w = r1(inner / S.cols.length); S.cols.forEach(c => { c.w = w; }); S.cols[S.cols.length - 1].w = r1(inner - w * (S.cols.length - 1)); }); }
+function eqCols() { if (!S.cols.length) return; mutate(() => { const g = geom(S), inner = g.W - (S.cols.length + 1) * S.t, w = r1(inner / S.cols.length); S.cols.forEach(c => { c.w = w; }); S.cols[S.cols.length - 1].w = r1(inner - w * (S.cols.length - 1)); }); }
 function evenShelves(n) {
   n = Math.max(0, Math.min(12, Math.round(parseFloat(n) || 0))); const ci = sel.k === 'col' ? sel.i : findItem(sel.id).ci, col = S.cols[ci], g = geom(S);
   mutate(() => { col.items = col.items.filter(i => i.type !== 'shelf'); for (let k = 1; k <= n; k++) col.items.push(mkItem('shelf', g.y0 + (g.y1 - g.y0 - S.t) * k / (n + 1))); });
@@ -124,12 +126,12 @@ function sideGlobal() {
   h += `<div class="r"><span>ЛДСП</span>${btn(S.t === 1.6, 'PRO.t(1.6)', '16 мм')}${btn(S.t === 1.8, 'PRO.t(1.8)', '18 мм')}</div>`;
   h += `<div class="sub">Цвет корпуса</div><div class="sw">${PALETTE.map((c, i) => `<button type="button" class="swb ${!S.custom && S.color === i ? 'on' : ''}" style="background:${c[1]}" title="${c[0]}" onclick="PRO.color(${i})"></button>`).join('')}<input type="color" value="${S.custom || '#cdbba0'}" onchange="PRO.custom(this.value)" title="свой цвет"></div>`;
   h += `<div class="r"><span>Класс</span>${T.map((t, i) => btn(S.tier === i, `PRO.tier(${i})`, t.ru)).join('')}</div>`;
-  h += `<div class="sub">Отсеки (${S.cols.length})</div><div class="cols">${S.cols.map((c, i) => `<button type="button" class="colchip" onclick="PRO.selCol(${i})">${c.gap ? 'проём' : '№' + (i + 1)}<b>${Math.round(c.w * 10)}</b><small>${c.gap ? '—' : c.items.length + ' поз.'}</small></button>`).join('')}</div>`;
+  h += `<div class="sub">Отсеки (${S.cols.length})</div><div class="cols">${S.cols.map((c, i) => `<button type="button" class="colchip" onclick="PRO.selCol(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.delCol(${i})">✕</span>${c.gap ? 'проём' : '№' + (i + 1)}<b>${Math.round(c.w * 10)}</b><small>${c.gap ? '—' : c.items.length + ' поз.'}</small></button>`).join('')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.addCol()', '＋ Отсек (шкаф)')}${btn(0, 'PRO.eqCols()', 'Выровнять ширину')}</div>`;
   const gm = geom(S);
-  h += `<div class="sub">Антресоли (${S.mezzes.length}) — отдельные блоки</div><div class="cols">${S.mezzes.map((m, i) => `<button type="button" class="colchip" onclick="PRO.selMezz(${i})">А${i + 1}<b>${Math.round(m.w * 10)}</b><small>y ${Math.round(m.y * 10)}</small></button>`).join('')}</div>`;
+  h += `<div class="sub">Антресоли (${S.mezzes.length}) — отдельные блоки</div><div class="cols">${S.mezzes.map((m, i) => `<button type="button" class="colchip" onclick="PRO.selMezz(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.delMezzAt(${i})">✕</span>А${i + 1}<b>${Math.round(m.w * 10)}</b><small>y ${Math.round(m.y * 10)}</small></button>`).join('')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.addMezz()', '＋ Антресоль')}${btn(0, 'PRO.addGap()', '＋ Проём между отсеками')}</div><div class="note">Антресоль — отдельная коробка: её можно двигать вбок и вверх независимо от низа, поставить над проёмом (П-образный шкаф).</div>`;
-  h += `<div class="sub">Зеркала и стеклянные панели (${S.panels.length})</div><div class="cols">${S.panels.map((p, i) => `<button type="button" class="colchip" onclick="PRO.selPanel(${i})">П${i + 1}<b>${Math.round(p.w * 10)}×${Math.round(p.h * 10)}</b><small>${FILLS[p.kind]}</small></button>`).join('')}</div><div class="r">${btn(0, 'PRO.addPanel()', '＋ Панель (зеркало)')}</div><div class="note">Отдельная панель: зеркало, стекло, лакобель или ЛДСП. На стену рядом со шкафом или на фасад поверх дверей; размер и место — любые.</div>`;
+  h += `<div class="sub">Зеркала и стеклянные панели (${S.panels.length})</div><div class="cols">${S.panels.map((p, i) => `<button type="button" class="colchip" onclick="PRO.selPanel(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.delPanelAt(${i})">✕</span>П${i + 1}<b>${Math.round(p.w * 10)}×${Math.round(p.h * 10)}</b><small>${FILLS[p.kind]}</small></button>`).join('')}</div><div class="r">${btn(0, 'PRO.addPanel()', '＋ Панель (зеркало)')}</div><div class="note">Отдельная панель: зеркало, стекло, лакобель или ЛДСП. На стену рядом со шкафом или на фасад поверх дверей; размер и место — любые.</div>`;
   h += `<div class="sub">Шаблоны</div><div class="r">${btn(0, "PRO.tpl('S')", 'Прямой шкаф')}${btn(0, "PRO.tpl('P')", 'П-образный')}</div>`;
   h += `<div class="sub">Двери</div><div class="r">${btn(S.doors.kind === 'none', "PRO.doors('none')", 'Без дверей')}${btn(S.doors.kind === 'swing', "PRO.doors('swing')", 'Распашные')}${btn(S.doors.kind === 'sliding', "PRO.doors('sliding')", 'Купе')}</div>`;
   if (S.doors.kind !== 'none') {
@@ -148,8 +150,8 @@ function addButtons() { return `<div class="grid2">${Object.keys(ITEM_TYPES).map
 function sideCol() {
   const i = sel.i, c = S.cols[i], g = geom(S), items = c.items.slice().sort((a, b) => ext(b, S)[0] - ext(a, S)[0]);
   if (c.gap) return `<div class="sh">Проём ${i + 1}</div><div class="note">Пустое место без стенок: проход, стол, техника. Антресоль может проходить над ним.</div>` + stepper('Ширина', 'col.w', c.w, 1) + `<div class="r">${btn(0, `PRO.moveCol(${i},-1)`, '◀')}${btn(0, `PRO.moveCol(${i},1)`, '▶')}${btn(0, `PRO.toggleGap(${i})`, 'Сделать отсеком')}${btn(0, `PRO.delCol(${i})`, 'Удалить')}${btn(0, 'PRO.global()', '✕ Весь шкаф')}</div>`;
-  let h = `<div class="sh">Отсек ${i + 1}</div>` + stepper('Ширина', 'col.w', c.w, 1);
-  h += `<div class="r">${btn(0, `PRO.moveCol(${i},-1)`, '◀')}${btn(0, `PRO.moveCol(${i},1)`, '▶')}${btn(0, `PRO.addCol(-1)`, '＋ слева')}${btn(0, `PRO.addCol(1)`, '＋ справа')}${btn(0, `PRO.dupCol(${i})`, 'Копия')}${btn(0, `PRO.toggleGap(${i})`, 'Сделать проёмом')}${btn(0, `PRO.delCol(${i})`, 'Удалить')}${btn(0, 'PRO.global()', '✕ Весь шкаф')}</div>`;
+  let h = `<div class="sh">Отсек ${i + 1}</div>` + stepper('Ширина', 'col.w', c.w, 1) + stepper('Высота (от пола)', 'col.H', c.H || S.H, 1) + stepper('Глубина', 'col.D', c.D || S.D, 1) + ((c.H || c.D) ? `<div class="r">${btn(0, `PRO.colReset(${i})`, 'Размеры как у всего шкафа')}</div>` : '');
+  h += `<div class="r">${btn(0, `PRO.moveCol(${i},-1)`, '◀')}${btn(0, `PRO.moveCol(${i},1)`, '▶')}${btn(0, `PRO.addCol(-1)`, '＋ слева')}${btn(0, `PRO.addCol(1)`, '＋ справа')}${btn(0, `PRO.addGapAt(-1)`, '＋ проём слева')}${btn(0, `PRO.addGapAt(1)`, '＋ проём справа')}${btn(0, `PRO.dupCol(${i})`, 'Копия')}${btn(0, `PRO.toggleGap(${i})`, 'Сделать проёмом')}${btn(0, `PRO.delCol(${i})`, 'Удалить')}${btn(0, 'PRO.global()', '✕ Весь шкаф')}</div>`;
   if (S.doors.kind === 'swing') {
     const nn = c.dn != null ? c.dn : (c.w > 65 ? 2 : 1), dr = c.dd || 'auto';
     h += `<div class="sub">Двери этого отсека</div><div class="r"><span>Дверей</span>${[0, 1, 2, 3].map(k => btn(nn === k, `PRO.set('col.dn',${k})`, k === 0 ? 'Нет' : String(k))).join('')}</div>`;
@@ -242,7 +244,7 @@ function renderWarn() {
 let odT = null;
 function refresh(full) {
   if (full !== false) { recalcW(S); save(); try { history.replaceState(null, '', location.pathname + '#p=' + encodeState(S)); } catch (e) {} }
-  if (K) { K.update(S); K.select(selMeta()); }
+  if (K) { if (full !== false) K.update(S); K.select(selMeta()); }   // выбор не пересобирает сцену: двойной щелчок по двери всегда срабатывает
   renderSide(); renderPrice(); renderWarn();
   if (OWNER && full !== false) { clearTimeout(odT); odT = setTimeout(renderOwner, 350); }
 }
@@ -253,6 +255,12 @@ async function init3D() {
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: s => { sel = !s ? { k: 'global' } : (s.k === 'item' ? { k: 'item', id: s.id, col: s.col } : (s.k === 'col' ? { k: 'col', i: s.i } : (s.k === 'mezz' ? { k: 'mezz', mi: s.i } : (s.k === 'panel' ? { k: 'panel', pi: s.i } : { k: 'global' })))); refresh(false); },
     onDrag: (s, dy, hx, dx) => {
+      if (s.k === 'col') {   // отсек двигаем вдоль шкафа: меняется порядок отсеков и проёмов
+        const g = geom(S), cur = s.i; if (!dragState || dragState.col !== s.id0) { pushUndo(); dragState = { col: s.id0 }; }
+        let j = g.cols.findIndex(c => hx >= c.xa - S.t && hx <= c.xb + S.t); if (j < 0) j = hx < 0 ? 0 : S.cols.length - 1;
+        if (j !== cur && j >= 0) { const c = S.cols.splice(cur, 1)[0]; S.cols.splice(j, 0, c); s.i = j; sel = { k: 'col', i: j }; recalcW(S); K.update(S); K.select(selMeta()); renderWarn(); renderSide(); }
+        return `отсек ${s.i + 1}: тяните вдоль шкафа · от левого края ${mm(geom(S).cols[s.i].xa)} мм`;
+      }
       if (s.k === 'panel') {
         const p = S.panels[s.i]; if (!p) return '';
         if (!dragState || dragState.panel !== s.i) { pushUndo(); dragState = { panel: s.i, x0: p.x, y0: p.y }; }
@@ -325,6 +333,11 @@ document.addEventListener('keydown', e => {
   if (VIEW) return; const tag = (document.activeElement && document.activeElement.tagName) || '';
   if (/INPUT|SELECT|TEXTAREA/.test(tag)) return;
   if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z' || e.code === 'KeyZ')) { e.preventDefault(); e.shiftKey ? doRedo() : doUndo(); return; }
+  if (sel.k === 'col') {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); moveCol(sel.i, -1); } else if (e.key === 'ArrowRight') { e.preventDefault(); moveCol(sel.i, 1); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); delCol(sel.i); }
+    return;
+  }
   if (sel.k === 'panel') {
     const d = e.shiftKey ? 10 : 1;
     if (e.key === 'ArrowLeft') { e.preventDefault(); panelMove(-d, 0); } else if (e.key === 'ArrowRight') { e.preventDefault(); panelMove(d, 0); }
@@ -377,11 +390,12 @@ window.PRO = {
   color: setColor, custom: setCustom, selCol: selectCol, selItem: selectItem, global: selectGlobal,
   tier: i => mutate(() => { S.tier = i; }), t: v => mutate(() => { S.t = v; }), name: v => mutate(() => { S.name = String(v).slice(0, 60); }, true),
   addPanel, delPanel, dupPanel, panelMove, panelOverDoors, selPanel: selectPanel, pKind: v => mutate(() => { const p = S.panels[sel.pi]; if (p) p.kind = v; }), pMount: v => mutate(() => { const p = S.panels[sel.pi]; if (p) p.mount = v; }), pFrame: () => mutate(() => { const p = S.panels[sel.pi]; if (p) p.frame = !p.frame; }),
-  mfill: v => mutate(() => { const m = S.mezzes[sel.mi]; if (m) m.fill = v; }), addMezz, delMezz, dupMezz, mezzFull, mezzOver, mezzMove, selMezz: selectMezz, addGap, toggleGap, tpl: loadTemplate, doors: setDoors, fill: setFill, laco: i => mutate(() => { S.doors.laco = i; }),
+  mfill: v => mutate(() => { const m = S.mezzes[sel.mi]; if (m) m.fill = v; }), delMezzAt: i => mutate(() => { S.mezzes.splice(i, 1); sel = { k: 'global' }; }), delPanelAt: i => mutate(() => { S.panels.splice(i, 1); sel = { k: 'global' }; }), addGapAt: side => mutate(() => { const at = sel.k === 'col' ? sel.i + (side > 0 ? 1 : 0) : S.cols.length; S.cols.splice(at, 0, { id: C.uid(), w: 60, gap: true, items: [] }); sel = { k: 'col', i: at }; }), addMezz, delMezz, dupMezz, mezzFull, mezzOver, mezzMove, selMezz: selectMezz, addGap, toggleGap, tpl: loadTemplate, doors: setDoors, fill: setFill, laco: i => mutate(() => { S.doors.laco = i; }),
   handles: () => mutate(() => { S.doors.handles = S.doors.handles === false; }), led: () => mutate(() => { S.led = !S.led; }),
   sys: v => mutate(() => { const f = findItem(sel.id); if (f) f.it.sys = v; }),
   toggleDoors: () => { if (K) { K.toggleDoors(); setTimeout(renderSide, 50); } }, openAll: on => { if (K) { K.toggleDoors(on); setTimeout(renderSide, 50); } },
   cdf: v => mutate(() => { const c = S.cols[sel.i]; if (c) { if (v === 'dsp') delete c.df; else c.df = v; } }), cdd: v => mutate(() => { const c = S.cols[sel.i]; if (c) { if (v === 'auto') delete c.dd; else c.dd = v; } }), allDf: v => mutate(() => { S.cols.forEach(c => { if (!c.gap) { if (v === 'dsp') delete c.df; else c.df = v; } }); }),
+  colReset: i => mutate(() => { delete S.cols[i].H; delete S.cols[i].D; }),
   rot: on => { if (K) K.setRotate(on); }, sideToggle, drawerAbove: () => drawerNear(1), drawerBelow: () => drawerNear(-1), between, vpCenter: () => mutate(() => { const f = findItem(sel.id); if (f) f.it.x = r1(f.col.w / 2 - S.t / 2); }), idoorDir: v => mutate(() => { const f = findItem(sel.id); if (f) f.it.dir = v; }),
   addDiv: () => mutate(() => { const m = S.mezzes[sel.mi]; m.div = m.div || []; const w = m.w - 2 * S.t, pts = [0].concat(m.div.slice().sort((a, b) => a - b).map(v => v + S.t), [w]); let bi = 0, bw = -1; for (let i = 0; i < pts.length - 1; i++) if (pts[i + 1] - pts[i] > bw) { bw = pts[i + 1] - pts[i]; bi = i; } m.div.push(r1(pts[bi] + (pts[bi + 1] - pts[bi] - S.t) / 2)); m.div.sort((a, b) => a - b); m.cd = []; }),
   delDiv: i => mutate(() => { const m = S.mezzes[sel.mi]; m.div.splice(i, 1); m.cd = []; m.dir = []; }),

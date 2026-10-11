@@ -71,15 +71,15 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     // корпус: секции (между проёмами), перегородки, антресоли — каждая отдельным блоком
     const selK = { k: 'global' }, n = g.cols.length;
     g.runs.forEach(r => {
-      const rw = r.x1 - r.x0;
+      const rw = r.x1 - r.x0, H = r.H, D = r.D, bd = D - z0;
       box(t, H - ph - t, bd, M.body, r.x0, ph + t, z0, selK); box(t, H - ph - t, bd, M.body, r.x1 - t, ph + t, z0, selK);
       box(rw - 2 * t, t, bd, M.body, r.x0 + t, H - t, z0, selK); box(rw, t, bd, M.body, r.x0, ph, z0, selK);
       box(rw - 2 * t, H - ph - 2 * t, .3, M.back, r.x0 + t, ph + t, 0);
       box(rw - 2 * t, ph - .2, t, M.plinth, r.x0 + t, 0, D - 6);
     });
-    g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === n) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap) return; box(t, g.y1 - g.y0, bd, M.body, b.x, g.y0, z0, { k: 'col', i: k - 1 }); });
+    g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === n) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap || R.split) return; box(t, L.y1 - g.y0, L.D - z0, M.body, b.x, g.y0, z0, { k: 'col', i: k - 1 }); });
     g.cols.forEach((c, i) => {
-      const pl = new THREE.Mesh(new THREE.PlaneGeometry(c.w, g.y1 - g.y0), new THREE.MeshBasicMaterial({ visible: false })); pl.position.set(c.xa + c.w / 2, (g.y0 + g.y1) / 2, 1); pl.userData.sel = { k: 'col', i }; picks.push(pl); root.add(pl);
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(c.w, c.y1 - g.y0), new THREE.MeshBasicMaterial({ visible: false })); pl.position.set(c.xa + c.w / 2, (g.y0 + c.y1) / 2, 1); pl.userData.sel = { k: 'col', i }; picks.push(pl); root.add(pl);
     });
     g.mz.forEach(m => {
       const meta = { k: 'mezz', i: m.mi }, mbd = bd;
@@ -92,6 +92,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     // наполнение
     S.cols.forEach((col, ci) => {
       const c = g.cols[ci]; if (col.gap) return;
+      const D = c.D;
       col.items.forEach(it => {
         const meta = { k: 'item', id: it.id, col: ci };
         if (it.type === 'shelf') box(c.w - .2, t, it.d || D - 2.5, M.body, c.xa + .1, it.y, z0, meta);
@@ -151,9 +152,10 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     // двери: основные (по секциям) и антресолей (каждая своими)
     const dl = doorList(S);
     dl.forEach(d => {
+      const D = d.ci != null && g.cols[d.ci] ? g.cols[d.ci].D : S.D;
       const mz = d.zone === 'mezz', gl = d.fill === 'glass', mat = d.fill === 'dsp' ? M.body : (d.fill === 'laco' ? M.glass(S.doors.laco) : (gl ? M.glassClear : M.mirror)), th = d.fill === 'dsp' ? 1.6 : .8;
       const face = (par, dx, dy) => { if (!gl) { box(d.w, d.h, th, mat, dx, dy, 0, meta, par); return; } const f = Math.min(Math.max(1, S.doors.gf || 4), d.w / 2 - .6, d.h / 2 - .6); box(d.w - 2 * f, d.h - 2 * f, .5, M.glassClear, dx + f, dy + f, .5, meta, par); box(d.w, f, 1.8, M.alu, dx, dy, 0, meta, par); box(d.w, f, 1.8, M.alu, dx, dy + d.h - f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx, dy + f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx + d.w - f, dy + f, 0, meta, par); };
-      const key = mz ? 'm' + d.mi + '.' + d.i : 'd' + d.i, meta = mz ? { k: 'mezz', i: d.mi, key } : { k: 'doors', key };
+      const key = mz ? 'm' + d.mi + '.' + d.i : 'd' + d.i, meta = mz ? { k: 'mezz', i: d.mi, key } : (d.ci != null ? { k: 'col', i: d.ci, key } : { k: 'doors', key });
       if (d.sliding) {
         const layer = d.ri % 2, z = D + .4 + layer * 3.4, grp = new THREE.Group(); grp.position.set(d.x, 0, z); root.add(grp);
         face(grp, 0, d.y);
@@ -197,7 +199,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     root.updateMatrixWorld(true);
     const bb = new THREE.Box3(); let any = false;
     picks.forEach(m => { const s = m.userData.sel; if (!s || !m.geometry || m.geometry.type === 'PlaneGeometry') return; if ((sel.k === 'item' && s.k === 'item' && s.id === sel.id) || (sel.k === 'col' && s.k === 'col' && s.i === sel.i && false) || (sel.k === 'mezz' && s.k === 'mezz' && s.i === sel.i) || (sel.k === 'panel' && s.k === 'panel' && s.i === sel.i) || (sel.k === 'doors' && s.k === 'doors')) { bb.expandByObject(m); any = true; } });
-    if (sel.k === 'col' && state) { const g = geom(state), c = g.cols[sel.i]; if (c) { bb.set(new THREE.Vector3(c.xa, g.y0, 0), new THREE.Vector3(c.xb, g.y1, state.D)); any = true; } }
+    if (sel.k === 'col' && state) { const g = geom(state), c = g.cols[sel.i]; if (c) { bb.set(new THREE.Vector3(c.xa, g.y0, 0), new THREE.Vector3(c.xb, c.y1, c.D)); any = true; } }
     if (!any) return;
     const sz = bb.getSize(new THREE.Vector3()), ct = bb.getCenter(new THREE.Vector3()), geo = new THREE.EdgesGeometry(new THREE.BoxGeometry(sz.x + 1, sz.y + 1, sz.z + 1));
     selBox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: '#e0a21a' })); selBox.position.copy(ct); root.add(selBox);
@@ -205,13 +207,14 @@ export function createPro3D(container, hooks = {}, opts = {}) {
 
   /* ---- мышь: выбрать, потянуть предмет по вертикали и между отсеками ---- */
   const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(), plane = new THREE.Plane(), hitP = new THREE.Vector3();
-  let downAt = null, drag = null;
+  let downAt = null, drag = null, lastTap = { key: null, t: 0 };
   const rayFrom = ev => { const r = renderer.domElement.getBoundingClientRect(); ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ptr, camera); };
   function hit(ev) { rayFrom(ev); const h = ray.intersectObjects(picks, false).find(x => x.object.userData.sel); return h ? { sel: h.object.userData.sel, p: h.point.clone() } : null; }
   renderer.domElement.addEventListener('pointerdown', e => {
     downAt = [e.clientX, e.clientY]; drag = null; if (viewOnly) return;
     const h = hit(e); if (!h) return;
-    if (h.sel.k === 'item' || h.sel.k === 'mezz' || h.sel.k === 'panel') {
+    const colDrag = h.sel.k === 'col' && sel && sel.k === 'col' && sel.i === h.sel.i;   // отсек тащим, только если он уже выбран (иначе камера крутится)
+    if (h.sel.k === 'item' || h.sel.k === 'mezz' || h.sel.k === 'panel' || colDrag) {
       if (hooks.onSelect) hooks.onSelect(h.sel);
       drag = { sel: h.sel, p0: h.p, moved: false }; controls.enabled = false; try { renderer.domElement.setPointerCapture(e.pointerId); } catch (er) {}
     }
@@ -230,9 +233,10 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
     const h = hit(e);
     if (viewOnly) { if (h && h.sel.key) toggleDoor(h.sel.key); return; }
+    const now = performance.now();   // двойное нажатие по двери/ящику определяем сами: работает и на мыши, и на пальце
+    if (h && h.sel.key) { if (lastTap.key === h.sel.key && now - lastTap.t < 550) { toggleDoor(h.sel.key); lastTap = { key: null, t: 0 }; } else lastTap = { key: h.sel.key, t: now }; } else lastTap = { key: null, t: 0 };
     if (hooks.onSelect) hooks.onSelect(h ? h.sel : null);
   });
-  renderer.domElement.addEventListener('dblclick', e => { const h = hit(e); if (h && h.sel.key) toggleDoor(h.sel.key); });
   function toggleDoor(key) { openTarget.set(key, (openTarget.get(key) || 0) > .5 ? 0 : 1); invalidate(); }
   function toggleDoors(on) { const keys = [...new Set(doorsAnim.map(a => a.key))]; if (on === undefined) on = !keys.some(k => (openTarget.get(k) || 0) > .5); keys.forEach(k => openTarget.set(k, on ? 1 : 0)); invalidate(); }
 
