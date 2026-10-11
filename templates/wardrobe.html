@@ -1258,7 +1258,7 @@ function w3Refresh() { if (W3 && w3Mode === '3d') { W3.update(w3State()); render
 function renderW3Bar() {
   const b = (a, t) => `<button type="button" onclick="w3Act('${a}')">${t}</button>`;
   const rot = W3 ? W3.isRotate() : true;
-  $('w3dBar').innerHTML = `<label class="rot" title="Галочка: тянете — вращаете. Без галочки: тянете — двигаете картинку. Колесо мыши — приблизить."><input type="checkbox" ${rot ? 'checked' : ''} onchange="if (W3) W3.setRotate(this.checked); renderW3Bar()"> ${rot ? '🔄 Вращать' : '✋ Двигать картинку'}</label>` + b('v:angle', '◩ Угол') + b('v:front', '▭ Спереди') + b('v:top', '▦ Сверху') + b('openAll', '↔ Открыть всё') + b('closeAll', 'Закрыть') + '<span class="sp"></span>' + b('full', '⛶ На весь экран');
+  $('w3dBar').innerHTML = `<label class="rot" title="Галочка: тянете — вращаете. Без галочки: тянете — двигаете картинку. Колесо мыши — приблизить."><input type="checkbox" ${rot ? 'checked' : ''} onchange="if (W3) W3.setRotate(this.checked); renderW3Bar()"> ${rot ? '🔄 Вращать' : '✋ Двигать картинку'}</label>` + b('v:angle', '◩ Угол') + b('v:front', '▭ Спереди') + b('v:top', '▦ Сверху') + b('openAll', '↔ Открыть всё') + b('closeAll', 'Закрыть') + '<span class="sp"></span>' + b('full', $('w3dBox') && $('w3dBox').classList.contains('k3d-full') ? '✕ Свернуть' : '⛶ На весь экран');
 }
 function w3AfterEdit() { activePreset = -1; norm(); renderForm(); refresh(); presetCards(); }
 function w3Ensure() { if (!secsValid(M)) M.secs = makeSecs(M); }
@@ -1269,6 +1269,7 @@ function w3Act(a, v) {
     const box = $('w3dBox');
     if (!box.classList.contains('k3d-full')) { box._ph = document.createComment('w3d'); box.parentNode.insertBefore(box._ph, box); document.body.appendChild(box); box.classList.add('k3d-full'); document.body.style.overflow = 'hidden'; }
     else { box.classList.remove('k3d-full'); if (box._ph && box._ph.parentNode) { box._ph.parentNode.insertBefore(box, box._ph); box._ph.remove(); } document.body.style.overflow = ''; }
+    renderW3Bar(); setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
     return;
   }
   if (!w3Sel) return;

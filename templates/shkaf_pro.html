@@ -23,7 +23,10 @@ h1{font-family:'Playfair Display',Georgia,serif;margin:6px 0 4px;font-size:1.6re
 .grid{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:14px;align-items:start}
 .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 4px 18px rgba(60,40,10,.06)}
 .box3{position:relative;height:620px;border-radius:14px;overflow:hidden;background:#ece6dc}
-.box3.full{position:fixed;inset:0;z-index:1000;height:100vh;border-radius:0}
+.box3.fs{position:fixed;inset:0;z-index:1000;height:100vh;border-radius:0;background:#0f0c08}
+.box3.fs .side{position:absolute;right:10px;top:56px;bottom:10px;width:min(370px,calc(100vw - 20px));height:auto;z-index:6;box-shadow:0 10px 34px rgba(0,0,0,.5)}
+.box3.fs.side-off .side{display:none}
+@media(max-width:900px){.box3.fs .side{left:8px;right:8px;width:auto;top:auto;bottom:8px;height:44vh}}
 #p3d{position:absolute;inset:0}
 .load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#7a6a45}
 .bar{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;z-index:3;pointer-events:none}
@@ -80,7 +83,7 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
     <div>
       <div class="box3" id="p3dBox">
         <div id="p3d"></div><div class="load" id="p3dLoad">Загрузка 3D…</div>
-        <div class="bar"><label class="rot"><input type="checkbox" checked onchange="PRO.rot(this.checked); this.nextSibling.textContent = this.checked ? ' 🔄 Вращать' : ' ✋ Двигать картинку'"> 🔄 Вращать</label><button type="button" onclick="PRO.openAll(true)">↔ Открыть всё</button><button type="button" onclick="PRO.openAll(false)">Закрыть</button><span class="sp"></span><button type="button" onclick="PRO.full()">⛶ На весь экран</button></div>
+        <div class="bar"><label class="rot"><input type="checkbox" checked onchange="PRO.rot(this.checked); this.nextSibling.textContent = this.checked ? ' 🔄 Вращать' : ' ✋ Двигать картинку'"> 🔄 Вращать</label><button type="button" onclick="PRO.openAll(true)">↔ Открыть всё</button><button type="button" onclick="PRO.openAll(false)">Закрыть</button><span class="sp"></span><button type="button" id="sideBtn" style="display:none" onclick="PRO.sideToggle()">⚙ Скрыть панель</button><button type="button" id="fsBtn" onclick="PRO.full()">⛶ На весь экран</button></div>
       </div>
       <div class="price" id="price"></div>
       <div class="warn" id="warn"></div>

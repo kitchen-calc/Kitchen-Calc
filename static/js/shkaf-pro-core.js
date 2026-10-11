@@ -19,9 +19,9 @@ export const PALETTE = [['Белый', '#f2f1ee'], ['Светлый дуб', '#d
 export const LACO = [['Графит', '#2a2d31'], ['Серо-зелёный', '#6f7d73'], ['Шампань', '#d6c3a1'], ['Белый', '#f0efe9'], ['Синий', '#33476a'], ['Бордо', '#6b2a35']];
 export const FILLS = { dsp: 'ЛДСП', glass: 'Стекло в алюминиевой раме', mirror: 'Зеркало', laco: 'Лакобель (цветное стекло)', film: 'Зеркало с плёнкой', sand: 'Зеркало с рисунком' };
 export const ITEM_TYPES = {
-  shelf: 'Полка', rod: 'Штанга', drawers: 'Ящики', shoe: 'Обувные полки', pant: 'Брючница', basket: 'Корзина', hook: 'Крючки', led: 'Подсветка', vpanel: 'Вертикальная панель'
+  shelf: 'Полка', rod: 'Штанга', drawer: 'Ящик', idoor: 'Дверца в отсеке', shoe: 'Обувные полки', pant: 'Брючница', basket: 'Корзина', hook: 'Крючки', led: 'Подсветка', vpanel: 'Вертикальная панель'
 };
-export const ITEM_ICON = { shelf: '▬', rod: '⎯', drawers: '▤', shoe: '👟', pant: '⇋', basket: '🧺', hook: '⌒', led: '💡', vpanel: '▮' };
+export const ITEM_ICON = { shelf: '▬', rod: '⎯', drawer: '▤', idoor: '🚪', shoe: '👟', pant: '⇋', basket: '🧺', hook: '⌒', led: '💡', vpanel: '▮' };
 
 let seq = 1;
 export const uid = () => 'i' + (seq++) + Math.random().toString(36).slice(2, 5);
@@ -32,7 +32,8 @@ export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export function mkItem(type, y, extra) {
   const b = { id: uid(), type, y: r1(y) };
   if (type === 'shelf') b.d = null;                         // глубина: null — стандартная (D − 2,5)
-  if (type === 'drawers') Object.assign(b, { n: 3, fh: 18, sys: 'tier' });
+  if (type === 'drawer') Object.assign(b, { fh: 18, sys: 'tier' });
+  if (type === 'idoor') Object.assign(b, { y1: r1(y + 60), x: 0, w: null, dir: 'L' });
   if (type === 'shoe') Object.assign(b, { n: 3 });
   if (type === 'basket') Object.assign(b, { h: 18 });
   if (type === 'vpanel') Object.assign(b, { y1: r1(y + 60), x: 0 });
@@ -43,7 +44,7 @@ export function defState() {
     doors: { kind: 'none', n: 3, fills: ['dsp', 'mirror', 'dsp', 'mirror', 'dsp', 'mirror', 'dsp', 'mirror'], laco: 0, handles: true, gf: 4 }, led: false, name: 'Мой шкаф' };
   S.cols = [
     { id: uid(), w: 78, items: [mkItem('rod', 185), mkItem('shelf', 193), mkItem('shelf', 40), mkItem('shelf', 100)] },
-    { id: uid(), w: 78, items: [mkItem('shelf', 68), mkItem('shelf', 105), mkItem('shelf', 142), mkItem('shelf', 180), mkItem('drawers', 9.6, { n: 3 })] },
+    { id: uid(), w: 78, items: [mkItem('shelf', 68), mkItem('shelf', 105), mkItem('shelf', 142), mkItem('shelf', 180), mkItem('drawer', 9.6), mkItem('drawer', 27.6), mkItem('drawer', 45.6)] },
     { id: uid(), w: 78, items: [mkItem('rod', 185), mkItem('rod', 115), mkItem('shelf', 193)] }
   ];
   fitWidth(S, 240);
@@ -51,13 +52,13 @@ export function defState() {
   return S;
 }
 export function mkPanel(x, y, w, h) { return { id: uid(), x: r1(x), y: r1(y), w: r1(w), h: r1(h), kind: 'mirror', mount: 'wall', frame: false, fw: 3 }; }
-export function mkMezz(x, w, y) { return { id: uid(), x: r1(x), w: r1(w), h: 40, y: r1(y), n: Math.max(1, Math.round(w / 60)), shelves: 0, fill: 'dsp' }; }
+export function mkMezz(x, w, y) { return { id: uid(), x: r1(x), w: r1(w), h: 40, y: r1(y), n: Math.max(1, Math.round(w / 60)), shelves: 0, fill: 'dsp', div: [], cd: [], dir: [] }; }
 export function presetP() {   // П-образный шкаф: две башни и антресоль-перемычка над проёмом
   const S = defState(); S.H = 240; S.name = 'П-образный шкаф';
   S.cols = [
     { id: uid(), w: 58, items: [mkItem('rod', 225), mkItem('shelf', 232), mkItem('shelf', 60), mkItem('shelf', 120), mkItem('shelf', 170)] },
     { id: uid(), w: 100, gap: true, items: [] },
-    { id: uid(), w: 58, items: [mkItem('shelf', 72), mkItem('shelf', 108), mkItem('shelf', 144), mkItem('shelf', 180), mkItem('drawers', 9.6, { n: 3 })] }
+    { id: uid(), w: 58, items: [mkItem('shelf', 72), mkItem('shelf', 108), mkItem('shelf', 144), mkItem('shelf', 180), mkItem('drawer', 9.6), mkItem('drawer', 27.6), mkItem('drawer', 45.6)] }
   ];
   recalcW(S); S.mezzes = [mkMezz(0, S.W, S.H)]; S.mezzes[0].h = 40; return S;
 }
@@ -79,7 +80,8 @@ export function geom(S) {
   const runs = []; let cur = null;
   cols.forEach((c, i) => { if (c.gap) { if (cur) { runs.push(cur); cur = null; } } else { if (!cur) cur = { a: i, b: i, x0: bnd[i].x, x1: 0 }; cur.b = i; cur.x1 = bnd[i + 1].x + t; } });
   if (cur) runs.push(cur);
-  const mz = (S.mezzes || []).map((m, mi) => ({ id: m.id, mi, fill: m.fill, x: m.x, w: m.w, h: m.h, y: m.y, n: m.n, shelves: m.shelves, x0: m.x, x1: m.x + m.w, yb: m.y, yt: m.y + m.h, ix0: m.x + t, ix1: m.x + m.w - t, iy0: m.y + t, iy1: m.y + m.h - t }));
+  const compOf = m => { const ix0 = m.x + t, ix1 = m.x + m.w - t, dv = (m.div || []).map(v => clamp(v, 5, Math.max(5, m.w - 2 * t - t - 5))).sort((a, b) => a - b), comp = []; let a = ix0; dv.forEach(off => { comp.push({ x0: a, x1: ix0 + off }); a = ix0 + off + t; }); comp.push({ x0: a, x1: ix1 }); return { dv, comp }; };
+  const mz = (S.mezzes || []).map((m, mi) => Object.assign(compOf(m), { id: m.id, mi, fill: m.fill, cd: m.cd, dir: m.dir, x: m.x, w: m.w, h: m.h, y: m.y, n: m.n, shelves: m.shelves, x0: m.x, x1: m.x + m.w, yb: m.y, yt: m.y + m.h, ix0: m.x + t, ix1: m.x + m.w - t, iy0: m.y + t, iy1: m.y + m.h - t }));
   const totalH = Math.max(S.H, ...mz.map(m => m.yt), ...(S.panels || []).map(p => p.y + p.h));
   return { t, y0: S.plinth + t, y1: S.H - t, cols, W: x, bnd, runs, mz, totalH, doorTop: S.H };
 }
@@ -88,7 +90,8 @@ export function ext(it, S) {   // вертикальный размах пред
   switch (it.type) {
     case 'shelf': return [it.y, it.y + t];
     case 'rod': return [it.y - 1.25, it.y + 1.25];
-    case 'drawers': return [it.y, it.y + it.n * it.fh];
+    case 'drawer': return [it.y, it.y + it.fh];
+    case 'idoor': return [it.y, it.y1];
     case 'shoe': return [it.y, it.y + it.n * 12];
     case 'pant': return [it.y, it.y + 10];
     case 'basket': return [it.y, it.y + it.h];
@@ -98,7 +101,14 @@ export function ext(it, S) {   // вертикальный размах пред
   }
   return [it.y, it.y];
 }
-const BLOCK = { drawers: 1, shoe: 1, pant: 1, basket: 1 };
+const BLOCK = { drawer: 1, shoe: 1, pant: 1, basket: 1 };
+// уровни для перегородки: «дно», полки (низ и верх), «верх» — чтобы выбрать, между какими полками стоит панель
+export function levels(S, col) {
+  const g = geom(S), L = [{ label: 'дно', top: g.y0, bot: g.y0 }];
+  col.items.filter(i => i.type === 'shelf').sort((a, b) => a.y - b.y).forEach((sh, k) => L.push({ label: 'полка ' + (k + 1) + ' (' + Math.round(sh.y * 10) + ' мм)', top: r1(sh.y + S.t), bot: sh.y }));
+  L.push({ label: 'верх', top: g.y1, bot: g.y1 });
+  return L;
+}
 export function freeY(S, col, h) {   // первое свободное место высотой h в отсеке
   const g = geom(S), blocks = col.items.filter(i => BLOCK[i.type]).map(i => ext(i, S)).sort((a, b) => a[0] - b[0]);
   let y = g.y0;
@@ -129,17 +139,24 @@ export function warnings(S) {
 }
 
 /* ---- двери ---- */
-export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, left, n, sliding}]
-  const g = geom(S), d = S.doors, out = [];
+export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, left, hinge:'L'|'R'|'U'|'D', n, sliding}]
+  const g = geom(S), d = S.doors, out = [], t = S.t;
   if (d.kind !== 'none' && g.runs.length) {
     const hh = S.H - S.plinth - .4, tot = g.runs.reduce((a, r) => a + (r.x1 - r.x0), 0), sliding = d.kind === 'sliding' && g.runs.length === 1; let idx = 0;
     g.runs.forEach(r => {
       const rw = r.x1 - r.x0, n = sliding ? d.n : Math.max(1, Math.round(d.n * rw / tot));
-      if (sliding) { const w = (rw + (n - 1) * 2.5) / n; for (let i = 0; i < n; i++) { out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + i * (w - 2.5), w, h: hh, y: S.plinth + .2, fill: d.fills[idx] || 'dsp', sliding: true, left: i < n / 2, gf: d.gf || 4 }); idx++; } }
-      else for (let i = 0; i < n; i++) { out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + i * (rw / n) + .15, w: rw / n - .3, h: hh, y: S.plinth + .2, fill: d.fills[idx] || 'dsp', sliding: false, left: i < n / 2, gf: d.gf || 4 }); idx++; }
+      if (sliding) { const w = (rw + (n - 1) * 2.5) / n; for (let i = 0; i < n; i++) { out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + i * (w - 2.5), w, h: hh, y: S.plinth + .2, fill: d.fills[idx] || 'dsp', sliding: true, left: i < n / 2, hinge: 'L', gf: d.gf || 4 }); idx++; } }
+      else for (let i = 0; i < n; i++) { const dr = (d.dir && d.dir[idx]) || 'auto', hinge = dr === 'auto' ? (i < n / 2 ? 'L' : 'R') : dr; out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + i * (rw / n) + .15, w: rw / n - .3, h: hh, y: S.plinth + .2, fill: d.fills[idx] || 'dsp', sliding: false, left: hinge === 'L', hinge, gf: d.gf || 4 }); idx++; }
     });
   }
-  g.mz.forEach(m => { for (let i = 0; i < m.n; i++) out.push({ zone: 'mezz', mi: m.mi, i, ri: i, n: m.n, x: m.x + i * (m.w / m.n) + .15, w: m.w / m.n - .3, h: m.h - .2, y: m.y + .1, fill: m.fill || 'dsp', sliding: false, left: i < m.n / 2, gf: d.gf || 4 }); });
+  g.mz.forEach(m => {
+    let idx = 0;
+    m.comp.forEach((c, ci) => {
+      const x0 = ci === 0 ? m.x : c.x0 - t / 2, x1 = ci === m.comp.length - 1 ? m.x + m.w : c.x1 + t / 2, cw = x1 - x0;
+      const n = m.cd && m.cd[ci] != null ? m.cd[ci] : Math.max(1, Math.round(cw / 60)), mode = (m.dir && m.dir[ci]) || 'swing';
+      for (let i = 0; i < n; i++) { const hinge = mode === 'swing' ? (i < n / 2 ? 'L' : 'R') : mode; out.push({ zone: 'mezz', mi: m.mi, ci, i: idx++, ri: i, n, x: x0 + i * (cw / n) + .15, w: cw / n - .3, h: m.h - .2, y: m.y + .1, fill: m.fill || 'dsp', sliding: false, left: hinge === 'L', hinge, gf: d.gf || 4 }); }
+    });
+  });
   return out;
 }
 
@@ -151,7 +168,7 @@ export function buildParts(S) {
   const add = (grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind) => parts.push({ grp, name, qty, L: mm(Math.max(L, Wd)), W: mm(Math.min(L, Wd)), t: mm(tt), mat, kind: kind || 'dsp', edgeM: Math.round(edgeEach * qty * 100) / 100, note: note || '' });
   const addHw = (grp, name, qty, unit, price, note) => { qty = Math.round(qty * 100) / 100; if (qty > 0) hw.push({ grp, name, qty, unit: unit || 'шт.', price: Math.round(price || 0), note: note || '' }); };
   const bd = D - .3, ph = S.plinth, hs = H - ph;
-  let joints = 8, feet = 0;
+  let joints = 8, feet = 0, hinges0 = 0, handles0 = 0;
   g.runs.forEach((r, ri) => {
     const rw = r.x1 - r.x0, k = r.b - r.a + 1, lbl = g.runs.length > 1 ? ' (секция ' + (ri + 1) + ')' : '';
     add('Корпус', 'Боковина' + lbl, 2, hs, bd, t, body, hs / 100, 'кромка по переднему торцу');
@@ -167,9 +184,10 @@ export function buildParts(S) {
     add(gr, 'Боковина' + lbl, 2, m.h, bd, t, body, m.h / 100);
     add(gr, 'Крышка' + lbl, 1, m.w - 2 * t, bd, t, body, (m.w - 2 * t) / 100);
     add(gr, 'Дно' + lbl, 1, m.w - 2 * t, bd, t, body, (m.w - 2 * t) / 100);
+    if (m.dv.length) add(gr, 'Перегородка' + lbl, m.dv.length, m.h - 2 * t, bd, t, body, (m.h - 2 * t) / 100, 'вертикальная, в антресоли');
     add(gr, 'Задняя стенка' + lbl, 1, m.w - .4, m.h - .4, .3, 'ХДФ 3 мм', 0, '', 'hdf');
-    for (let k = 0; k < (m.shelves | 0); k++) add(gr, 'Полка' + lbl, 1, m.w - 2 * t - .2, D - 2.5, t, body, (m.w - 2 * t - .2) / 100, 'на 4 полкодержателя');
-    joints += 16 + (m.shelves | 0) * 4;
+    m.comp.forEach((c, ci) => { for (let k = 0; k < (m.shelves | 0); k++) add(gr, 'Полка' + lbl + (m.comp.length > 1 ? ' отд. ' + (ci + 1) : ''), 1, c.x1 - c.x0 - .2, D - 2.5, t, body, (c.x1 - c.x0 - .2) / 100, 'на 4 полкодержателя'); });
+    joints += 16 + (m.shelves | 0) * 4 + m.dv.length * 8;
   });
   (S.panels || []).forEach((p, i) => {
     const th = p.kind === 'dsp' ? t : .6, mat = p.kind === 'dsp' ? body : FILLS[p.kind] + ', 6 мм';
@@ -180,20 +198,24 @@ export function buildParts(S) {
   addHw('Крепёж', 'Конфирмат 7×50', joints, 'шт.', 600);
   addHw('Крепёж', 'Опора-ножка цоколя', feet, 'шт.', 6000);
   addHw('Крепёж', 'Уголок крепления к стене', 4 * Math.max(1, g.runs.length) + 2 * g.mz.length, 'шт.', 3000);
-  let rods = 0, hooks = 0, ledM = 0, basket = 0, pant = 0, pins = g.mz.reduce((a, m) => a + (m.shelves | 0) * 4, 0); const drw = {};
+  let rods = 0, hooks = 0, ledM = 0, basket = 0, pant = 0, pins = g.mz.reduce((a, m) => a + (m.shelves | 0) * 4 * m.comp.length, 0), lifts = 0, lowers = 0; const drw = {};
   S.cols.forEach((c, ci) => {
     if (c.gap) return;
     const lbl = ' (отсек ' + (ci + 1) + ')';
     c.items.forEach(it => {
       if (it.type === 'shelf') { const d = it.d || D - 2.5; add('Наполнение', 'Полка' + lbl, 1, c.w - .2, d, t, body, (c.w - .2) / 100, 'на 4 полкодержателя'); pins += 4; }
       else if (it.type === 'rod') { rods++; add('Наполнение', 'Штанга ⌀25' + lbl, 1, c.w - .6, 2.5, 2.5, 'Хром, труба 25×15', 0, 'длина ' + mm(c.w - .6) + ' мм', 'metal'); }
-      else if (it.type === 'drawers') {
+      else if (it.type === 'drawer') {
         const bw = c.w - .4;
-        for (let k = 0; k < it.n; k++) {
-          add('Ящики', 'Фасад ящика' + lbl, 1, bw, it.fh - .3, t, body, (2 * (bw + it.fh)) / 100);
-          if (it.sys === 'tier') { add('Ящики', 'Боковина ящика' + lbl, 2, D - 8, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Задняя ящика' + lbl, 1, bw - 5.4, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Дно ящика' + lbl, 1, bw - 3.6, D - 9, .3, 'ХДФ 3 мм', 0, '', 'hdf'); }
-        }
-        drw[it.sys] = (drw[it.sys] || 0) + it.n;
+        add('Ящики', 'Фасад ящика' + lbl, 1, bw, it.fh - .3, t, body, (2 * (bw + it.fh)) / 100);
+        if (it.sys === 'tier') { add('Ящики', 'Боковина ящика' + lbl, 2, D - 8, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Задняя ящика' + lbl, 1, bw - 5.4, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Дно ящика' + lbl, 1, bw - 3.6, D - 9, .3, 'ХДФ 3 мм', 0, '', 'hdf'); }
+        drw[it.sys] = (drw[it.sys] || 0) + 1;
+      }
+      else if (it.type === 'idoor') {
+        const iw = it.w || (c.w - it.x), ih = it.y1 - it.y;
+        add('Двери', 'Дверца в отсеке' + lbl, 1, ih - .4, iw - .4, t, body, (2 * (ih + iw)) / 100, 'открывание: ' + ({ L: 'влево', R: 'вправо', U: 'вверх', D: 'вниз' }[it.dir] || 'влево'));
+        if (it.dir === 'U') lifts += 2; else if (it.dir === 'D') lowers += 2; else hinges0 += ih <= 90 ? 2 : ih <= 160 ? 3 : 4;
+        handles0++;
       }
       else if (it.type === 'shoe') { for (let k = 0; k < it.n; k++) add('Наполнение', 'Обувная полка (наклонная)' + lbl, 1, c.w - .2, D - 6, t, body, (c.w - .2) / 100, 'угол ≈ 12°'); pins += it.n * 4; }
       else if (it.type === 'pant') pant++;
@@ -219,10 +241,12 @@ export function buildParts(S) {
     if (d.fill === 'glass') { const gf = d.gf || 4; add('Двери', 'Стекло' + lbl + nm, 1, d.h - 2 * gf, d.w - 2 * gf, .4, 'Стекло 4 мм, полировка кромки', (2 * (d.h + d.w - 4 * gf)) / 100, 'размер стекла ' + mm(d.w - 2 * gf) + '×' + mm(d.h - 2 * gf), 'glass'); add('Двери', 'Рамка алюминиевая' + lbl + nm, 1, d.h, d.w, gf, 'Алюминий, профиль ' + mm(gf) + ' мм', (2 * (d.h + d.w)) / 100, 'периметр', 'frame'); }
     else if (d.fill === 'dsp') add('Двери', 'Дверь' + lbl + nm, 1, d.h, d.w, t, mat, (2 * (d.h + d.w)) / 100, d.sliding ? 'в раме системы' : '');
     else add('Двери', 'Вставка / дверь' + lbl + nm, 1, d.h, d.w, .4, mat, (2 * (d.h + d.w)) / 100, 'полировка кромки', d.fill);
-    if (!d.sliding) { hinges += d.h <= 90 ? 2 : d.h <= 160 ? 3 : d.h <= 220 ? 4 : 5; if (S.doors.handles !== false) handles++; } else slidingN = d.n;
+    if (!d.sliding) { if (d.hinge === 'U') lifts += 2; else if (d.hinge === 'D') lowers += 2; else hinges += d.h <= 90 ? 2 : d.h <= 160 ? 3 : d.h <= 220 ? 4 : 5; if (S.doors.handles !== false) handles++; } else slidingN = d.n;
   });
-  addHw('Двери', 'Петля с доводчиком', hinges, 'шт.', T.hinge);
-  addHw('Двери', 'Ручка', handles, 'шт.', T.handle);
+  addHw('Двери', 'Петля с доводчиком', hinges + hinges0, 'шт.', T.hinge);
+  addHw('Двери', 'Подъёмник (газлифт) для дверей вверх', lifts, 'шт.', 85000);
+  addHw('Двери', 'Откидной механизм (ограничители) для дверей вниз', lowers, 'шт.', 45000);
+  addHw('Двери', 'Ручка', handles + handles0, 'шт.', T.handle);
   if (slidingN) {
     let kit = T.doorKit * Math.pow(slidingN / 3, .9); const rw = g.runs[0].x1 - g.runs[0].x0;
     if (rw > 270) kit += (rw / 100 - 2.7) * 2 * T.rail;
@@ -265,17 +289,19 @@ export function sanitize(S) {
   const D = defState(), n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? clamp(v, a, b) : d; };
   const o = { v: 2, W: n(S.W, 60, 800, 240), H: n(S.H, 100, 320, 200), D: n(S.D, 25, 90, 60), t: S.t === 1.8 ? 1.8 : 1.6, plinth: n(S.plinth, 0, 20, 8), tier: n(S.tier, 0, 2, 1) | 0, color: n(S.color, 0, 99, 0) | 0, custom: /^#[0-9a-f]{6}$/i.test(S.custom || '') ? S.custom : null,
     mezzes: [],
-    doors: { kind: ['none', 'swing', 'sliding'].includes(S.doors && S.doors.kind) ? S.doors.kind : 'none', n: n(S.doors && S.doors.n, 1, 8, 3) | 0, fills: (S.doors && Array.isArray(S.doors.fills) ? S.doors.fills : D.doors.fills).map(f => FILLS[f] ? f : 'dsp').slice(0, 8), laco: n(S.doors && S.doors.laco, 0, 5, 0) | 0, handles: !(S.doors && S.doors.handles === false), gf: n(S.doors && S.doors.gf, 2, 30, 4) },
+    doors: { kind: ['none', 'swing', 'sliding'].includes(S.doors && S.doors.kind) ? S.doors.kind : 'none', n: n(S.doors && S.doors.n, 1, 8, 3) | 0, fills: (S.doors && Array.isArray(S.doors.fills) ? S.doors.fills : D.doors.fills).map(f => FILLS[f] ? f : 'dsp').slice(0, 8), laco: n(S.doors && S.doors.laco, 0, 5, 0) | 0, handles: !(S.doors && S.doors.handles === false), gf: n(S.doors && S.doors.gf, 2, 30, 4), dir: (S.doors && Array.isArray(S.doors.dir) ? S.doors.dir : []).slice(0, 8).map(v => ['auto', 'L', 'R', 'U', 'D'].includes(v) ? v : 'auto') },
     led: !!S.led, name: String(S.name || 'Мой шкаф').slice(0, 60), cols: [] };
   while (o.doors.fills.length < 8) o.doors.fills.push('dsp');
   S.cols.slice(0, 14).forEach(c => {
     const col = { id: uid(), w: n(c && c.w, 15, 250, 60), items: [] };
     if (c && c.gap) col.gap = true;
     (!col.gap && c && Array.isArray(c.items) ? c.items : []).slice(0, 40).forEach(it => {
+      if (it && it.type === 'drawers') { const cnt = n(it.n, 1, 8, 3) | 0, fh0 = n(it.fh, 8, 40, 18); for (let k = 0; k < cnt; k++) { const b0 = mkItem('drawer', n(it.y, 0, 330, 10) + k * fh0); b0.fh = fh0; b0.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; col.items.push(b0); } return; }
       if (!it || !ITEM_TYPES[it.type]) return;
       const b = mkItem(it.type, n(it.y, 0, 330, 50));
       if (it.type === 'shelf') b.d = it.d ? n(it.d, 15, 85, 57.5) : null;
-      if (it.type === 'drawers') { b.n = n(it.n, 1, 8, 3) | 0; b.fh = n(it.fh, 8, 40, 18); b.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; }
+      if (it.type === 'drawer') { b.fh = n(it.fh, 8, 40, 18); b.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; }
+      if (it.type === 'idoor') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 250, 0); b.w = it.w ? n(it.w, 8, 250, 40) : null; b.dir = ['L', 'R', 'U', 'D'].includes(it.dir) ? it.dir : 'L'; }
       if (it.type === 'shoe') b.n = n(it.n, 1, 6, 3) | 0;
       if (it.type === 'basket') b.h = n(it.h, 10, 40, 18);
       if (it.type === 'vpanel') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 200, 0); }
@@ -286,7 +312,7 @@ export function sanitize(S) {
   if (!o.cols.some(c => !c.gap)) o.cols[0].gap = false;
   o.panels = (Array.isArray(S.panels) ? S.panels : []).slice(0, 8).map(p => ({ id: uid(), x: r1(n(p && p.x, -300, 1200, 0)), y: r1(n(p && p.y, 0, 340, 20)), w: r1(n(p && p.w, 10, 400, 60)), h: r1(n(p && p.h, 10, 340, 180)), kind: ['mirror', 'film', 'sand', 'glass', 'laco', 'dsp'].includes(p && p.kind) ? p.kind : 'mirror', mount: p && p.mount === 'front' ? 'front' : 'wall', frame: !!(p && p.frame), fw: r1(n(p && p.fw, 1, 15, 3)) }));
   recalcW(o);
-  if (Array.isArray(S.mezzes)) S.mezzes.slice(0, 8).forEach(m => { if (m) o.mezzes.push({ id: uid(), x: r1(n(m.x, -100, 900, 0)), w: r1(n(m.w, 20, 900, 60)), h: r1(n(m.h, 15, 120, 40)), y: r1(n(m.y, 0, 340, o.H)), n: n(m.n, 0, 10, 2) | 0, shelves: n(m.shelves, 0, 3, 0) | 0, fill: FILLS[m.fill] ? m.fill : 'dsp' }); });
+  if (Array.isArray(S.mezzes)) S.mezzes.slice(0, 8).forEach(m => { if (m) o.mezzes.push({ id: uid(), x: r1(n(m.x, -100, 900, 0)), w: r1(n(m.w, 20, 900, 60)), h: r1(n(m.h, 15, 120, 40)), y: r1(n(m.y, 0, 340, o.H)), n: n(m.n, 0, 10, 2) | 0, shelves: n(m.shelves, 0, 3, 0) | 0, fill: FILLS[m.fill] ? m.fill : 'dsp', div: (Array.isArray(m.div) ? m.div : []).slice(0, 7).map(v => r1(n(v, 5, 800, 30))), cd: (Array.isArray(m.cd) ? m.cd : []).slice(0, 8).map(v => v == null ? null : n(v, 0, 5, 1) | 0), dir: (Array.isArray(m.dir) ? m.dir : []).slice(0, 8).map(v => ['swing', 'U', 'D'].includes(v) ? v : 'swing') }); });
   else if (S.mezz && S.mezz.on) {   // старый формат: одна антресоль сверху на всю ширину
     const mh = n(S.mezz.h, 15, 90, 40); o.H = r1(Math.max(100, o.H - mh - o.t)); o.mezzes.push({ id: uid(), x: 0, w: o.W, h: r1(mh + o.t), y: o.H, n: n(S.mezz.n, 0, 10, 3) | 0, shelves: n(S.mezz.shelves, 0, 3, 0) | 0 });
   }

@@ -47,6 +47,7 @@ function drawFront(S, g, x0, y0, sc, o) {
   g.mz.forEach(m => {
     out.push(rect(X(m.x0), Y(m.yt), m.w * k10, m.h * k10, 'o'));
     out.push(rect(X(m.x0), Y(m.yt), t * k10, m.h * k10, 'o', 'url(#h1)'), rect(X(m.x1 - t), Y(m.yt), t * k10, m.h * k10, 'o', 'url(#h1)'), rect(X(m.x0 + t), Y(m.yt), (m.w - 2 * t) * k10, t * k10, 'o', 'url(#h1)'), rect(X(m.x0 + t), Y(m.yb + t), (m.w - 2 * t) * k10, t * k10, 'o', 'url(#h1)'));
+    m.dv.forEach(off => out.push(rect(X(m.ix0 + off), Y(m.iy1), t * k10, (m.iy1 - m.iy0) * k10, 'o', 'url(#h1)')));
     for (let k = 1; k <= (m.shelves | 0); k++) out.push(rect(X(m.ix0), Y(m.iy0 + (m.iy1 - m.iy0) * k / ((m.shelves | 0) + 1) + t), (m.w - 2 * t) * k10, t * k10, 'o', 'url(#h1)'));
     out.push(text(X((m.x0 + m.x1) / 2), Y((m.yb + m.yt) / 2) + 3, 'АНТРЕСОЛЬ ' + (m.mi + 1), 7.5));
   });
@@ -56,13 +57,14 @@ function drawFront(S, g, x0, y0, sc, o) {
       const [a, b] = ext(it, S), xa = c.xa, xb = c.xb, w = c.w;
       if (it.type === 'shelf') out.push(rect(X(xa), Y(it.y + t), w * k10, t * k10, 'o', 'url(#h1)'));
       else if (it.type === 'rod') { out.push(line(X(xa + .3), Y(it.y), X(xb - .3), Y(it.y), 'o'), rect(X(xa), Y(it.y + 1.7), 2.8 * k10, 3.4 * k10, 't'), rect(X(xb - 2.8), Y(it.y + 1.7), 2.8 * k10, 3.4 * k10, 't')); }
-      else if (it.type === 'drawers') for (let k = 0; k < it.n; k++) { const yy = it.y + k * it.fh; out.push(rect(X(xa + .2), Y(yy + it.fh - .15), (w - .4) * k10, (it.fh - .3) * k10, 'o', '#fff'), rect(X(xa + w / 2 - 7), Y(yy + it.fh - 4), 140 * sc, 8 * sc, 't', '#ddd')); }
+      else if (it.type === 'drawer') for (let k = 0; k < 1; k++) { const yy = it.y + k * it.fh; out.push(rect(X(xa + .2), Y(yy + it.fh - .15), (w - .4) * k10, (it.fh - .3) * k10, 'o', '#fff'), rect(X(xa + w / 2 - 7), Y(yy + it.fh - 4), 140 * sc, 8 * sc, 't', '#ddd')); }
       else if (it.type === 'shoe') for (let k = 0; k < it.n; k++) out.push(line(X(xa), Y(it.y + k * 12 + 3), X(xb), Y(it.y + k * 12 + 3), 'o'));
       else if (it.type === 'pant') out.push(rect(X(xa + 1), Y(it.y + 10), (w - 2) * k10, 100 * sc, 'h'), text(X(xa + w / 2), Y(it.y + 5) + 3, 'брючница', 6.5));
       else if (it.type === 'basket') out.push(rect(X(xa + 1.5), Y(it.y + it.h), (w - 3) * k10, it.h * k10, 'h'), text(X(xa + w / 2), Y(it.y + it.h / 2) + 3, 'корзина', 6.5));
       else if (it.type === 'hook') { out.push(rect(X(xa + .2), Y(it.y + 4), (w - .4) * k10, 40 * sc, 'o', '#fff')); for (let k = 0; k < Math.max(2, Math.floor(w / 8)); k++) out.push(circ(X(xa + (k + .5) * w / Math.max(2, Math.floor(w / 8))), Y(it.y + 2), 2.2 * sc * 3, 't')); }
       else if (it.type === 'led') out.push(line(X(xa + .5), Y(it.y), X(xb - .5), Y(it.y), 'c'));
       else if (it.type === 'vpanel') out.push(rect(X(xa + it.x), Y(it.y1), t * k10, (it.y1 - it.y) * k10, 'o', 'url(#h1)'));
+      else if (it.type === 'idoor') { const iw = Math.min(it.w || (w - it.x), w - it.x); out.push(rect(X(xa + it.x), Y(it.y1), iw * k10, (it.y1 - it.y) * k10, 'o', '#fff'), text(X(xa + it.x + iw / 2), Y((it.y + it.y1) / 2), 'дверца ' + ({ L: '◀', R: '▶', U: '▲', D: '▼' }[it.dir] || '◀'), 7)); }
       if (o.marks && it.type !== 'led') out.push(text(X(xa) + 4, Y(a) - 2, 'y' + mm(a), 6, 'start', 'fill="#b3261e"'));
     });
   });
@@ -84,7 +86,7 @@ function drawSection(S, g, ci, x0, y0, sc) {
   col.items.forEach(it => {
     if (it.type === 'shelf') out.push(rect(X(.3), Y(it.y + t), (it.d || D - 2.5) * k10, t * k10, 'o', 'url(#h1)'));
     else if (it.type === 'rod') out.push(circ(X(D / 2), Y(it.y), 12.5 * sc, 'o'), rect(X(D / 2 - 12), Y(it.y - 1.7), 24 * sc, 34 * sc, 't'));
-    else if (it.type === 'drawers') for (let k = 0; k < it.n; k++) { const yy = it.y + k * it.fh; out.push(rect(X(D - t), Y(yy + it.fh - .15), t * k10, (it.fh - .3) * k10, 'o', 'url(#h2)'), rect(X(6), Y(yy + it.fh - 3), (D - 12) * k10, (it.fh - 4) * k10, 'h')); }
+    else if (it.type === 'drawer') for (let k = 0; k < 1; k++) { const yy = it.y + k * it.fh; out.push(rect(X(D - t), Y(yy + it.fh - .15), t * k10, (it.fh - .3) * k10, 'o', 'url(#h2)'), rect(X(6), Y(yy + it.fh - 3), (D - 12) * k10, (it.fh - 4) * k10, 'h')); }
     else if (it.type === 'shoe') for (let k = 0; k < it.n; k++) { const yb = it.y + k * 12; out.push(line(X(.3), Y(yb + 9), X(D - 6), Y(yb + 1), 'o'), line(X(D - 6), Y(yb + 1), X(D - 6), Y(yb + 3), 'o')); }
     else if (it.type === 'basket') out.push(rect(X(8), Y(it.y + it.h), (D - 16) * k10, it.h * k10, 'h'));
     else if (it.type === 'pant') out.push(rect(X(6), Y(it.y + 10), (D - 12) * k10, 100 * sc, 'h'));
@@ -136,7 +138,8 @@ function sheetDoors(S, bp, no, total) {
     o += rect(X(d.x), Y(d.y + d.h), d.w * k10, d.h * k10, 'o', d.fill === 'dsp' ? '#fff' : 'url(#h2)');
     o += text(X(d.x + d.w / 2), Y(d.y + d.h / 2), (d.zone === 'mezz' ? 'А' + (d.mi + 1) + '.' : 'Д') + (d.i + 1) + ' · ' + FILLS[d.fill], 7.5);
     o += text(X(d.x + d.w / 2), Y(d.y + d.h / 2) + 14, mm(d.w) + '×' + mm(d.h), 7.5, 'middle', 'fill="#0b6e8f"');
-    if (!d.sliding) { const left = d.left, n = d.h <= 90 ? 2 : d.h <= 160 ? 3 : d.h <= 220 ? 4 : 5; for (let k = 0; k < n; k++) { const yy = d.y + 10 + k * (d.h - 20) / (n - 1); o += circ(X(left ? d.x + 2 : d.x + d.w - 2), Y(yy), 3.5, 'o'); } o += line(X(left ? d.x + d.w : d.x), Y(d.y), X(left ? d.x : d.x + d.w), Y(d.y + d.h / 2), 'h') + line(X(left ? d.x + d.w : d.x), Y(d.y + d.h), X(left ? d.x : d.x + d.w), Y(d.y + d.h / 2), 'h'); }
+    if (!d.sliding && (d.hinge === 'U' || d.hinge === 'D')) { const up = d.hinge === 'U', yy = up ? d.y + d.h : d.y; o += line(X(d.x), Y(d.y), X(d.x + d.w / 2), Y(yy), 'h') + line(X(d.x + d.w), Y(d.y), X(d.x + d.w / 2), Y(yy), 'h') + line(X(d.x), Y(d.y + d.h), X(d.x + d.w / 2), Y(yy), 'h') + line(X(d.x + d.w), Y(d.y + d.h), X(d.x + d.w / 2), Y(yy), 'h') + text(X(d.x + d.w / 2), Y(d.y + d.h / 2) + 28, up ? '▲ вверх (газлифт)' : '▼ вниз', 7); }
+    else if (!d.sliding) { const left = d.left, n = d.h <= 90 ? 2 : d.h <= 160 ? 3 : d.h <= 220 ? 4 : 5; for (let k = 0; k < n; k++) { const yy = d.y + 10 + k * (d.h - 20) / (n - 1); o += circ(X(left ? d.x + 2 : d.x + d.w - 2), Y(yy), 3.5, 'o'); } o += line(X(left ? d.x + d.w : d.x), Y(d.y), X(left ? d.x : d.x + d.w), Y(d.y + d.h / 2), 'h') + line(X(left ? d.x + d.w : d.x), Y(d.y + d.h), X(left ? d.x : d.x + d.w), Y(d.y + d.h / 2), 'h'); }
   });
   if (S.doors.kind === 'sliding' && g.runs.length === 1) o += line(X(g.runs[0].x0), Y(S.plinth + 1), X(g.runs[0].x1), Y(S.plinth + 1), 'c') + line(X(g.runs[0].x0), Y(S.H - 1), X(g.runs[0].x1), Y(S.H - 1), 'c') + text(X(g.W / 2), Y(S.plinth) + 14, 'нижняя направляющая системы купе', 7);
   o += dimH(X(0), X(g.W), Y(g.totalH), Y(g.totalH) - 28, mm(g.W)) + dimV(Y(g.totalH), Y(0), X(g.W), X(g.W) + 34, mm(g.totalH));
@@ -165,13 +168,14 @@ function sheetColumn(S, bp, ci, no, total) {
     const [a, b] = ext(it, S), w = c.w, xa = c.xa, xb = c.xb;
     if (it.type === 'shelf') { o += rect(X(xa), Y(it.y + T), w * 10 * sc, T * 10 * sc, 'o', 'url(#h1)'); lines.push([it.y + T / 2, `Полка ${mm(T)}×${mm(w - .2)}×${mm(it.d || S.D - 2.5)}`]); }
     else if (it.type === 'rod') { o += line(X(xa + .3), Y(it.y), X(xb - .3), Y(it.y), 'o') + rect(X(xa), Y(it.y + 1.7), 28 * sc, 34 * sc, 't') + rect(X(xb - 2.8), Y(it.y + 1.7), 28 * sc, 34 * sc, 't'); lines.push([it.y, `Штанга ⌀25, L=${mm(w - .6)}`]); }
-    else if (it.type === 'drawers') { for (let k = 0; k < it.n; k++) { const yy = it.y + k * it.fh; o += rect(X(xa + .2), Y(yy + it.fh - .15), (w - .4) * 10 * sc, (it.fh - .3) * 10 * sc, 'o', '#fff') + rect(X(xa + w / 2 - 7), Y(yy + it.fh - 4), 140 * sc, 8 * sc, 't', '#ddd'); } lines.push([(a + b) / 2, `Ящики ${it.n} шт. · фасад ${mm(w - .4)}×${mm(it.fh - .3)}`]); }
+    else if (it.type === 'drawer') { for (let k = 0; k < 1; k++) { const yy = it.y + k * it.fh; o += rect(X(xa + .2), Y(yy + it.fh - .15), (w - .4) * 10 * sc, (it.fh - .3) * 10 * sc, 'o', '#fff') + rect(X(xa + w / 2 - 7), Y(yy + it.fh - 4), 140 * sc, 8 * sc, 't', '#ddd'); } lines.push([(a + b) / 2, `Ящик · фасад ${mm(w - .4)}×${mm(it.fh - .3)}`]); }
     else if (it.type === 'shoe') { for (let k = 0; k < it.n; k++) o += line(X(xa), Y(it.y + k * 12 + 3), X(xb), Y(it.y + k * 12 + 3), 'o'); lines.push([(a + b) / 2, `Обувные полки ${it.n} шт.`]); }
     else if (it.type === 'pant') { o += rect(X(xa + 1), Y(it.y + 10), (w - 2) * 10 * sc, 100 * sc, 'h'); lines.push([it.y + 5, 'Брючница выдвижная']); }
     else if (it.type === 'basket') { o += rect(X(xa + 1.5), Y(it.y + it.h), (w - 3) * 10 * sc, it.h * 10 * sc, 'h'); lines.push([it.y + it.h / 2, `Корзина h=${mm(it.h)}`]); }
     else if (it.type === 'hook') { o += rect(X(xa + .2), Y(it.y + 4), (w - .4) * 10 * sc, 40 * sc, 'o', '#fff'); lines.push([it.y + 2, 'Планка с крючками']); }
     else if (it.type === 'led') { o += line(X(xa + .5), Y(it.y), X(xb - .5), Y(it.y), 'c'); lines.push([it.y, 'LED-подсветка']); }
     else if (it.type === 'vpanel') { o += rect(X(xa + it.x), Y(it.y1), T * 10 * sc, (it.y1 - it.y) * 10 * sc, 'o', 'url(#h1)'); lines.push([(it.y + it.y1) / 2, `Вертикальная панель ${mm(it.y1 - it.y)}×${mm(S.D - 2.5)}`]); }
+    else if (it.type === 'idoor') { const iw = Math.min(it.w || (w - it.x), w - it.x); o += rect(X(xa + it.x), Y(it.y1), iw * 10 * sc, (it.y1 - it.y) * 10 * sc, 'o', '#fff'); lines.push([(it.y + it.y1) / 2, `Дверца ${mm(iw - .4)}×${mm(it.y1 - it.y - .4)} · открывание ${({ L: 'влево', R: 'вправо', U: 'вверх', D: 'вниз' })[it.dir] || 'влево'}`]); }
   });
   // выноски справа
   const xr = X(c.xb + T) + 20; lines.sort((p, q) => q[0] - p[0]);
@@ -191,6 +195,7 @@ function sheetColumn(S, bp, ci, no, total) {
 function sheetMezz(S, bp, mi, no, total) {
   const g = bp.g, m = g.mz[mi], t = S.t, sc = Math.min(560 / (m.w * 10), 420 / (m.h * 10), .5), x0 = 150, y0 = 130, k10 = 10 * sc, X = v => x0 + (v - m.x0) * k10, Y = v => y0 + (m.yt - v) * k10;
   let o = rect(X(m.x0), Y(m.yt), m.w * k10, m.h * k10, 'o') + rect(X(m.x0), Y(m.yt), t * k10, m.h * k10, 'o', 'url(#h1)') + rect(X(m.x1 - t), Y(m.yt), t * k10, m.h * k10, 'o', 'url(#h1)') + rect(X(m.x0 + t), Y(m.yt), (m.w - 2 * t) * k10, t * k10, 'o', 'url(#h1)') + rect(X(m.x0 + t), Y(m.yb + t), (m.w - 2 * t) * k10, t * k10, 'o', 'url(#h1)');
+  m.dv.forEach(off => { o += rect(X(m.ix0 + off), Y(m.iy1), t * k10, (m.iy1 - m.iy0) * k10, 'o', 'url(#h1)'); });
   for (let k = 1; k <= (m.shelves | 0); k++) o += rect(X(m.ix0), Y(m.iy0 + (m.iy1 - m.iy0) * k / ((m.shelves | 0) + 1) + t), (m.w - 2 * t) * k10, t * k10, 'o', 'url(#h1)');
   const dl = bp.doors.filter(d => d.zone === 'mezz' && d.mi === mi);
   dl.forEach(d => { o += rect(X(d.x), Y(d.y + d.h), d.w * k10, d.h * k10, 'h') + text(X(d.x + d.w / 2), Y(d.y + d.h / 2), 'А' + (mi + 1) + '.' + (d.i + 1) + ' ' + mm(d.w) + '×' + mm(d.h), 7.5); });
@@ -223,7 +228,7 @@ function sheetDetails(S, bp, no, total) {
   // 3. ящик
   const dx0 = 780, dy0 = 90, dw = 300, dh0 = 120;
   o += text(dx0 + 100, dy0 - 40, '3 · Ящик (ЛДСП, шариковые направляющие)', 9, 'middle', 'font-weight="700"');
-  const dr = S.cols.flatMap(cl => cl.items).find(i => i.type === 'drawers'), fh = dr ? dr.fh : 18;
+  const dr = S.cols.flatMap(cl => cl.items).find(i => i.type === 'drawer'), fh = dr ? dr.fh : 18;
   o += rect(dx0, dy0, dw, dh0 * 0.9, 'o', '#fff') + rect(dx0 + 20, dy0 + 10, dw - 40, dh0 * 0.7, 'h') + dimH(dx0, dx0 + dw, dy0, dy0 - 12, mm(c.w - .4)) + dimV(dy0, dy0 + dh0 * .9, dx0 + dw, dx0 + dw + 20, mm(fh - .3));
   o += rect(dx0, dy0 + 160, dw * .8, 90, 'o', '#fff') + dimH(dx0, dx0 + dw * .8, dy0 + 250, dy0 + 272, mm(D - 8));
   o += text(dx0 + 4, dy0 + 150, 'боковина: ' + mm(D - 8) + '×' + mm(Math.max(8, fh - 6)), 7, 'start') + text(dx0 + 4, dy0 + 292, 'задняя: ' + mm(c.w - .4 - 5.4) + '×' + mm(Math.max(8, fh - 6)) + ' · дно ХДФ ' + mm(c.w - .4 - 3.6) + '×' + mm(D - 9), 7, 'start');

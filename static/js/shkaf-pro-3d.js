@@ -86,7 +86,8 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       box(t, m.h, mbd, M.body, m.x0, m.yb, z0, meta); box(t, m.h, mbd, M.body, m.x1 - t, m.yb, z0, meta);
       box(m.w - 2 * t, t, mbd, M.body, m.x0 + t, m.yt - t, z0, meta); box(m.w - 2 * t, t, mbd, M.body, m.x0 + t, m.yb, z0, meta);
       box(m.w, m.h, .3, M.back, m.x0, m.yb, 0, meta);
-      for (let k = 1; k <= (m.shelves | 0); k++) box(m.w - 2 * t - .2, t, D - 2.5, M.body, m.x0 + t + .1, m.iy0 + (m.iy1 - m.iy0) * k / ((m.shelves | 0) + 1), z0, meta);
+      m.dv.forEach(off => box(t, m.h - 2 * t, mbd, M.body, m.ix0 + off, m.iy0, z0, meta));
+      m.comp.forEach(c => { for (let k = 1; k <= (m.shelves | 0); k++) box(c.x1 - c.x0 - .2, t, D - 2.5, M.body, c.x0 + .1, m.iy0 + (m.iy1 - m.iy0) * k / ((m.shelves | 0) + 1), z0, meta); });
     });
     // наполнение
     S.cols.forEach((col, ci) => {
@@ -98,14 +99,21 @@ export function createPro3D(container, hooks = {}, opts = {}) {
           cyl(1.25, c.w - .6, M.chrome, c.xa + c.w / 2, it.y, D / 2, 'x', meta);
           [c.xa + .1, c.xb - 2.9].forEach(x => box(2.8, 3.4, 2.4, M.steel, x, it.y - 1.7, D / 2 - 1.2, meta));
         }
-        else if (it.type === 'drawers') {
-          for (let k = 0; k < it.n; k++) {
-            const y = it.y + k * it.fh, fh = it.fh;
-            box(c.w - .4, fh - .3, t, M.body, c.xa + .2, y + .15, D - t, meta);
-            box(1.2, fh - 4, D - 12, M.steel, c.xa + 1.2, y + 1.5, 6, meta); box(1.2, fh - 4, D - 12, M.steel, c.xb - 2.4, y + 1.5, 6, meta);
-            box(c.w - 4.8, fh - 4, 1.2, M.inner, c.xa + 2.4, y + 1.5, 6, meta); box(c.w - 4.8, 1, D - 12, M.inner, c.xa + 2.4, y + 1.2, 6, meta);
-            if (S.doors.handles !== false) box(Math.min(14, c.w * .5), .8, 1.4, M.chrome, c.xa + c.w / 2 - Math.min(14, c.w * .5) / 2, y + fh - 4, D, meta);
-          }
+        else if (it.type === 'drawer') {
+          const y = it.y, fh = it.fh, key = 'w' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, grp = new THREE.Group(); root.add(grp);
+          box(c.w - .4, fh - .3, t, M.body, c.xa + .2, y + .15, D - t, dm, grp);
+          box(1.2, fh - 4, D - 12, M.steel, c.xa + 1.2, y + 1.5, 6, dm, grp); box(1.2, fh - 4, D - 12, M.steel, c.xb - 2.4, y + 1.5, 6, dm, grp);
+          box(c.w - 4.8, fh - 4, 1.2, M.inner, c.xa + 2.4, y + 1.5, 6, dm, grp); box(c.w - 4.8, 1, D - 12, M.inner, c.xa + 2.4, y + 1.2, 6, dm, grp);
+          if (S.doors.handles !== false) box(Math.min(14, c.w * .5), .8, 1.4, M.chrome, c.xa + c.w / 2 - Math.min(14, c.w * .5) / 2, y + fh - 4, D, dm, grp);
+          doorsAnim.push({ key, apply: f => { grp.position.z = f * (D - 14) * .8; } });
+        }
+        else if (it.type === 'idoor') {
+          const key = 'i' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, iw = Math.min(it.w || (c.w - it.x), c.w - it.x), ih = it.y1 - it.y, x0 = c.xa + it.x, z = D - 1.2;
+          const pv = new THREE.Group(); root.add(pv);
+          if (it.dir === 'R') { pv.position.set(x0 + iw, it.y, z); box(iw - .2, ih - .2, 1.6, M.body, -iw + .1, .1, 0, dm, pv); box(.9, Math.min(20, ih * .3), 1.6, M.chrome, -iw + 3, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = 105 * DEG * f; } }); }
+          else if (it.dir === 'U') { pv.position.set(x0, it.y + ih, z); box(iw - .2, ih - .2, 1.6, M.body, .1, -ih + .1, 0, dm, pv); box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, -ih + 3, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = -100 * DEG * f; } }); }
+          else if (it.dir === 'D') { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, M.body, .1, .1, 0, dm, pv); box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, ih - 4, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = 95 * DEG * f; } }); }
+          else { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, M.body, .1, .1, 0, dm, pv); box(.9, Math.min(20, ih * .3), 1.6, M.chrome, iw - 3.5, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = -105 * DEG * f; } }); }
         }
         else if (it.type === 'shoe') {
           for (let k = 0; k < it.n; k++) {
@@ -152,11 +160,22 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         if (d.fill !== 'dsp' && !gl) { box(d.w, 2.2, th + .4, M.steel, 0, d.y, -.2, null, grp); box(d.w, 2.2, th + .4, M.steel, 0, d.y + d.h - 2.2, -.2, null, grp); }
         doorsAnim.push({ key, apply: f => { grp.position.x = d.x + (layer === 1 ? (d.w - 2.5) * f * (d.left ? -1 : 1) : 0); } });
       } else {
-        const left = d.left, pv = new THREE.Group(); pv.position.set(left ? d.x : d.x + d.w, d.y, D + .3); root.add(pv);
-        const dx = left ? 0 : -d.w;
-        face(pv, dx, 0);
-        if (S.doors.handles !== false) box(.9, Math.min(24, d.h * .3), 1.6, M.chrome, left ? dx + d.w - 4 : dx + 3, mz ? Math.min(6, d.h / 3) : d.h / 2 - 12, th, meta, pv);
-        doorsAnim.push({ key, apply: f => { pv.rotation.y = (left ? -1 : 1) * 105 * DEG * f; } });
+        const hg = d.hinge || (d.left ? 'L' : 'R'), pv = new THREE.Group(); root.add(pv);
+        if (hg === 'L' || hg === 'R') {
+          const left = hg === 'L'; pv.position.set(left ? d.x : d.x + d.w, d.y, D + .3);
+          const dx = left ? 0 : -d.w;
+          face(pv, dx, 0);
+          if (S.doors.handles !== false) box(.9, Math.min(24, d.h * .3), 1.6, M.chrome, left ? dx + d.w - 4 : dx + 3, mz ? Math.min(6, d.h / 3) : d.h / 2 - 12, th, meta, pv);
+          doorsAnim.push({ key, apply: f => { pv.rotation.y = (left ? -1 : 1) * 105 * DEG * f; } });
+        } else if (hg === 'U') {
+          pv.position.set(d.x, d.y + d.h, D + .3); face(pv, 0, -d.h);
+          if (S.doors.handles !== false) box(Math.min(24, d.w * .4), .9, 1.6, M.chrome, d.w / 2 - Math.min(24, d.w * .4) / 2, -d.h + 3, th, meta, pv);
+          doorsAnim.push({ key, apply: f => { pv.rotation.x = -105 * DEG * f; } });
+        } else {
+          pv.position.set(d.x, d.y, D + .3); face(pv, 0, 0);
+          if (S.doors.handles !== false) box(Math.min(24, d.w * .4), .9, 1.6, M.chrome, d.w / 2 - Math.min(24, d.w * .4) / 2, d.h - 4, th, meta, pv);
+          doorsAnim.push({ key, apply: f => { pv.rotation.x = 95 * DEG * f; } });
+        }
       }
     });
     if (S.led && !S.cols.some(c => c.items.some(i => i.type === 'led'))) g.cols.forEach(c => { if (!c.gap) box(c.w - 1, .6, 1.4, M.led, c.xa + .5, g.y1 - t - .8, D - 6); });
