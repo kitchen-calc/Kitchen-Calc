@@ -20,6 +20,10 @@ export const DRAWER_SYS = {
 export const PALETTE = [['Белый', '#f2f1ee'], ['Светлый дуб', '#d8bd91'], ['Бежевый', '#cdbba0'], ['Серый', '#a9adb0'], ['Орех', '#7a5638'], ['Графит', '#3a3d41'], ['Чёрный', '#1c1d1f'], ['Капучино', '#a88b73']];
 export const LACO = [['Графит', '#2a2d31'], ['Серо-зелёный', '#6f7d73'], ['Шампань', '#d6c3a1'], ['Белый', '#f0efe9'], ['Синий', '#33476a'], ['Бордо', '#6b2a35']];
 export const FILLS = { dsp: 'ЛДСП', mdf: 'Фрезерованный МДФ', glass: 'Стекло в алюминиевой раме', mirror: 'Зеркало', laco: 'Лакобель (цветное стекло)', film: 'Зеркало с плёнкой', sand: 'Зеркало с рисунком' };
+/* рисунок фрезеровки МДФ-фасадов (как «рейка» на фото): общий для дверей шкафа */
+export const MILLS = { frame: 'филёнка (рамка)', vgroove: 'рейка вертикальная 30 мм', vfine: 'рейка вертикальная мелкая 15 мм', hgroove: 'рейка горизонтальная 30 мм', grid: 'квадраты (решётка)' };
+export const MILL_PITCH = { frame: 10, vgroove: 3, vfine: 1.5, hgroove: 3, grid: 10 };
+export const millName = S => { const m = S && S.doors && S.doors.mp; return m && MILLS[m] && m !== 'frame' ? ' · ' + MILLS[m] : ''; };
 export const PANEL_KINDS = { mirror: 'Зеркало', film: 'Зеркало с плёнкой', sand: 'Зеркало с рисунком', glass: 'Стекло в алюминиевой раме', laco: 'Лакобель', dsp: 'ЛДСП', mdf: 'Фрезерованный МДФ', slats: 'Перегородка из клеёного МДФ (рейки)' };
 export const BED_STYLES = { foam: { ru: 'Беспружинный (пенный)', price: 900000 }, spring: { ru: 'Независимые пружины', price: 1600000 }, ortho: { ru: 'Ортопедический (кокос + латекс)', price: 2200000 }, combi: { ru: 'Комби (пружины + кокос)', price: 2600000 } };
 export const BED_SIZES = [[70, 160, 'Детский 70×160'], [80, 160, 'Детский 80×160'], [80, 190, '80×190'], [90, 200, '90×200'], [120, 200, '120×200'], [140, 200, '140×200'], [160, 200, '160×200'], [180, 200, '180×200']];
@@ -510,7 +514,7 @@ export function buildParts(S) {
     if (u.seat) add(gr, 'Сиденье (крышка)' + lbl, 1, w + 1, d + 1.5, t, body, (2 * (w + d + 2.5)) / 100, 'под мягкую накладку; кромка по периметру');
     else add(gr, 'Крышка' + lbl, 1, w - 2 * t, d, t, body, (w - 2 * t) / 100, 'между боковинами');
     add(gr, 'Задняя стенка' + lbl, 1, w - 2 * t, hb - 2 * t, .3, 'ХДФ 3 мм', 0, 'ставится на дно между боковин', 'hdf');
-    const fn = Math.max(1, u.n | 0), fill = u.fill || 'dsp', fmat = fill === 'dsp' ? body : FILLS[fill], fh = (hb - fn * .3 - .3) / fn;
+    const fn = Math.max(1, u.n | 0), fill = u.fill || 'dsp', fmat = fill === 'dsp' ? body : FILLS[fill] + (fill === 'mdf' ? millName(S) : ''), fh = (hb - fn * .3 - .3) / fn;
     const front = (name, qty, L, W2, note) => { if (fill === 'dsp') add(gr, name + lbl, qty, L, W2, t, fmat, (2 * (L + W2)) / 100, note); else add(gr, name + lbl, qty, L, W2, fill === 'mdf' ? t : .4, fmat, (2 * (L + W2)) / 100, note, fill); };
     if (u.kind === 'flap') {
       front('Откидная створка', fn, fh, w - .4, 'открывается вперёд-вниз');
@@ -577,7 +581,7 @@ export function buildParts(S) {
     const body = q.mat === 'ply' ? OBJ_MATS.ply : q.mat === 'mdf' ? 'МДФ крашеный ' + mm(S.t) + ' мм' : 'ЛДСП ' + mm(S.t) + ' мм' + (q.cat ? ' · ' + catName(q.cat) : '');
     const addP = (grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind) => { if (okind && !kind) add(grp, name, qty, L, Wd, tt, mat, 0, (note ? note + '; ' : '') + (okind === 'ply' ? 'торцы: шлифовка + масло/лак' : 'торцы: шпаклёвка + покраска'), okind); else add(grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind); };
     const gr = OBJ_KINDS[q.kind].ru + ' ' + (i + 1), lbl = ' (' + OBJ_KINDS[q.kind].ru.toLowerCase() + ' ' + (i + 1) + ')', hnd = q.handles !== false;
-    const fmat = q.fill === 'dsp' ? body : FILLS[q.fill], fth = q.fill === 'dsp' || q.fill === 'mdf' ? t : .4;
+    const fmat = q.fill === 'dsp' ? body : FILLS[q.fill] + (q.fill === 'mdf' ? millName(S) : ''), fth = q.fill === 'dsp' || q.fill === 'mdf' ? t : .4;
     const door = (name, qty, L, Wd, note) => { if (q.fill === 'dsp') addP(gr, name + lbl, qty, L, Wd, t, fmat, (2 * (L + Wd)) / 100, note); else addP(gr, name + lbl, qty, L, Wd, fth, fmat, (2 * (L + Wd)) / 100, note, q.fill); };
     const addDoorHw = (dn, dh) => { addHw('Двери', 'Петля с доводчиком', dn * (dh <= 90 ? 2 : dh <= 160 ? 3 : 4), 'шт.', T.hinge); if (hnd) addHw('Двери', 'Ручка', dn, 'шт.', T.handle); };
     if (q.kind === 'parts') {
@@ -683,7 +687,7 @@ export function buildParts(S) {
   const doors = doorList(S); let hinges = 0, handles = 0, slidingN = 0;
   doors.forEach(d => {
     d.gf = S.doors.gf || 4; const lbl = d.zone === 'mezz' ? ' антресоли ' + (d.mi + 1) + '.' : (d.ci != null ? ' отсека ' + (d.ci + 1) + '.' : ' '), nm = d.zone === 'mezz' ? d.i + 1 : (d.ci != null ? d.ri + 1 : d.i + 1);
-    const mat = d.fill === 'dsp' ? body : FILLS[d.fill];
+    const mat = d.fill === 'dsp' ? body : FILLS[d.fill] + (d.fill === 'mdf' ? millName(S) : '');
     if (d.fill === 'glass') { const gf = d.gf || 4; add('Двери', 'Стекло' + lbl + nm, 1, d.h - 2 * gf, d.w - 2 * gf, .4, 'Стекло 4 мм, полировка кромки', (2 * (d.h + d.w - 4 * gf)) / 100, 'размер стекла ' + mm(d.w - 2 * gf) + '×' + mm(d.h - 2 * gf), 'glass'); add('Двери', 'Рамка алюминиевая' + lbl + nm, 1, d.h, d.w, gf, 'Алюминий, профиль ' + mm(gf) + ' мм', (2 * (d.h + d.w)) / 100, 'периметр', 'frame'); }
     else if (d.fill === 'dsp') add('Двери', 'Дверь' + lbl + nm, 1, d.h, d.w, t, mat, (2 * (d.h + d.w)) / 100, d.sliding ? 'в раме системы' : '');
     else add('Двери', 'Вставка / дверь' + lbl + nm, 1, d.h, d.w, .4, mat, (2 * (d.h + d.w)) / 100, 'полировка кромки', d.fill);
@@ -727,7 +731,7 @@ export function pricing(S, bp) {
   add('Задняя стенка ХДФ', Math.round(hdfM2 * 100) / 100 + ' м²', hdfM2 * P.hdfM2);
   Object.keys(glass).forEach(k => add(k === 'glass' ? 'Стекло дверей' : (FILLS[k] || k), Math.round(glass[k] * 100) / 100 + ' м²', glass[k] * P.glass[k]));
   add('Фанера берёзовая 12 мм (распил)', Math.round(plyM2 * 100) / 100 + ' м²', plyM2 * P.plyM2);
-  add('Фрезерованный МДФ (двери, панели)', Math.round(mdfM2 * 100) / 100 + ' м²', mdfM2 * P.mdfM2);
+  add('Фрезерованный МДФ (двери, панели)' + millName(S), Math.round(mdfM2 * 100) / 100 + ' м²', mdfM2 * P.mdfM2 * ((S.doors && ['vgroove', 'vfine', 'hgroove'].includes(S.doors.mp)) ? (S.doors.mp === 'vfine' ? 1.35 : 1.25) : 1));
   add('Клеёный МДФ — рейки перегородок', Math.round(slatM3 * 1000) / 1000 + ' м³', slatM3 * P.slatM3);
   add('Алюминиевая рамка дверей', Math.round(frameM * 10) / 10 + ' м', frameM * P.frameM);
   bp.hw.forEach(h => add(h.name, h.qty + ' ' + h.unit, h.qty * h.price));
@@ -750,7 +754,7 @@ export function sanitize(S) {
   const D = defState(), n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? clamp(v, a, b) : d; };
   const o = { v: 2, W: n(S.W, 60, 800, 240), H: n(S.H, 100, 320, 200), D: n(S.D, 25, 90, 60), t: S.t === 1.8 ? 1.8 : 1.6, plinth: n(S.plinth, 0, 20, 8), tier: n(S.tier, 0, 2, 1) | 0, color: n(S.color, 0, 99, 0) | 0, custom: /^#[0-9a-f]{6}$/i.test(S.custom || '') ? S.custom : null,
     mezzes: [],
-    doors: { kind: ['none', 'swing', 'sliding'].includes(S.doors && S.doors.kind) ? S.doors.kind : 'none', n: n(S.doors && S.doors.n, 1, 8, 3) | 0, fills: (S.doors && Array.isArray(S.doors.fills) ? S.doors.fills : D.doors.fills).map(f => FILLS[f] ? f : 'dsp').slice(0, 8), laco: n(S.doors && S.doors.laco, 0, 5, 0) | 0, handles: !(S.doors && S.doors.handles === false), gf: n(S.doors && S.doors.gf, 2, 30, 4), cat: catId(S.doors && S.doors.cat), dir: (S.doors && Array.isArray(S.doors.dir) ? S.doors.dir : []).slice(0, 8).map(v => ['auto', 'L', 'R', 'U', 'D'].includes(v) ? v : 'auto') },
+    doors: { mp: MILLS[S.doors && S.doors.mp] ? S.doors.mp : 'frame', kind: ['none', 'swing', 'sliding'].includes(S.doors && S.doors.kind) ? S.doors.kind : 'none', n: n(S.doors && S.doors.n, 1, 8, 3) | 0, fills: (S.doors && Array.isArray(S.doors.fills) ? S.doors.fills : D.doors.fills).map(f => FILLS[f] ? f : 'dsp').slice(0, 8), laco: n(S.doors && S.doors.laco, 0, 5, 0) | 0, handles: !(S.doors && S.doors.handles === false), gf: n(S.doors && S.doors.gf, 2, 30, 4), cat: catId(S.doors && S.doors.cat), dir: (S.doors && Array.isArray(S.doors.dir) ? S.doors.dir : []).slice(0, 8).map(v => ['auto', 'L', 'R', 'U', 'D'].includes(v) ? v : 'auto') },
     cat: catId(S.cat), led: !!S.led, nb: !!S.nb, nsl: !!S.nsl, nsr: !!S.nsr, name: String(S.name || 'Мой шкаф').slice(0, 60), cols: [] };
   while (o.doors.fills.length < 8) o.doors.fills.push('dsp');
   S.cols.slice(0, 14).forEach(c => {

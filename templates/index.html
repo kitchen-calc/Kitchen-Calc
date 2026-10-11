@@ -24,7 +24,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=21'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=3'; import * as C from '/static/js/shkaf-pro-core.js?v=22'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script src="/static/js/shkaf-lib.js?v=2"></script>
   <script type="module" src="/static/js/shkaf-3dpart.js?v=6"></script>
   <script src="/static/js/color-catalog.js?v=3"></script>
@@ -4044,7 +4044,7 @@
       updateCalculator(); renderK3dEdit();
     }
     /* ---------- «сделать как этот»: размеры / начинка / фурнитура / цвет — выбранным или всем шкафам яруса ---------- */
-    const kSyncSel = { lower: {}, upper: {} }, kSyncWhat = { size: true, inner: false, hw: false, color: false };
+    const kSyncSel = { lower: {}, upper: {} }, kSyncWhat = { size: true, level: false, inner: false, hw: false, color: false };
     const kSyncCount = tier => secsOf(tier).filter(x => x !== selSec && kSyncSel[tier][x.id]).length;
     function kSyncHtml(s, tier) {
       const others = secsOf(tier).filter(x => x !== s); if (!others.length) return '';
@@ -4055,7 +4055,7 @@
         <div class="k3s-note">${esc(L3('Отметьте шкафы, которые должны стать такими же, и что именно повторить.', 'Shu shkafga oʻxshash boʻladigan shkaflarni belgilang.'))}</div>
         <div class="k3s-grid">${chips}</div>
         <div class="k3e-r">${k3B(false, `k3dSyncPick('${tier}','all')`, L3('Все', 'Hammasi'))}${k3B(false, `k3dSyncPick('${tier}','kind')`, L3('Такого же типа', 'Shu turdagi'))}${k3B(false, `k3dSyncPick('${tier}','none')`, L3('Снять выбор', 'Tozalash'))}</div>
-        <div class="k3e-r">${tg('size', L3('Размеры', 'Oʻlchamlar'))}${tg('inner', L3('Начинка (ящики, полки, подсветка)', 'Ichi'))}${tg('hw', L3('Фурнитура', 'Furnitura'))}${OWNER_ON ? tg('color', L3('Цвет', 'Rang')) : ''}</div>
+        <div class="k3e-r">${tg('size', L3('Размеры', 'Oʻlchamlar'))}${tg('level', L3('Высота от пола (на одном уровне)', 'Pol dan balandlik'))}${tg('inner', L3('Начинка (ящики, полки, подсветка)', 'Ichi'))}${tg('hw', L3('Фурнитура', 'Furnitura'))}${OWNER_ON ? tg('color', L3('Цвет', 'Rang')) : ''}</div>
         <div class="k3e-r">${k3B(false, 'k3dSyncApply(false)', '▶ ' + L3('Применить к выбранным', 'Tanlanganlarga') + ' (' + cnt + ')')}${k3B(false, 'k3dSyncApply(true)', L3('Применить ко всем', 'Hammasiga'))}</div>`;
     }
     function k3dSyncTog(tier, id) { const m = kSyncSel[tier]; if (m[id]) delete m[id]; else m[id] = 1; renderK3dEdit(); }
@@ -4065,9 +4065,15 @@
       const s = selSec; if (!s) return; const tier = tierOf(s), W = kSyncWhat;
       const targets = secsOf(tier).filter(x => x !== s && (all || kSyncSel[tier][x.id]));
       if (!targets.length) { if (typeof msToast === 'function') msToast(L3('Сначала отметьте шкафы', 'Avval shkaflarni belgilang')); return; }
-      if (!W.size && !W.inner && !W.hw && !W.color) { if (typeof msToast === 'function') msToast(L3('Отметьте, что повторить', 'Nimani takrorlashni belgilang')); return; }
+      if (!W.size && !W.level && !W.inner && !W.hw && !W.color) { if (typeof msToast === 'function') msToast(L3('Отметьте, что повторить', 'Nimani takrorlashni belgilang')); return; }
       const put = (t, f) => { if (s[f] == null) delete t[f]; else t[f] = JSON.parse(JSON.stringify(s[f])); };
+      let srcY = null, geoL = null;
+      if (W.level) { geoL = k3dGeo(); const ps = getTarget({ tier, sec: s }, geoL); srcY = +ps.y || 0; }
       targets.forEach(t => {
+        if (W.level && srcY != null && !isTall(t)) {   // тот же уровень от пола: у шкафа «в ряду» это отступ от столешницы, у свободного — высота
+          if (t.fp) t.fp.y = Math.round(srcY * 10) / 10;
+          else if (tier === 'upper') { const gap = Math.round((srcY - (geoL.G.BOX + geoL.G.CT)) * 10) / 10; if (Math.abs(gap - geoL.G.UGAP) < .05) delete t.ug; else t.ug = Math.max(20, Math.min(120, gap)); }
+        }
         if (W.size && isTall(t) === isTall(s)) ['dp', 'ht', 'ctt', 'ctd', 'ctc'].forEach(f => put(t, f));
         if (W.inner && t.kind === s.kind) ['drawers', 'mxd', 'ml', 'shelves', 'led', 'dsys', 'glass', 'gf', 'gt', 'hinge', 'mwTop'].forEach(f => put(t, f));
         if (W.hw) put(t, 'hx');
@@ -4515,7 +4521,7 @@
         (pp ? pp.hw : []).forEach(h => { const k = h.name + '|' + h.unit; if (!hwAll[k]) hwAll[k] = { grp: 'С' + (i + 1), name: h.name, qty: 0, unit: h.unit }; else if (hwAll[k].grp.indexOf('С' + (i + 1)) < 0) hwAll[k].grp += ', С' + (i + 1); hwAll[k].qty += h.qty; }); });
       return { name: 'Кухня на заказ', poly: kWallPolyCache || kWallPoly(), H: geo.roomH, opens: kOpens, items, hw: Object.keys(hwAll).map(k => hwAll[k]), meta: [['Проект', 'Кухня на заказ'], ['Помещение', Math.round(geo.W * 10) + ' × ' + Math.round(geo.roomD * 10) + ' мм · высота ' + Math.round(geo.roomH * 10)], ['Материал', 'ЛДСП ' + CUT_T + ' мм']] };
     }
-    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=28').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
+    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=29').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
     function renderOwnerDraw() {
       const box = el('ownerDrawBody'); if (!box || !OWNER_ON) return;
       const geo = k3dGeo(), groups = new Map();
