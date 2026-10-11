@@ -586,6 +586,10 @@ function sheetIso(S, bp, no, total, vk) {
   });
   items0.forEach(it => { const bb = it.boxes && it.boxes.length ? bxBounds(it.boxes) : it, p = rot((bb.x0 + bb.x1) / 2, (bb.z0 + bb.z1) / 2), c = Q(p[0], bb.y1, p[1]); o += thr(c[0], c[1] + 3, it.n, 7.4, 'middle', 'font-weight="700"'); });
   /* ---- размеры в мм на самом виде: комната по полу и высота, затем габариты каждого предмета (ширина, глубина, высота) ---- */
+  (S.opens || []).forEach((q, i) => {   // от угла стены и от пола до центра каждого элемента на видимых стенах
+    const e = E[q.wall]; if (!e || (e.nx + e.nz) / Math.SQRT2 < .3) return; const Wp = (u, y) => Q(e.a[0] + e.ex * u, y, e.a[1] + e.ez * u), uc = q.off + q.w / 2, yc = q.y + q.h / 2;
+    o += dimS(Wp(0, yc), Wp(uc, yc), 0, 0, String(mm(uc)), 6.6) + dimSV(Wp(uc, 0), Wp(uc, yc), -4, String(mm(yc)), 6.6);
+  });
   E.forEach(e => { if ((e.nx + e.nz) / Math.SQRT2 > -.3) return; const A = Q(e.a[0], 0, e.a[1]), B = Q(e.b[0], 0, e.b[1]), A2 = Q(e.a[0] - e.nx * 45, 0, e.a[1] - e.nz * 45); o += dimS(A, B, A2[0] - A[0], A2[1] - A[1], String(mm(e.L)), 7.4); });
   { let far = P[0]; P.forEach(p => { if (p[0] + p[1] < far[0] + far[1]) far = p; }); o += dimSV(Q(far[0], 0, far[1]), Q(far[0], H, far[1]), -14, String(mm(H)), 7.4); }
   items0.slice().sort((a, b) => ((b.x1 - b.x0) * (b.z1 - b.z0) * (b.y1 - b.y0)) - ((a.x1 - a.x0) * (a.z1 - a.z0) * (a.y1 - a.y0))).forEach(it => {
@@ -714,6 +718,12 @@ function sheetItem(S, bp, it, items, no, total) {
       const lft = els.filter(v => v.u1 <= u0 + .5).sort((a, b) => b.u1 - a.u1)[0], rgt = els.filter(v => v.u0 >= u1 - .5).sort((a, b) => a.u0 - b.u0)[0];
       if (lft && u0 - lft.u1 > .5) o += wl(X(lft.u1), Y(0), X(lft.u1), yB + 3) + wl(X(u0), Y(0), X(u0), yB + 3) + dH(X(lft.u1), X(u0), yB, mm(u0 - lft.u1) + ' до ' + lft.n, 6.6);
       if (rgt && rgt.u0 - u1 > .5) o += wl(X(u1), Y(0), X(u1), yB + 3) + wl(X(rgt.u0), Y(0), X(rgt.u0), yB + 3) + dH(X(u1), X(rgt.u0), yB, mm(rgt.u0 - u1) + ' до ' + rgt.n, 6.6);
+      { const usedI = [], frI = (cx, cy, txt, sz) => { const w = String(txt).length * sz * F * .56 + 3, h = sz * F + 2; if (usedI.some(u => Math.abs(cx - u[0]) < (w + u[2]) / 2 && Math.abs(cy - u[1]) < (h + u[3]) / 2)) return false; usedI.push([cx, cy, w, h]); return true; };
+        opens.slice(0, 14).forEach(q => {   // для каждого элемента стены: расстояние от края предмета до его центра и высота центра от пола, мм
+          const uc = q.off + q.w / 2, yc = q.y + q.h / 2, ox = X(uc), oy = Y(yc);
+          if (uc > u1 + .5 || uc < u0 - .5) { const a = uc > u1 ? X(u1) : X(uc), b = uc > u1 ? X(uc) : X(u0), lb = String(mm(uc > u1 ? uc - u1 : u0 - uc)); if (b - a > lb.length * 7 + 6 && frI((a + b) / 2, oy - 3, lb, 6.4)) o += line(a, oy, b, oy, 'd') + tick(a, oy) + tick(b, oy) + thx((a + b) / 2, oy - 3, lb, 6.4, 'middle', 'fill="#0b6e8f"'); }
+          const lv = String(mm(yc)); if (Y(0) - oy > 14 && frI(ox - 8, (oy + Y(0)) / 2, lv, 6.4)) o += line(ox, Y(0), ox, oy, 'd') + tick(ox, oy) + tick(ox, Y(0)) + thx(ox - 3, (oy + Y(0)) / 2 + 3, lv, 6.4, 'end', 'fill="#0b6e8f"');
+        }); }
       // вертикали справа: от пола, высота, до потолка; слева — высота стены
       const xv = X(L) + 14;
       if (it.y0 > .5) o += wl(X(L), Y(0), xv + 3, Y(0)) + wl(X(L), Y(it.y0), xv + 3, Y(it.y0)) + dV(Y(it.y0), Y(0), xv, 'от пола ' + mm(it.y0), 6.8);
