@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
 import * as C from '/static/js/shkaf-pro-core.js?v=1';
-const { PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
+const { BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { openRoomStart, openRoomEditor } from '/static/js/shkaf-room.js?v=1';
 const VIEW = /^\/shkaf\/view\/?$/.test(location.pathname);
@@ -22,13 +22,13 @@ const snap = () => JSON.stringify(S);
 function pushUndo() { undo.push(snap()); if (undo.length > 60) undo.shift(); redo = []; }
 function doUndo() { if (!undo.length) return; redo.push(snap()); S = sanitize(JSON.parse(undo.pop())); fixSel(); refresh(); }
 function doRedo() { if (!redo.length) return; undo.push(snap()); S = sanitize(JSON.parse(redo.pop())); fixSel(); refresh(); }
-function fixSel() { if (sel.k === 'item' && !findItem(sel.id)) sel = { k: 'global' }; if (sel.k === 'col' && sel.i >= S.cols.length) sel = { k: 'global' }; if (sel.k === 'mezz' && !S.mezzes[sel.mi]) sel = { k: 'global' }; if (sel.k === 'panel' && !S.panels[sel.pi]) sel = { k: 'global' }; }
+function fixSel() { if (sel.k === 'item' && !findItem(sel.id)) sel = { k: 'global' }; if (sel.k === 'col' && sel.i >= S.cols.length) sel = { k: 'global' }; if (sel.k === 'mezz' && !S.mezzes[sel.mi]) sel = { k: 'global' }; if (sel.k === 'panel' && !S.panels[sel.pi]) sel = { k: 'global' }; if (sel.k === 'unit' && !S.units[sel.ui]) sel = { k: 'global' }; if (sel.k === 'bed' && !S.beds[sel.bi]) sel = { k: 'global' }; }
 function mutate(fn, noUndo) { if (!noUndo) pushUndo(); fn(); recalcW(S); fixSel(); refresh(); }
 function findItem(id) { for (let ci = 0; ci < S.cols.length; ci++) { const it = S.cols[ci].items.find(i => i.id === id); if (it) return { it, ci, col: S.cols[ci] }; } return null; }
 const toast = (t) => { const e = $('toast'); if (!e) return; e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2600); };
 
 /* ---------- ввод чисел ---------- */
-const RANGE = { W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [15, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [15, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 3], 'col.H': [60, 320], 'col.D': [25, 90], 'room.W': [100, 1500], 'room.D': [100, 1500], 'room.H': [180, 400], 'room.ox': [-500, 1500], 'pn.sw': [10, 400], 'pn.sd': [6, 100], 'pn.sg': [0, 200], 'pn.pz': [0, 400], 'pn.gp': [3, 60] };
+const RANGE = { W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [15, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [15, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 3], 'col.H': [60, 320], 'col.D': [25, 90], 'room.W': [100, 1500], 'room.D': [100, 1500], 'room.H': [180, 400], 'room.ox': [-500, 1500], 'pn.sw': [10, 400], 'pn.sd': [6, 100], 'pn.sg': [0, 200], 'pn.pz': [0, 400], 'pn.gp': [3, 60], 'bd.x': [-800, 1800], 'bd.pz': [0, 500], 'bd.mw': [50, 220], 'bd.ml': [100, 240], 'bd.mt': [5, 40], 'bd.sh': [10, 60], 'bd.hh': [20, 220], 'bd.fh': [10, 220], 'bd.lg': [0, 40], 'bd.drw': [0, 4], 'bd.lv2': [80, 200], 'bd.rail': [10, 60], 'bd.steps': [3, 9], 'un.x': [-600, 1600], 'un.pz': [0, 400], 'un.w': [25, 300], 'un.h': [30, 200], 'un.d': [15, 80], 'un.n': [1, 8], 'un.legs': [0, 20] };
 function stepper(label, path, val, step, unit) {
   return `<div class="r"><span>${esc(label)}</span><span class="stp"><button type="button" onpointerdown="PRO.hold(event,'${path}',${-step})">−</button><input type="number" step="any" value="${r1(val)}" onfocus="this.select()" onchange="PRO.set('${path}',this.value)"><button type="button" onpointerdown="PRO.hold(event,'${path}',${step})">+</button><small>${esc(unit || 'см')}</small></span></div>`;
 }
@@ -38,6 +38,8 @@ function getVal(path) {
   if (path.startsWith('mzc.')) { const m = S.mezzes[sel.mi], ci = +path.slice(4); return m ? (m.cd && m.cd[ci] != null ? m.cd[ci] : geom(S).mz[sel.mi].comp.length ? Math.max(1, Math.round((geom(S).mz[sel.mi].comp[ci].x1 - geom(S).mz[sel.mi].comp[ci].x0) / 60)) : 1) : 0; }
   if (path.startsWith('mz.')) { const m = S.mezzes[sel.mi]; return m ? m[path.slice(3)] : 0; }
   if (path.startsWith('pn.')) { const p = S.panels[sel.pi]; return p ? p[path.slice(3)] : 0; }
+  if (path.startsWith('un.')) { const u = S.units[sel.ui]; return u ? u[path.slice(3)] : 0; }
+  if (path.startsWith('bd.')) { const b = S.beds[sel.bi]; return b ? b[path.slice(3)] : 0; }
   if (path.startsWith('room.')) return S.room[path.slice(5)];
   if (path === 'col.H' || path === 'col.D') { const c = S.cols[sel.i]; return c ? (c[path.slice(4)] || S[path.slice(4)]) : 0; }
   if (path === 'col.dn') { const c = S.cols[sel.i], g = geom(S); return c ? (c.dn != null ? c.dn : (c.w > 65 ? 2 : 1)) : 0; }
@@ -53,6 +55,8 @@ function setVal(path, v) {
     if (path.startsWith('mzd.')) { const m = S.mezzes[sel.mi]; if (m && m.div) m.div[+path.slice(4)] = r1(clamp(v, 5, Math.max(5, m.w - 3 * S.t - 5))); return; }
     if (path.startsWith('mzc.')) { const m = S.mezzes[sel.mi]; if (m) { m.cd = m.cd || []; m.cd[+path.slice(4)] = Math.round(clamp(v, 0, 5)); } return; }
     if (path.startsWith('pn.')) { const p = S.panels[sel.pi]; if (p) p[path.slice(3)] = r1(v); return; }
+    if (path.startsWith('bd.')) { const b = S.beds[sel.bi]; if (b) b[path.slice(3)] = ['drw', 'steps'].includes(path.slice(3)) ? Math.round(v) : r1(v); return; }
+    if (path.startsWith('un.')) { const u = S.units[sel.ui]; if (u) u[path.slice(3)] = path === 'un.n' ? Math.round(v) : r1(v); return; }
     if (path.startsWith('mz.')) { const m = S.mezzes[sel.mi]; if (!m) return; const k = path.slice(3); m[k] = ['n', 'shelves'].includes(k) ? Math.round(v) : r1(v); return; }
     if (path.startsWith('room.')) { S.room[path.slice(5)] = r1(v); S.room.set = true; return; }
     if (path === 'col.H' || path === 'col.D') { S.cols[sel.i][path.slice(4)] = r1(v); return; }
@@ -88,6 +92,13 @@ function dupItem() { const f = findItem(sel.id); if (!f) return; mutate(() => { 
 function moveItemCol(d) { const f = findItem(sel.id); if (!f) return; const nc = f.ci + d; if (nc < 0 || nc >= S.cols.length) return; mutate(() => { f.col.items = f.col.items.filter(i => i !== f.it); S.cols[nc].items.push(f.it); sel = { k: 'item', id: f.it.id, col: nc }; }); }
 function addGap() { mutate(() => { S.cols.push({ id: C.uid(), w: 80, gap: true, items: [] }); sel = { k: 'col', i: S.cols.length - 1 }; }); }
 function toggleGap(i) { mutate(() => { const c = S.cols[i]; c.gap = !c.gap; if (c.gap) c.items = []; else c.items = [mkItem('shelf', 70), mkItem('shelf', 140)]; }); }
+function addBed(kind) { const g = geom(S); mutate(() => { const b = mkBed(g.W + 20, kind); S.beds.push(b); sel = { k: 'bed', bi: S.beds.length - 1 }; }); if (K) K.frame(); }
+function bedPatch(fn) { mutate(() => { const b = S.beds[sel.bi]; if (b) fn(b); }); }
+function addUnit() { const g = geom(S); mutate(() => { const u = mkUnit(g.W + 8, 80); S.units.push(u); sel = { k: 'unit', ui: S.units.length - 1 }; }); if (K) K.frame(); }
+function delUnit() { mutate(() => { S.units.splice(sel.ui, 1); sel = { k: 'global' }; }); }
+function dupUnit() { mutate(() => { const u = Object.assign({}, S.units[sel.ui], { id: C.uid(), x: r1(S.units[sel.ui].x + S.units[sel.ui].w + 3) }); S.units.push(u); sel = { k: 'unit', ui: S.units.length - 1 }; }); }
+function unitMove(dx) { mutate(() => { const u = S.units[sel.ui]; u.x = r1(u.x + dx); }); }
+function selectUnit(i) { sel = { k: 'unit', ui: i }; refresh(false); }
 function addPanel(kind) { const g = geom(S); mutate(() => { const p = mkPanel(g.W + 10, 20, 60, Math.min(180, S.H - 20)); if (kind === 'mdf' || kind === 'slats') { p.kind = kind; p.w = kind === 'slats' ? 100 : 80; p.h = 220; if (kind === 'slats') p.mount = 'free'; } S.panels.push(p); sel = { k: 'panel', pi: S.panels.length - 1 }; }); }
 function delPanel() { mutate(() => { S.panels.splice(sel.pi, 1); sel = { k: 'global' }; }); }
 function dupPanel() { mutate(() => { const p = Object.assign({}, S.panels[sel.pi], { id: C.uid(), x: r1(S.panels[sel.pi].x + S.panels[sel.pi].w + 5) }); S.panels.push(p); sel = { k: 'panel', pi: S.panels.length - 1 }; }); }
@@ -120,7 +131,7 @@ function selectItem(id) { const f = findItem(id); if (!f) return; sel = { k: 'it
 function selectGlobal() { sel = { k: 'global' }; refresh(false); }
 
 /* ---------- панель ---------- */
-function selMeta() { return sel.k === 'item' ? { k: 'item', id: sel.id } : (sel.k === 'col' ? { k: 'col', i: sel.i } : (sel.k === 'mezz' ? { k: 'mezz', i: sel.mi } : (sel.k === 'panel' ? { k: 'panel', i: sel.pi } : (sel.k === 'doors' ? { k: 'doors' } : { k: 'global' })))); }
+function selMeta() { return sel.k === 'item' ? { k: 'item', id: sel.id } : (sel.k === 'col' ? { k: 'col', i: sel.i } : (sel.k === 'mezz' ? { k: 'mezz', i: sel.mi } : (sel.k === 'bed' ? { k: 'bed', i: sel.bi } : (sel.k === 'unit' ? { k: 'unit', i: sel.ui } : (sel.k === 'panel' ? { k: 'panel', i: sel.pi } : (sel.k === 'doors' ? { k: 'doors' } : { k: 'global' })))))); }
 const btn = (on, act, txt, cls) => `<button type="button" class="${on ? 'on ' : ''}${cls || ''}" onclick="${act}">${txt}</button>`;
 function sideGlobal() {
   const g = geom(S), T = P.tiers;
@@ -141,6 +152,8 @@ function sideGlobal() {
   h += `<div class="sub">Антресоли (${S.mezzes.length}) — отдельные блоки</div><div class="cols">${S.mezzes.map((m, i) => `<button type="button" class="colchip" onclick="PRO.selMezz(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.delMezzAt(${i})">✕</span>А${i + 1}<b>${Math.round(m.w * 10)}</b><small>y ${Math.round(m.y * 10)}</small></button>`).join('')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.addMezz()', '＋ Антресоль')}${btn(0, 'PRO.addGap()', '＋ Проём между отсеками')}</div><div class="note">Антресоль — отдельная коробка: её можно двигать вбок и вверх независимо от низа, поставить над проёмом (П-образный шкаф).</div>`;
   h += `<div class="sub">Зеркала и стеклянные панели (${S.panels.length})</div><div class="cols">${S.panels.map((p, i) => `<button type="button" class="colchip" onclick="PRO.selPanel(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.delPanelAt(${i})">✕</span>П${i + 1}<b>${Math.round(p.w * 10)}×${Math.round(p.h * 10)}</b><small>${FILLS[p.kind]}</small></button>`).join('')}</div><div class="r">${btn(0, 'PRO.addPanel()', '＋ Панель (зеркало)')}</div><div class="note">Отдельная панель: зеркало, стекло, лакобель или ЛДСП. На стену рядом со шкафом или на фасад поверх дверей; размер и место — любые.</div>`;
+  h += `<div class="sub">Кровати (${S.beds.length})</div><div class="cols">${S.beds.map((b, i) => `<button type="button" class="colchip" onclick="PRO.selBed(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.delBedAt(${i})">✕</span>К${i + 1}<b>${Math.round(b.mw * 10)}</b><small>${b.kind === 'bunk' ? '2 яруса' : 'кровать'}</small></button>`).join('')}</div><div class="r">${btn(0, "PRO.addBed('single')", '＋ Кровать')}${btn(0, "PRO.addBed('bunk')", '＋ Двухъярусная детская')}</div>`;
+  h += `<div class="sub">Тумбы-обувницы (${S.units.length})</div><div class="cols">${S.units.map((u, i) => `<button type="button" class="colchip" onclick="PRO.selUnit(${i})"><span class="chx" title="Удалить" onclick="event.stopPropagation(); PRO.delUnitAt(${i})">✕</span>Т${i + 1}<b>${Math.round(u.w * 10)}</b><small>${UNIT_KINDS[u.kind].split(' ')[0]}</small></button>`).join('')}</div><div class="r">${btn(0, 'PRO.addUnit()', '＋ Тумба-обувница')}</div><div class="note">Отдельная низкая тумба: откидные створки, двери или ящики. Двигайте мышью вдоль стены, размеры любые.</div>`;
   h += `<div class="sub">Шаблоны</div><div class="r">${btn(0, "PRO.tpl('S')", 'Прямой шкаф')}${btn(0, "PRO.tpl('P')", 'П-образный')}</div>`;
   h += `<div class="sub">Двери</div><div class="r">${btn(S.doors.kind === 'none', "PRO.doors('none')", 'Без дверей')}${btn(S.doors.kind === 'swing', "PRO.doors('swing')", 'Распашные')}${btn(S.doors.kind === 'sliding', "PRO.doors('sliding')", 'Купе')}</div>`;
   if (S.doors.kind !== 'none') {
@@ -238,10 +251,40 @@ function sidePanel() {
   h += `<div class="r">${btn(0, 'PRO.panelOverDoors()', 'Закрыть весь фасад')}${btn(0, 'PRO.dupPanel()', 'Копия')}${btn(0, 'PRO.delPanel()', 'Удалить')}${btn(0, 'PRO.global()', '✕ Весь шкаф')}</div>`;
   return h;
 }
+function sideBed() {
+  const b = S.beds[sel.bi]; if (!b) return sideGlobal(); const d = bedDims(b, S.t), bunk = b.kind === 'bunk';
+  let h = `<div class="sh">${bunk ? 'Двухъярусная кровать' : 'Кровать'} ${sel.bi + 1}</div><div class="note">Каркас ${mm(d.W)}×${mm(d.L)} мм · изголовье ${mm(b.hh)} · боковина ${mm(b.sh)} · матрас ${mm(b.mw)}×${mm(b.ml)}×${mm(b.mt)} мм.</div>`;
+  h += `<div class="r"><span>Тип</span>${Object.keys(BED_KINDS).map(k => btn(b.kind === k, `PRO.bKind('${k}')`, BED_KINDS[k])).join('')}</div>`;
+  h += `<div class="sub">Матрас</div><div class="r"><span>Размер</span>${BED_SIZES.map(([w, l, n]) => btn(b.mw === w && b.ml === l, `PRO.bSize(${w},${l})`, n)).join('')}</div>`;
+  h += stepper('Ширина матраса', 'bd.mw', b.mw, 1) + stepper('Длина матраса', 'bd.ml', b.ml, 1) + stepper('Толщина матраса', 'bd.mt', b.mt, 1);
+  h += `<div class="r"><span>Стиль</span><select onchange="PRO.bStyle(this.value)">${Object.keys(BED_STYLES).map(k => `<option value="${k}" ${b.style === k ? 'selected' : ''}>${BED_STYLES[k].ru}</option>`).join('')}</select></div>`;
+  h += `<div class="r"><span>Цвет чехла</span><div class="sw">${BED_COLORS.map((c, i) => `<button type="button" class="swb ${b.mcol === i ? 'on' : ''}" style="background:${c[1]}" title="${c[0]}" onclick="PRO.bCol(${i})"></button>`).join('')}</div></div>`;
+  h += `<div class="sub">Каркас — выше / ниже</div>` + stepper('Высота боковины', 'bd.sh', b.sh, 1) + stepper('Изголовье (от пола)', 'bd.hh', b.hh, 1) + stepper('Изножье (от пола)', 'bd.fh', b.fh, 1) + stepper('Ножки', 'bd.lg', b.lg, 1);
+  h += `<div class="r"><span>Боковины</span>${btn(0, 'PRO.nuBed(\'bd.sh\',-5)', '▼ ниже 5')}${btn(0, 'PRO.nuBed(\'bd.sh\',5)', '▲ выше 5')}</div><div class="r"><span>Изголовье</span>${btn(0, 'PRO.nuBed(\'bd.hh\',-5)', '▼ ниже 5')}${btn(0, 'PRO.nuBed(\'bd.hh\',5)', '▲ выше 5')}</div>`;
+  h += `<div class="sub">Опции</div>` + stepper('Ящики под кроватью', 'bd.drw', b.drw, 1, 'шт') + `<div class="r">${btn(!!b.lift, 'PRO.bFlag(\'lift\')', '⤴ Подъёмное основание')}${btn(!!b.soft, 'PRO.bFlag(\'soft\')', '🛋 Мягкое изголовье')}${btn(!!b.bedding, 'PRO.bFlag(\'bedding\')', '🛏 Постель (для вида)')}</div>`;
+  if (bunk) h += `<div class="sub">Второй ярус</div>` + stepper('Высота 2-го яруса (от пола до реек)', 'bd.lv2', b.lv2, 1) + stepper('Бортик над матрасом', 'bd.rail', b.rail, 1) + `<div class="r"><span>Лестница</span>${btn(b.ladder === 'end', "PRO.bLadder('end')", 'С торца')}${btn(b.ladder === 'side', "PRO.bLadder('side')", 'Сбоку')}</div>` + stepper('Ступеней', 'bd.steps', b.steps, 1, 'шт');
+  h += `<div class="sub">Положение</div>` + stepper('От левого края шкафа', 'bd.x', b.x, 1) + stepper('От стены', 'bd.pz', b.pz || 0, 1) + `<div class="r"><span>Поворот</span>${btn(b.rot !== 90, "PRO.bRot(0)", 'Изголовьем к стене')}${btn(b.rot === 90, "PRO.bRot(90)", 'Боком к стене')}</div>`;
+  h += `<div class="r">${btn(0, 'PRO.bMove(-10)', '◀ 10')}${btn(0, 'PRO.bMove(-1)', '◀ 1')}${btn(0, 'PRO.bMove(1)', '1 ▶')}${btn(0, 'PRO.bMove(10)', '10 ▶')}</div>`;
+  h += `<div class="r">${btn(0, 'PRO.openAll(true)', '↔ Открыть (ящики / подъём)')}${btn(0, 'PRO.openAll(false)', 'Закрыть')}${btn(0, 'PRO.dupBed()', 'Копия')}${btn(0, 'PRO.delBed()', 'Удалить')}${btn(0, 'PRO.global()', '✕ Весь шкаф')}</div>`;
+  return h;
+}
+function sideUnit() {
+  const u = S.units[sel.ui]; if (!u) return sideGlobal();
+  let h = `<div class="sh">Тумба-обувница ${sel.ui + 1}</div><div class="note">${UNIT_KINDS[u.kind]} · ${mm(u.w)}×${mm(u.h)}×${mm(u.d)} мм. Двойной щелчок по створке — открыть.</div>`;
+  h += `<div class="r"><span>Тип</span>${Object.keys(UNIT_KINDS).map(k => btn(u.kind === k, `PRO.uKind('${k}')`, UNIT_KINDS[k])).join('')}</div>`;
+  h += stepper(u.kind === 'drawers' ? 'Ящиков' : (u.kind === 'flap' ? 'Откидных створок' : 'Полок'), 'un.n', u.n, 1, 'шт');
+  h += stepper('Ширина', 'un.w', u.w, 1) + stepper('Высота', 'un.h', u.h, 1) + stepper('Глубина', 'un.d', u.d, 1) + stepper('Ножки (высота)', 'un.legs', u.legs, 1);
+  h += stepper('От левого края шкафа', 'un.x', u.x, 1) + stepper('От стены (вперёд)', 'un.pz', u.pz || 0, 1);
+  h += `<div class="r"><span>Фасад</span><select onchange="PRO.uFill(this.value)">${['dsp', 'mdf', 'glass', 'mirror'].map(k => `<option value="${k}" ${(u.fill || 'dsp') === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select></div>`;
+  h += `<div class="r">${btn(!!u.seat, 'PRO.uSeat()', '🪑 Мягкое сиденье сверху')}</div>`;
+  h += `<div class="r"><span>Сдвиг</span>${btn(0, 'PRO.unitMove(-10)', '◀ 10')}${btn(0, 'PRO.unitMove(-1)', '◀ 1')}${btn(0, 'PRO.unitMove(1)', '1 ▶')}${btn(0, 'PRO.unitMove(10)', '10 ▶')}</div>`;
+  h += `<div class="r">${btn(0, 'PRO.openAll(true)', '↔ Открыть всё')}${btn(0, 'PRO.dupUnit()', 'Копия')}${btn(0, 'PRO.delUnit()', 'Удалить')}${btn(0, 'PRO.global()', '✕ Весь шкаф')}</div>`;
+  return h;
+}
 function renderSide() {
   const box = $('side'); if (!box) return;
   if (VIEW) { box.innerHTML = sideView(); return; }
-  box.innerHTML = sel.k === 'item' ? sideItem() : (sel.k === 'col' ? sideCol() : (sel.k === 'mezz' ? sideMezz() : (sel.k === 'panel' ? sidePanel() : sideGlobal())));
+  box.innerHTML = sel.k === 'item' ? sideItem() : (sel.k === 'col' ? sideCol() : (sel.k === 'mezz' ? sideMezz() : (sel.k === 'panel' ? sidePanel() : (sel.k === 'unit' ? sideUnit() : (sel.k === 'bed' ? sideBed() : sideGlobal())))));
 }
 function sideView() {
   const pr = pricing(S), g = geom(S);
@@ -276,13 +319,25 @@ function refresh(full) {
 async function init3D() {
   const mod = await import('/static/js/shkaf-pro-3d.js?v=1');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
-    onSelect: s => { sel = !s ? { k: 'global' } : (s.k === 'item' ? { k: 'item', id: s.id, col: s.col } : (s.k === 'col' ? { k: 'col', i: s.i } : (s.k === 'mezz' ? { k: 'mezz', mi: s.i } : (s.k === 'panel' ? { k: 'panel', pi: s.i } : { k: 'global' })))); refresh(false); },
+    onSelect: s => { sel = !s ? { k: 'global' } : (s.k === 'item' ? { k: 'item', id: s.id, col: s.col } : (s.k === 'col' ? { k: 'col', i: s.i } : (s.k === 'mezz' ? { k: 'mezz', mi: s.i } : (s.k === 'panel' ? { k: 'panel', pi: s.i } : (s.k === 'unit' ? { k: 'unit', ui: s.i } : (s.k === 'bed' ? { k: 'bed', bi: s.i } : { k: 'global' })))))); refresh(false); },
     onDrag: (s, dy, hx, dx) => {
       if (s.k === 'col') {   // отсек двигаем вдоль шкафа: меняется порядок отсеков и проёмов
         const g = geom(S), cur = s.i; if (!dragState || dragState.col !== s.id0) { pushUndo(); dragState = { col: s.id0 }; }
         const hxl = hx - (S.room.ox || 0); let j = g.cols.findIndex(c => hxl >= c.xa - S.t && hxl <= c.xb + S.t); if (j < 0) j = hxl < 0 ? 0 : S.cols.length - 1;
         if (j !== cur && j >= 0) { const c = S.cols.splice(cur, 1)[0]; S.cols.splice(j, 0, c); s.i = j; sel = { k: 'col', i: j }; recalcW(S); K.update(S); K.select(selMeta()); renderWarn(); renderSide(); }
         return `отсек ${s.i + 1}: тяните вдоль шкафа · от левого края ${mm(geom(S).cols[s.i].xa)} мм`;
+      }
+      if (s.k === 'bed') {
+        const b = S.beds[s.i]; if (!b) return '';
+        if (!dragState || dragState.bed !== s.i) { pushUndo(); dragState = { bed: s.i, x0: b.x }; }
+        b.x = r1(Math.round(dragState.x0 + dx)); K.update(S); K.select(selMeta()); renderWarn();
+        return `кровать ${s.i + 1}: от левого края шкафа ${mm(b.x)} мм`;
+      }
+      if (s.k === 'unit') {
+        const u = S.units[s.i]; if (!u) return '';
+        if (!dragState || dragState.unit !== s.i) { pushUndo(); dragState = { unit: s.i, x0: u.x }; }
+        u.x = r1(Math.round(dragState.x0 + dx)); K.update(S); K.select(selMeta()); renderWarn();
+        return `тумба ${s.i + 1}: от левого края шкафа ${mm(u.x)} мм`;
       }
       if (s.k === 'panel') {
         const p = S.panels[s.i]; if (!p) return '';
@@ -361,6 +416,18 @@ document.addEventListener('keydown', e => {
     else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); delCol(sel.i); }
     return;
   }
+  if (sel.k === 'bed') {
+    const d = e.shiftKey ? 10 : 1;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); window.PRO.bMove(-d); } else if (e.key === 'ArrowRight') { e.preventDefault(); window.PRO.bMove(d); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); window.PRO.delBed(); }
+    return;
+  }
+  if (sel.k === 'unit') {
+    const d = e.shiftKey ? 10 : 1;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); unitMove(-d); } else if (e.key === 'ArrowRight') { e.preventDefault(); unitMove(d); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); delUnit(); }
+    return;
+  }
   if (sel.k === 'panel') {
     const d = e.shiftKey ? 10 : 1;
     if (e.key === 'ArrowLeft') { e.preventDefault(); panelMove(-d, 0); } else if (e.key === 'ArrowRight') { e.preventDefault(); panelMove(d, 0); }
@@ -412,6 +479,11 @@ window.PRO = {
   set: setVal, nu: nudge, hold, add: addItem, delItem, dupItem, moveItemCol, addCol, dupCol, delCol, moveCol, eqCols, even: evenShelves,
   color: setColor, custom: setCustom, selCol: selectCol, selItem: selectItem, global: selectGlobal,
   tier: i => mutate(() => { S.tier = i; }), t: v => mutate(() => { S.t = v; }), name: v => mutate(() => { S.name = String(v).slice(0, 60); }, true),
+  addBed, selBed: i => { sel = { k: 'bed', bi: i }; refresh(false); }, delBed: () => mutate(() => { S.beds.splice(sel.bi, 1); sel = { k: 'global' }; }), delBedAt: i => mutate(() => { S.beds.splice(i, 1); sel = { k: 'global' }; }),
+  dupBed: () => mutate(() => { const b = Object.assign({}, S.beds[sel.bi], { id: C.uid(), x: r1(S.beds[sel.bi].x + bedDims(S.beds[sel.bi], S.t).W + 10) }); S.beds.push(b); sel = { k: 'bed', bi: S.beds.length - 1 }; }),
+  bMove: dx => bedPatch(b => { b.x = r1(b.x + dx); }), nuBed: (p, d) => nudge(p, d), bRot: v => bedPatch(b => { b.rot = v; }), bFlag: k => bedPatch(b => { b[k] = !b[k]; }), bStyle: v => bedPatch(b => { b.style = v; }), bCol: i => bedPatch(b => { b.mcol = i; }), bLadder: v => bedPatch(b => { b.ladder = v; }),
+  bSize: (w, l) => bedPatch(b => { b.mw = w; b.ml = l; }), bKind: k => bedPatch(b => { const d = mkBed(b.x, k); Object.assign(b, { kind: k, mw: d.mw, ml: d.ml, mt: d.mt, style: d.style, sh: d.sh, hh: d.hh, fh: d.fh, lg: d.lg, soft: d.soft }); }),
+  addUnit, delUnit, dupUnit, unitMove, selUnit: selectUnit, delUnitAt: i => mutate(() => { S.units.splice(i, 1); sel = { k: 'global' }; }), uKind: v => mutate(() => { const u = S.units[sel.ui]; if (u) { u.kind = v; if (v === 'drawers' && u.n > 5) u.n = 3; } }), uFill: v => mutate(() => { const u = S.units[sel.ui]; if (u) u.fill = v; }), uSeat: () => mutate(() => { const u = S.units[sel.ui]; if (u) u.seat = !u.seat; }),
   pShape: v => mutate(() => { const p = S.panels[sel.pi]; if (p) { p.shape = v; if (v === 'round') p.h = p.w; } }), pBl: () => mutate(() => { const p = S.panels[sel.pi]; if (p) p.bl = !p.bl; }), pPat: v => mutate(() => { const p = S.panels[sel.pi]; if (p) p.pat = v; }), pSo: v => mutate(() => { const p = S.panels[sel.pi]; if (p) p.so = v; }), pSlat: (d, w) => mutate(() => { const p = S.panels[sel.pi]; if (p) { p.sd = d; p.sw = w; } }), pSize: (w, hh, sh) => mutate(() => { const p = S.panels[sel.pi]; if (p) { p.w = w; p.h = hh; p.shape = sh; if (!MIRROR_KINDS.includes(p.kind)) p.kind = 'mirror'; } }),
   addPanel, delPanel, dupPanel, panelMove, panelOverDoors, selPanel: selectPanel, pKind: v => mutate(() => { const p = S.panels[sel.pi]; if (p) p.kind = v; }), pMount: v => mutate(() => { const p = S.panels[sel.pi]; if (p) p.mount = v; }), pFrame: () => mutate(() => { const p = S.panels[sel.pi]; if (p) p.frame = !p.frame; }),
   mfill: v => mutate(() => { const m = S.mezzes[sel.mi]; if (m) m.fill = v; }), delMezzAt: i => mutate(() => { S.mezzes.splice(i, 1); sel = { k: 'global' }; }), delPanelAt: i => mutate(() => { S.panels.splice(i, 1); sel = { k: 'global' }; }), addGapAt: side => mutate(() => { const at = sel.k === 'col' ? sel.i + (side > 0 ? 1 : 0) : S.cols.length; S.cols.splice(at, 0, { id: C.uid(), w: 60, gap: true, items: [] }); sel = { k: 'col', i: at }; }), addMezz, delMezz, dupMezz, mezzFull, mezzOver, mezzMove, selMezz: selectMezz, addGap, toggleGap, tpl: loadTemplate, doors: setDoors, fill: setFill, laco: i => mutate(() => { S.doors.laco = i; }),

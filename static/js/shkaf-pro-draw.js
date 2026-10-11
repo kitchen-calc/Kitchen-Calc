@@ -1,5 +1,5 @@
 /* Чертежи конструктора шкафа PRO в стиле AutoCAD, лист A4 (альбомный). Размеры на чертежах — в мм. Только для режима мастера. */
-import { PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1 } from '/static/js/shkaf-pro-core.js?v=1';
+import { BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1 } from '/static/js/shkaf-pro-core.js?v=1';
 
 const F = 1.4;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -67,6 +67,14 @@ function drawFront(S, g, x0, y0, sc, o) {
       else if (it.type === 'idoor') { const iw = Math.min(it.w || (w - it.x), w - it.x); out.push(rect(X(xa + it.x), Y(it.y1), iw * k10, (it.y1 - it.y) * k10, 'o', '#fff'), text(X(xa + it.x + iw / 2), Y((it.y + it.y1) / 2), 'дверца ' + ({ L: '◀', R: '▶', U: '▲', D: '▼' }[it.dir] || '◀'), 7)); }
       if (o.marks && it.type !== 'led') out.push(text(X(xa) + 4, Y(a) - 2, 'y' + mm(a), 6, 'start', 'fill="#b3261e"'));
     });
+  });
+  (S.beds || []).forEach((b, i) => { const d = bedDims(b, S.t), w = b.rot === 90 ? d.L : d.W; out.push(rect(X(b.x), Y(d.H), w * k10, (d.H - b.lg) * k10, 'o', '#fff'), rect(X(b.x), Y(b.lg + b.sh + b.mt), w * k10, (b.sh + b.mt) * k10, 'h'), text(X(b.x + w / 2), Y(d.H / 2), 'К' + (i + 1) + (b.kind === 'bunk' ? ' 2 яруса' : ' кровать'), 7), text(X(b.x + w / 2), Y(d.H / 2) + 14, mm(d.W) + '×' + mm(d.L) + '×' + mm(d.H), 7, 'middle', 'fill="#0b6e8f"')); });
+  (S.units || []).forEach((u, i) => {
+    const hb = u.h - (u.legs || 0), fn = Math.max(1, u.n | 0);
+    out.push(rect(X(u.x), Y(u.h), u.w * k10, hb * k10, 'o', '#fff'));
+    if (u.kind === 'doors') { const dn = u.w > 65 ? 2 : 1; for (let k = 1; k < dn; k++) out.push(line(X(u.x + k * u.w / dn), Y(u.h), X(u.x + k * u.w / dn), Y(u.legs || 0), 'o')); }
+    else for (let k = 1; k < fn; k++) out.push(line(X(u.x), Y((u.legs || 0) + k * hb / fn), X(u.x + u.w), Y((u.legs || 0) + k * hb / fn), 'o'));
+    out.push(text(X(u.x + u.w / 2), Y(u.h / 2), 'Т' + (i + 1) + ' ' + ({ flap: 'обувница', doors: 'тумба', drawers: 'ящики' }[u.kind]), 7), text(X(u.x + u.w / 2), Y(u.h / 2) + 14, mm(u.w) + '×' + mm(u.h) + '×' + mm(u.d), 7, 'middle', 'fill="#0b6e8f"'));
   });
   (S.panels || []).forEach((p, i) => {
     const lbl = 'П' + (i + 1) + ' ' + (PANEL_KINDS[p.kind] || '').split(' ')[0];
@@ -280,6 +288,106 @@ function tableSheets(S, bp, pr, startNo, total) {
   return out;
 }
 
+/* ---------- кровати: общий вид, узлы, двухъярусная ---------- */
+function bedRows(S, bp, b, bi, extra) { const d = bedDims(b, S.t); return [['Изделие', (b.kind === 'bunk' ? 'Двухъярусная кровать ' : 'Кровать ') + (bi + 1)], ['Каркас Ш×Д×В', mm(d.W) + ' × ' + mm(d.L) + ' × ' + mm(d.H) + ' мм'], ['Матрас', mm(b.mw) + '×' + mm(b.ml) + '×' + mm(b.mt) + ' мм, ' + BED_STYLES[b.style].ru], ['Материал', 'ЛДСП ' + mm(S.t) + ' мм · кромка 2 мм по видимым торцам'], ['Лист', extra], ['Дата', new Date().toLocaleDateString('ru-RU')]]; }
+function sheetBedMain(S, bp, bi, no, total) {
+  const b = S.beds[bi], t = S.t, d = bedDims(b, t), W = d.W, L = d.L, bunk = b.kind === 'bunk';
+  const sc = Math.min(860 / ((W + L) * 10 + 1200), 440 / (L * 10), .3), k = 10 * sc;
+  let o = '';
+  // --- вид сверху
+  const px = 110, py = 100, PX = v => px + v * k, PY = v => py + v * k;
+  o += rect(PX(0), PY(0), W * k, L * k, 'o');
+  o += rect(PX(0), PY(0), W * k, t * k, 'o', 'url(#h1)') + rect(PX(0), PY(L - t), W * k, t * k, 'o', 'url(#h1)') + rect(PX(0), PY(t), t * k, (L - 2 * t) * k, 'o', 'url(#h1)') + rect(PX(W - t), PY(t), t * k, (L - 2 * t) * k, 'o', 'url(#h1)');
+  const n = d.n, span = (b.ml + 1) - 6.8;
+  for (let i = 0; i < n; i++) o += rect(PX(t), PY(t + (n > 1 ? i * span / (n - 1) : 0)), (W - 2 * t) * k, 6.8 * k, 't', '#f1e6d2');
+  o += rect(PX(t + .5), PY(t + .5), b.mw * k, b.ml * k, 'h') + text(PX(W / 2), PY(L / 2), 'МАТРАС ' + mm(b.mw) + '×' + mm(b.ml), 8);
+  [[0, 0], [W - 5, 0], [0, L - 5], [W - 5, L - 5]].forEach(([lx, lz]) => { o += rect(PX(lx), PY(lz), 5 * k, 5 * k, 'h'); });
+  o += rect(PX(t), PY(t), 3 * k, (L - 2 * t) * k, 'h') + rect(PX(W - t - 3), PY(t), 3 * k, (L - 2 * t) * k, 'h');
+  if (b.drw) for (let i = 0; i < b.drw; i++) o += rect(PX(W), PY(t + i * (L - 2 * t) / b.drw + .15), 36 * k, ((L - 2 * t) / b.drw - .3) * k, 'h') + text(PX(W) + 18 * k, PY(t + (i + .5) * (L - 2 * t) / b.drw), 'ящик ' + (i + 1), 6.5);
+  o += dimH(PX(0), PX(W), PY(0), PY(0) - 28, mm(W)) + dimV(PY(0), PY(L), PX(0), PX(0) - 28, mm(L));
+  o += dimH(PX(t + .5), PX(t + .5 + b.mw), PY(L), PY(L) + 26, mm(b.mw)) + dimV(PY(t + .5), PY(t + .5 + b.ml), PX(W), PX(W) + (b.drw ? 36 * k : 0) + 30, mm(b.ml));
+  o += text(PX(W / 2), PY(L) + 54, 'ВИД СВЕРХУ (ПЛАН) · ламелей ' + n + ' шт · шаг ' + mm((b.ml + 1) / n) + ' мм', 8.5, 'middle', 'font-weight="700"');
+  // --- вид сбоку (изголовье слева)
+  const sx = px + W * k + 130 + (b.drw ? 36 * k : 0), sy = 90, SX = v => sx + v * k, SY = v => sy + (d.H - v) * k;
+  o += rect(SX(0), SY(b.hh), t * k, (b.hh - b.lg) * k, 'o', 'url(#h1)') + rect(SX(L - t), SY(b.fh), t * k, (b.fh - b.lg) * k, 'o', 'url(#h1)');
+  o += rect(SX(t), SY(b.lg + b.sh), (L - 2 * t) * k, b.sh * k, 'o', 'url(#h2)');
+  o += rect(SX(0), SY(b.lg), 5 * k, b.lg * k, 'o') + rect(SX(L - 5), SY(b.lg), 5 * k, b.lg * k, 'o');
+  o += line(SX(t), SY(d.slatTop), SX(L - t), SY(d.slatTop), 'o') + rect(SX(t + .5), SY(d.slatTop + .8 + b.mt), b.ml * k, b.mt * k, 'h') + text(SX(L / 2), SY(d.slatTop + .8 + b.mt / 2) + 3, 'матрас ' + mm(b.mt), 7.5);
+  o += rect(SX(t), SY(b.lg + b.sh - 2), (L - 2 * t) * k, 4 * k, 't');
+  if (b.soft) o += rect(SX(t), SY(b.hh - 2), 6 * k, (b.hh - b.lg - b.sh - 2) * k, 'o', '#e8e8e8') + text(SX(t + 12), SY(b.hh - 4), 'мягкая накладка', 6.5, 'start');
+  if (bunk) {
+    const y2 = b.lv2 + 3.2;
+    o += rect(SX(0), SY(d.postH), 7 * k, d.postH * k, 'o') + rect(SX(L - 7), SY(d.postH), 7 * k, d.postH * k, 'o');
+    o += rect(SX(7), SY(y2), (L - 14) * k, b.sh * k, 'o', 'url(#h2)') + line(SX(7), SY(b.lv2), SX(L - 7), SY(b.lv2), 'o') + rect(SX(t + .5), SY(b.lv2 + .8 + b.mt), b.ml * k, b.mt * k, 'h');
+    o += rect(SX(7), SY(b.lv2 + b.mt + b.rail), (L - 14) * k, (b.mt + b.rail + 2) * k, 'h') + dimV(SY(b.lv2 + b.mt + b.rail), SY(b.lv2 + 1), SX(L), SX(L) + 30, mm(b.mt + b.rail));
+    o += dimV(SY(b.lv2), SY(0), SX(L), SX(L) + 60, mm(b.lv2));
+  }
+  o += dimV(SY(b.hh), SY(0), SX(0), SX(0) - 28, mm(b.hh)) + dimV(SY(b.fh), SY(0), SX(L), SX(L) + (bunk ? 96 : 28), mm(b.fh)) + dimV(SY(b.lg + b.sh), SY(b.lg), SX(L / 2), SX(L / 2) + 0, mm(b.sh));
+  o += dimV(SY(b.lg), SY(0), SX(L - 14), SX(L - 14) - 22, mm(b.lg));
+  o += dimH(SX(0), SX(L), SY(d.H), SY(d.H) - 26, mm(L));
+  o += text(SX(L / 2), SY(0) + 38, 'ВИД СБОКУ (изголовье слева) · боковина ' + mm(b.sh) + ' · ножки ' + mm(b.lg) + ' · основание на ' + mm(d.slatTop) + ' от пола', 8.5, 'middle', 'font-weight="700"');
+  // --- вид спереди (с торца)
+  const fx = sx + 40, fy = 390, FX = v => fx + v * k, FY = v => fy + (b.hh - v) * k;
+  o += rect(FX(0), FY(b.hh), W * k, (b.hh - b.lg) * k, 'o', 'url(#h2)') + rect(FX(0), FY(b.fh), W * k, (b.fh - b.lg) * k, 'o', '#fff') + rect(FX(0), FY(b.lg), 5 * k, b.lg * k, 'o') + rect(FX(W - 5), FY(b.lg), 5 * k, b.lg * k, 'o');
+  o += rect(FX(t + .5), FY(d.slatTop + .8 + b.mt), b.mw * k, b.mt * k, 'h');
+  o += dimH(FX(0), FX(W), FY(b.hh), FY(b.hh) - 24, mm(W)) + dimV(FY(b.hh), FY(0), FX(W), FX(W) + 26, mm(b.hh)) + dimV(FY(b.fh), FY(0), FX(0), FX(0) - 26, mm(b.fh));
+  o += text(FX(W / 2), FY(0) + 36, 'ВИД С ИЗНОЖЬЯ', 8.5, 'middle', 'font-weight="700"') + text(1100, 60, 'М 1:' + niceScale(sc), 12, 'end', 'font-weight="700"');
+  return sheet(o, bedRows(S, bp, b, bi, 'общий вид и размеры'), no, total);
+}
+function sheetBedDetails(S, bp, bi, no, total) {
+  const b = S.beds[bi], t = S.t, d = bedDims(b, t); let o = '';
+  const T10 = t * 10, k = 3.2;
+  // 1. угловое соединение боковины и изголовья (вид сверху)
+  let x = 80, y = 110;
+  o += text(x + 120, y - 34, '1 · Узел: боковина — изголовье (вид сверху)', 9, 'middle', 'font-weight="700"');
+  o += rect(x, y, 220, T10 * k / 3.2 * 1, 'o', 'url(#h1)');   // изголовье
+  o += rect(x, y + T10 * k / 3.2, T10 * k / 3.2 * 1, 190, 'o', 'url(#h1)');       // боковина
+  o += circ(x + 36, y + 30, 5, 'o') + line(x + 36, y + 30, x + 36, y + 160, 'h') + circ(x + 36, y + 170, 4, 'o');
+  o += text(x + 66, y + 34, 'конфирмат 7×50', 7.5, 'start') + text(x + 66, y + 174, 'шкант ⌀8×30 (2 шт)', 7.5, 'start') + dimH(x, x + T10 * k / 3.2, y + 190, y + 214, T10) + dimV(y, y + T10 * k / 3.2, x + 220, x + 246, T10);
+  o += text(x + 110, y + 240, 'Соединение: торец боковины в пласть изголовья', 7.5, 'middle');
+  // 2. ламель в держателе (сечение)
+  x = 440; y = 110;
+  o += text(x + 100, y - 34, '2 · Ламель в ламеледержателе (сечение)', 9, 'middle', 'font-weight="700"');
+  o += rect(x, y + 70, 200, 38, 'o', 'url(#h2)') + text(x + 100, y + 128, 'опорный брусок 30×40', 7.5);
+  o += rect(x + 20, y + 54, 160, 16, 'o', '#f1e6d2') + text(x + 100, y + 48, 'ламель бук 68×8, шаг ' + mm((b.ml + 1) / d.n) + ' мм', 7.5);
+  o += `<path d="M ${x + 20} ${y + 54} q 0 -10 -8 -10 M ${x + 180} ${y + 54} q 0 -10 8 -10" ${ST.o}/>` + dimH(x + 20, x + 180, y + 70, y + 160, 68);
+  // 3. ножка и крепление
+  x = 780; y = 110;
+  o += text(x + 100, y - 34, '3 · Ножка кровати', 9, 'middle', 'font-weight="700"');
+  o += rect(x + 50, y, 100, 14, 'o', 'url(#h1)') + rect(x + 80, y + 14, 40, Math.min(150, b.lg * 10 * .6), 'o') + circ(x + 100, y + 7, 3, 'o');
+  o += dimV(y + 14, y + 14 + Math.min(150, b.lg * 10 * .6), x + 80, x + 40, mm(b.lg)) + dimH(x + 80, x + 120, y + 14 + Math.min(150, b.lg * 10 * .6), y + 14 + Math.min(150, b.lg * 10 * .6) + 24, 50);
+  o += text(x + 100, y + 14 + Math.min(150, b.lg * 10 * .6) + 50, 'монтажная пластина + болт M8', 7.5);
+  // 4. матрас: слои
+  x = 80; y = 400;
+  o += text(x + 150, y - 24, '4 · Матрас «' + BED_STYLES[b.style].ru + '»: слои (сумма ' + mm(b.mt) + ' мм)', 9, 'middle', 'font-weight="700"');
+  const layers = b.style === 'foam' ? [['Чехол стёганый', .08], ['Пена HR', .46], ['Пена средней жёсткости', .38], ['Чехол', .08]] : b.style === 'spring' ? [['Чехол стёганый', .08], ['Слой пены / струттофайбер', .17], ['Блок независимых пружин', .67], ['Основание', .08]] : b.style === 'ortho' ? [['Чехол', .08], ['Латекс', .25], ['Кокосовая койра', .34], ['Латекс', .25], ['Чехол', .08]] : [['Чехол', .08], ['Пена', .16], ['Блок пружин', .42], ['Кокосовая койра', .26], ['Основание', .08]];
+  let yy = y; const th = 250;
+  layers.forEach(([nm, f]) => { const h = th * f; o += rect(x, yy, 220, h, 'o', '#f6f3ec') + text(x + 236, yy + h / 2 + 3, nm + ' · ' + mm(b.mt * f) + ' мм', 7.5, 'start'); yy += h; });
+  o += dimV(y, y + th, x, x - 24, mm(b.mt));
+  // 5. спецификация основных деталей кровати
+  x = 560; y = 400; o += text(x, y - 24, '5 · Детали кровати (из общего раскроя)', 9, 'start', 'font-weight="700"');
+  const gr = bp.parts.filter(p => p.grp.indexOf('ровать ' + (bi + 1)) >= 0 || p.grp.indexOf('Двухъярусная кровать ' + (bi + 1)) >= 0).slice(0, 13);
+  gr.forEach((p, i) => { o += text(x, y + 6 + i * 15, p.name.replace(/ \(кровать \d+\)/, '') + ' — ' + p.qty + ' шт · ' + p.L + '×' + p.W + '×' + p.t, 7, 'start'); });
+  o += text(1100, 60, 'Узлы и сечения', 12, 'end', 'font-weight="700"');
+  return sheet(o, bedRows(S, bp, b, bi, 'узлы, сечения, матрас'), no, total);
+}
+function sheetBunk(S, bp, bi, no, total) {
+  const b = S.beds[bi], t = S.t, d = bedDims(b, t), sn = Math.max(3, b.steps | 0), sp = b.lv2 / (sn + 1); let o = '';
+  const sc = Math.min(520 / (d.postH * 10 + 100), .3), k = 10 * sc, x0 = 120, y0 = 70, X = v => x0 + v * k, Y = v => y0 + (d.postH + 5 - v) * k;
+  // ладья: вид сбоку с лестницей (торцевая) — стойки, ступени
+  o += rect(X(0), Y(d.postH), 7 * k, d.postH * k, 'o', 'url(#h1)') + rect(X(d.L - 7), Y(d.postH), 7 * k, d.postH * k, 'o', 'url(#h1)');
+  o += rect(X(7), Y(b.lv2 + 3.2), (d.L - 14) * k, b.sh * k, 'o', 'url(#h2)') + rect(X(7), Y(b.lg + b.sh), (d.L - 14) * k, b.sh * k, 'o', 'url(#h2)');
+  o += rect(X(7), Y(b.lv2 + b.mt + b.rail), (d.L - 14) * k, (b.mt + b.rail + 2) * k, 'h') + text(X(d.L / 2), Y(b.lv2 + b.mt + b.rail / 2) + 3, 'бортик ' + mm(b.rail) + ' над матрасом', 7.5);
+  o += rect(X(t + .5), Y(b.lv2 + .8 + b.mt), b.ml * k, b.mt * k, 'h') + rect(X(t + .5), Y(d.slatTop + .8 + b.mt), b.ml * k, b.mt * k, 'h');
+  const lx = X(d.L) + 40; o += rect(lx, Y(b.lv2 + 6), 6 * k, (b.lv2 + 6) * k, 'o', 'url(#h1)') + rect(lx + 40 * k, Y(b.lv2 + 6), 6 * k, (b.lv2 + 6) * k, 'o', 'url(#h1)');
+  for (let i = 1; i <= sn; i++) { o += rect(lx + 6 * k, Y(i * sp + 1.25), 34 * k, 2.5 * k, 'o', '#f1e6d2'); if (i > 1) o += dimV(Y(i * sp), Y((i - 1) * sp), lx + 46 * k, lx + 46 * k + 26 + (i % 2) * 22, mm(sp)); }
+  o += dimV(Y(sp), Y(0), lx, lx - 26, mm(sp)) + dimV(Y(b.lv2), Y(0), X(0), X(0) - 34, mm(b.lv2)) + dimV(Y(d.postH), Y(0), X(0), X(0) - 70, mm(d.postH));
+  o += dimV(Y(b.lv2 + b.mt + b.rail), Y(b.lv2), X(d.L - 7), X(d.L - 7) - 30, mm(b.mt + b.rail));
+  o += dimH(X(0), X(d.L), Y(d.postH), Y(d.postH) - 26, mm(d.L)) + text(X(d.L / 2), Y(0) + 40, 'ДВУХЪЯРУСНАЯ: стойки 70×70, ярусы, бортики, лестница (' + sn + ' ступеней, шаг ' + mm(sp) + ' мм)', 9, 'middle', 'font-weight="700"');
+  o += text(lx + 23 * k, Y(b.lv2 + 6) - 14, 'лестница', 8, 'middle', 'font-weight="700"');
+  o += text(1100, 60, 'М 1:' + niceScale(sc), 12, 'end', 'font-weight="700"');
+  return sheet(o, bedRows(S, bp, b, bi, 'двухъярусная: стойки и лестница'), no, total);
+}
 export function buildSheets(S) {
   const bp = buildParts(S), pr = pricing(S, bp);
   const total = '__T__';
@@ -287,6 +395,7 @@ export function buildSheets(S) {
   const sheets = [sheetOverview(S, bp, no++, total), sheetDoors(S, bp, no++, total), sheetSections(S, bp, no++, total)];
   S.cols.forEach((c, i) => { if (!c.gap) sheets.push(sheetColumn(S, bp, i, no++, total)); });
   S.mezzes.forEach((m, i) => sheets.push(sheetMezz(S, bp, i, no++, total)));
+  S.beds.forEach((b, bi) => { sheets.push(sheetBedMain(S, bp, bi, no++, total)); sheets.push(sheetBedDetails(S, bp, bi, no++, total)); if (b.kind === 'bunk') sheets.push(sheetBunk(S, bp, bi, no++, total)); });
   sheets.push(sheetDetails(S, bp, no++, total));
   const tbl = tableSheets(S, bp, pr, no, total);
   tbl.forEach(t => sheets.push(t));
