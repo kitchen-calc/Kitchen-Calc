@@ -683,7 +683,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
       const mirror = new THREE.MeshStandardMaterial({ color: '#eef5f9', roughness: .06, metalness: .8 }), key = 'obj:' + q.id;
       const g = buildObjGroup(q, { t, body, back: M.inner, glass: M.glass, mirror, chrome: M.chrome, edge: null, keyBase: key, onDoor: (k, fn) => anims.push({ key: k, apply: fn }), mark: null });
       g.position.y = q.y || 0; const wrap = new THREE.Group(); wrap.add(g); placeAt(wrap, q.bw, q.bd, q.cx, q.cz, q.r || 0, 0);
-      wrap.userData.mod = { tier: 'obj', id: q.id, w: q.bw, h: q.h, d: q.bd, y0: q.y || 0, free: true }; root.add(wrap); pick.push(wrap);
+      wrap.userData.mod = { tier: 'obj', id: q.id, w: q.bw, h: q.h, d: q.bd, y0: q.y || 0, free: true, cx: q.cx, cz: q.cz, r: q.r || 0, y: q.y || 0 }; root.add(wrap); pick.push(wrap);
     });
     room(M, st, bounds);
     island(M, st, bounds);
