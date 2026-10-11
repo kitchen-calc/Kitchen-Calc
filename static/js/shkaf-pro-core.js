@@ -695,6 +695,7 @@ export function sanitize(S) {
   S.cols.slice(0, 14).forEach(c => {
     const col = { id: uid(), w: n(c && c.w, 15, 250, 60), items: [] };
     if (c && c.gap) col.gap = true;
+    if (c && !col.gap) { const hh = Number(c.H), dd0 = Number(c.D); if (isFinite(hh) && hh > 0) col.H = r1(n(hh, 30, 350, 200)); if (isFinite(dd0) && dd0 > 0) col.D = r1(n(dd0, 10, 120, 60)); }
     if (c && c.dn != null) col.dn = n(c.dn, 0, 4, 1) | 0;
     if (c && c.dp === false) col.dp = false;
     if (c && c.nk) col.nk = true;
