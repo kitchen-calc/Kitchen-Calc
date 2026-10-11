@@ -544,32 +544,50 @@ export function createK3D(container, hooks = {}, opts = {}) {
   function islandPos(st, runDepth) {
     if (!st.island) return null;
     const L = st.island.L, Wd = st.island.W, r = ((st.island.r || 0) % 360 + 360) % 360;
-    return { L, Wd, r, cx: st.island.cx != null ? st.island.cx : st.W / 2, cz: st.island.cz != null ? st.island.cz : runDepth + 100 + Wd / 2, ext: (r % 180 ? L : Wd) / 2 };
+    return { L, Wd, r, cx: st.island.cx != null ? st.island.cx : st.W / 2, cz: st.island.cz != null ? st.island.cz : runDepth + 100 + Wd / 2, ext: (r % 180 ? L : Wd) / 2, cfg: st.island.cfg };
   }
   /* группа, у которой локальный центр основания (w/2, d/2) стоит в (cx, cz), повёрнута на r градусов */
   function placeAt(g, w, d, cx, cz, r, y) {
     const th = r * DEG; g.rotation.y = th;
     g.position.set(cx - (w / 2 * Math.cos(th) + d / 2 * Math.sin(th)), y == null ? g.position.y : y, cz - (-w / 2 * Math.sin(th) + d / 2 * Math.cos(th)));
   }
+  /* секция острова: двери, ящики, глухая панель или открытые полки — те же узлы, что у обычных нижних шкафов */
+  function islCell(cg, M, st, c, w, key) {
+    const D = st.LD, PL = st.PL, H = st.BOX - PL, zf = D - FT;
+    if (c.k === 'door' || c.k === 'drawers') { lowerModule(cg, M, st, { kind: c.k === 'drawers' ? 'drawers' : 'door', drawers: c.k === 'drawers' ? ((c.dr | 0) || 3) : 0, dn: c.dn || 1, hinge: c.hg || 'L', shelves: c.k === 'door' ? (c.sh | 0) : 0, openType: 'handles', width: w }, w, key); return; }
+    box(cg, w - 4, PL, D - 6, M.plinth, 2, 0, 2);
+    if (c.k === 'blind') { carcass(cg, M, w, H, D, PL, 0, {}); box(cg, w - 2 * GAP, H - 2 * GAP, FT, M.facade, GAP, PL + GAP, zf, 60); }
+    else carcass(cg, M, w, H, D, PL, (c.sh | 0) || 2, {});
+  }
   function island(M, st, bounds) {
     K_MILL = st.mill || '';
     const I = bounds.isl; if (!I) return null;
-    const L = I.L, Wd = I.Wd;
+    const L = I.L, Wd = I.Wd, cfg = I.cfg || { cells: [], top: 'top', ovF: 2, ovB: 2, back: 'panel' }, CT = st.CT;
+    const cells = cfg.cells && cfg.cells.length ? cfg.cells : [{ k: 'door', w: L, dn: 2 }];
     const g = new THREE.Group(); placeAt(g, L, Wd, I.cx, I.cz, I.r, 0); root.add(g);
     g.userData.mod = { tier: 'island', id: 0, w: L, h: st.BOX + st.CT, d: Wd, y0: 0 };
     pick.push(g);
-    box(g, L - 4, st.PL, Wd - 8, M.plinth, 2, 0, 4);
-    box(g, L, st.BOX - st.PL, Wd - 4, M.facade, 0, st.PL, 2, 60);
-    box(g, L + 4, st.CT, Wd + 4, M.top, -2, st.BOX, 0, 80);
-    const n = Math.max(1, Math.round(L / 60));
-    for (let k = 1; k < n; k++) box(g, .3, st.BOX - st.PL - 2, .2, M.black, k * L / n, st.PL + 1, Wd - 2);
-    // стулья
-    const nS = Math.min(st.decor.stools || 0, Math.max(1, Math.floor(L / 42)));
+    const both = cfg.back === 'cells', Df = both ? Wd / 2 : Wd - FT, stI = Object.assign({}, st, { LD: Df });
+    let x0 = 0;
+    cells.forEach((c, i) => {
+      const w = c.w, cg = new THREE.Group(); cg.position.set(x0, 0, both ? 0 : FT); g.add(cg); islCell(cg, M, stI, c, w, 'island:0:' + i);
+      if (both) { const cb = new THREE.Group(); cb.position.set(x0 + w, 0, Wd); cb.rotation.y = Math.PI; g.add(cb); islCell(cb, M, stI, c, w, 'island:0:b' + i); }
+      x0 += w;
+    });
+    if (!both) box(g, L, st.BOX - st.PL, FT, M.facade, 0, st.PL, 0, 60);   // задняя сторона — глухая панель
+    // столешница: сверху, свесы спереди и сзади; боковины из столешницы с одной или двух коротких сторон
+    const wl = cfg.top === 'L' || cfg.top === 'both', wr = cfg.top === 'R' || cfg.top === 'both', ovF = cfg.ovF != null ? cfg.ovF : 2, ovB = cfg.ovB != null ? cfg.ovB : 2;
+    const xa = wl ? -CT : -2, xb = L + (wr ? CT : 2);
+    box(g, xb - xa, CT, Wd + ovF + ovB, M.top, xa, st.BOX, -ovB, 80);
+    if (wl) box(g, CT, st.BOX, Wd, M.top, -CT, 0, 0, 80);
+    if (wr) box(g, CT, st.BOX, Wd, M.top, L, 0, 0, 80);
+    // стулья со стороны свеса (где свес больше)
+    const nS = Math.min(st.decor.stools || 0, Math.max(1, Math.floor(L / 42))), sz = ovB > ovF ? -(ovB + 28) : Wd + ovF + 28;
     for (let i = 0; i < nS; i++) {
       const sx = (i + .5) * L / nS;
-      const seat = mesh(new THREE.CylinderGeometry(17, 17, 6, 28), new THREE.MeshStandardMaterial({ color: '#b8956a', roughness: .6 })); seat.position.set(sx, 72, Wd + 30); g.add(seat);
-      cyl(g, 1.4, 70, M.black, sx, 36, Wd + 30, null);
-      const ring = mesh(new THREE.TorusGeometry(12, .9, 8, 30), M.black); ring.rotation.x = Math.PI / 2; ring.position.set(sx, 30, Wd + 30); g.add(ring);
+      const seat = mesh(new THREE.CylinderGeometry(17, 17, 6, 28), new THREE.MeshStandardMaterial({ color: '#b8956a', roughness: .6 })); seat.position.set(sx, 72, sz); g.add(seat);
+      cyl(g, 1.4, 70, M.black, sx, 36, sz, null);
+      const ring = mesh(new THREE.TorusGeometry(12, .9, 8, 30), M.black); ring.rotation.x = Math.PI / 2; ring.position.set(sx, 30, sz); g.add(ring);
     }
     return { z1: I.cz + I.ext };
   }
