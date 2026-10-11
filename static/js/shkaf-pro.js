@@ -419,9 +419,11 @@ function sideView() {
   return `<div class="sh">${esc(S.name)}</div><div class="note">Вращайте камеру. Нажмите на двери, чтобы открыть.</div>
     <div class="r">${btn(0, 'PRO.openAll(true)', '↔ Открыть всё')}${btn(0, 'PRO.openAll(false)', 'Закрыть')}</div>
     <div class="sub">Параметры</div>
-    <div class="r"><span>Размер</span><b>${mm(g.W)} × ${mm(S.H)} × ${mm(S.D)} мм</b></div>
-    <div class="r"><span>Цвет</span><b>${esc(S.custom || PALETTE[S.color][0])}</b></div>
-    <div class="r"><span>Отсеков</span><b>${S.cols.filter(c => !c.gap).length}${S.mezzes.length ? ' + антресолей: ' + S.mezzes.length : ''}</b></div>
+    ${S.cols.some(c => !c.gap && !c.det) ? `<div class="r"><span>Размер</span><b>${mm(g.W)} × ${mm(S.H)} × ${mm(S.D)} мм</b></div>` : ''}
+    <div class="r"><span>Комната</span><b>${(() => { const P = roomPoly(S); return mm(Math.max(...P.map(p => p[0])) - Math.min(...P.map(p => p[0]))) + ' × ' + mm(Math.max(...P.map(p => p[1])) - Math.min(...P.map(p => p[1]))) + ' мм'; })()}</b></div>
+    <div class="r"><span>Цвет</span><b>${esc(S.cat && window.KCCAT ? window.KCCAT.name(S.cat) : (S.custom || PALETTE[S.color][0]))}</b></div>
+    <div class="r"><span>Шкафов и отсеков</span><b>${S.cols.filter(c => !c.gap).length}${S.mezzes.length ? ' + антресолей: ' + S.mezzes.length : ''}</b></div>
+    ${(S.beds.length + S.units.length + (S.objs || []).length) ? `<div class="r"><span>Другая мебель</span><b>${S.beds.length ? 'кроватей: ' + S.beds.length + ' ' : ''}${S.units.length ? 'тумб: ' + S.units.length + ' ' : ''}${(S.objs || []).length ? 'изделий: ' + S.objs.length : ''}</b></div>` : ''}
     <div class="sub">Стоимость</div><div class="vp">$${fmt(pr.total / USD)}</div><div class="note">Ориентировочно. Точный проект и цена — после замера.</div>
     <div class="r" style="margin-top:12px"><a class="cta" href="tel:+998920934510">📞 Позвонить</a><a class="cta" href="https://t.me/Kitchencalc" target="_blank" rel="noopener">✈ Telegram</a></div>`;
 }
@@ -452,7 +454,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=24');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=25');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -563,6 +565,7 @@ async function init3D() {
     onDragEnd: () => { dragState = null; refresh(true); }
   }, { viewOnly: VIEW });
   $('p3dLoad').style.display = 'none';
+  K.update(S);   // первая сборка сцены: проект из ссылки / сохранения должен нарисоваться сразу, без правки
   refresh(false);
 }
 let dragState = null;
@@ -595,7 +598,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=18');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=21');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -791,6 +794,7 @@ window.PRO = {
     const v = id || undefined;
     if (t === 's') S.cat = v; else if (t === 'doors') S.doors.cat = v; else { const it = t === 'unit' ? S.units[sel.ui] : t === 'bed' ? S.beds[sel.bi] : t === 'obj' ? S.objs[sel.oi] : S.panels[sel.pi]; if (it) it.cat = v; }
   }),
+  dbg: () => K && K.debug && K.debug(),
   colDp: () => mutate(() => { const c = S.cols[sel.i]; if (c) { if (c.dp === false) delete c.dp; else c.dp = false; } }),
   dtRot: d => mutate(() => { const c = S.cols[sel.i]; if (!c || !c.det) return; const ci = sel.i, f = colFoot(S, ci), cx = c.det.x + f.w / 2, cz = c.det.z + f.d / 2; c.det.rot = (((c.det.rot || 0) + d) % 360 + 360) % 360; const n2 = colFoot(S, ci); c.det.x = r1(cx - n2.w / 2); c.det.z = r1(cz - n2.d / 2); if (S.room.mag) { const m = rectMagnet(S, c.det.x, c.det.z, r => colFoot(S, ci, r), c.det.rot, 200, c.det.rot); if (m) { c.det.x = m.ox; c.det.z = m.oz; } } }),
   magnet: () => mutate(() => { S.room.mag = !S.room.mag; if (S.room.mag) { const m = wardrobeMagnet(S, S.room.ox || 0, S.room.oz || 0, 120); if (m) { S.room.ox = m.ox; S.room.oz = m.oz; S.room.rot = m.rot; } } }),

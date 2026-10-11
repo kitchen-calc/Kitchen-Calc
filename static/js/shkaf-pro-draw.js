@@ -7,9 +7,10 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 const N = v => Math.round(v * 100) / 100, mm = v => Math.round(v * 10);
 const ST = { o: 'stroke="#111" stroke-width="1.5" fill="none" stroke-linejoin="round"', t: 'stroke="#333" stroke-width=".7" fill="none"', h: 'stroke="#555" stroke-width=".7" stroke-dasharray="6 3.5" fill="none"', c: 'stroke="#b3261e" stroke-width=".6" stroke-dasharray="14 3 2 3" fill="none"', d: 'stroke="#0b6e8f" stroke-width=".8" fill="none"' };
 const line = (x1, y1, x2, y2, s) => `<line x1="${N(x1)}" y1="${N(y1)}" x2="${N(x2)}" y2="${N(y2)}" ${ST[s || 'o']}/>`;
-const rect = (x, y, w, h, s, fill) => `<rect x="${N(x)}" y="${N(y)}" width="${N(Math.max(0, w))}" height="${N(Math.max(0, h))}" ${ST[s || 'o']}${fill ? ` fill="${fill}"` : ''}/>`;
+const sty = (s, fill) => fill ? ST[s || 'o'].replace('fill="none"', '') : ST[s || 'o'];
+const rect = (x, y, w, h, s, fill) => `<rect x="${N(x)}" y="${N(y)}" width="${N(Math.max(0, w))}" height="${N(Math.max(0, h))}" ${sty(s, fill)}${fill ? ` fill="${fill}"` : ''}/>`;
 const text = (x, y, t, size, anchor, extra) => `<text x="${N(x)}" y="${N(y)}" font-size="${N((size || 10) * F)}" text-anchor="${anchor || 'middle'}" font-family="Arial, sans-serif" fill="#111" ${extra || ''}>${esc(t)}</text>`;
-const circ = (x, y, r, s, fill) => `<circle cx="${N(x)}" cy="${N(y)}" r="${N(r)}" ${ST[s || 'o']}${fill ? ` fill="${fill}"` : ''}/>`;
+const circ = (x, y, r, s, fill) => `<circle cx="${N(x)}" cy="${N(y)}" r="${N(r)}" ${sty(s, fill)}${fill ? ` fill="${fill}"` : ''}/>`;
 const tick = (x, y) => `<line x1="${N(x - 3)}" y1="${N(y + 3)}" x2="${N(x + 3)}" y2="${N(y - 3)}" stroke="#0b6e8f" stroke-width="1"/>`;
 function dimH(x1, x2, yObj, yDim, label) {
   const dir = yDim < yObj ? -1 : 1;
@@ -30,7 +31,7 @@ function titleBlock(rows, no, total) {
 const sheet = (inner, rows, no, total) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1190 840" width="100%" style="background:#fff;display:block" font-family="Arial, sans-serif">${defs}${rect(10, 10, 1170, 820, 'o')}${rect(30, 30, 1130, 760, 't')}<g class="ct">${inner}</g>${titleBlock(rows, no, total)}</svg>`;
 const niceScale = sc => { const N0 = (1190 / 420) / sc, nice = [2, 4, 5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100]; let b = nice[0]; nice.forEach(n => { if (Math.abs(n - N0) < Math.abs(b - N0)) b = n; }); return b; };
 
-function meta(S, bp) { return [['Изделие', S.name + ' · ' + Math.round(bp.g.W * 10) + '×' + Math.round(bp.g.totalH * 10) + '×' + Math.round(S.D * 10) + ' мм'], ['Цвет корпуса', S.custom ? S.custom : PALETTE[S.color][0]], ['Материал', 'ЛДСП ' + Math.round(S.t * 10) + ' мм, задняя стенка ХДФ 3 мм'], ['Отсеков', S.cols.filter(c => !c.gap).length + (S.cols.some(c => c.gap) ? ' + проём' : '') + (S.mezzes.length ? ', антресолей ' + S.mezzes.length : '')], ['Двери', { none: 'без дверей', swing: 'распашные ' + S.doors.n, sliding: 'купе ' + S.doors.n }[S.doors.kind]], ['Дата', new Date().toLocaleDateString('ru-RU')]]; }
+function meta(S, bp) { return [['Изделие', S.name + (S.cols.some(c => !c.gap && !c.det) ? ' · ' + Math.round(bp.g.W * 10) + '×' + Math.round(bp.g.totalH * 10) + '×' + Math.round(S.D * 10) + ' мм' : '')], ['Цвет корпуса', S.custom ? S.custom : PALETTE[S.color][0]], ['Материал', 'ЛДСП ' + Math.round(S.t * 10) + ' мм, задняя стенка ХДФ 3 мм'], ['Отсеков', S.cols.filter(c => !c.gap).length + (S.cols.some(c => c.gap) ? ' + проём' : '') + (S.mezzes.length ? ', антресолей ' + S.mezzes.length : '')], ['Двери', { none: 'без дверей', swing: 'распашные ' + S.doors.n, sliding: 'купе ' + S.doors.n }[S.doors.kind]], ['Дата', new Date().toLocaleDateString('ru-RU')]]; }
 
 /* ---------- вид спереди (с наполнением) ---------- */
 function drawFront(S, g, x0, y0, sc, o) {
@@ -155,7 +156,7 @@ function sheetOverview(S, bp, no, total) {
 function sheetRoomPlan(S, bp, no, total) {
   const P = roomPoly(S), bx = Math.max(...P.map(p => p[0])), bz = Math.max(...P.map(p => p[1]));
   const sc = Math.min(760 / (bx * 10), 460 / (bz * 10), .5), k10 = 10 * sc, x0 = 120, y0 = 90, X = v => x0 + v * k10, Z = v => y0 + v * k10;
-  let o = `<polygon points="${P.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${ST.o} stroke-width="3" fill="#faf7f0"/>`;
+  let o = `<polygon points="${P.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${sty('o', 1)} stroke-width="3" fill="#faf7f0"/>`;
   { const E = roomEdges(P); (S.opens || []).forEach((q, i) => {
       const c = openCenter(q, E); if (!c) return; const e = c.e, hw = q.w / 2, k = q.kind, p1 = [c.x - e.ex * hw, c.z - e.ez * hw], p2 = [c.x + e.ex * hw, c.z + e.ez * hw], n = [e.nx, e.nz];
       const P2 = (p, d) => [X(p[0] + n[0] * d), Z(p[1] + n[1] * d)], ln = (a, b, st) => `<line x1="${N(a[0])}" y1="${N(a[1])}" x2="${N(b[0])}" y2="${N(b[1])}" ${st || ST.o}/>`;
@@ -167,9 +168,9 @@ function sheetRoomPlan(S, bp, no, total) {
         o += ln(P2(p1, 0), P2(p2, 0), 'stroke="#faf7f0" stroke-width="7"') + ln(P2(p1, -2.2), P2(p2, -2.2)) + ln(P2(p1, 0), P2(p2, 0), ST.t) + ln(P2(p1, 2.2), P2(p2, 2.2)) + ln(P2(p1, -2.2), P2(p1, 2.2)) + ln(P2(p2, -2.2), P2(p2, 2.2));
         for (let j = 1; j < (q.n || 1); j++) { const pp = [p1[0] + (p2[0] - p1[0]) * j / q.n, p1[1] + (p2[1] - p1[1]) * j / q.n]; o += ln(P2(pp, -2.2), P2(pp, 2.2)); }
       } else if (k === 'radiator') {
-        o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, 9), P2(p1, 9)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${ST.o} fill="url(#h2)"/>`;
+        o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, 9), P2(p1, 9)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${sty('o', 1)} fill="url(#h2)"/>`;
       } else if (k === 'column') {
-        o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, q.d || 40), P2(p1, q.d || 40)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${ST.o} fill="url(#h1)"/>`;
+        o += `<polygon points="${[P2(p1, 0), P2(p2, 0), P2(p2, q.d || 40), P2(p1, q.d || 40)].map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${sty('o', 1)} fill="url(#h1)"/>`;
       } else {
         const cc = P2([c.x, c.z], 2.5); o += circ(cc[0], cc[1], k === 'pipe' ? Math.max(2, q.w / 2 * k10) : 3.4, 'o', k === 'pipe' ? '#ddd' : '#fff') + text(cc[0] + n[0] * 9, cc[1] + n[1] * 9 + 2.5, k === 'switch' ? 'В' : (k === 'vent' ? '⌀' : (k === 'pipe' ? 'Т' : 'Р')), 6.2, 'middle', 'font-weight="700"');
       }
@@ -189,7 +190,7 @@ function sheetRoomPlan(S, bp, no, total) {
   });
   const legend = [];
   items.forEach(it => {
-    o += `<polygon points="${it.poly.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${ST.o} fill="${it.fill}"/>`;
+    o += `<polygon points="${it.poly.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${sty('o', 1)} fill="${it.fill}"/>`;
     const xs = it.poly.map(p => p[0]), zs = it.poly.map(p => p[1]), ix0 = Math.min(...xs), ix1 = Math.max(...xs), iz0 = Math.min(...zs), iz1 = Math.max(...zs), cx = (ix0 + ix1) / 2, cz = (iz0 + iz1) / 2, a = (it.rot || 0) * Math.PI / 180;
     o += line(X(cx), Z(cz), X(cx) + Math.sin(a) * 16, Z(cz) + Math.cos(a) * 16, 'o') + circ(X(cx), Z(cz), 2, 'o', '#111');   // стрелка «лицом»
     o += text(X(cx), Z(cz) - 6, it.n, 8.5, 'middle', 'font-weight="700"');
@@ -477,39 +478,54 @@ function roomItems(S, bp) {
   return out;
 }
 /* ---------- аксонометрия комнаты: как на эскизе — две стены, пол, мебель и проёмы ---------- */
-function sheetIso(S, bp, no, total) {
-  const P = roomPoly(S), E = roomEdges(P), H = (S.room && S.room.H) || 260, items = roomItems(S, bp), c30 = .866, s30 = .5;
-  const pr = (x, y, z) => [(x - z) * c30, (x + z) * s30 - y];
-  const pts = [];   // для масштаба
+function sheetIso(S, bp, no, total, vk) {
+  vk = vk || 0;
+  const P0 = roomPoly(S), H = (S.room && S.room.H) || 260, items0 = roomItems(S, bp), c30 = .866, s30 = .5;
+  const bx0 = Math.min(...P0.map(p => p[0])), bx1 = Math.max(...P0.map(p => p[0])), bz0 = Math.min(...P0.map(p => p[1])), bz1 = Math.max(...P0.map(p => p[1])), cxm = (bx0 + bx1) / 2, czm = (bz0 + bz1) / 2;
+  const rot = (x, z) => { let dx = x - cxm, dz = z - czm; for (let i = 0; i < vk; i++) { const t = dx; dx = dz; dz = -t; } return [cxm + dx, czm + dz]; };   // поворот плана на 90° — вид с другого угла
+  const P = P0.map(p => rot(p[0], p[1])), E = roomEdges(P);
+  const items = items0.map(it => { const a = rot(it.x0, it.z0), b = rot(it.x1, it.z1); return Object.assign({}, it, { x0: Math.min(a[0], b[0]), x1: Math.max(a[0], b[0]), z0: Math.min(a[1], b[1]), z1: Math.max(a[1], b[1]) }); });
+  const pr = (x, y, z) => [(x - z) * c30, (x + z) * s30 - y], pts = [];
   P.forEach(p => { pts.push(pr(p[0], 0, p[1]), pr(p[0], H, p[1])); });
   items.forEach(it => { [[it.x0, it.z0], [it.x1, it.z0], [it.x1, it.z1], [it.x0, it.z1]].forEach(c => { pts.push(pr(c[0], it.y0, c[1]), pr(c[0], it.y1, c[1])); }); });
-  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), bx0 = Math.min(...xs), bx1 = Math.max(...xs), by0 = Math.min(...ys), by1 = Math.max(...ys);
-  const sc = Math.min(720 / (bx1 - bx0 || 1), 560 / (by1 - by0 || 1)), ox = 60 - bx0 * sc + (720 - (bx1 - bx0) * sc) / 2, oy = 70 - by0 * sc;
-  const Q = (x, y, z) => { const p = pr(x, y, z); return [ox + p[0] * sc, oy + p[1] * sc]; }, poly = (arr, st, fill) => `<polygon points="${arr.map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${st || ST.o}${fill ? ` fill="${fill}"` : ''}/>`;
-  let o = poly(P.map(p => Q(p[0], 0, p[1])), ST.o, '#f3ecdc');
-  E.forEach(e => {   // стены, которые видно изнутри (дальние от зрителя)
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), ax0 = Math.min(...xs), ax1 = Math.max(...xs), ay0 = Math.min(...ys), ay1 = Math.max(...ys);
+  const sc = Math.min(760 / (ax1 - ax0 || 1), 560 / (ay1 - ay0 || 1)), ox = 50 - ax0 * sc + (760 - (ax1 - ax0) * sc) / 2, oy = 78 - ay0 * sc;
+  const Q = (x, y, z) => { const p = pr(x, y, z); return [ox + p[0] * sc, oy + p[1] * sc]; }, poly = (arr, st, fill) => `<polygon points="${arr.map(a => N(a[0]) + ',' + N(a[1])).join(' ')}" ${sty(st ? 't' : 'o', fill)}${fill ? ` fill="${fill}"` : ''}${st === 't' ? ' stroke-width=".8"' : ''}/>`;
+  let o = poly(P.map(p => Q(p[0], 0, p[1])), null, '#f3ecdc');
+  E.forEach(e => {   // стены, видимые изнутри (дальние от зрителя)
     if ((e.nx + e.nz) / Math.SQRT2 < .3) return;
-    o += poly([Q(e.a[0], 0, e.a[1]), Q(e.b[0], 0, e.b[1]), Q(e.b[0], H, e.b[1]), Q(e.a[0], H, e.a[1])], ST.t, 'rgba(210,205,195,.45)');
-    const mid = Q((e.a[0] + e.b[0]) / 2, 0, (e.a[1] + e.b[1]) / 2); o += text(mid[0] + e.nx * 0 - 10, mid[1] + 24, Math.round(e.L * 10) + '', 7.5, 'middle', 'fill="#0b6e8f" font-weight="700"');
+    o += poly([Q(e.a[0], 0, e.a[1]), Q(e.b[0], 0, e.b[1]), Q(e.b[0], H, e.b[1]), Q(e.a[0], H, e.a[1])], 't', 'rgba(215,210,198,.5)');
+    const mid = Q((e.a[0] + e.b[0]) / 2, 0, (e.a[1] + e.b[1]) / 2); o += text(mid[0] - 10, mid[1] + 24, Math.round(e.L * 10) + '', 7.5, 'middle', 'fill="#0b6e8f" font-weight="700"');
   });
-  (S.opens || []).forEach((q, i) => {   // проёмы на видимых стенах
+  (S.opens || []).forEach((q, i) => {
     const e = E[q.wall]; if (!e || (e.nx + e.nz) / Math.SQRT2 < .3) return;
     const W3 = (u, y) => Q(e.a[0] + e.ex * u, y, e.a[1] + e.ez * u), u0 = q.off, u1 = q.off + q.w, y0 = q.y, y1 = q.y + q.h;
-    o += poly([W3(u0, y0), W3(u1, y0), W3(u1, y1), W3(u0, y1)], ST.o, q.kind === 'window' ? 'rgba(160,200,225,.55)' : (q.kind === 'door' || q.kind === 'balcony' ? 'rgba(160,110,70,.4)' : '#fff'));
+    o += poly([W3(u0, y0), W3(u1, y0), W3(u1, y1), W3(u0, y1)], null, q.kind === 'window' ? 'rgba(160,200,225,.6)' : (q.kind === 'door' || q.kind === 'balcony' ? 'rgba(160,110,70,.45)' : '#fff'));
     if (q.kind === 'window') for (let j = 1; j < (q.n || 1); j++) { const u = u0 + (u1 - u0) * j / q.n; o += line(W3(u, y0)[0], W3(u, y0)[1], W3(u, y1)[0], W3(u, y1)[1], 't'); }
-    const c = W3((u0 + u1) / 2, (y0 + y1) / 2); o += text(c[0], c[1] + 3, String(i + 1), 6.5, 'middle', 'fill="#0b6e8f" font-weight="700"');
+    const c = W3((u0 + u1) / 2, (y0 + y1) / 2); o += text(c[0], c[1] + 3, '№' + (i + 1), 6.5, 'middle', 'fill="#0b6e8f" font-weight="700"');
+    if (q.y > 1) { const f0 = W3(u0, 0), f1 = W3(u0, y0); o += line(f0[0] - 5, f0[1], f1[0] - 5, f1[1], 'd') + text(f1[0] - 8, (f0[1] + f1[1]) / 2, mm(q.y), 6, 'end', 'fill="#0b6e8f"'); }
   });
-  items.slice().sort((a, b) => (a.x0 + a.x1 + a.z0 + a.z1) - (b.x0 + b.x1 + b.z0 + b.z1)).forEach(it => {   // дальние сначала
-    const top = [Q(it.x0, it.y1, it.z0), Q(it.x1, it.y1, it.z0), Q(it.x1, it.y1, it.z1), Q(it.x0, it.y1, it.z1)];
-    o += poly([Q(it.x1, it.y0, it.z0), Q(it.x1, it.y0, it.z1), Q(it.x1, it.y1, it.z1), Q(it.x1, it.y1, it.z0)], ST.o, '#e1d8c6');   // грань +x
-    o += poly([Q(it.x0, it.y0, it.z1), Q(it.x1, it.y0, it.z1), Q(it.x1, it.y1, it.z1), Q(it.x0, it.y1, it.z1)], ST.o, '#d3c9b3');   // грань +z
-    o += poly(top, ST.o, '#f6f1e6');
+  // размеры по полу: от стены до предмета и между предметами, мм
+  const dimF = (xa, za, xb, zb, label) => { const A = Q(xa, 0, za), B = Q(xb, 0, zb); o += line(A[0], A[1], B[0], B[1], 'd') + circ(A[0], A[1], 1.6, 'd', '#0b6e8f') + circ(B[0], B[1], 1.6, 'd', '#0b6e8f') + text((A[0] + B[0]) / 2 + 3, (A[1] + B[1]) / 2 - 3, label, 6.4, 'middle', 'fill="#0b6e8f" font-weight="700"'); };
+  items.forEach(it => {
+    const ob = obstacles(P, items, it), xc = (it.x0 + it.x1) / 2, zc = (it.z0 + it.z1) / 2;
+    if (ob.L && ob.L[0] > 1) dimF(it.x0 - ob.L[0], zc, it.x0, zc, mm(ob.L[0]) + (ob.L[1] === 'стена' ? '' : '→' + ob.L[1]));
+    if (ob.U && ob.U[0] > 1) dimF(xc, it.z0 - ob.U[0], xc, it.z0, mm(ob.U[0]) + (ob.U[1] === 'стена' ? '' : '→' + ob.U[1]));
+    if (ob.R && ob.R[0] > 1) dimF(it.x1, zc, it.x1 + ob.R[0], zc, mm(ob.R[0]) + (ob.R[1] === 'стена' ? '' : '→' + ob.R[1]));
+    if (ob.D && ob.D[0] > 1) dimF(xc, it.z1, xc, it.z1 + ob.D[0], mm(ob.D[0]) + (ob.D[1] === 'стена' ? '' : '→' + ob.D[1]));
+  });
+  items.slice().sort((a, b) => (a.x0 + a.x1 + a.z0 + a.z1) - (b.x0 + b.x1 + b.z0 + b.z1)).forEach(it => {
+    o += poly([Q(it.x1, it.y0, it.z0), Q(it.x1, it.y0, it.z1), Q(it.x1, it.y1, it.z1), Q(it.x1, it.y1, it.z0)], null, '#e1d8c6');
+    o += poly([Q(it.x0, it.y0, it.z1), Q(it.x1, it.y0, it.z1), Q(it.x1, it.y1, it.z1), Q(it.x0, it.y1, it.z1)], null, '#d3c9b3');
+    o += poly([Q(it.x0, it.y1, it.z0), Q(it.x1, it.y1, it.z0), Q(it.x1, it.y1, it.z1), Q(it.x0, it.y1, it.z1)], null, '#f6f1e6');
     const tc = Q((it.x0 + it.x1) / 2, it.y1, (it.z0 + it.z1) / 2); o += text(tc[0], tc[1] + 3, it.n, 7.5, 'middle', 'font-weight="700"');
+    const v0 = Q(it.x1, it.y0, it.z1), v1 = Q(it.x1, it.y1, it.z1);   // высота предмета и от пола — у переднего угла
+    o += line(v0[0] + 8, v0[1], v1[0] + 8, v1[1], 'd') + text(v1[0] + 11, (v0[1] + v1[1]) / 2 + 2, mm(it.y1 - it.y0) + (it.y0 > 1 ? ' (от пола ' + mm(it.y0) + ')' : ''), 6.2, 'start', 'fill="#0b6e8f"');
   });
-  o += text(60 + 360, 52, 'АКСОНОМЕТРИЯ КОМНАТЫ · размеры стен и высота — мм · номера предметов см. в экспликации и на развёртках стен', 9, 'middle', 'font-weight="700"');
-  const lx = 830, ly = 90; o += text(lx, ly - 6, 'ЭКСПЛИКАЦИЯ (мм)', 9, 'start', 'font-weight="700"');
+  o += text(50 + 380, 56, 'АКСОНОМЕТРИЯ КОМНАТЫ · ВИД ' + (vk === 0 ? '1' : '2 (с противоположного угла)') + ' · синие линии — расстояния от стен и между предметами, мм; справа высота предмета', 8.6, 'middle', 'font-weight="700"');
+  const lx = 850, ly = 90; o += text(lx, ly - 6, 'ЭКСПЛИКАЦИЯ (мм)', 9, 'start', 'font-weight="700"');
   items.slice(0, 22).forEach((it, i) => { o += text(lx, ly + 14 + i * 26, `${it.n} ${it.name}`, 6.6, 'start', 'font-weight="700"') + text(lx + 6, ly + 25 + i * 26, `${mm(it.x1 - it.x0)}×${mm(it.z1 - it.z0)}×${mm(it.y1 - it.y0)} · от пола ${mm(it.y0)}`, 6, 'start', 'fill="#444"'); });
-  return sheet(o, meta(S, bp).slice(0, 3).concat([['Лист', 'Аксонометрия комнаты'], ['Предметов', String(items.length + (S.opens || []).length)], ['Дата', new Date().toLocaleDateString('ru-RU')]]), no, total);
+  return sheet(o, meta(S, bp).slice(0, 3).concat([['Лист', 'Аксонометрия, вид ' + (vk === 0 ? '1' : '2')], ['Предметов', String(items.length + (S.opens || []).length)], ['Дата', new Date().toLocaleDateString('ru-RU')]]), no, total);
 }
 /* ---------- развёртка стены: проёмы, розетки и мебель с отступами от угла и высотой от пола, мм ---------- */
 function wallElements(S, bp, wi, E, items) {
@@ -571,7 +587,7 @@ function obstacles(P, items, it) {   // до чего сколько мм в ч�
 }
 function sheetItem(S, bp, it, items, no, total) {
   const P = roomPoly(S), bx = Math.max(...P.map(p => p[0])), bz = Math.max(...P.map(p => p[1])), sc = Math.min(540 / (bx * 10), 430 / (bz * 10)), k10 = 10 * sc, x0 = 70, y0 = 105, X = v => x0 + v * k10, Z = v => y0 + v * k10;
-  let o = `<polygon points="${P.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${ST.o} stroke-width="2.5" fill="#faf7f0"/>`;
+  let o = `<polygon points="${P.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${sty('o', 1)} stroke-width="2.5" fill="#faf7f0"/>`;
   items.forEach(q => { if (q !== it) o += rect(X(q.x0), Z(q.z0), (q.x1 - q.x0) * k10, (q.z1 - q.z0) * k10, 't', '#eee6d6') + text(X((q.x0 + q.x1) / 2), Z((q.z0 + q.z1) / 2) + 3, q.n, 6.5, 'middle', 'fill="#777"'); });
   o += rect(X(it.x0), Z(it.z0), (it.x1 - it.x0) * k10, (it.z1 - it.z0) * k10, 'o', 'url(#h2)') + text(X((it.x0 + it.x1) / 2), Z((it.z0 + it.z1) / 2) + 3, it.n, 9, 'middle', 'font-weight="700"');
   const ob = obstacles(P, items, it), xc = (it.x0 + it.x1) / 2, zc = (it.z0 + it.z1) / 2;
@@ -616,14 +632,14 @@ export function buildSheets(S0) {
   if ((S0.opens || []).length) add('Элементы стен', n => sheetOpenings(S0, bp, n, total));
   { const items0 = roomItems(S0, bp);
     if (items0.length || (S0.opens || []).length) {
-      add('Аксонометрия комнаты', n => sheetIso(S0, bp, n, total));
+      add('Аксонометрия комнаты, вид 1', n => sheetIso(S0, bp, n, total, 0)); add('Аксонометрия комнаты, вид 2', n => sheetIso(S0, bp, n, total, 2));
       items0.forEach(it => add('Предмет ' + it.n, n => sheetItem(S0, bp, it, items0, n, total)));
     } }
   if (hasMain) { add('Двери', n => sheetDoors(S, bp, n, total)); add('Секции', n => sheetSections(S, bp, n, total)); }
   S.cols.forEach((c, i) => { if (!c.gap) add('Отсек ' + (i + 1), n => sheetColumn(S, bp, i, n, total)); });
   S.mezzes.forEach((m, i) => add('Антресоль ' + (i + 1), n => sheetMezz(S, bp, i, n, total)));
   S.beds.forEach((b, bi) => { add('Кровать ' + (bi + 1), n => sheetBedMain(S, bp, bi, n, total)); add('Кровать ' + (bi + 1) + ': узлы', n => sheetBedDetails(S, bp, bi, n, total)); if (b.kind === 'bunk') add('Двухъярусная ' + (bi + 1), n => sheetBunk(S, bp, bi, n, total)); });
-  if (hasMain || S.beds.length) add('Узлы и детали', n => sheetDetails(S, bp, n, total));
+  if (hasMain) add('Узлы и детали', n => sheetDetails(S, bp, n, total));
   S0.cols.filter(c => c.det).forEach((c, di) => {   // отдельные шкафы: свои листы
     const Sd = Object.assign({}, S0, { cols: [Object.assign({}, c, { det: undefined })], mezzes: [], panels: [], units: [], beds: [], objs: [], opens: [], name: 'Отдельный шкаф ' + (di + 1), room: Object.assign({}, S0.room, { ox: 0, oz: 0, rot: 0 }) }); delete Sd.cols[0].det; Sd.W = geom(Sd).W;
     const bpd = buildParts(Sd); add('Отдельный шкаф ' + (di + 1), n => sheetOverview(Sd, bpd, n, total)); add('Отдельный шкаф ' + (di + 1) + ': отсек', n => sheetColumn(Sd, bpd, 0, n, total));

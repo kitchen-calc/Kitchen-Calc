@@ -543,6 +543,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   return {
     update(S) { state = S; build(S); },
     select(s) { sel = s; highlight(); invalidate(); },
+    debug() { return { cam: camera.position.toArray(), target: controls.target.toArray(), n: root.children.length, picks: picks.length }; },
     setMoveMode(on) { moveMode = !!on; }, setMulti(on) { multiMode = !!on; }, setMultiKeys(k) { multiKeys = k || []; highlight(); invalidate(); },
     setLight, setLeds, isLight: () => !dusk, isLeds: () => ledsOn, setRotate, isRotate: () => rotateMode, toggleDoors, toggleDoor, isOpen: () => [...openTarget.values()].some(v => v > .5), frame, setHud,
     snapshot() { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); },
