@@ -2833,7 +2833,7 @@
       const rotLbl = `<label class="rot" title="${esc(L3('Галочка: тянете — вращаете. Без галочки: тянете — двигаете картинку. Колесо мыши — приблизить.', 'Belgi bor — aylantirish, yoʻq — suratni surish. Gʻildirak — yaqinlashtirish.'))}"><input type="checkbox" ${k3dRotate ? 'checked' : ''} onchange="k3dRotMode(this.checked)"> ${k3dRotate ? esc(L3('🔄 Вращать', '🔄 Aylantirish')) : esc(L3('✋ Двигать картинку', '✋ Suratni surish'))}</label>`;
       el('k3dBar').innerHTML = rotLbl + b('openAll', L3('↔ Открыть всё', '↔ Hammasini ochish')) + b('closeAll', L3('Закрыть', 'Yopish')) +
         b('light', k3dLightOn ? L3('💡 Свет: вкл', '💡 Yorugʻlik: yoniq') : L3('🌙 Свет: выкл', '🌙 Yorugʻlik: oʻchiq'), !k3dLightOn) + b('leds', k3dLedsOn ? L3('✨ Подсветка: вкл', '✨ Yoritish: yoniq') : L3('▫ Подсветка: выкл', '▫ Yoritish: oʻchiq'), !k3dLedsOn) + '<span class="sp"></span>' +
-        ((VIEW_ONLY || !OWNER_ON) ? '' : b('client', L3('👁 Клиенту', '👁 Mijozga')) + b('saveFile', '💾 ' + L3('Сохранить', 'Saqlash')) + b('openFile', '📂 ' + L3('Открыть', 'Ochish'))) +
+        ((VIEW_ONLY || !OWNER_ON) ? '' : b('undo', '↶ ' + L3('Отменить', 'Bekor') + (kHist.length ? ' (' + kHist.length + ')' : '')) + b('redo', '↷') + b('client', L3('👁 Клиенту', '👁 Mijozga')) + b('saveFile', '💾 ' + L3('Сохранить', 'Saqlash')) + b('openFile', '📂 ' + L3('Открыть', 'Ochish'))) +
         (isFull ? b('side', st.classList.contains('side-off') ? L3('⚙ Параметры', '⚙ Parametrlar') : L3('⚙ Скрыть панель', '⚙ Panelni yashirish')) : '') +
         b('full', isFull ? L3('✕ Свернуть', '✕ Yopish') : L3('⛶ На весь экран', '⛶ Toʻliq ekran'));
     }
@@ -2871,6 +2871,8 @@
       if (a === 'light') { k3dLightOn = !k3dLightOn; k3dLightFx(); renderK3dBar(); return; }
       if (a === 'leds') { k3dLedsOn = !k3dLedsOn; k3dLightFx(); renderK3dBar(); return; }
       if (a === 'client') { k3dClientLink(); return; }
+      if (a === 'undo') { kUndo(); return; }
+      if (a === 'redo') { kRedoDo(); return; }
       if (a === 'saveFile') { kSaveFile(); return; }
       if (a === 'openFile') { kOpenFile(); return; }
       if (a === 'unsel') { selSec = null; selIsland = false; swapFrom = null; renderPlanner(); return; }
@@ -6078,9 +6080,26 @@
     }
     function shareUrl() { return location.href.split('#')[0] + '#k=' + b64urlEncode(JSON.stringify(serializeState())); }
 
+    /* ---- «Отменить / Вернуть» для кухни (мастер): история состояний, как в «Шкафы PRO» ---- */
+    let kHist = [], kRedo = [], kHLast = null, kHBusy = false;
+    function kHistTick(url) {
+      if (kHBusy) return; const m = url.split('#k=')[1]; if (!m) return;
+      if (kHLast == null) { kHLast = m; return; } if (m === kHLast) return;
+      kHist.push(kHLast); if (kHist.length > 80) kHist.shift(); kHLast = m; kRedo = []; if (K3) renderK3dBar();
+    }
+    function kHistGo(from, to) {
+      if (!from.length) return; kHBusy = true;
+      try { to.push(kHLast); kHLast = from.pop(); applyState(JSON.parse(b64urlDecode(kHLast))); kMulti = []; selSec = null; selIsland = false; selOpenId = null; selObjId = null; renderPlanner(); k3dRefresh(); renderK3dEdit(); renderKAdded(); }
+      finally { kHBusy = false; } try { history.replaceState(null, '', location.href.split('#')[0] + '#k=' + kHLast); } catch (e) {} if (K3) renderK3dBar();
+    }
+    const kUndo = () => kHistGo(kHist, kRedo), kRedoDo = () => kHistGo(kRedo, kHist);
+    document.addEventListener('keydown', ev => {
+      if (!OWNER_ON || !(ev.ctrlKey || ev.metaKey) || /^(INPUT|TEXTAREA|SELECT)$/.test((ev.target && ev.target.tagName) || '')) return;
+      const k = (ev.key || '').toLowerCase(); if (k === 'z' && !ev.shiftKey) { ev.preventDefault(); kUndo(); } else if (k === 'y' || (k === 'z' && ev.shiftKey)) { ev.preventDefault(); kRedoDo(); }
+    });
     function updateShareLinks() {
       if (!appReady) return;
-      const url = shareUrl();
+      const url = shareUrl(); kHistTick(url);
       el('shareTg').href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(t('shareText'));
       try { history.replaceState(null, '', url); } catch (e) {}
     }
