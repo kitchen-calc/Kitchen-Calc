@@ -3209,7 +3209,7 @@
         ${k3Row(L3('Верхний ряд', 'Yuqori qator'), k3B(up, 'k3dUpper(1)', L3('есть', 'bor')) + k3B(!up, 'k3dUpper(0)', L3('нет', 'yoʻq')))}
         ${up ? k3Row(L3('Высота', 'Balandlik'), k3Step(el('upperHeight').value + ' ' + L3('см', 'sm'), "k3dInput('upperHeight',-2,30,130)", "k3dInput('upperHeight',2,30,130)")) +
           k3Row(L3('Глубина', 'Chuqurlik'), k3Step(el('upperDepth').value + ' ' + L3('см', 'sm'), "k3dInput('upperDepth',-5,20,65)", "k3dInput('upperDepth',5,20,65)")) +
-          k3Row(L3('От столешницы', 'Stoldan'), k3Step(el('upperGap').value + ' ' + L3('см', 'sm'), "k3dInput('upperGap',-5,30,100)", "k3dInput('upperGap',5,30,100)")) +
+          k3Row(L3('Верхние: низ от пола', 'Yuqori: pol dan'), k3Step(Math.round((techGeometry().TOPY + (parseFloat(el('upperGap').value) || 0)) * 10) / 10 + ' ' + L3('см', 'sm'), "k3dInput('upperGap',-5,30,100)", "k3dInput('upperGap',5,30,100)")) +
           k3Row(L3('Ярусов', 'Qavatlar'), k3B(!chk('upperTwoTier'), 'k3dTwoTier(0)', '1') + k3B(chk('upperTwoTier'), 'k3dTwoTier(1)', '2')) : ''}
         <div class="k3s-sub">${esc(L3('Открывание у всех', 'Hammasi uchun ochilish'))}</div>
         <div class="k3e-r">${k3B(false, "setAllOpen('handles')", L3('Ручки', 'Dastalar'))}${k3B(false, "setAllOpen('push')", 'TIP-ON')}${k3B(false, "setAllOpen('gola')", L3('Гола', 'Gola'))}</div>
@@ -3248,7 +3248,7 @@
       h += `<div class="k3s-sub">${esc(L3('Размеры', 'Oʻlchamlar'))}</div>`;
       h += k3Row(L3('Ширина', 'Kenglik'), k3Step(w + ' ' + L3('см', 'sm'), "k3dStep('width',-5)", "k3dStep('width',5)"));
       h += k3dSizeRows(s, tier, tall);
-      if (tier === 'upper') h += k3Row(L3('От столешницы', 'Stoldan'), k3Step((s.ug != null ? s.ug : el('upperGap').value) + ' ' + L3('см', 'sm'), "k3dStep('ug',-5)", "k3dStep('ug',5)") + (s.ug != null ? k3B(false, "k3dStep('ug',0)", L3('как у всех', 'hammadek')) : ''));
+      if (tier === 'upper') h += k3Row(L3('Низ от пола', 'Pol dan'), k3Step(Math.round((techGeometry().TOPY + (s.ug != null ? +s.ug : (parseFloat(el('upperGap').value) || 0))) * 10) / 10 + ' ' + L3('см', 'sm'), "k3dStep('ug',-5)", "k3dStep('ug',5)") + (s.ug != null ? k3B(false, "k3dStep('ug',0)", L3('как у всех', 'hammadek')) : ''));
       const hasDr = !tall && ['door', 'drawers', 'sink', 'hob'].indexOf(k) >= 0 && (s.drawers | 0) > 0;
       if (hasDr) h += k3Row(L3('Ящиков', 'Tortmalar'), k3Step(s.drawers | 0, "k3dStep('drawers',-1)", "k3dStep('drawers',1)"));
       const canShelves = !tall && !(s.drawers | 0) && ['oven', 'dishwasher', 'washer', 'cargo', 'hood'].indexOf(k) < 0 && !((s.gasLifts | 0) && tier === 'upper' && k !== 'door');
