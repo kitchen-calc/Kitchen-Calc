@@ -45,7 +45,7 @@ const P = {
   stool: { ru: 'Табурет', f: () => tableP(35, 35, 45, 2.8, 4, 2.5) },
   shelf: { ru: 'Стеллаж 4 полки', f: t => cabinetP(80, 180, 30, 3, 0, 0, t).filter(b => b[6] !== .3 && !(b[5] === .3)) }
 };
-const pad = b => { const c = b.slice(); while (c.length < 11) c.push(0); return c; };
+const pad = b => { const c = b.slice(); while (c.length < 12) c.push(0); return c; };
 function fromObj(o) { return { id: o ? o.id : null, name: (o && o.name) || '', mat: (o && o.mat) || 'dsp', color: (o && o.color) || '', cat: (o && o.cat) || '', pt: ((o && o.pt && o.pt.length) ? o.pt : P.cab.f(1.6)).map(pad) }; }
 const snap = () => { hist.push(JSON.stringify(st.pt)); if (hist.length > 80) hist.shift(); };
 
@@ -55,12 +55,19 @@ function matOf() {
   if (c && c.img) window.KCCAT.tex(c.img, cv => { const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.wrapS = tx.wrapT = THREE.MirroredRepeatWrapping; tx.anisotropy = 8; m.map = tx; m.color.set('#ffffff'); m.needsUpdate = true; draw(); });
   return m;
 }
+const pcCache = {};
+function catMat(id) {   // материал детали из каталога цветов
+  if (pcCache[id]) return pcCache[id]; const c = window.KCCAT && window.KCCAT.find(id); if (!c) return null;
+  const m = pcCache[id] = new THREE.MeshStandardMaterial({ color: c.hex, roughness: .55, metalness: 0 });
+  if (c.img) window.KCCAT.tex(c.img, cv => { const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.wrapS = tx.wrapT = THREE.MirroredRepeatWrapping; tx.anisotropy = 8; m.map = tx; m.color.set('#ffffff'); m.needsUpdate = true; draw(); });
+  return m;
+}
 function rebuild() {
   if (!group) return; while (group.children.length) { const c = group.children.pop(); c.geometry && c.geometry.dispose(); }
   meshes = []; const mat = matOf(), dmat = mat.clone(), rmat = mat.clone(); dmat.color = dmat.color.clone().multiplyScalar(.92); rmat.color = rmat.color.clone().multiplyScalar(.85);
   st.pt.forEach((b, i) => {
     const k = b[0], g = k === 1 ? new THREE.CylinderGeometry(b[4] / 2, b[4] / 2, b[5], 28) : new THREE.BoxGeometry(Math.max(.05, b[4]), Math.max(.05, b[5]), Math.max(.05, b[6]));
-    const m = new THREE.Mesh(g, k >= 2 && k <= 5 ? dmat : (k === 6 ? rmat : mat)); m.position.set(b[1] + b[4] / 2, b[2] + b[5] / 2, b[3] + b[6] / 2); m.rotation.order = 'YXZ'; m.rotation.set((b[9] || 0) * Math.PI / 180, (b[8] || 0) * Math.PI / 180, (b[10] || 0) * Math.PI / 180); m.castShadow = m.receiveShadow = true; m.userData.i = i;
+    const m = new THREE.Mesh(g, (b[11] && catMat(b[11])) || (k >= 2 && k <= 5 ? dmat : (k === 6 ? rmat : mat))); m.position.set(b[1] + b[4] / 2, b[2] + b[5] / 2, b[3] + b[6] / 2); m.rotation.order = 'YXZ'; m.rotation.set((b[9] || 0) * Math.PI / 180, (b[8] || 0) * Math.PI / 180, (b[10] || 0) * Math.PI / 180); m.castShadow = m.receiveShadow = true; m.userData.i = i;
     if (openAll) { if (k === 6) m.position.z += 30; if (k === 2) { m.position.x -= b[4] * .15; m.rotation.y = -1; } }
     m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: .28 })));
     group.add(m); meshes.push(m);
@@ -125,6 +132,7 @@ function ui() {
   if (b) {
     h += `<div class="shr"><b>Деталь ${selI + 1}:</b> <select id="pK">${KN.map((n, i) => `<option value="${i}" ${b[0] === i ? 'selected' : ''}>${n}</option>`).join('')}</select></div><div class="p3g">${num('pX', b[1], .1, 'X (слева), см')}${num('pZ', b[3], .1, 'Z (вглубь), см')}${num('pY', b[2], .1, 'Y (от пола), см')}${num('pW', b[4], .1, isC ? 'Диаметр, см' : 'Ширина X, см')}${num('pH', b[5], .1, 'Высота, см')}${isC ? '' : num('pD', b[6], .1, 'Глубина Z, см')}</div>`;
     if (b[0] <= 1) h += `<div class="shr"><b>Поворот, °:</b></div><div class="p3g">${num('pRY', b[8] || 0, 5, 'По горизонтали (вокруг вертикали)')}${num('pRX', b[9] || 0, 5, 'По вертикали: наклон вперёд / назад')}${num('pRZ', b[10] || 0, 5, 'По вертикали: наклон влево / вправо')}</div><div class="shr"><button type="button" data-rot="8:-90">↺ 90° гор.</button><button type="button" data-rot="8:90">↻ 90° гор.</button><button type="button" data-rot="8:-45">↺ 45°</button><button type="button" data-rot="8:45">↻ 45°</button><button type="button" data-rot="9:90">⤴ 90° верт.</button><button type="button" data-rot="all:0">Сбросить поворот</button></div>`;
+    h += `<div class="shr"><b>Цвет детали:</b> <button type="button" data-act="pcat">🎨 ${b[11] && window.KCCAT ? window.KCCAT.name(b[11]) : 'как у изделия'}</button>${b[11] ? '<button type="button" data-act="pcatx">✕</button>' : ''}<button type="button" data-act="pcatall">Всем деталям этот цвет</button></div>`;
     h += `<div class="shr"><button type="button" data-n="-1,0">◀ 1 см</button><button type="button" data-n="1,0">1 см ▶</button><button type="button" data-n="0,-1">▲ 1 см</button><button type="button" data-n="0,1">▼ 1 см</button><button type="button" data-act="mx">⇋ Копия зеркально слева-направо</button><button type="button" data-act="mz">⇵ Копия зеркально вперёд-назад</button><button type="button" data-act="dup">⧉ Копия</button><button type="button" data-act="del">🗑 Удалить</button></div>`;
   }
   h += `<div class="shr">Материал <select id="p3Mat">${MATS.map(([k, n]) => `<option value="${k}" ${st.mat === k ? 'selected' : ''}>${n}</option>`).join('')}</select> Цвет <input type="color" id="p3Col" value="${st.color || '#d8bd8a'}"><button type="button" data-act="cat">🎨 ${st.cat && window.KCCAT ? window.KCCAT.name(st.cat) : 'Из каталога'}</button>${st.cat || st.color ? '<button type="button" data-act="nocol">✕</button>' : ''}</div>`;
@@ -132,7 +140,7 @@ function ui() {
   e.innerHTML = h;
 }
 function payload() {
-  const bb = bbox(), pt = st.pt.map(b => [b[0], r1(b[1] - bb.x0), r1(b[2] - bb.y0), r1(b[3] - bb.z0), r1(b[4]), r1(b[5]), r1(b[6]), b[7] || 0, b[8] || 0, b[9] || 0, b[10] || 0]);
+  const bb = bbox(), pt = st.pt.map(b => [b[0], r1(b[1] - bb.x0), r1(b[2] - bb.y0), r1(b[3] - bb.z0), r1(b[4]), r1(b[5]), r1(b[6]), b[7] || 0, b[8] || 0, b[9] || 0, b[10] || 0, b[11] || 0]);
   return { kind: 'parts', pt, w: r1(bb.x1 - bb.x0), d: r1(bb.z1 - bb.z0), h: r1(bb.y1 - bb.y0), y: r1(bb.y0), mat: st.mat, color: st.color, cat: st.cat || undefined, n: 0, dn: 0, back: false, handles: true, fill: 'dsp' };
 }
 const msg = t => { const m = $('p3Msg'); if (m) { m.textContent = t; setTimeout(() => { if (m.textContent === t) m.textContent = ''; }, 3500); } };
@@ -161,6 +169,9 @@ function bind() {
     else if (a === 'mx' && p) { snap(); const bb = bbox(); st.pt.push(p.map((v, i) => (i === 1 ? r1(bb.x0 + bb.x1 - p[1] - p[4]) : (i === 8 || i === 10 ? -(v || 0) : (i === 0 && (p[0] === 2 || p[0] === 3) ? (p[0] === 2 ? 3 : 2) : v))))); selI = st.pt.length - 1; rebuild(); ui(); }
     else if (a === 'mz' && p) { snap(); const bb = bbox(); st.pt.push(p.map((v, i) => (i === 3 ? r1(bb.z0 + bb.z1 - p[3] - p[6]) : (i === 8 || i === 9 ? -(v || 0) : v)))); selI = st.pt.length - 1; rebuild(); ui(); }
     else if (a === 'cat') { if (window.KCCAT) window.KCCAT.pick(st.cat || '', id => { st.cat = id || ''; rebuild(); ui(); }); }
+    else if (a === 'pcat' && p) { if (window.KCCAT) window.KCCAT.pick(p[11] || '', id => { snap(); p[11] = id || 0; rebuild(); ui(); }); }
+    else if (a === 'pcatx' && p) { snap(); p[11] = 0; rebuild(); ui(); }
+    else if (a === 'pcatall' && p) { snap(); st.pt.forEach(q => { q[11] = p[11] || 0; }); rebuild(); ui(); }
     else if (a === 'nocol') { st.cat = ''; st.color = ''; rebuild(); ui(); }
     else if (a === 'new') { st.id = null; ui(); }
     else if (a === 'apply') { if (!st.pt.length) return; if (window.PRO && window.PRO.shapeApply) { window.PRO.shapeApply(payload(), st.id); msg('✔ Готово — изделие стоит в комнате'); if ($('p3Box').classList.contains('p3full')) { setFull(false); const t = $('p3dBox') || $('k3dBox'); if (t) setTimeout(() => t.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); } } }

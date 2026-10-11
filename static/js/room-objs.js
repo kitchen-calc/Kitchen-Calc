@@ -20,19 +20,20 @@ export function buildObjGroup(q, ctx) {
     const groups = {}, DEGR = Math.PI / 180;
     (q.pt || []).forEach((b, idx) => {
       const k = b[0], x = b[1], y = b[2], z = b[3], w = b[4], h = b[5], d = b[6], gi = b[7] || 0;
+      const pm = b[11] && ctx.catMat ? ctx.catMat(b[11]) : null, BMp = pm || BM, fm = pm || fmat;
       const rot = m => { if (b[8] || b[9] || b[10]) { m.rotation.order = 'YXZ'; m.rotation.set((b[9] || 0) * DEGR, (b[8] || 0) * DEGR, (b[10] || 0) * DEGR); } return m; };
-      if (k === 1) { const m = new THREE.Mesh(new THREE.CylinderGeometry(w / 2, w / 2, h, 24), BM); m.position.set(x + w / 2, y + h / 2, z + d / 2); rot(m); add(og, m); return; }
+      if (k === 1) { const m = new THREE.Mesh(new THREE.CylinderGeometry(w / 2, w / 2, h, 24), BMp); m.position.set(x + w / 2, y + h / 2, z + d / 2); rot(m); add(og, m); return; }
       if (k >= 2 && k <= 5) {   // дверца на петлях: слева / справа / сверху / снизу
         const pv = new THREE.Group(); og.add(pv);
-        if (k === 2) { pv.position.set(x, y, z + d); bx(w, h, d, fmat, 0, 0, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.y = -105 * DEGR * f; }); }
-        else if (k === 3) { pv.position.set(x + w, y, z + d); bx(w, h, d, fmat, -w, 0, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.y = 105 * DEGR * f; }); }
-        else if (k === 4) { pv.position.set(x, y + h, z + d); bx(w, h, d, fmat, 0, -h, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.x = -100 * DEGR * f; }); }
-        else { pv.position.set(x, y, z + d); bx(w, h, d, fmat, 0, 0, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.x = 95 * DEGR * f; }); }
+        if (k === 2) { pv.position.set(x, y, z + d); bx(w, h, d, fm, 0, 0, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.y = -105 * DEGR * f; }); }
+        else if (k === 3) { pv.position.set(x + w, y, z + d); bx(w, h, d, fm, -w, 0, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.y = 105 * DEGR * f; }); }
+        else if (k === 4) { pv.position.set(x, y + h, z + d); bx(w, h, d, fm, 0, -h, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.x = -100 * DEGR * f; }); }
+        else { pv.position.set(x, y, z + d); bx(w, h, d, fm, 0, 0, -d, pv); ctx.onDoor(ctx.keyBase + ':p' + idx, f => { pv.rotation.x = 95 * DEGR * f; }); }
         if (hnd) bx(Math.min(14, w * .5), 1.4, 1.2, ctx.chrome, k === 3 ? -w + 3 : 3, h - 5, 0, pv);
         return;
       }
-      if (k === 6 && gi) { if (!groups[gi]) { groups[gi] = { g: new THREE.Group(), dmax: 0 }; og.add(groups[gi].g); } groups[gi].dmax = Math.max(groups[gi].dmax, d); bx(w, h, d, BM, x, y, z, groups[gi].g); return; }
-      rot(bx(w, h, d, BM, x, y, z));
+      if (k === 6 && gi) { if (!groups[gi]) { groups[gi] = { g: new THREE.Group(), dmax: 0 }; og.add(groups[gi].g); } groups[gi].dmax = Math.max(groups[gi].dmax, d); bx(w, h, d, BMp, x, y, z, groups[gi].g); return; }
+      rot(bx(w, h, d, BMp, x, y, z));
     });
     Object.keys(groups).forEach(gi => { const G = groups[gi]; ctx.onDoor(ctx.keyBase + ':g' + gi, f => { G.g.position.z = f * G.dmax * .8; }); });
     return og;

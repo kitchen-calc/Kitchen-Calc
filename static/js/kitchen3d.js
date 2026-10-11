@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall } from '/static/js/room-open.js?v=4';
-import { buildObjGroup } from '/static/js/room-objs.js?v=4';
+import { buildObjGroup } from '/static/js/room-objs.js?v=5';
 
 const DEG = Math.PI / 180;
 const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -126,6 +126,8 @@ export function createK3D(container, hooks = {}, opts = {}) {
     texCache[url] = t; return t;
   };
 
+  const catMatCache = new Map();
+  const catMatOf = id => { if (!id || !window.KCCAT) return null; const c = window.KCCAT.find(id); if (!c) return null; if (catMatCache.has(id)) return catMatCache.get(id); const m = new THREE.MeshStandardMaterial({ color: c.hex, roughness: .55, envMapIntensity: .7 }); if (c.img) { const tx = loadTex(c.img); if (tx) { m.map = tx; m.color.set('#ffffff'); } } catMatCache.set(id, m); return m; };
   let root = new THREE.Group(); scene.add(root);
   let anims = [], pick = [], state = null, firstFrame = true, selBox = null;
   const openAmt = new Map();     // key -> текущая доля открытия (0..1)
@@ -681,7 +683,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
       const catMat = (() => { const c = q.cat && window.KCCAT && window.KCCAT.find(q.cat); if (!c) return null; const m = new THREE.MeshStandardMaterial({ color: c.hex, roughness: .55, envMapIntensity: .7 }); if (c.img) { const tx = loadTex(c.img); if (tx) { m.map = tx; m.color.set('#ffffff'); } } return m; })();
       const t = q.mat === 'ply' ? 1.2 : 1.6, body = catMat || (q.color ? new THREE.MeshStandardMaterial({ color: q.color, roughness: .55 }) : (q.mat === 'ply' ? new THREE.MeshStandardMaterial({ color: '#d8bd8a', roughness: .6 }) : (q.mat === 'mdf' ? M.facade : M.body)));
       const mirror = new THREE.MeshStandardMaterial({ color: '#eef5f9', roughness: .06, metalness: .8 }), key = 'obj:' + q.id;
-      const g = buildObjGroup(q, { t, body, back: M.inner, glass: M.glass, mirror, chrome: M.chrome, edge: null, keyBase: key, onDoor: (k, fn) => anims.push({ key: k, apply: fn }), mark: null });
+      const g = buildObjGroup(q, { t, body, catMat: catMatOf, back: M.inner, glass: M.glass, mirror, chrome: M.chrome, edge: null, keyBase: key, onDoor: (k, fn) => anims.push({ key: k, apply: fn }), mark: null });
       g.position.y = q.y || 0; const wrap = new THREE.Group(); wrap.add(g); placeAt(wrap, q.bw, q.bd, q.cx, q.cz, q.r || 0, 0);
       wrap.userData.mod = { tier: 'obj', id: q.id, w: q.bw, h: q.h, d: q.bd, y0: q.y || 0, free: true, cx: q.cx, cz: q.cz, r: q.r || 0, y: q.y || 0 }; root.add(wrap); pick.push(wrap);
     });
