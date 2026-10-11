@@ -458,6 +458,12 @@ export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, le
 export function buildParts(S) {
   const g = geom(S), t = S.t, W = g.W, H = S.H, D = S.D, mm = v => Math.round(v * 10), T = P.tiers[S.tier];
   const parts = [], hw = [];
+  /* фурнитура на выбор из каталога kis.uz (Blum, Cinetto…): S.hw — ключи; пусто = по классу комплектации */
+  const KS = typeof KIS !== 'undefined' ? KIS : null, HWs = S.hw || {};
+  const pick = (grp, key) => (KS && KS[grp] && key && KS[grp][key] && KS[grp][key].price != null) ? KS[grp][key] : null;
+  const hSel = pick('hinges', HWs.hinge), oSel = pick('open', HWs.open), lSel = pick('lifts', HWs.lift), pSel = pick('pantSel', HWs.pant), rSel = pick('rodSel', HWs.rod), sSel = (KS && KS.sliding && HWs.slide && KS.sliding[HWs.slide] && KS.sliding[HWs.slide].p2) ? KS.sliding[HWs.slide] : null;
+  const HN = hSel ? hSel.ru : 'Петля с доводчиком', HP = hSel ? hSel.price + (KS.plate || 0) : T.hinge, HDN = oSel ? oSel.ru : 'Ручка', HDP = oSel ? oSel.price : T.handle;
+  const DRP = (HWs.drawer && KS && KS.drawerSys && KS.drawerSys[HWs.drawer] && KS.drawerSys[HWs.drawer].price) || T.drawer, DS = k => (KS && KS.drawerSys && KS.drawerSys[k] && KS.drawerSys[k].price ? KS.drawerSys[k] : DRAWER_SYS[k]);
   const body = 'ЛДСП ' + mm(t) + ' мм' + (S.cat ? ' · ' + catName(S.cat) : '');
   const add = (grp, name, qty, L, Wd, tt, mat, edgeEach, note, kind) => {
     const lg = Math.max(L, Wd), sh = Math.min(L, Wd), e = edgeEach * 100, facade = /^(Дверь|Фасад|Вставка)/.test(name);
@@ -520,16 +526,16 @@ export function buildParts(S) {
       front('Откидная створка', fn, fh, w - .4, 'открывается вперёд-вниз');
       add(gr, 'Полка наклонная' + lbl, fn, w - 2 * t - .2, d - 4, t, body, (w - 2 * t - .2) / 100, 'угол ≈ 15° для обуви');
       addHw('Двери', 'Откидной механизм обувницы (комплект на створку)', fn, 'шт.', T.shoe, 'тумба ' + (i + 1));
-      if (S.doors.handles !== false) addHw('Двери', 'Ручка', fn, 'шт.', T.handle);
+      if (S.doors.handles !== false) addHw('Двери', HDN, fn, 'шт.', HDP);
     } else if (u.kind === 'doors') {
       const dn = w > 65 ? 2 : 1, dh = hb - .4;
       front('Дверь', dn, dh, w / dn - .3, 'распашная');
       if (fn > 0) add(gr, 'Полка' + lbl, fn, w - 2 * t - .2, d - 3, t, body, (w - 2 * t - .2) / 100, 'на 4 полкодержателя');
-      addHw('Двери', 'Петля с доводчиком', dn * (dh <= 90 ? 2 : 3), 'шт.', T.hinge); if (S.doors.handles !== false) addHw('Двери', 'Ручка', dn, 'шт.', T.handle);
+      addHw('Двери', HN, dn * (dh <= 90 ? 2 : 3), 'шт.', HP); if (S.doors.handles !== false) addHw('Двери', HDN, dn, 'шт.', HDP);
     } else {
       front('Фасад ящика', fn, fh, w - .4, 'ящик');
       for (let k = 0; k < fn; k++) { add(gr, 'Боковина ящика' + lbl, 2, d - 8, Math.max(8, fh - 6), t, body, 0); add(gr, 'Задняя ящика' + lbl, 1, w - 2 * t - 5.4, Math.max(8, fh - 6), t, body, 0); add(gr, 'Дно ящика' + lbl, 1, w - 2 * t - 3.6, d - 9, .3, 'ХДФ 3 мм', 0, '', 'hdf'); }
-      addHw('Ящики', 'Направляющие ящика (комплект)', fn, 'комплект', T.drawer); if (S.doors.handles !== false) addHw('Двери', 'Ручка', fn, 'шт.', T.handle);
+      addHw('Ящики', 'Направляющие ящика (комплект)', fn, 'комплект', DRP); if (S.doors.handles !== false) addHw('Двери', HDN, fn, 'шт.', HDP);
     }
     if (u.seat) addHw('Мебель', 'Мягкое сиденье (поролон + ткань) тумбы ' + (i + 1), 1, 'шт.', Math.round(150000 * w / 100));
     if (ph2 > 0) addHw('Крепёж', 'Ножка-опора тумбы ' + (i + 1), 4, 'шт.', 6000);
@@ -558,7 +564,7 @@ export function buildParts(S) {
       add(gr, 'Боковина ящика' + lbl, dn * 2, 45, Math.max(8, b.sh - 9), t, body, 0);
       add(gr, 'Задняя/передняя ящика' + lbl, dn * 2, fl - 2 * t - 4, Math.max(8, b.sh - 9), t, body, 0);
       add(gr, 'Дно ящика' + lbl, dn, fl - 4, 45, .3, 'ХДФ 3 мм', 0, '', 'hdf');
-      addHw('Ящики', 'Направляющие ящика (комплект)', dn, 'комплект', T.drawer);
+      addHw('Ящики', 'Направляющие ящика (комплект)', dn, 'комплект', DRP);
     }
     if (b.kind === 'bunk') {
       add(gr, 'Боковина 2-го яруса' + lbl, 2, b.ml + 1, b.sh, t, body, per(b.ml + 1, b.sh), 'верхний ярус');
@@ -583,7 +589,7 @@ export function buildParts(S) {
     const gr = OBJ_KINDS[q.kind].ru + ' ' + (i + 1), lbl = ' (' + OBJ_KINDS[q.kind].ru.toLowerCase() + ' ' + (i + 1) + ')', hnd = q.handles !== false;
     const fmat = q.fill === 'dsp' ? body : FILLS[q.fill] + (q.fill === 'mdf' ? millName(S) : ''), fth = q.fill === 'dsp' || q.fill === 'mdf' ? t : .4;
     const door = (name, qty, L, Wd, note) => { if (q.fill === 'dsp') addP(gr, name + lbl, qty, L, Wd, t, fmat, (2 * (L + Wd)) / 100, note); else addP(gr, name + lbl, qty, L, Wd, fth, fmat, (2 * (L + Wd)) / 100, note, q.fill); };
-    const addDoorHw = (dn, dh) => { addHw('Двери', 'Петля с доводчиком', dn * (dh <= 90 ? 2 : dh <= 160 ? 3 : 4), 'шт.', T.hinge); if (hnd) addHw('Двери', 'Ручка', dn, 'шт.', T.handle); };
+    const addDoorHw = (dn, dh) => { addHw('Двери', HN, dn * (dh <= 90 ? 2 : dh <= 160 ? 3 : 4), 'шт.', HP); if (hnd) addHw('Двери', HDN, dn, 'шт.', HDP); };
     if (q.kind === 'parts') {
       const B = q.pt || [], pm = {}, cm = {}, dm = {}; let doorsN = 0; const groups = new Set();
       B.forEach(b => {
@@ -597,8 +603,8 @@ export function buildParts(S) {
       Object.keys(pm).forEach(k => { const [dk, ck] = k.split('|'), [L, W2, T2] = dk.split('x').map(v => v / 10), board = T2 <= 4.5; addP(gr, (board ? 'Доска / щит' : 'Брусок') + lbl, pm[k], L, W2, T2, mt(ck), board ? (2 * (L + W2)) / 100 : 0, board ? 'видимая кромка по периметру' : 'брусок: торцы без кромки'); });
       Object.keys(dm).forEach(k => { const [dk, ck] = k.split('|'), [L, W2, T2] = dk.split('x').map(v => v / 10); addP(gr, 'Дверца' + lbl, dm[k], L - .4, W2 - .4, T2, mt(ck), (2 * (L + W2)) / 100, 'распашная / откидная, по размеру детали'); });
       Object.keys(cm).forEach(k => { const [L, dia] = k.split('x').map(v => v / 10); addP(gr, 'Ножка / стойка круглая ⌀' + mm(dia) + lbl, cm[k], L, dia, dia, 'Массив / металл', 0, 'круглая деталь, длина ' + mm(L) + ' мм', 'metal'); addHw('Фурнитура', 'Подпятник / опора круглой ножки', cm[k], 'шт.', 8000); });
-      if (doorsN) { addHw('Двери', 'Петля с доводчиком', doorsN * 2, 'шт.', T.hinge); if (hnd) addHw('Двери', 'Ручка', doorsN, 'шт.', T.handle); }
-      if (groups.size) { addHw('Ящики', 'Направляющие ящика (комплект)', groups.size, 'комплект', T.drawer); if (hnd) addHw('Двери', 'Ручка', groups.size, 'шт.', T.handle); }
+      if (doorsN) { addHw('Двери', HN, doorsN * 2, 'шт.', HP); if (hnd) addHw('Двери', HDN, doorsN, 'шт.', HDP); }
+      if (groups.size) { addHw('Ящики', 'Направляющие ящика (комплект)', groups.size, 'комплект', DRP); if (hnd) addHw('Двери', HDN, groups.size, 'шт.', HDP); }
       joints_u += ptJoints(B).n; return;
     }
     if (q.kind === 'boards') {
@@ -675,15 +681,15 @@ export function buildParts(S) {
       else if (it.type === 'vpanel') add('Наполнение', 'Вертикальная панель' + lbl, 1, it.y1 - it.y, D - 2.5, t, body, (it.y1 - it.y) / 100);
     });
   });
-  addHw('Фурнитура', 'Штанга хромированная ⌀25 (в сборе)', rods, 'шт.', T.rod);
+  addHw('Фурнитура', rSel ? rSel.ru : 'Штанга хромированная ⌀25 (в сборе)', rods, 'шт.', rSel ? rSel.price : T.rod);
   addHw('Фурнитура', 'Штангодержатель', rods * 2, 'шт.', 0, 'входит в цену штанги');
   addHw('Фурнитура', 'Полкодержатель ⌀5', pins, 'шт.', 1500);
-  addHw('Фурнитура', 'Брючница выдвижная', pant, 'шт.', T.pant);
+  addHw('Фурнитура', pSel ? pSel.ru : 'Брючница выдвижная', pant, 'шт.', pSel ? pSel.price : T.pant);
   addHw('Фурнитура', 'Корзина выдвижная', basket, 'шт.', Math.round(T.pant * .55));
   addHw('Фурнитура', 'Крючки (комплект)', hooks, 'шт.', T.hook);
   addHw('Свет', 'LED-лента 12 В', ledM, 'м', T.led);
   if (ledM > 0 || S.led) addHw('Свет', 'Блок питания и датчик', 1, 'шт.', T.ledKit);
-  Object.keys(drw).forEach(k => addHw('Ящики', 'Направляющие / система: ' + (DRAWER_SYS[k] ? DRAWER_SYS[k].ru : k), drw[k], 'комплект', (DRAWER_SYS[k] && DRAWER_SYS[k].price) || T.drawer));
+  Object.keys(drw).forEach(k => addHw('Ящики', 'Направляющие / система: ' + (DS(k) ? DS(k).ru : k), drw[k], 'комплект', (DS(k) && DS(k).price) || DRP));
   const doors = doorList(S); let hinges = 0, handles = 0, slidingN = 0;
   doors.forEach(d => {
     d.gf = S.doors.gf || 4; const lbl = d.zone === 'mezz' ? ' антресоли ' + (d.mi + 1) + '.' : (d.ci != null ? ' отсека ' + (d.ci + 1) + '.' : ' '), nm = d.zone === 'mezz' ? d.i + 1 : (d.ci != null ? d.ri + 1 : d.i + 1);
@@ -693,14 +699,14 @@ export function buildParts(S) {
     else add('Двери', 'Вставка / дверь' + lbl + nm, 1, d.h, d.w, .4, mat, (2 * (d.h + d.w)) / 100, 'полировка кромки', d.fill);
     if (!d.sliding) { if (d.hinge === 'U') lifts += 2; else if (d.hinge === 'D') lowers += 2; else hinges += d.h <= 90 ? 2 : d.h <= 160 ? 3 : d.h <= 220 ? 4 : 5; if (S.doors.handles !== false) handles++; } else slidingN = d.n;
   });
-  addHw('Двери', 'Петля с доводчиком', hinges + hinges0, 'шт.', T.hinge);
-  addHw('Двери', 'Подъёмник (газлифт) для дверей вверх', lifts, 'шт.', 85000);
+  addHw('Двери', HN, hinges + hinges0, 'шт.', HP);
+  addHw('Двери', lSel ? lSel.ru + ' (на дверь)' : 'Подъёмник (газлифт) для дверей вверх', lifts, 'шт.', lSel ? Math.round(lSel.price / 2) : 85000);
   addHw('Двери', 'Откидной механизм (ограничители) для дверей вниз', lowers, 'шт.', 45000);
-  addHw('Двери', 'Ручка', handles + handles0, 'шт.', T.handle);
+  addHw('Двери', HDN, handles + handles0, 'шт.', HDP);
   if (slidingN) {
     let kit = T.doorKit * Math.pow(slidingN / 3, .9); const rw = g.runs[0].x1 - g.runs[0].x0;
-    if (rw > 270) kit += (rw / 100 - 2.7) * 2 * T.rail;
-    addHw('Двери', 'Система купе (направляющие, ролики, профили) на ' + slidingN + ' двери', 1, 'комплект', kit);
+    if (sSel) kit = slidingN <= 2 ? sSel.p2 : (slidingN === 3 ? sSel.p3 : sSel.p3 * slidingN / 3); else if (rw > 270) kit += (rw / 100 - 2.7) * 2 * T.rail;
+    addHw('Двери', (sSel ? sSel.ru : 'Система купе (направляющие, ролики, профили)') + ' на ' + slidingN + ' двери', 1, 'комплект', kit);
   }
   return { parts, hw, doors, g };
 }
@@ -755,7 +761,7 @@ export function sanitize(S) {
   const o = { v: 2, W: n(S.W, 60, 800, 240), H: n(S.H, 100, 320, 200), D: n(S.D, 25, 90, 60), t: S.t === 1.8 ? 1.8 : 1.6, plinth: n(S.plinth, 0, 20, 8), tier: n(S.tier, 0, 2, 1) | 0, color: n(S.color, 0, 99, 0) | 0, custom: /^#[0-9a-f]{6}$/i.test(S.custom || '') ? S.custom : null,
     mezzes: [],
     doors: { mp: MILLS[S.doors && S.doors.mp] ? S.doors.mp : 'frame', kind: ['none', 'swing', 'sliding'].includes(S.doors && S.doors.kind) ? S.doors.kind : 'none', n: n(S.doors && S.doors.n, 1, 8, 3) | 0, fills: (S.doors && Array.isArray(S.doors.fills) ? S.doors.fills : D.doors.fills).map(f => FILLS[f] ? f : 'dsp').slice(0, 8), laco: n(S.doors && S.doors.laco, 0, 5, 0) | 0, handles: !(S.doors && S.doors.handles === false), gf: n(S.doors && S.doors.gf, 2, 30, 4), cat: catId(S.doors && S.doors.cat), dir: (S.doors && Array.isArray(S.doors.dir) ? S.doors.dir : []).slice(0, 8).map(v => ['auto', 'L', 'R', 'U', 'D'].includes(v) ? v : 'auto') },
-    cat: catId(S.cat), led: !!S.led, nb: !!S.nb, nsl: !!S.nsl, nsr: !!S.nsr, name: String(S.name || 'Мой шкаф').slice(0, 60), cols: [] };
+    cat: catId(S.cat), hw: (() => { const K = typeof KIS !== 'undefined' ? KIS : null, h = S.hw || {}, ok = (g, k) => (K && K[g] && typeof k === 'string' && K[g][k] && k !== 'tier') ? k : ''; return { hinge: ok('hinges', h.hinge), open: ok('open', h.open), drawer: ok('drawerSys', h.drawer), lift: ok('lifts', h.lift), slide: ok('sliding', h.slide), pant: ok('pantSel', h.pant), rod: ok('rodSel', h.rod) }; })(), led: !!S.led, nb: !!S.nb, nsl: !!S.nsl, nsr: !!S.nsr, name: String(S.name || 'Мой шкаф').slice(0, 60), cols: [] };
   while (o.doors.fills.length < 8) o.doors.fills.push('dsp');
   S.cols.slice(0, 14).forEach(c => {
     const col = { id: uid(), w: n(c && c.w, 15, 250, 60), items: [] };

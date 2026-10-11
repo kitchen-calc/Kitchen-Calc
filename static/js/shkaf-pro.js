@@ -1,5 +1,5 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=22';
+import * as C from '/static/js/shkaf-pro-core.js?v=23';
 const { uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=3';
@@ -191,6 +191,7 @@ function sideGlobal() {
   h += sideObjList();
   h += sideOpenList();
   h += `<div class="sub">Шаблоны</div><div class="r">${btn(0, "PRO.tpl('S')", 'Прямой шкаф')}${btn(0, "PRO.tpl('P')", 'П-образный')}</div>`;
+  h += hwCatalogHtml();
   h += `<div class="sub">Двери</div><div class="r">${btn(S.doors.kind === 'none', "PRO.doors('none')", 'Без дверей')}${btn(S.doors.kind === 'swing', "PRO.doors('swing')", 'Распашные')}${btn(S.doors.kind === 'sliding', "PRO.doors('sliding')", 'Купе')}</div>`;
   if (S.doors.kind !== 'none') {
     if (S.doors.kind === 'swing') h += `<div class="note">Распашные двери настраиваются в каждом отсеке отдельно: нажмите на отсек в 3D. Новый отсек — кнопка «＋ Отсек».</div><div class="r"><span>Все двери</span>${['dsp', 'glass', 'mirror', 'laco'].map(k => btn(0, `PRO.allDf('${k}')`, FILLS[k].split(' ')[0])).join('')}</div>`;
@@ -235,6 +236,13 @@ function colSyncHtml(i) {
   const others = S.cols.map((c, ci) => ({ c, ci })).filter(x => x.ci !== i && !x.c.gap); if (!others.length) return '';
   const chips = others.map(x => `<button type="button" class="${colSync.sel[x.c.id] ? 'on' : ''}" onclick="PRO.csTog('${x.c.id}')">Отсек ${x.ci + 1} · ${mm(x.c.w)}</button>`).join(''), W = colSync.what, tg = (f, t) => btn(W[f], `PRO.csWhat('${f}')`, (W[f] ? '✔ ' : '') + t), cnt = others.filter(x => colSync.sel[x.c.id]).length;
   return `<div class="sub">Сделать как этот отсек</div><div class="note">Отметьте отсеки, которые должны стать такими же, и что повторить.</div><div class="r">${chips}</div><div class="r">${btn(0, "PRO.csPick('all')", 'Все')}${btn(0, "PRO.csPick('none')", 'Снять выбор')}</div><div class="r">${tg('size', 'Высота и глубина')}${tg('doors', 'Двери')}${tg('items', 'Наполнение (полки, штанги, ящики)')}</div><div class="r">${btn(0, 'PRO.csApply(false)', '▶ Применить к выбранным (' + cnt + ')')}${btn(0, 'PRO.csApply(true)', 'Применить ко всем')}</div>`;
+}
+/* каталог фурнитуры (kis.uz): петли, ручки/TIP-ON, ящики, подъёмники, купе, брючницы, штанги — цена и список деталей меняются */
+function hwCatalogHtml() {
+  if (typeof KIS === 'undefined') return '';
+  const H = S.hw || {}, nm = it => String(it.ru || '').replace(/'/g, '&#39;') + (it.price != null ? ' — ' + Math.round(it.price).toLocaleString('ru-RU') + ' сум' : (it.p2 ? ' — от ' + Math.round(it.p2).toLocaleString('ru-RU') + ' сум' : ''));
+  const sel = (grp, fld, lbl) => { const G = KIS[grp]; if (!G) return ''; return `<div class="r"><span>${lbl}</span><select onchange="PRO.hwSet('${fld}', this.value)"><option value="">По классу комплектации</option>${Object.keys(G).filter(k => k !== 'tier' && G[k] && (G[k].price != null || G[k].p2) && G[k].avail !== false).map(k => `<option value="${k}" ${H[fld] === k ? 'selected' : ''}>${nm(G[k])}</option>`).join('')}</select></div>`; };
+  return `<div class="sub">Фурнитура из каталога (цены kis.uz)</div>` + sel('hinges', 'hinge', 'Петли') + sel('open', 'open', 'Ручки / TIP-ON') + sel('drawerSys', 'drawer', 'Ящики (система)') + sel('lifts', 'lift', 'Подъёмники дверей') + sel('sliding', 'slide', 'Купе (система)') + sel('pantSel', 'pant', 'Брючница') + sel('rodSel', 'rod', 'Штанга') + `<div class="note">Выбранная фурнитура попадает в спецификацию и цену; пусто — по классу комплектации (Эконом / Стандарт / Премиум).</div>`;
 }
 function sideItem() {
   const f = findItem(sel.id); if (!f) return sideGlobal();
@@ -463,7 +471,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=30');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=31');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -607,7 +615,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=31');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=32');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -731,6 +739,7 @@ window.PRO = {
       if (W.items) { t.items = JSON.parse(JSON.stringify(src.items || [])).map(it => Object.assign(it, { id: uid() })); }
     }));
   },
+  hwSet: (f, v) => mutate(() => { S.hw = Object.assign({}, S.hw, { [f]: v }); }),
   mill: v => mutate(() => { S.doors.mp = v; }),
   obFill: v => mutate(() => { const o = S.objs[sel.oi]; if (o) o.fill = v; }),
   obRot: d => mutate(() => { const o = S.objs[sel.oi]; if (!o) return; const f = objFoot(o), cx = o.x + f.w / 2, cz = o.z + f.d / 2; o.rot = (((o.rot || 0) + d) % 360 + 360) % 360; const n2 = objFoot(o); o.x = r1(cx - n2.w / 2); o.z = r1(cz - n2.d / 2); if (S.room.mag) { const m = objMagnet(S, o, o.x, o.z, 200, o.rot); if (m) { o.x = m.ox; o.z = m.oz; } } }),
