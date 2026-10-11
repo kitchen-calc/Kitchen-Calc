@@ -83,7 +83,7 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
     <div>
       <div class="box3" id="p3dBox">
         <div id="p3d"></div><div class="load" id="p3dLoad">Загрузка 3D…</div>
-        <div class="bar"><label class="rot"><input type="checkbox" checked onchange="PRO.rot(this.checked); this.nextSibling.textContent = this.checked ? ' 🔄 Вращать' : ' ✋ Двигать картинку'"> 🔄 Вращать</label><button type="button" onclick="PRO.openAll(true)">↔ Открыть всё</button><button type="button" onclick="PRO.openAll(false)">Закрыть</button><span class="sp"></span><button type="button" id="sideBtn" style="display:none" onclick="PRO.sideToggle()">⚙ Скрыть панель</button><button type="button" id="fsBtn" onclick="PRO.full()">⛶ На весь экран</button></div>
+        <div class="bar"><label class="rot"><input type="checkbox" checked onchange="PRO.rot(this.checked); this.nextSibling.textContent = this.checked ? ' 🔄 Вращать' : ' ✋ Двигать картинку'"> 🔄 Вращать</label><button type="button" onclick="PRO.openAll(true)">↔ Открыть всё</button><button type="button" onclick="PRO.openAll(false)">Закрыть</button><button type="button" id="lightBtn" onclick="PRO.light()">💡 Свет: вкл</button><button type="button" id="ledBtn" onclick="PRO.leds()">✨ Подсветка: вкл</button><span class="sp"></span><button type="button" id="sideBtn" style="display:none" onclick="PRO.sideToggle()">⚙ Скрыть панель</button><button type="button" id="fsBtn" onclick="PRO.full()">⛶ На весь экран</button></div>
       </div>
       <div class="price" id="price"></div>
       <div class="warn" id="warn"></div>

@@ -2742,13 +2742,13 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=15');
+        const mod = await import('/static/js/kitchen3d.js?v=18');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: sel => k3dOnSelect(sel),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
           onMove: (sel, res, c0) => k3dDropHook(sel, res, c0)
         }, { viewOnly: VIEW_ONLY });
-        K3.setRotate(k3dRotate);
+        K3.setRotate(k3dRotate); k3dLightFx();
         el('k3dLoad').style.display = 'none';
         renderK3dBar(); K3.update(k3dState()); renderK3dEdit();
       } catch (e) {
@@ -2765,13 +2765,15 @@
       if (k3dMode === '3d') { if (!K3) initK3D(); else K3.update(k3dState()); }
     }
     function k3dRefresh() { if (K3 && k3dMode === '3d') { K3.update(k3dState()); if (!k3dKeepPanel) renderK3dEdit(); else k3dPosUpdate(); } }
-    let k3dRotate = true;
+    let k3dRotate = true, k3dLightOn = true, k3dLedsOn = true;
+    function k3dLightFx() { if (K3) { K3.setLight(k3dLightOn); K3.setLeds(k3dLedsOn); } }
     function k3dRotMode(on) { k3dRotate = !!on; if (K3) K3.setRotate(k3dRotate); renderK3dBar(); }
     function renderK3dBar() {
       const b = (act, txt, on) => `<button type="button" class="${on ? 'on' : ''}" onclick="k3dAct('${act}')">${txt}</button>`;
       const st = el('studio'), isFull = st.classList.contains('k3d-full');
       const rotLbl = `<label class="rot" title="${esc(L3('Галочка: тянете — вращаете. Без галочки: тянете — двигаете картинку. Колесо мыши — приблизить.', 'Belgi bor — aylantirish, yoʻq — suratni surish. Gʻildirak — yaqinlashtirish.'))}"><input type="checkbox" ${k3dRotate ? 'checked' : ''} onchange="k3dRotMode(this.checked)"> ${k3dRotate ? esc(L3('🔄 Вращать', '🔄 Aylantirish')) : esc(L3('✋ Двигать картинку', '✋ Suratni surish'))}</label>`;
-      el('k3dBar').innerHTML = rotLbl + b('openAll', L3('↔ Открыть всё', '↔ Hammasini ochish')) + b('closeAll', L3('Закрыть', 'Yopish')) + '<span class="sp"></span>' +
+      el('k3dBar').innerHTML = rotLbl + b('openAll', L3('↔ Открыть всё', '↔ Hammasini ochish')) + b('closeAll', L3('Закрыть', 'Yopish')) +
+        b('light', k3dLightOn ? L3('💡 Свет: вкл', '💡 Yorugʻlik: yoniq') : L3('🌙 Свет: выкл', '🌙 Yorugʻlik: oʻchiq'), !k3dLightOn) + b('leds', k3dLedsOn ? L3('✨ Подсветка: вкл', '✨ Yoritish: yoniq') : L3('▫ Подсветка: выкл', '▫ Yoritish: oʻchiq'), !k3dLedsOn) + '<span class="sp"></span>' +
         ((VIEW_ONLY || !OWNER_ON) ? '' : b('client', L3('👁 Клиенту', '👁 Mijozga'))) +
         (isFull ? b('side', st.classList.contains('side-off') ? L3('⚙ Параметры', '⚙ Parametrlar') : L3('⚙ Скрыть панель', '⚙ Panelni yashirish')) : '') +
         b('full', isFull ? L3('✕ Свернуть', '✕ Yopish') : L3('⛶ На весь экран', '⛶ Toʻliq ekran'));
@@ -2781,6 +2783,8 @@
       return (LAY[wall][tier === 'lower' ? 'lower' : 'upper'] || []).map(r => r.sec);
     }
     function k3dAct(a, v) {
+      if (a === 'light') { k3dLightOn = !k3dLightOn; k3dLightFx(); renderK3dBar(); return; }
+      if (a === 'leds') { k3dLedsOn = !k3dLedsOn; k3dLightFx(); renderK3dBar(); return; }
       if (a === 'client') { k3dClientLink(); return; }
       if (a === 'unsel') { selSec = null; selIsland = false; swapFrom = null; renderPlanner(); return; }
       if (a === 'openAll' || a === 'closeAll') { if (K3) K3.openAll(a === 'openAll'); return; }

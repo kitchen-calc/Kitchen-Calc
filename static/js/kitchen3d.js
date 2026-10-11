@@ -93,9 +93,20 @@ export function createK3D(container, hooks = {}, opts = {}) {
   function setRotate(on) { rotateMode = !!on; controls.mouseButtons = { LEFT: on ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: on ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE }; controls.touches = { ONE: on ? THREE.TOUCH.ROTATE : THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN }; }
 
   const hemi = new THREE.HemisphereLight('#fff8ee', '#b9a07a', 0.55); scene.add(hemi);
+  const HEMI0 = .55, SUN0 = 2.2;
   const sun = new THREE.DirectionalLight('#fff3df', 2.2); sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.6; sun.shadow.radius = 5;
   scene.add(sun); scene.add(sun.target);
+  // «Свет»: вечерний режим — тусклее, чтобы подсветка красиво светилась (для фото и показа клиенту)
+  let dusk = false, lastM = null;
+  let ledsOn = true;
+  const glowTex = (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(255,214,130,1)'); gr.addColorStop(1, 'rgba(255,214,130,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+  const mkGlow = () => new THREE.MeshBasicMaterial({ map: glowTex, color: '#ffffff', transparent: true, opacity: .22, depthWrite: false, blending: THREE.AdditiveBlending });
+  const glowM = M => M.ledGlow || (M.ledGlow = mkGlow());
+  function ledBoost(M) { if (!M) return; const k = ledsOn ? (dusk ? 14 : 2.2) : 0; if (M.led) { M.led.emissiveIntensity = k; M.led.color.set(ledsOn ? '#fff3c4' : '#6b6a66'); } if (M.ledGlow) M.ledGlow.opacity = ledsOn ? (dusk ? .62 : .22) : 0; if (M.glowMat) M.glowMat.opacity = ledsOn ? (dusk ? .55 : .2) : 0; }
+  function setLeds(on) { ledsOn = !!on; ledBoost(lastM); invalidate(); }
+  function setLight(on) { dusk = !on; renderer.toneMappingExposure = dusk ? .24 : 1.05; hemi.intensity = dusk ? .08 : HEMI0; sun.intensity = dusk ? .15 : SUN0; scene.background = new THREE.Color(dusk ? '#2e2a26' : '#ece6dc'); ledBoost(lastM); invalidate(); }
+
 
   const tex = { floor: FLOOR_TEX(), tile: TILE_TEX() };
   const loader = new THREE.TextureLoader();
@@ -182,7 +193,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   function carcass(g, M, w, h, d, y0, shelves, opts = {}) {
     const t = 1.6, led = opts.led | 0;
     if (led > 0) {   // подсветка: сначала под крышкой, потом под полками сверху вниз; под лентой — тёплое свечение
-      const glow = M.ledGlow || (M.ledGlow = new THREE.MeshBasicMaterial({ color: '#ffcf6e', transparent: true, opacity: .22, depthWrite: false }));
+      const glow = glowM(M);
       const strip = y => { box(g, w - 2 * t - 2, .7, 1.2, M.led, t + 1, y, d - 7); const gl = new THREE.Mesh(boxGeo(w - 2 * t - 1, 9, d - 8), glow); gl.position.set(w / 2, y - 4.6, (d - 8) / 2 + 1); g.add(gl); };
       strip(y0 + h - t - .8);
       for (let k = (shelves | 0), n = 1; k >= 1 && n < led; k--, n++) strip(y0 + h * k / ((shelves | 0) + 1) - .8);
@@ -617,7 +628,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
         g.userData.mod.h = sst.UH * sst.tiers; g.userData.mod.d = sst.UD;
         upperModule(g, Mfor(M, st, r.sec), sst, r.sec.kind === 'corner' ? Object.assign({}, r.sec, { _blind: r.sec.cs === 'R' ? 'R' : 'L' }) : r.sec, w, key, ub, sst.UH);
         if (sst.tiers === 2) upperModule(g, Mfor(M, st, r.sec), sst, Object.assign({}, r.sec, { kind: 'door', gasLifts: 0, dn: 0, led: 0 }), w, key + ':t2', ub + sst.UH, sst.UH);
-        if (st.led && st.led.level && st.led.work) box(g, w - 6, .6, 1.4, M.led, 3, ub - .7, sst.UD - 6);
+        if (st.led && st.led.level && st.led.work) { box(g, w - 6, .6, 1.4, M.led, 3, ub - .7, sst.UD - 6); box(g, w - 4, 30, .4, glowM(M), 2, ub - 31, 1.1); box(g, w - 4, .4, sst.UD - 4, glowM(M), 2, ub - 1.2, 2); }
         root.add(g); pick.push(g);
       });
     });
@@ -663,6 +674,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     sun.position.set(cx - span * .35, st.roomH + 260, bounds.zMax + span * .55); sun.target.position.set(cx, 60, depthMax / 2);
     const sc = sun.shadow.camera; sc.left = -span * .7; sc.right = span * .7; sc.top = span * .7; sc.bottom = -span * .7; sc.near = 10; sc.far = span * 3; sc.updateProjectionMatrix();
     // применить текущие доли открытия
+    lastM = M; ledBoost(M);
     anims.forEach(a => a.apply(ease(openAmt.get(a.key) || 0)));
     highlight();
     if (firstFrame) { setView('angle'); firstFrame = false; }
@@ -807,7 +819,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
 
   return {
     update(st) { state = st; build(st); },
-    setView, toggle, openAll, isOpen, floorAt, setHud, setRotate, isRotate: () => rotateMode,
+    setView, toggle, openAll, isOpen, floorAt, setHud, setLight, setLeds, isLight: () => !dusk, isLeds: () => ledsOn, setRotate, isRotate: () => rotateMode,
     select(sel) { if (state) { state.selected = sel; highlight(); invalidate(); } },
     snapshot() { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); },
     dispose() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); container.removeChild(renderer.domElement); }
