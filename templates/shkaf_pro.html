@@ -63,6 +63,8 @@ h1{font-family:'Playfair Display',Georgia,serif;margin:6px 0 4px;font-size:1.6re
 body.view .top .lk.edit,body.view .warn,body.view .price,body.view .lead,body.view #ownerBox,body.view h1,body.view .sub0{display:none!important}
 body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
 @media(max-width:900px){.grid,body.view .grid{grid-template-columns:1fr}.box3{height:430px}.side{height:auto;max-height:none}.stp button{width:42px;height:38px}.side button{padding:10px 11px;font-size:.84rem}}
+.shape-cv{margin-top:10px;border:1px solid #d8cdb8;border-radius:12px;overflow:hidden;background:#fff;touch-action:none}.shape-cv canvas{display:block;width:100%;height:auto;cursor:crosshair}
+.shape-ui .shr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:14px}.shape-ui button{padding:7px 11px;border:1px solid #cdbba0;background:#fffaf0;border-radius:9px;cursor:pointer;font:inherit}.shape-ui button.go{background:#c8892b;color:#fff;border-color:#c8892b;font-weight:700}.shape-ui button:disabled{opacity:.4}
 </style>
 <meta name="robots" content="index,follow" id="robots">
 </head>
@@ -98,6 +100,11 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
     </div>
     <aside class="side" id="side"></aside>
   </div>
+  <div class="card od-card" id="shapeBox">
+    <div class="od-head"><h3>✏️ Нарисуйте свою форму шкафа</h3><span>Вид сверху: ставьте углы, тяните их мышью, задайте длину каждой стороны и отметьте стороны, где будут дверцы. Готовый шкаф появится в комнате: двери открываются двойным щелчком, детали попадут в раскрой и чертежи.</span></div>
+    <div class="shape-cv"><canvas id="shapeCv" width="640" height="352"></canvas></div>
+    <div id="shapeUi" class="shape-ui"></div><div id="shapeMsg" class="hint"></div>
+  </div>
   <div class="card od-card" id="ownerBox" style="display:none">
     <div class="od-head"><h3>📐 Чертежи и спецификация — режим мастера</h3><span>Видно только вам. Лист A4: общий вид, двери, разрезы, каждый отсек, узлы, список деталей и фурнитуры.</span>
       <button type="button" onclick="PRO.print()">🖨 Печать (A4)</button><button type="button" onclick="PRO.owner()">🔒 Выйти</button></div>
@@ -106,6 +113,7 @@ body.view .grid{grid-template-columns:minmax(0,1fr) 340px}
 </main>
 <div class="toast" id="toast"></div>
 <script>if (/^\/shkaf\/view/.test(location.pathname)) document.getElementById('robots').content = 'noindex,nofollow';</script>
-<script type="module" src="/static/js/shkaf-pro.js?v=4"></script>
+<script type="module" src="/static/js/shkaf-shape.js?v=1"></script>
+<script type="module" src="/static/js/shkaf-pro.js?v=10"></script>
 </body>
 </html>

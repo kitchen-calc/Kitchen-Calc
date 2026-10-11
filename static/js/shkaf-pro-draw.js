@@ -1,5 +1,5 @@
 /* Чертежи конструктора шкафа PRO в стиле AutoCAD, лист A4 (альбомный). Размеры на чертежах — в мм. Только для режима мастера. */
-import { BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1 } from '/static/js/shkaf-pro-core.js?v=3';
+import { wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1 } from '/static/js/shkaf-pro-core.js?v=6';
 
 const F = 1.4;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -145,6 +145,36 @@ function sheetOverview(S, bp, no, total) {
   o += text(x0 + g.W * k10 / 2, y0 + g.totalH * k10 + 40, 'ВИД СПЕРЕДИ (двери сняты, показано наполнение)', 10, 'middle', 'font-weight="700"');
   o += text(1100, 60, `М 1:${niceScale(sc)}`, 12, 'end', 'font-weight="700"');
   return sheet(o, meta(S, bp), no, total);
+}
+/* ---------- план всей комнаты: шкаф, кровати, тумбы, зеркала, стеллажи и шкафы своей формы ---------- */
+function sheetRoomPlan(S, bp, no, total) {
+  const P = roomPoly(S), bx = Math.max(...P.map(p => p[0])), bz = Math.max(...P.map(p => p[1]));
+  const sc = Math.min(760 / (bx * 10), 460 / (bz * 10), .5), k10 = 10 * sc, x0 = 120, y0 = 90, X = v => x0 + v * k10, Z = v => y0 + v * k10;
+  let o = `<polygon points="${P.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${ST.o} stroke-width="3" fill="#faf7f0"/>`;
+  const items = [], rm = S.room || {}, rotPts = (pts, rot, ox, oz) => { const a = (rot || 0) * Math.PI / 180, c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a)); return pts.map(p => [p[0] * c + p[1] * s + ox, -p[0] * s + p[1] * c + oz]); };
+  const ft = wfoot(S), wr = { x0: rm.ox || 0, z0: rm.oz || 0 };
+  items.push({ n: 'Шкаф', poly: [[wr.x0, wr.z0], [wr.x0 + ft.w, wr.z0], [wr.x0 + ft.w, wr.z0 + ft.d], [wr.x0, wr.z0 + ft.d]], rot: rm.rot || 0, w: bp.g.W, d: ft.d, fill: 'url(#h2)' });
+  const add = (n, w, d, r, rot, fill) => items.push({ n, poly: [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]], rot, w, d, fill });
+  S.units.forEach((u, i) => { const c = u.fp ? u : Object.assign({}, u); if (!c.fp) freeItem(S, 'unit', c); add('Т' + (i + 1), u.w, u.d, itemRect(S, 'unit', c), c.fp.rot, '#efe3c8'); });
+  S.beds.forEach((b, i) => { const c = b.fp ? b : Object.assign({}, b); if (!c.fp) freeItem(S, 'bed', c); const bb = itemBase(S, 'bed', c); add('К' + (i + 1), bb.w, bb.d, itemRect(S, 'bed', c), c.fp.rot, '#dfe8f0'); });
+  S.panels.forEach((p, i) => { const c = p.fp ? p : Object.assign({}, p); if (!c.fp) freeItem(S, 'panel', c); add('З' + (i + 1), p.w, Math.max(3, itemBase(S, 'panel', c).d), itemRect(S, 'panel', c), c.fp.rot, '#d8eef7'); });
+  (S.objs || []).forEach((q, i) => {
+    const f = objFoot(q), poly = q.kind === 'custom' ? rotPts(objPoly(q), q.rot, q.x - f.mx, q.z - f.mz) : null, r = objRect(q);
+    items.push({ n: 'С' + (i + 1), poly: poly || [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]], rot: q.rot, w: q.w, d: q.d, fill: '#ece2cf', kind: OBJ_KINDS[q.kind].ru });
+  });
+  const legend = [];
+  items.forEach(it => {
+    o += `<polygon points="${it.poly.map(p => N(X(p[0])) + ',' + N(Z(p[1]))).join(' ')}" ${ST.o} fill="${it.fill}"/>`;
+    const xs = it.poly.map(p => p[0]), zs = it.poly.map(p => p[1]), ix0 = Math.min(...xs), ix1 = Math.max(...xs), iz0 = Math.min(...zs), iz1 = Math.max(...zs), cx = (ix0 + ix1) / 2, cz = (iz0 + iz1) / 2, a = (it.rot || 0) * Math.PI / 180;
+    o += line(X(cx), Z(cz), X(cx) + Math.sin(a) * 16, Z(cz) + Math.cos(a) * 16, 'o') + circ(X(cx), Z(cz), 2, 'o', '#111');   // стрелка «лицом»
+    o += text(X(cx), Z(cz) - 6, it.n, 8.5, 'middle', 'font-weight="700"');
+    legend.push([it.n, it.kind || '', mm(ix1 - ix0) + '×' + mm(iz1 - iz0), 'от лев. ' + mm(ix0) + ', от дальн. ' + mm(iz0), (it.rot || 0) + '°']);
+  });
+  o += dimH(X(0), X(bx), Z(0), Z(0) - 30, mm(bx)) + dimV(Z(0), Z(bz), X(bx), X(bx) + 34, mm(bz));
+  o += text(X(bx / 2), Z(bz) + 36, 'ПЛАН КОМНАТЫ С МЕБЕЛЬЮ (вид сверху) · стрелка — куда смотрит лицо · габариты, мм', 10, 'middle', 'font-weight="700"');
+  const lx = 935, ly = 90; o += text(lx, ly - 6, 'ЭКСПЛИКАЦИЯ', 9, 'start', 'font-weight="700"');
+  legend.slice(0, 22).forEach((r, i) => { o += text(lx, ly + 14 + i * 26, `${r[0]} ${r[1]} ${r[2]}`, 6.6, 'start', 'font-weight="700"') + text(lx + 6, ly + 25 + i * 26, `${r[3]} · поворот ${r[4]}`, 6, 'start', 'fill="#444"'); });
+  return sheet(o, meta(S, bp).slice(0, 3).concat([['Лист', 'План комнаты с мебелью'], ['Предметов', String(items.length)], ['Дата', new Date().toLocaleDateString('ru-RU')]]), no, total);
 }
 function sheetDoors(S, bp, no, total) {
   const g = bp.g, sc = Math.min(1000 / (g.W * 10), 470 / (g.totalH * 10), .5), x0 = 105, y0 = 80, k10 = 10 * sc, X = v => x0 + v * k10, Y = v => y0 + (g.totalH - v) * k10;
@@ -392,7 +422,9 @@ export function buildSheets(S) {
   const bp = buildParts(S), pr = pricing(S, bp);
   const total = '__T__';
   let no = 1;
-  const sheets = [sheetOverview(S, bp, no++, total), sheetDoors(S, bp, no++, total), sheetSections(S, bp, no++, total)];
+  const sheets = [sheetOverview(S, bp, no++, total)];
+  if (S.objs.length || S.beds.length || S.units.length || S.panels.length || S.room.rot || S.room.oz) sheets.push(sheetRoomPlan(S, bp, no++, total));
+  sheets.push(sheetDoors(S, bp, no++, total), sheetSections(S, bp, no++, total));
   S.cols.forEach((c, i) => { if (!c.gap) sheets.push(sheetColumn(S, bp, i, no++, total)); });
   S.mezzes.forEach((m, i) => sheets.push(sheetMezz(S, bp, i, no++, total)));
   S.beds.forEach((b, bi) => { sheets.push(sheetBedMain(S, bp, bi, no++, total)); sheets.push(sheetBedDetails(S, bp, bi, no++, total)); if (b.kind === 'bunk') sheets.push(sheetBunk(S, bp, bi, no++, total)); });
