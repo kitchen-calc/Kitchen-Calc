@@ -294,7 +294,12 @@ export function createK3D(container, hooks = {}, opts = {}) {
     }
     if (kind === 'dishwasher') { dropDoor(g, M, key, GAP, PL + GAP, w - 2 * GAP, H - 2 * GAP, zf, M.facade, null, 75); box(g, w - 2, 4, 1, M.black, 1, PL + H - 5, D - 4); return; }
     const nd = s.drawers | 0;
-    if (nd > 0) {
+    if (nd === 1 && +s.mxd > 0) {   // ящик сверху + дверца снизу
+      const dh = Math.max(8, Math.min(+s.mxd, H - 3 * GAP - 8)), yD = PL + H - GAP - dh, hD = H - 3 * GAP - dh;
+      drawer(g, M, st, key, GAP, yD, w - 2 * GAP, dh, zf, D, open, st.dsysOf(s, 0), 0);
+      if (twoDoors(s, w)) { const dw = (w - 3 * GAP) / 2; door(g, M, st, key, GAP, PL + GAP, dw, hD, zf, 'L', open, 'lower'); door(g, M, st, key, 2 * GAP + dw, PL + GAP, dw, hD, zf, 'R', open, 'lower'); }
+      else door(g, M, st, key, GAP, PL + GAP, w - 2 * GAP, hD, zf, s.hinge === 'R' ? 'R' : 'L', open, 'lower');
+    } else if (nd > 0) {
       const hh = (H - GAP * (nd + 1)) / nd;
       for (let i = 0; i < nd; i++) {
         const dg = drawer(g, M, st, key, GAP, PL + GAP + (nd - 1 - i) * (hh + GAP), w - 2 * GAP, hh, zf, D, open, st.dsysOf(s, i), i);
