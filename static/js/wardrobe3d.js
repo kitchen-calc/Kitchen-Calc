@@ -4,6 +4,7 @@
    API: createW3D(container, hooks) -> { update(st), setView(name), toggle(key), openAll(on), isOpen(key), select(sel), dispose() } */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { finishMat } from '/static/js/room-open.js?v=10';
 
 const DEG = Math.PI / 180, T = 1.6, PL = 8;
 const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -386,11 +387,13 @@ export function createW3D(container, hooks = {}) {
   /* ---------- комната ---------- */
   function room(M) {
     const pad = 110, x0 = bounds.x0 - pad, x1 = bounds.x1 + pad, zMax = bounds.zMax + 60, Hroom = Math.max(bounds.h + 30, 270);
-    const fl = mesh(new THREE.PlaneGeometry(x1 - x0, zMax + 40), M.floor, false); fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, 0, zMax / 2 - 20); M.floor.map.repeat.set((x1 - x0) / 160, (zMax + 40) / 160); root.add(fl);
-    const back = mesh(new THREE.PlaneGeometry(x1 - x0, Hroom), M.wall, false); back.position.set((x0 + x1) / 2, Hroom / 2, -.8); root.add(back);
+    const fin = (state && state.m && state.m.fin) || {}, fm = (k, W, H) => fin[k] ? finishMat(k, fin[k][0], fin[k][1], W, H) : null;
+    const fMat = fm('floor', x1 - x0, zMax + 40), wMat = (W, H) => fm('wall', W, H) || M.wall;
+    const fl = mesh(new THREE.PlaneGeometry(x1 - x0, zMax + 40), fMat || M.floor, false); fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, 0, zMax / 2 - 20); if (!fMat) M.floor.map.repeat.set((x1 - x0) / 160, (zMax + 40) / 160); root.add(fl);
+    const back = mesh(new THREE.PlaneGeometry(x1 - x0, Hroom), wMat(x1 - x0, Hroom), false); back.position.set((x0 + x1) / 2, Hroom / 2, -.8); root.add(back);
     const st = state, wd = st.type === 'wardrobe' && st.m.shape !== 'line';
-    if (wd) { const lw = mesh(new THREE.PlaneGeometry(zMax, Hroom), M.wall, false); lw.rotation.y = Math.PI / 2; lw.position.set(-.8, Hroom / 2, zMax / 2); root.add(lw); }
-    if (st.type === 'wardrobe' && st.m.shape === 'U') { const rw = mesh(new THREE.PlaneGeometry(zMax, Hroom), M.wall, false); rw.rotation.y = -Math.PI / 2; rw.position.set(st.walls[0] + .8, Hroom / 2, zMax / 2); root.add(rw); }
+    if (wd) { const lw = mesh(new THREE.PlaneGeometry(zMax, Hroom), wMat(zMax, Hroom), false); lw.rotation.y = Math.PI / 2; lw.position.set(-.8, Hroom / 2, zMax / 2); root.add(lw); }
+    if (st.type === 'wardrobe' && st.m.shape === 'U') { const rw = mesh(new THREE.PlaneGeometry(zMax, Hroom), wMat(zMax, Hroom), false); rw.rotation.y = -Math.PI / 2; rw.position.set(st.walls[0] + .8, Hroom / 2, zMax / 2); root.add(rw); }
     box(root, x1 - x0, 7, 1.4, M.niche, x0, 0, -.6);
   }
 

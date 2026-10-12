@@ -251,7 +251,8 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="/static/js/shkaf-data.js?v=8"></script>
+<script type="module">import * as R from '/static/js/room-open-core.js?v=10'; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+<script src="/static/js/shkaf-data.js?v=9"></script>
 <script src="/static/js/kis-data.js?v=4"></script>
 <script src="/static/js/kis-art.js?v=2"></script>
 <script src="/static/js/kis-ui.js?v=5"></script>
@@ -995,9 +996,21 @@ function hwPanel() {
 }
 document.addEventListener('kispick', e => { const d = e.detail; if (d.ctx !== 'shk') return; HWK()[d.field] = d.key; activePreset = -1; norm(); renderForm(); refresh(); presetCards(); });
 document.addEventListener('kiscount', e => { const d = e.detail; if (d.ctx !== 'shk') return; const x = HWK().x || (HWK().x = {}); x[d.key] = Math.max(0, Math.min(8, (x[d.key] | 0) + d.delta)); activePreset = -1; renderForm(); refresh(); presetCards(); });
+function finCard(n) {
+  if (!window.ROPEN || !window.ROPEN.ROOM_FINISH) return '';
+  const RF = window.ROPEN.ROOM_FINISH, TN = window.ROPEN.FINISH_TINTS, fin = M.fin || {};
+  const row = (k, label) => {
+    const cat = RF[k], cur = fin[k] || ['', ''], groups = {};
+    Object.keys(cat).forEach(id => { (groups[cat[id].grp] = groups[cat[id].grp] || []).push(id); });
+    return `<label class="f" style="margin-top:10px">${label}</label><select data-fin="${k}"><option value="">по умолчанию</option>${Object.keys(groups).map(g => `<optgroup label="${g}">${groups[g].map(id => `<option value="${id}" ${cur[0] === id ? 'selected' : ''}>${cat[id].ru}</option>`).join('')}</optgroup>`).join('')}</select>` +
+      (cur[0] && cat[cur[0]].pat !== 'mirror' ? `<select data-fint="${k}" style="margin-top:6px">${TN.map(([c, nm]) => `<option value="${c}" ${(cur[1] || '') === c ? 'selected' : ''}>Оттенок: ${nm}</option>`).join('')}</select>` : '');
+  };
+  return `<div class="card"><h2><span class="n">${n}</span>Пол и стены</h2>${row('floor', 'Пол')}${row('wall', 'Стены')}</div>`;
+}
+window.addEventListener('ropen-ready', () => { try { if (typeof renderForm === 'function' && typeof M !== 'undefined' && M) renderForm(); } catch (e) {} });
 function decorCard(n) {
   const d = M.decor, names = { plant: 'Растение', lamp: 'Торшер', pouf: 'Пуф / сумка', rug: 'Коврик', pics: 'Картины' };
-  return `<div class="card"><h2><span class="n">${n}</span>Декор на картинке</h2><div class="chips">${Object.keys(names).map(k => chip(d[k], `data-decor="${k}"`, names[k])).join('')}</div><div class="hint">Декор нужен только для красоты на картинке и в цену не входит.</div></div>`;
+  return finCard(n) + `<div class="card"><h2><span class="n">${n + 1}</span>Декор на картинке</h2><div class="chips">${Object.keys(names).map(k => chip(d[k], `data-decor="${k}"`, names[k])).join('')}</div><div class="hint">Декор нужен только для красоты на картинке и в цену не входит.</div></div>`;
 }
 function mirrorCard(n) {
   const m = M.mirror;
@@ -1188,6 +1201,8 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.dataset.k) { let v = t.value; if (t.type === 'number' || ['antresol'].includes(t.dataset.k)) v = Number(v); set(M, t.dataset.k, v); activePreset = -1; norm(); renderForm(); refresh(); presetCards(); }
+  else if (t.dataset.fin) { const k = t.dataset.fin, f = Object.assign({}, M.fin || {}); if (t.value) f[k] = [t.value, '']; else delete f[k]; M.fin = Object.keys(f).length ? f : null; activePreset = -1; renderForm(); refresh(); presetCards(); }
+  else if (t.dataset.fint) { const k = t.dataset.fint; if (M.fin && M.fin[k]) M.fin[k][1] = t.value; refresh(); renderForm(); }
   else if (t.dataset.fill !== undefined) { M.fills[+t.dataset.fill] = t.value; renderForm(); refresh(); }
   else if (t.dataset.p) { P[t.dataset.p] = Number(t.value) || P[t.dataset.p]; try { localStorage.setItem('kcw_p', JSON.stringify({ K: P.K, Klabor: P.Klabor, laborM2: P.laborM2, delivery: P.delivery })); } catch (er) {} refresh(); presetCards(); }
 });
@@ -1241,7 +1256,7 @@ function w3Supported() { try { return !!(window.WebGL2RenderingContext && docume
 async function initW3() {
   if (W3 || w3Loading) return; w3Loading = true;
   try {
-    const mod = await import('/static/js/wardrobe3d.js?v=7');
+    const mod = await import('/static/js/wardrobe3d.js?v=8');
     W3 = mod.createW3D($('w3dCanvas'), { onSelect: sel => { w3Sel = sel; W3.select(sel); renderW3Edit(); } });
     $('w3dLoad').style.display = 'none'; renderW3Bar(); W3.update(w3State()); renderW3Edit();
   } catch (e) { console.warn('3D недоступно', e); $('w3dTab').style.display = 'none'; setW3Mode('2d'); }
