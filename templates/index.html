@@ -1207,7 +1207,6 @@
                 <div class="hw-desc" id="hwDesc"></div>
               </div>
               <div id="kisKitchen" style="grid-column: span 2;"></div>
-              <div id="roomFinish" style="grid-column: span 2;"></div>
             </div>
             <div class="hw-note" data-i18n="logisticsNote">В цену входят ввоз и доставка материалов, доставка готовой кухни по Ташкенту и монтаж.</div>
           </div>
@@ -1958,22 +1957,24 @@
       const hint = { parquet: 'repeating-linear-gradient(90deg,rgba(0,0,0,.18) 0 1px,transparent 1px 9px)', herring: 'repeating-linear-gradient(45deg,rgba(0,0,0,.2) 0 1px,transparent 1px 6px)', grid: 'linear-gradient(rgba(0,0,0,.22) 1px,transparent 1px) 0 0/50% 50%,linear-gradient(90deg,rgba(0,0,0,.22) 1px,transparent 1px) 0 0/50% 50%', brick: 'linear-gradient(rgba(0,0,0,.25) 1px,transparent 1px) 0 0/100% 33%', stripe: 'repeating-linear-gradient(90deg,' + (f.col2 || 'rgba(0,0,0,.1)') + ' 0 4px,transparent 4px 8px)', checker: 'conic-gradient(' + (f.col2 || '#222') + ' 25%,transparent 0 50%,' + (f.col2 || '#222') + ' 0 75%,transparent 0) 0 0/50% 50%', ribbed: 'repeating-linear-gradient(90deg,rgba(0,0,0,.28) 0 2px,transparent 2px 5px)', slats: 'repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 2px,transparent 2px 6px)', wood: 'repeating-linear-gradient(90deg,rgba(0,0,0,.12) 0 1px,transparent 1px 5px)', slab: 'radial-gradient(circle at 30% 40%,rgba(0,0,0,.15),transparent 60%)', geo: 'radial-gradient(circle,rgba(0,0,0,.2) 0 20%,transparent 22%) 0 0/50% 50%', damask: 'radial-gradient(circle,rgba(0,0,0,.18) 0 25%,transparent 27%) 0 0/50% 50%', hex: 'radial-gradient(circle,rgba(0,0,0,.2) 0 30%,transparent 32%) 0 0/50% 50%', terrazzo: 'radial-gradient(circle,rgba(0,0,0,.35) 0 8%,transparent 10%) 0 0/30% 30%', mirror: 'linear-gradient(135deg,rgba(255,255,255,.7),transparent 60%)' }[f.pat] || '';
       return `<button type="button" title="${esc(f.ru)}" onclick="rfPick('${kind}','${id}')" style="width:38px;height:38px;border-radius:7px;border:2px solid ${cur === id ? '#c8952f' : 'rgba(0,0,0,.18)'};background:${hint ? hint + ',' : ''}${f.col};cursor:pointer;padding:0;box-shadow:${cur === id ? '0 0 0 2px rgba(200,149,47,.4)' : 'none'}"></button>`;
     }
-    function renderRoomFinish() {
-      const box = el('roomFinish'); if (!box) return; if (!window.ROPEN || !window.ROPEN.ROOM_FINISH) { box.innerHTML = ''; return; }
+    const rfOpen = {};
+    function rfHtml() {
+      if (!window.ROPEN || !window.ROPEN.ROOM_FINISH) return '';
       const RF = window.ROPEN.ROOM_FINISH, TN = window.ROPEN.FINISH_TINTS;
       const block = (kind, title, tab) => {
         const cat = RF[tab || kind], cur = roomFinish[kind][0], f = cur ? cat[cur] : null, groups = {};
         Object.keys(cat).forEach(id => { (groups[cat[id].grp] = groups[cat[id].grp] || []).push(id); });
-        let h = `<details style="border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:8px 10px;margin-bottom:8px"><summary style="cursor:pointer;font-weight:600">${esc(title)}: <span style="font-weight:400">${esc(f ? f.ru : L3('по умолчанию', 'standart'))}</span></summary><div style="margin-top:8px">`;
+        let h = `<details ${rfOpen[kind] ? 'open' : ''} ontoggle="rfOpen['${kind}'] = this.open" style="border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:8px 10px;margin-bottom:8px"><summary style="cursor:pointer;font-weight:600">${esc(title)}: <span style="font-weight:400">${esc(f ? f.ru : L3('по умолчанию', 'standart'))}</span></summary><div style="margin-top:8px">`;
         h += `<button type="button" class="btn-sm" onclick="rfPick('${kind}','')" style="margin-bottom:6px">${esc(L3('По умолчанию', 'Standart'))}</button>`;
         Object.keys(groups).forEach(g => { h += `<div style="font-size:12px;opacity:.7;margin:8px 0 4px">${esc(g)}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${groups[g].map(id => rfSwatch(kind, id, cat[id], cur)).join('')}</div>`; });
         if (f && f.pat !== 'mirror') h += `<div style="font-size:12px;opacity:.7;margin:10px 0 4px">${esc(L3('Оттенок', 'Rang'))}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${TN.map(([c, n]) => `<button type="button" title="${esc(n)}" onclick="rfTint('${kind}','${c}')" style="width:26px;height:26px;border-radius:50%;border:2px solid ${((roomFinish[kind][1] || '') === c) ? '#c8952f' : 'rgba(0,0,0,.2)'};background:${c || 'linear-gradient(135deg,#fff 50%,#ccc 50%)'};cursor:pointer;padding:0"></button>`).join('')}</div>`;
         return h + '</div></details>';
       };
-      box.innerHTML = `<label>${esc(L3('Отделка комнаты', 'Xona pardozi'))}</label>` + block('floor', L3('Пол', 'Pol')) + block('wall', L3('Стены', 'Devorlar')) + block('acc', L3('Акцентная задняя стена', 'Aksent devor'), 'wall');
+      return `<div class="k3s-sub">🎨 ${esc(L3('Пол и стены комнаты', 'Xona poli va devorlari'))}</div>` + block('floor', L3('Пол', 'Pol')) + block('wall', L3('Стены', 'Devorlar')) + block('acc', L3('Акцентная задняя стена', 'Aksent devor'), 'wall');
     }
-    function rfPick(k, id) { roomFinish[k] = [id, ''] ; renderRoomFinish(); updateCalculator(); updateShareLinks(); }
-    function rfTint(k, c) { roomFinish[k][1] = c; renderRoomFinish(); updateCalculator(); updateShareLinks(); }
+    function renderRoomFinish() { const box = el('roomFinish'); if (box) box.innerHTML = rfHtml(); }
+    function rfPick(k, id) { roomFinish[k] = [id, '']; renderRoomFinish(); updateCalculator(); renderK3dEdit(); updateShareLinks(); }
+    function rfTint(k, c) { roomFinish[k][1] = c; renderRoomFinish(); updateCalculator(); renderK3dEdit(); updateShareLinks(); }
     window.addEventListener('ropen-ready', renderRoomFinish);
     const MILL_K = { vgroove: 'рейка вертикальная 30 мм', vfine: 'рейка вертикальная мелкая 15 мм', hgroove: 'рейка горизонтальная 30 мм', frame: 'филёнка (рамка)' };
     const MILL_PRICE = { vgroove: 1, vfine: 1.3, hgroove: 1, frame: .7 };   // доплата за фрезеровку: коэффициент к базе на 1 п.м. ширины шкафа
@@ -3261,6 +3262,7 @@
         <div class="k3s-sub">🎨 ${esc(L3('Цвет столешницы', 'Stol usti rangi'))}</div>
         ${topSwatches(topColorHex, 'k3dTopColor', L3('по материалу', 'material boʻyicha'))}
         ${topTexRow()}
+        ${rfHtml()}
         <div class="k3s-sub">💡 ${esc(L3('Подсветка', 'Yoritish'))}</div>
         ${k3Row(L3('Класс', 'Sinf'), [0, 1, 2].map(i => k3B(ledState.level === i, 'setLedLevel(' + i + ')', t('led_' + i))).join(''))}
         ${k3Row(L3('Под шкафами', 'Shkaflar ostida'), k3B(ledState.level && ledState.work, "k3dLedZone('work')", L3('рабочая зона', 'ish zonasi')) + k3B(ledState.level && ledState.plinth, "k3dLedZone('plinth')", L3('цоколь', 'sokol')))}
