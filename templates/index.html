@@ -1958,7 +1958,7 @@
     function mixD(s) { return (s && (s.kind === 'door' || s.kind === 'drawers') && (s.drawers | 0) === 1 && +s.mxd > 0) ? +s.mxd : 0; }
     function mixFrac(s, G) { G = G || techGeometry(); return Math.min(.8, Math.max(.08, mixD(s) / (((s && s.ht) ? +s.ht : G.BOX) - G.PL))); }
     /* остров как отдельное изделие: секции (двери / ящики / глухая панель / открытые полки), столешница сверху и с боков, свесы */
-    var islandCfg = { cells: [], top: 'top', ovF: 2, ovB: 2, back: 'panel', hood: false, bar: false }, islCell = 0;
+    var islandCfg = { cells: [], top: 'top', ovF: 2, ovB: 2, back: 'panel', hood: false, bar: false, pc: null, ctc: '' }, islCell = 0;
     const ISL_KINDS = { door: 'Двери', drawers: 'Ящики', blind: 'Глухая панель', open: 'Открытые полки', sink: 'Мойка (раковина)', hob: 'Газовая / варочная панель', oven: 'Духовка', dishwasher: 'Посудомойка', washer: 'Стиральная машина', cargo: 'Карго (выдвижные корзины)' };
     function islandCells(L) {   // секции: свои или по умолчанию (двери и ящики по очереди, как раньше)
       L = L || parseFloat((el('islandLength') || {}).value) || 140;
@@ -1967,7 +1967,7 @@
       const sum = c.reduce((a, x) => a + (+x.w || 0), 0); c.forEach(x => { x.w = sum > 0 ? (+x.w || 0) * L / sum : L / c.length; });
       return c.map(x => Object.assign({ dn: 1, dr: 3, sh: 1, hg: 'L' }, x, { w: Math.round(x.w * 10) / 10 }));
     }
-    const islandPlain = L => ({ cells: islandCells(L), top: islandCfg.top, ovF: islandCfg.ovF, ovB: islandCfg.ovB, back: islandCfg.back, hood: !!islandCfg.hood, bar: !!islandCfg.bar });
+    const islandPlain = L => ({ cells: islandCells(L), top: islandCfg.top, ovF: islandCfg.ovF, ovB: islandCfg.ovB, back: islandCfg.back, hood: !!islandCfg.hood, bar: !!islandCfg.bar, pc: islandCfg.pc, ctc: islandCfg.ctc });
     function islandSecs() {   // секции острова как «шкафы» для раскроя
       if (!chk('hasIsland')) return []; const W = parseFloat(el('islandWidth').value) || 80, both = islandCfg.back === 'cells';
       return islandCells().map((c, i) => ({ id: 'О' + (i + 1), isl: true, name: 'Остров · секция ' + (i + 1) + ' (' + (ISL_KINDS[c.k] || '').toLowerCase() + ')', kind: ['drawers', 'sink', 'hob', 'oven', 'dishwasher', 'washer', 'cargo'].indexOf(c.k) >= 0 ? c.k : 'door', width: c.w, drawers: c.k === 'drawers' ? ((c.dr | 0) || 3) : (c.k === 'hob' ? (c.dr | 0) : 0), dn: c.dn || 1, hinge: c.hg, shelves: c.k === 'door' ? (c.sh | 0) : (c.k === 'open' ? ((c.sh | 0) || 2) : 0), noDoors: c.k === 'open', dp: Math.round((both ? W / 2 : W - 2) * 10) / 10, openType: 'handles' }));
@@ -2815,7 +2815,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=41');
+        const mod = await import('/static/js/kitchen3d.js?v=42');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: (sel, multi) => k3dOnSelect(sel, multi), onMoveMulti: (items, dx, dz) => k3dMoveMulti(items, dx, dz),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3767,6 +3767,8 @@
       h += k3Row(L3('Ширина секции', 'Boʻlim kengligi'), k3Step(Math.round(c.w * 10) / 10 + ' ' + cmU(), "k3dIslW(-5)", "k3dIslW(5)")) + `<div class="k3e-r">${k3B(false, 'k3dIslAll()', L3('Эту секцию — всем', 'Hammasiga'))}${k3B(false, 'k3dIslReset()', L3('Сбросить секции', 'Tozalash'))}</div>`;
       h += `<div class="k3s-sub">${esc(L3('Столешница', 'Stol usti'))}</div>` + k3Row(L3('Боковины', 'Yon'), [['top', L3('только сверху', 'faqat ustida')], ['L', L3('+ слева', '+ chap')], ['R', L3('+ справа', '+ oʻng')], ['both', L3('+ с двух сторон', '+ ikki tomon')]].map(([k, n]) => k3B((cfg.top || 'top') === k, `k3dIslTop('${k}')`, n)).join(''));
       h += k3Row(L3('Свес спереди', 'Oldi osma'), k3Step((cfg.ovF != null ? cfg.ovF : 2) + ' ' + cmU(), "k3dIslOv('ovF',-5)", "k3dIslOv('ovF',5)")) + k3Row(L3('Свес сзади', 'Orqa osma'), k3Step((cfg.ovB != null ? cfg.ovB : 2) + ' ' + cmU(), "k3dIslOv('ovB',-5)", "k3dIslOv('ovB',5)")) + `<div class="k3s-note">${esc(L3('Свес 30 см и больше — барная сторона: стулья ставятся с неё.', 'Osma 30 sm va undan koʻp — bar tomoni.'))}</div>`;
+      { const pc = cfg.pc || {};
+        h += `<div class="k3s-sub">🎨 ${esc(L3('Цвета острова', 'Orol ranglari'))}</div>` + k3Row(L3('Фасад', 'Fasad'), paintSelectFn('k3dIslPaint', 'f', pc.f)) + k3Row(L3('Корпус', 'Korpus'), paintSelectFn('k3dIslPaint', 'b', pc.b)) + k3Row(L3('Столешница', 'Stol usti'), '') + topSwatches(cfg.ctc || '', 'k3dIslTopColor', L3('как у кухни', 'oshxonadagidek')); }
       h += k3Row(L3('Над островом', 'Orol usti'), (cells.some(x => x.k === 'hob') ? k3B(!!cfg.hood, 'k3dIslFlag(\'hood\')', L3('вытяжка', 'sorgich')) : '') + k3B(!!cfg.bar, 'k3dIslFlag(\'bar\')', L3('барная стойка', 'bar tomoni')));
       h += k3Row(L3('Задняя сторона', 'Orqa tomon'), k3B(cfg.back !== 'cells', "k3dIslBack('panel')", L3('глухая панель', 'yopiq panel')) + k3B(cfg.back === 'cells', "k3dIslBack('cells')", L3('такие же секции', 'xuddi shunday')));
       return h + `<div class="k3e-r" style="margin-top:12px">${k3B(false, 'k3dIslandHome()', L3('На место по умолчанию', 'Joyiga qaytarish'))}${k3B(false, "k3dAct('unsel',0)", '✕ ' + L3('К кухне', 'Oshxonaga'))}</div>`;
@@ -3790,6 +3792,8 @@
     function k3dIslReset() { islandCfg.cells = []; islCell = 0; islDone(); }
     function k3dIslTop(v) { islandCfg.top = v; islDone(); }
     function k3dIslOv(f, d) { islandCfg[f] = Math.max(0, Math.min(45, (islandCfg[f] != null ? islandCfg[f] : 2) + d)); islDone(); }
+    function k3dIslPaint(f, v) { const pc = Object.assign({}, islandCfg.pc || {}); if (v) pc[f] = v; else delete pc[f]; islandCfg.pc = Object.keys(pc).length ? pc : null; islDone(); }
+    function k3dIslTopColor(h) { islandCfg.ctc = /^#[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : ''; islDone(); }
     function k3dIslFlag(f) { islandCfg[f] = !islandCfg[f]; islDone(); }
     function k3dIslBack(v) { islandCfg.back = v; islDone(); }
     function k3dIslandHome() { islandPos = null; moveBase = null; k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
@@ -4173,6 +4177,10 @@
     function k3dPaintSel() { const s = selSec; if (!s || !s.pc) return; const tier = tierOf(s); secsOf(tier).forEach(x => { if (x !== s && kSyncSel[tier][x.id]) x.pc = Object.assign({}, s.pc); }); updateCalculator(); renderK3dEdit(); }
     function k3dPaintTier(tier) { const s = selSec; if (!s || !s.pc) return; secsOf(tier).forEach(x => { x.pc = Object.assign({}, s.pc); }); updateCalculator(); renderK3dEdit(); }
     function k3dPaintAll() { const s = selSec; if (!s || !s.pc) return; lowerSections.concat(upperSections).forEach(x => { x.pc = Object.assign({}, s.pc); }); updateCalculator(); renderK3dEdit(); }
+    function paintSelectFn(fn, field, cur) {
+      const groups = colorCatalog.map((c, ci) => `<optgroup label="${esc(t('cat' + ci))}">${c.items.map(it => `<option value="${it.id}" ${cur === it.id ? 'selected' : ''}>${esc(it.name)} №${it.n}</option>`).join('')}</optgroup>`).join('');
+      return `<select onchange="${fn}('${field}', this.value)"><option value="">${esc(L3('Как у всей кухни', 'Butun oshxonadagidek'))}</option>${groups}</select>`;
+    }
     function paintSelect(field, cur) {
       const groups = colorCatalog.map((c, ci) => `<optgroup label="${esc(t('cat' + ci))}">${c.items.map(it => `<option value="${it.id}" ${cur === it.id ? 'selected' : ''}>${esc(it.name)} №${it.n}</option>`).join('')}</optgroup>`).join('');
       return `<select onchange="k3dPaint('${field}', this.value)"><option value="">${esc(L3('Как у всей кухни', 'Butun oshxonadagidek'))}</option>${groups}</select>`;
@@ -6173,7 +6181,7 @@
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
-        ic: (islandCfg.cells.length || islandCfg.top !== 'top' || islandCfg.ovF !== 2 || islandCfg.ovB !== 2 || islandCfg.back !== 'panel' || islandCfg.hood || islandCfg.bar) ? { c: islandCfg.cells.map(x => [x.k, Math.round(x.w * 10) / 10, x.dn | 0, x.dr | 0, x.sh | 0, x.hg || 'L']), t: islandCfg.top, f: islandCfg.ovF, b: islandCfg.ovB, k: islandCfg.back, h: islandCfg.hood ? 1 : 0, r: islandCfg.bar ? 1 : 0 } : 0, fm: facadeMill || 0, tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
+        ic: (islandCfg.cells.length || islandCfg.top !== 'top' || islandCfg.ovF !== 2 || islandCfg.ovB !== 2 || islandCfg.back !== 'panel' || islandCfg.hood || islandCfg.bar || islandCfg.pc || islandCfg.ctc) ? { c: islandCfg.cells.map(x => [x.k, Math.round(x.w * 10) / 10, x.dn | 0, x.dr | 0, x.sh | 0, x.hg || 'L']), t: islandCfg.top, f: islandCfg.ovF, b: islandCfg.ovB, k: islandCfg.back, h: islandCfg.hood ? 1 : 0, r: islandCfg.bar ? 1 : 0, p: islandCfg.pc ? [islandCfg.pc.f || '', islandCfg.pc.b || ''] : 0, tc: islandCfg.ctc || '' } : 0, fm: facadeMill || 0, tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
         ox: kOpens.map(o => [o.kind, o.wall, o.off, o.w, o.h, o.y, o.d, o.n || 1, o.v || '', o.c | 0]), oj: kObjs.length ? kObjs : 0,
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW], kh: KHW, ch: s.counterH, ug: s.upperGap };
     }
@@ -6269,7 +6277,7 @@
       upperSections = up;
       parkedSections = (Array.isArray(st.pk) ? st.pk.slice(0, 20) : []).map(x => { const tier = x && x[0] ? 'upper' : 'lower', sec = build([x && x[1]], tier)[0]; return sec ? { sec, tier } : null; }).filter(Boolean);
       { const q = st.ic && typeof st.ic === 'object' ? st.ic : null, num = (v, a, b, d) => { v = parseFloat(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
-        islandCfg = { cells: q && Array.isArray(q.c) ? q.c.slice(0, 8).map(a => ({ k: ISL_KINDS[a[0]] ? a[0] : 'door', w: num(a[1], 20, 400, 60), dn: a[2] === 2 ? 2 : 1, dr: num(a[3], 1, 5, 3) | 0, sh: num(a[4], 0, 5, 1) | 0, hg: a[5] === 'R' ? 'R' : 'L' })) : [], top: q && ['L', 'R', 'both'].indexOf(q.t) >= 0 ? q.t : 'top', ovF: q ? num(q.f, 0, 45, 2) : 2, ovB: q ? num(q.b, 0, 45, 2) : 2, back: q && q.k === 'cells' ? 'cells' : 'panel', hood: !!(q && q.h), bar: !!(q && q.r) }; islCell = 0; }
+        islandCfg = { cells: q && Array.isArray(q.c) ? q.c.slice(0, 8).map(a => ({ k: ISL_KINDS[a[0]] ? a[0] : 'door', w: num(a[1], 20, 400, 60), dn: a[2] === 2 ? 2 : 1, dr: num(a[3], 1, 5, 3) | 0, sh: num(a[4], 0, 5, 1) | 0, hg: a[5] === 'R' ? 'R' : 'L' })) : [], top: q && ['L', 'R', 'both'].indexOf(q.t) >= 0 ? q.t : 'top', ovF: q ? num(q.f, 0, 45, 2) : 2, ovB: q ? num(q.b, 0, 45, 2) : 2, back: q && q.k === 'cells' ? 'cells' : 'panel', hood: !!(q && q.h), bar: !!(q && q.r), pc: (() => { if (!q || !Array.isArray(q.p)) return null; const o = {}; if (q.p[0] && findColor(q.p[0])) o.f = q.p[0]; if (q.p[1] && findColor(q.p[1])) o.b = q.p[1]; return Object.keys(o).length ? o : null; })(), ctc: q && /^#[0-9a-f]{6}$/i.test(q.tc || '') ? q.tc.toLowerCase() : '' }; islCell = 0; }
       islandPos = Array.isArray(st.ip) && st.ip.length >= 3 && st.ip.every(v => isFinite(v)) ? { cx: +st.ip[0], cz: +st.ip[1], r: +st.ip[2] } : null;
       selIsland = false; swapFrom = null; moveBase = null;
       topColorHex = typeof st.tc === 'string' && /^#[0-9a-f]{6}$/i.test(st.tc) ? st.tc.toLowerCase() : '';

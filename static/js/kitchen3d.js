@@ -563,10 +563,11 @@ export function createK3D(container, hooks = {}, opts = {}) {
     if (c.k === 'blind') { carcass(cg, M, w, H, D, PL, 0, {}); box(cg, w - 2 * GAP, H - 2 * GAP, FT, M.facade, GAP, PL + GAP, zf, 60); }
     else carcass(cg, M, w, H, D, PL, (c.sh | 0) || 2, {});
   }
-  function island(M, st, bounds) {
+  function island(M0, st, bounds) {
     K_MILL = st.mill || '';
     const I = bounds.isl; if (!I) return null;
     const L = I.L, Wd = I.Wd, cfg = I.cfg || { cells: [], top: 'top', ovF: 2, ovB: 2, back: 'panel' }, CT = st.CT;
+    const M = Mfor(M0, st, { pc: cfg.pc, ctc: cfg.ctc });   // свои цвета острова: фасад, корпус, столешница отдельно
     const cells = cfg.cells && cfg.cells.length ? cfg.cells : [{ k: 'door', w: L, dn: 2 }];
     const g = new THREE.Group(); placeAt(g, L, Wd, I.cx, I.cz, I.r, 0); root.add(g);
     g.userData.mod = { tier: 'island', id: 0, w: L, h: st.BOX + st.CT, d: Wd, y0: 0 };
