@@ -3743,6 +3743,12 @@
     function k3dCornerSide(side) { const s = selSec; if (!s) return; s.cs = side; s.csFixed = true; plannerChanged(); }
     // ---- остров ----
     function k3dSideIsland() {
+      if (!OWNER_ON) {   // клиенту — только размеры и положение острова; секции и столешницу настраивает мастер
+        return `<div class="k3s-h">${esc(L3('Остров', 'Orol'))}</div>` + k3dPosHtml({ tier: 'island', sec: null }) + `<div class="k3s-sub">${esc(L3('Размеры', 'Oʻlchamlar'))}</div>` +
+          k3Row(L3('Длина', 'Uzunlik'), k3Step(el('islandLength').value + ' ' + cmU(), "k3dInput('islandLength',-10,80,300)", "k3dInput('islandLength',10,80,300)")) +
+          k3Row(L3('Ширина', 'Kenglik'), k3Step(el('islandWidth').value + ' ' + cmU(), "k3dInput('islandWidth',-5,50,150)", "k3dInput('islandWidth',5,50,150)")) +
+          `<div class="k3e-r" style="margin-top:12px">${k3B(false, 'k3dIslandHome()', L3('На место по умолчанию', 'Joyiga qaytarish'))}${k3B(false, "k3dAct('unsel',0)", '✕ ' + L3('К кухне', 'Oshxonaga'))}</div>`;
+      }
       const tg = { tier: 'island', sec: null }, cells = islandCells(), ci = Math.min(islCell, cells.length - 1), c = cells[ci], cfg = islandCfg;
       const brief = x => ({ door: x.dn === 2 ? '🚪🚪' : '🚪', drawers: '▤×' + ((x.dr | 0) || 3), blind: '▬', open: '▯' })[x.k] || '';
       let h = `<div class="k3s-h">${esc(L3('Остров', 'Orol'))}</div>` + k3dPosHtml(tg) +
@@ -3822,6 +3828,7 @@
       k3dKeepPanel = false; if (objsMoved) kObjChanged(false); else { k3dRefresh(); updateShareLinks(); }
     }
     function k3dOnSelect(sel, multi) {
+      if (multi && !OWNER_ON) multi = false;   // выбор нескольких шкафов — только мастеру
       if (multi && sel && sel.tier !== 'open') {
         if (!kMulti.length) { const cur = k3dSelKey(); if (cur) kMulti.push(cur); }
         const k = kMulti.findIndex(x => x.tier === sel.tier && x.id === sel.id); if (k >= 0) kMulti.splice(k, 1); else kMulti.push({ tier: sel.tier, id: sel.id });
@@ -4122,6 +4129,7 @@
     const kSyncSel = { lower: {}, upper: {} }, kSyncWhat = { size: true, level: false, inner: false, hw: false, color: false };
     const kSyncCount = tier => secsOf(tier).filter(x => x !== selSec && kSyncSel[tier][x.id]).length;
     function kSyncHtml(s, tier) {
+      if (!OWNER_ON) return '';   // инструмент мастера
       const others = secsOf(tier).filter(x => x !== s); if (!others.length) return '';
       const sel = kSyncSel[tier], pre = tier === 'lower' ? 'Н-' : 'В-', cnt = kSyncCount(tier);
       const chips = others.map(x => `<button type="button" class="${sel[x.id] ? 'on' : ''}" onclick="k3dSyncTog('${tier}','${x.id}')">${pre}${esc(String(x.id))} · ${esc(x.name || '')} · ${Number(x.width) || 0}</button>`).join('');
