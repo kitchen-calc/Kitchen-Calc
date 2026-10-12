@@ -1,4 +1,4 @@
-import { sanitizeOpens, ROOM_FINISH } from '/static/js/room-open-core.js?v=5';
+import { sanitizeOpens, ROOM_FINISH } from '/static/js/room-open-core.js?v=7';
 /* Конструктор шкафа PRO: модель, геометрия, список деталей, цена. Без DOM — можно проверять в node. Размеры в см. */
 
 export const P = {

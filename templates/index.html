@@ -24,9 +24,9 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=5'; import * as C from '/static/js/shkaf-pro-core.js?v=27'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=7'; import * as C from '/static/js/shkaf-pro-core.js?v=29'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script src="/static/js/shkaf-lib.js?v=2"></script>
-  <script type="module" src="/static/js/shkaf-3dpart.js?v=11"></script>
+  <script type="module" src="/static/js/shkaf-3dpart.js?v=13"></script>
   <script src="/static/js/color-catalog.js?v=3"></script>
   <script src="/static/js/sheet-fit.js?v=1"></script>
   <script src="/static/js/sheet-export.js?v=1"></script>
@@ -2072,7 +2072,7 @@
     function decorClean(d) {
       d = d || {};
       const n = (v, a, b) => Math.max(a, Math.min(b, Math.round(Number(v) || 0)));
-      return { lamps: n(d.lamps, 0, 6), stools: n(d.stools, 0, 8), plant: !!d.plant, fplant: !!d.fplant };
+      return { lamps: n(d.lamps, 0, 6), stools: n(d.stools, 0, 8), plant: !!d.plant, fplant: !!d.fplant, ls: d.ls === 'globe' ? 'globe' : '', ss: d.ss === 'chair' ? 'chair' : '', sc: !!d.sc };
     }
     // Где висят светильники и стоят стулья (см): над островом, а без острова — вдоль основной стены перед столешницей
     function decorSpots(st, W, isl) {
@@ -2831,7 +2831,7 @@
         hw: Object.assign({}, KHW), led: Object.assign({}, ledState), decor: decorClean(decorState),
         island: s.island ? { L: s.islL, W: s.islW, cx: islandPos ? islandPos.cx : null, cz: islandPos ? islandPos.cz : null, r: islandPos ? islandPos.r : 0, cfg: islandPlain(s.islL) } : null,
         free: k3dFreeList(hasUpper), paintOf, poly: roomPoly, roomD: roomPoly ? rpBBox().z1 : Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0),
-        opens: kOpens, objs: kObjsState(), finish: rfClean(), mill: facadeMill, millOf, multi: kMulti.slice(), selected: VIEW_ONLY ? null : k3dSelKey(), drawerVis: drawerVisMap(),
+        opens: kOpens, objs: kObjsState(), topTex, finish: rfClean(), mill: facadeMill, millOf, multi: kMulti.slice(), selected: VIEW_ONLY ? null : k3dSelKey(), drawerVis: drawerVisMap(),
         dsysOf: (sec, i) => { const k = sec.dsys && sec.dsys[i]; return (k && k !== 'tier' && KIS.drawerSys[k]) ? k : def; }, towerBands: (a, top) => towerBands(a && typeof a === 'object' && a.kind ? towerCfg(a) : a, top) };
     }
     function kWallPoly(st) { st = st || {}; const W = Math.max(60, st.W || parseFloat(el('mainWall').value) || 240), D = st.roomD || Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0); return roomPoly || [[0, 0], [W, 0], [W, D], [0, D]]; }
@@ -2840,7 +2840,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=46');
+        const mod = await import('/static/js/kitchen3d.js?v=50');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: (sel, multi) => k3dOnSelect(sel, multi), onMoveMulti: (items, dx, dz) => k3dMoveMulti(items, dx, dz),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3260,6 +3260,7 @@
         <div class="k3e-r">${k3B(false, 'k3dClientLink()', '🔗 ' + L3('Копировать ссылку', 'Havolani nusxalash'))}${k3B(false, "k3dClientLink('tg')", '✈ Telegram')}</div>` : ''}
         <div class="k3s-sub">🎨 ${esc(L3('Цвет столешницы', 'Stol usti rangi'))}</div>
         ${topSwatches(topColorHex, 'k3dTopColor', L3('по материалу', 'material boʻyicha'))}
+        ${topTexRow()}
         <div class="k3s-sub">💡 ${esc(L3('Подсветка', 'Yoritish'))}</div>
         ${k3Row(L3('Класс', 'Sinf'), [0, 1, 2].map(i => k3B(ledState.level === i, 'setLedLevel(' + i + ')', t('led_' + i))).join(''))}
         ${k3Row(L3('Под шкафами', 'Shkaflar ostida'), k3B(ledState.level && ledState.work, "k3dLedZone('work')", L3('рабочая зона', 'ish zonasi')) + k3B(ledState.level && ledState.plinth, "k3dLedZone('plinth')", L3('цоколь', 'sokol')))}
@@ -3297,6 +3298,10 @@
         <div class="k3s-sub">🪴 ${esc(L3('Интерьер (в цену не входит)', 'Interyer (narxga kirmaydi)'))}</div>
         ${k3Row(L3('Лампы', 'Chiroqlar'), k3Step(dc.lamps, 'k3dDecor(\'lamps\',-1)', 'k3dDecor(\'lamps\',1)'))}
         ${k3Row(L3('Стулья', 'Stullar'), k3Step(dc.stools, 'k3dDecor(\'stools\',-1)', 'k3dDecor(\'stools\',1)'))}
+        ${k3Row(L3('Вид ламп', 'Chiroq turi'), k3B(!dc.ls, "k3dDecorS('ls','')", L3('конусы', 'konus')) + k3B(!!dc.ls, "k3dDecorS('ls','globe')", L3('стеклянные шары', 'shisha shar')))}
+        ${k3Row(L3('Вид стульев', 'Stul turi'), k3B(!dc.ss, "k3dDecorS('ss','')", L3('круглые', 'dumaloq')) + k3B(!!dc.ss, "k3dDecorS('ss','chair')", L3('мягкие со спинкой', 'yumshoq')))}
+        ${k3Row(L3('Окно с видом на город', 'Shahar manzarali oyna'), k3B(!dc.sc, "k3dDecorS('sc',false)", L3('нет', 'yoʻq')) + k3B(!!dc.sc, "k3dDecorS('sc',true)", L3('вечер, шторы', 'kech, parda')))}
+        <div class="k3e-r">${k3B(false, 'k3dPrestige()', '✨ ' + L3('Стиль «Престиж, вечер» — одним нажатием', 'Prestij uslubi — bir bosishda'))}</div>
         ${k3Row(L3('Растения', 'Oʻsimliklar'), k3B(dc.plant, "k3dDecor('plant')", L3('на столешнице', 'stolda')) + k3B(dc.fplant, "k3dDecor('fplant')", L3('в кадке', 'tuvakda')))}`;
       return h;
     }
@@ -3420,12 +3425,29 @@
     function k3dUpper(on) { el('hasUpperTier').checked = !!on; toggleUpperTierControls(); renderK3dEdit(); }
     function k3dTwoTier(on) { el('upperTwoTier').checked = !!on; renderPlanner(); updateCalculator(); }
     function k3dInput(id, d, mn, mx) { const inp = el(id); inp.value = Math.max(mn, Math.min(mx, (parseFloat(inp.value) || 0) + d)); updateCalculator(); renderK3dEdit(); }
+    function topTexRow() {
+      if (!window.ROPEN || !window.ROPEN.ROOM_FINISH) return '';
+      const F = window.ROPEN.ROOM_FINISH.floor, ids = Object.keys(F).filter(k => F[k].grp === 'Камень' || F[k].grp === 'Бетон');
+      return k3Row(L3('Камень (плита)', 'Tosh (plita)'), `<select onchange="k3dTopTex(this.value)"><option value="">${esc(L3('не использовать', 'ishlatmaslik'))}</option>${ids.map(k => `<option value="${k}" ${topTex === k ? 'selected' : ''}>${esc(F[k].ru)}</option>`).join('')}</select>`);
+    }
+    function k3dTopTex(v) { topTex = v; updateCalculator(); renderK3dEdit(); updateShareLinks(); }
+    function k3dSceneLight() { k3dLightOn = !decorClean(decorState).sc; k3dLedsOn = true; k3dLightFx(); renderK3dBar(); }
+    function k3dDecorS(k, v) { decorState = decorClean(Object.assign({}, decorState, { [k]: v })); if (k === 'sc') k3dSceneLight(); updateCalculator(); renderK3dEdit(); updateShareLinks(); }
+    /* готовый вид «как на фото»: тёмный шпон-орех, коричневый мрамор, тёмный камень на полу, шары, мягкие стулья, окно с городом, вечерний свет */
+    function k3dPrestige() {
+      const f = findColor('ec29'), b = findColor('pr23'); if (f) selectedFacadeColor = colorObj(f); if (b) selectedBodyColor = colorObj(b); updateColorUIBadges();
+      topTex = 's_emp'; topColorHex = ''; islandCfg.ctc = ''; roomFinish = { floor: ['s_dark', ''], wall: ['w_choc', ''], acc: ['', ''] };
+      kOpens.forEach(o => { if (o.kind === 'apron') { o.v = 'marble_e'; o.c = 0; } });
+      lowerSections.concat(upperSections).forEach(x => { delete x.ctc; delete x.pc; });   // единый вид: свои цвета шкафов и столешниц сбрасываем
+      decorState = decorClean({ lamps: 3, stools: 3, plant: true, ls: 'globe', ss: 'chair', sc: true });
+      k3dSceneLight(); updateCalculator(); renderK3dEdit(); renderRoomFinish(); updateShareLinks();
+    }
     function k3dDecor(k, d) { if (d == null) decorState[k] = !decorState[k]; else decorState[k] = Math.max(0, (decorState[k] | 0) + d); decorState = decorClean(decorState); updateCalculator(); renderK3dEdit(); }
     const VIEW_ONLY = /^\/view\/?$/.test(location.pathname);
     /* ===================== СВОБОДНАЯ РАССТАНОВКА (как в The Sims) =====================
        Шкаф можно поставить куда угодно: sec.fp = {x, z, y, r} — центр на полу (см от левой и задней стены), низ от пола, поворот (0/90/180/270).
        Шкаф, прижатый к стене на стандартной высоте, остаётся в ряду (цена, чертежи, стыки считаются как раньше). */
-    let topColorHex = '';
+    let topColorHex = '', topTex = '';   // topTex — каменная столешница из каталога отделки (мрамор, камень, бетон)
     const TOP_PALETTE = [['#e9e6e0', 'Белый мрамор'], ['#d8c7a6', 'Бежевый'], ['#c9a273', 'Светлый дуб'], ['#8a5a3a', 'Орех'], ['#b06a4f', 'Терракота'], ['#9a9c9e', 'Серый бетон'], ['#6b6f73', 'Графит'], ['#2b2d30', 'Чёрный камень'], ['#5f7a63', 'Зелёный'], ['#3f5873', 'Синий']];
     const topSwatches = (cur, fn, resetTxt) => `<div class="k3sw-row">${TOP_PALETTE.map(c => `<button type="button" class="k3sw ${cur === c[0] ? 'on' : ''}" style="background:${c[0]}" title="${c[1]}" onclick="${fn}('${c[0]}')"></button>`).join('')}<input type="color" class="k3sw-pick" value="${/^#[0-9a-f]{6}$/i.test(cur) ? cur : '#c9a273'}" title="свой цвет" onchange="${fn}(this.value)">${cur ? k3B(false, fn + "('')", resetTxt) : ''}</div>`;
     function k3dTopColor(h) { topColorHex = /^#[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : ''; updateCalculator(); renderK3dEdit(); updateShareLinks(); }
@@ -4706,7 +4728,7 @@
         (pp ? pp.hw : []).forEach(h => { const k = h.name + '|' + h.unit; if (!hwAll[k]) hwAll[k] = { grp: 'С' + (i + 1), name: h.name, qty: 0, unit: h.unit }; else if (hwAll[k].grp.indexOf('С' + (i + 1)) < 0) hwAll[k].grp += ', С' + (i + 1); hwAll[k].qty += h.qty; }); });
       return { name: 'Кухня на заказ', poly: kWallPolyCache || kWallPoly(), H: geo.roomH, opens: kOpens, items, hw: Object.keys(hwAll).map(k => hwAll[k]), meta: [['Проект', 'Кухня на заказ'], ['Помещение', Math.round(geo.W * 10) + ' × ' + Math.round(geo.roomD * 10) + ' мм · высота ' + Math.round(geo.roomH * 10)], ['Материал', 'ЛДСП ' + CUT_T + ' мм']] };
     }
-    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=38').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
+    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=40').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
     function renderOwnerDraw() {
       const box = el('ownerDrawBody'); if (!box || !OWNER_ON) return;
       const geo = k3dGeo(), groups = new Map();
@@ -6180,7 +6202,7 @@
         island: !!st.i[0], islL: st.i[1], islW: st.i[2], sink: ao.sink, hob: ao.hob, app: ao.app,
         counterH: st.ch || 89, upperGap: st.ug || 56,
         hw: st.hw === undefined ? CONFIG.defaults.hw : st.hw, led: ledWithCabinets(ledFromArr(st.lg), lo.concat(up)), khw: sanitizeKHW(st.kh),
-        decor: decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3] } : null),
+        decor: decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3], ls: st.dc[4] ? 'globe' : '', ss: st.dc[5] ? 'chair' : '', sc: st.dc[6] } : null),
         facadeHex: fcol ? fcol.item.hex : '#f8fafc', bodyHex: bcol ? bcol.item.hex : '#ffffff' };
     }
 
@@ -6218,7 +6240,7 @@
       const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : '', x.ovY != null ? x.ovY : '', x.mwY != null ? x.mwY : '', x.ov ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || '', x.mxd || ''].join('|'), x.ctc || '', x.bw || '', (x.glass || x.kind === 'glass') ? [1, x.gf || '', x.gt || ''].join('|') : '', x.ml || ''];
       const enc = (arr, tier) => arr.map(x => encOne(x, tier));
       const dc = decorClean(decorState);
-      return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
+      return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0, dc.ls ? 1 : 0, dc.ss ? 1 : 0, dc.sc ? 1 : 0], tt: topTex || 0, t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
         ic: (islandCfg.cells.length || islandCfg.top !== 'top' || islandCfg.ovF !== 2 || islandCfg.ovB !== 2 || islandCfg.back !== 'panel' || islandCfg.hood || islandCfg.bar || islandCfg.pc || islandCfg.ctc || islandCfg.ovL !== 2 || islandCfg.ovR !== 2 || islandCfg.ct || islandCfg.bh || islandCfg.ot !== 'handles') ? { c: islandCfg.cells.map(x => [x.k, Math.round(x.w * 10) / 10, x.dn | 0, x.dr | 0, x.sh | 0, x.hg || 'L', x.ot || '', x.glass ? 1 : 0, x.led | 0, x.ml || '', x.ov ? 1 : 0]), t: islandCfg.top, f: islandCfg.ovF, b: islandCfg.ovB, k: islandCfg.back, h: islandCfg.hood ? 1 : 0, r: islandCfg.bar ? 1 : 0, ot: islandCfg.ot || 'handles', p: islandCfg.pc ? [islandCfg.pc.f || '', islandCfg.pc.b || ''] : 0, tc: islandCfg.ctc || '', ol: islandCfg.ovL, or: islandCfg.ovR, ct: islandCfg.ct || 0, bh: islandCfg.bh || 0 } : 0, fm: facadeMill || 0, rf: (rfClean() ? ['floor', 'wall', 'acc'].map(k => roomFinish[k][0] ? roomFinish[k][0] + (roomFinish[k][1] ? '|' + roomFinish[k][1] : '') : '') : 0), tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
@@ -6320,6 +6342,7 @@
         islandCfg = { cells: q && Array.isArray(q.c) ? q.c.slice(0, 8).map(a => ({ k: ISL_KINDS[a[0]] ? a[0] : 'door', w: num(a[1], 20, 400, 60), dn: a[2] === 2 ? 2 : 1, dr: num(a[3], 1, 5, 3) | 0, sh: num(a[4], 0, 5, 1) | 0, hg: a[5] === 'R' ? 'R' : 'L', ot: ['handles', 'push', 'gola'].indexOf(a[6]) >= 0 ? a[6] : undefined, glass: a[7] ? true : undefined, led: num(a[8], 0, 3, 0) | 0 || undefined, ml: (MILL_K[a[9]] || a[9] === 'none') ? a[9] : undefined, ov: a[10] ? true : undefined })) : [], top: q && ['L', 'R', 'both'].indexOf(q.t) >= 0 ? q.t : 'top', ovF: q ? num(q.f, 0, 45, 2) : 2, ovB: q ? num(q.b, 0, 45, 2) : 2, back: q && q.k === 'cells' ? 'cells' : 'panel', hood: !!(q && q.h), bar: !!(q && q.r), pc: (() => { if (!q || !Array.isArray(q.p)) return null; const o = {}; if (q.p[0] && findColor(q.p[0])) o.f = q.p[0]; if (q.p[1] && findColor(q.p[1])) o.b = q.p[1]; return Object.keys(o).length ? o : null; })(), ctc: q && /^#[0-9a-f]{6}$/i.test(q.tc || '') ? q.tc.toLowerCase() : '', ovL: q ? num(q.ol, 0, 45, 2) : 2, ovR: q ? num(q.or, 0, 45, 2) : 2, ct: q ? num(q.ct, 0, 10, 0) : 0, bh: q ? num(q.bh, 0, 120, 0) : 0, ot: q && ['push', 'gola'].indexOf(q.ot) >= 0 ? q.ot : 'handles' }; islCell = 0; }
       islandPos = Array.isArray(st.ip) && st.ip.length >= 3 && st.ip.every(v => isFinite(v)) ? { cx: +st.ip[0], cz: +st.ip[1], r: +st.ip[2] } : null;
       selIsland = false; swapFrom = null; moveBase = null;
+      topTex = (window.ROPEN && window.ROPEN.ROOM_FINISH.floor[st.tt]) ? st.tt : '';
       topColorHex = typeof st.tc === 'string' && /^#[0-9a-f]{6}$/i.test(st.tc) ? st.tc.toLowerCase() : '';
       roomPoly = null;
       if (Array.isArray(st.rp) && st.rp.length >= 8 && st.rp.length % 2 === 0 && st.rp.every(v => isFinite(v))) { const Q = []; for (let i = 0; i < st.rp.length; i += 2) Q.push([+st.rp[i], +st.rp[i + 1]]); if (rpValid(Q)) roomPoly = Q; }
@@ -6327,7 +6350,8 @@
       kObjs = window.SCORE && Array.isArray(st.oj) && st.oj.length ? (window.SCORE.sanitize({ cols: [], objs: st.oj.slice(0, 60), room: { poly: roomPoly } }) || { objs: [] }).objs : []; selObjId = null;
       selSec = null;
       addMenuWall = null;
-      decorState = decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3] } : null);
+      decorState = decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3], ls: st.dc[4] ? 'globe' : '', ss: st.dc[5] ? 'chair' : '', sc: st.dc[6] } : null);
+      if (decorState.sc) { k3dLightOn = false; k3dLedsOn = true; }
 
       currentType = ['straight', 'l-shape', 'u-shape', 'parallel'].includes(st.t) ? st.t : 'straight';
       updateTypeUI();

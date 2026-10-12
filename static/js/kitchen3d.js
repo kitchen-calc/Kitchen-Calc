@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=7';
+import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=9';
 import { buildObjGroup } from '/static/js/room-objs.js?v=6';
 
 const DEG = Math.PI / 180;
@@ -116,14 +116,14 @@ export function createK3D(container, hooks = {}, opts = {}) {
   sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.6; sun.shadow.radius = 5;
   scene.add(sun); scene.add(sun.target);
   // «Свет»: вечерний режим — тусклее, чтобы подсветка красиво светилась (для фото и показа клиенту)
-  let dusk = false, lastM = null;
+  let dusk = false, lastM = null, lastSc = false;
   let ledsOn = true;
   const glowTex = (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(255,214,130,1)'); gr.addColorStop(1, 'rgba(255,214,130,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
   const mkGlow = () => new THREE.MeshBasicMaterial({ map: glowTex, color: '#ffffff', transparent: true, opacity: .22, depthWrite: false, blending: THREE.AdditiveBlending });
   const glowM = M => M.ledGlow || (M.ledGlow = mkGlow());
   function ledBoost(M) { if (!M) return; const k = ledsOn ? (dusk ? 36 : 2.2) : 0; if (M.led) { M.led.emissiveIntensity = k; M.led.color.set(ledsOn ? '#fff3c4' : '#6b6a66'); } if (M.ledGlow) M.ledGlow.opacity = ledsOn ? (dusk ? .95 : .22) : 0; if (M.glowMat) M.glowMat.opacity = ledsOn ? (dusk ? .55 : .2) : 0; }
   function setLeds(on) { ledsOn = !!on; ledBoost(lastM); invalidate(); }
-  function setLight(on) { dusk = !on; renderer.toneMappingExposure = dusk ? .11 : 1.05; hemi.intensity = dusk ? .03 : HEMI0; sun.intensity = dusk ? .05 : SUN0; scene.background = new THREE.Color(dusk ? '#15120f' : '#ece6dc'); ledBoost(lastM); invalidate(); }
+  function setLight(on) { dusk = !on; renderer.toneMappingExposure = dusk ? (lastSc ? .95 : .11) : 1.05; hemi.intensity = dusk ? (lastSc ? .2 : .03) : HEMI0; sun.intensity = dusk ? .05 : SUN0; scene.background = new THREE.Color(dusk ? '#15120f' : '#ece6dc'); ledBoost(lastM); invalidate(); }
 
 
   const tex = { floor: FLOOR_TEX(), tile: TILE_TEX() };
@@ -161,7 +161,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     return {
       facade: (fm => { fm.userData.isFacade = true; return fm; })(colorMat(st.colors.facade, .42)),
       body: colorMat(st.colors.body, .6),
-      top: new THREE.MeshStandardMaterial({ map: NOISE_TEX((st.colors.top && st.colors.top.hex) || '#cbb89a'), roughness: .32, metalness: 0, envMapIntensity: .9 }),
+      top: (st.topTex && finishMat('floor', st.topTex, '', 240, 120)) || new THREE.MeshStandardMaterial({ map: NOISE_TEX((st.colors.top && st.colors.top.hex) || '#cbb89a'), roughness: .32, metalness: 0, envMapIntensity: .9 }),
       plinth: new THREE.MeshStandardMaterial({ color: '#2d2b29', roughness: .7 }),
       wall: new THREE.MeshStandardMaterial({ color: '#efe8dc', roughness: .95 }),
       floor: new THREE.MeshStandardMaterial({ map: tex.floor, roughness: .62, envMapIntensity: .5 }),
@@ -529,6 +529,29 @@ export function createK3D(container, hooks = {}, opts = {}) {
     opens.forEach(o => { const g = groups.get(o.id); if (g) { g.userData.mod = { tier: 'open', id: o.id, w: o.w, h: o.h, d: 6, y0: o.y, open: true }; pick.push(g); } });
   }
   function room(M, st, bounds) { roomShell(M, st, bounds); openings(st); }
+  let cityT = null;
+  function cityTex() {
+    if (cityT) return cityT;
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 640; const g = c.getContext('2d');
+    const sky = g.createLinearGradient(0, 0, 0, 640); sky.addColorStop(0, '#2c2d55'); sky.addColorStop(.45, '#7a5675'); sky.addColorStop(.72, '#e3875f'); sky.addColorStop(1, '#f2b07a'); g.fillStyle = sky; g.fillRect(0, 0, 1024, 640);
+    let seed = 7; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let layer = 0; layer < 3; layer++) {
+      let x = -20; const base = [470, 520, 600][layer], col = ['#4a3f5c', '#33304a', '#1e1c2e'][layer];
+      while (x < 1040) {
+        const w = 30 + R() * 70, h = (layer === 0 ? 60 : 90) + R() * (layer === 2 ? 330 : 200), top = 640 - h - (640 - base) * .3; g.fillStyle = col; g.fillRect(x, top, w, h + 200);
+        for (let wy = top + 10; wy < 640; wy += 12) for (let wx = x + 4; wx < x + w - 4; wx += 9) if (R() > (layer === 2 ? .45 : .6)) { g.fillStyle = R() > .3 ? '#ffd58a' : '#ffe9bd'; g.globalAlpha = .45 + R() * .5; g.fillRect(wx, wy, 4, 6); g.globalAlpha = 1; }
+        x += w + 4 + R() * 14;
+      }
+    }
+    cityT = new THREE.CanvasTexture(c); cityT.colorSpace = THREE.SRGBColorSpace; return cityT;
+  }
+  function cityWall(st, z0, len, H) {   // панорамное окно в пол с видом на вечерний город
+    const m = mesh(new THREE.PlaneGeometry(len, H), new THREE.MeshBasicMaterial({ map: cityTex(), toneMapped: false }), false); m.rotation.y = -Math.PI / 2; m.position.set(st.W + .8, H / 2, z0 + len / 2); root.add(m);
+    const fr = new THREE.MeshStandardMaterial({ color: '#17140f', roughness: .5, metalness: .6 });
+    const n = Math.max(2, Math.round(len / 120)); for (let i = 0; i <= n; i++) box(root, 2.2, H, 3.5, fr, st.W - 2.6, 0, z0 + i * len / n - 1.1);
+    box(root, 2.2, 3.5, len, fr, st.W - 2.6, 0, z0); box(root, 2.2, 3.5, len, fr, st.W - 2.6, H - 3.5, z0); box(root, 2.2, 3.5, len, fr, st.W - 2.6, H * .5, z0);
+    const cur = finishMat('wall', 'wd_rib_g', '#5a4636', 40, H) || fr; box(root, 9, H - 2, 38, cur, st.W - 10, 1, z0 + 6);
+  }
   function roomShell(M, st, bounds) {
     if (st.poly && st.poly.length >= 4) { roomByPoly(M, st); return; }
     const pad = 90, x0 = -pad, x1 = st.W + pad, zMax = bounds.zMax + 220, H = st.roomH;
@@ -540,9 +563,11 @@ export function createK3D(container, hooks = {}, opts = {}) {
       const ow = mesh(new THREE.PlaneGeometry(x1 - x0, H), wallMat(M, st, x1 - x0, H), false); ow.rotation.y = Math.PI; ow.position.set((x0 + x1) / 2, H / 2, st.ZOPP + .8); root.add(ow);
       box(root, x1 - x0, 7, 1.4, M.inner, x0, 0, st.ZOPP - .8);
     }
-    const lz = hasL && rm.left ? Math.max(rm.left, 80) : zMax, rz = hasR && rm.right ? Math.max(rm.right, 80) : zMax;
+    const scn = !!(st.decor && st.decor.sc);
+    const lz = hasL && rm.left ? Math.max(rm.left, 80) : zMax, rz = scn ? zMax : (hasR && rm.right ? Math.max(rm.right, 80) : zMax);
     if (hasL) { const lw = mesh(new THREE.PlaneGeometry(lz, H), wallMat(M, st, lz, H), false); lw.rotation.y = Math.PI / 2; lw.position.set(-.8, H / 2, lz / 2); root.add(lw); }
-    if (hasR) { const rw = mesh(new THREE.PlaneGeometry(rz, H), wallMat(M, st, rz, H), false); rw.rotation.y = -Math.PI / 2; rw.position.set(st.W + .8, H / 2, rz / 2); root.add(rw); }
+    if (scn) cityWall(st, 80, zMax - 80, H);
+    if (hasR && !scn) { const rw = mesh(new THREE.PlaneGeometry(rz, H), wallMat(M, st, rz, H), false); rw.rotation.y = -Math.PI / 2; rw.position.set(st.W + .8, H / 2, rz / 2); root.add(rw); }
     if (st.room) {   // граница комнаты на полу: шкафы за неё не выходят
       const edge = new THREE.MeshBasicMaterial({ color: '#c8952f', transparent: true, opacity: .55 });
       box(root, st.W, .3, 1.2, edge, 0, .2, -.2);
@@ -608,6 +633,15 @@ export function createK3D(container, hooks = {}, opts = {}) {
     const nS = Math.min(st.decor.stools || 0, Math.max(1, Math.floor(L / 42))), sz = ovB > ovF ? -(ovB + 28) : Wd + ovF + 28;
     for (let i = 0; i < nS; i++) {
       const sx = (i + .5) * L / nS;
+      if (st.decor.ss === 'chair') {   // мягкий барный стул со спинкой, обращённой от острова
+        const vel = new THREE.MeshStandardMaterial({ color: '#a98462', roughness: .92 }), dir = sz > Wd / 2 ? 1 : -1;
+        const seat = mesh(new THREE.CylinderGeometry(19, 18, 8, 32), vel); seat.position.set(sx, 70, sz); g.add(seat);
+        const bkm = vel.clone(); bkm.side = THREE.DoubleSide;
+        const bk = mesh(new THREE.CylinderGeometry(19.5, 19.5, 20, 32, 1, true, -1.15, 2.3), bkm); bk.position.set(sx, 84, sz); if (dir < 0) bk.rotation.y = Math.PI; g.add(bk);
+        [[-9, -9], [9, -9], [-9, 9], [9, 9]].forEach(q => cyl(g, 1, 66, M.black, sx + q[0], 33, sz + q[1], null));
+        const ring = mesh(new THREE.TorusGeometry(11, .8, 8, 28), M.black); ring.rotation.x = Math.PI / 2; ring.position.set(sx, 26, sz); g.add(ring);
+        continue;
+      }
       const seat = mesh(new THREE.CylinderGeometry(17, 17, 6, 28), new THREE.MeshStandardMaterial({ color: '#b8956a', roughness: .6 })); seat.position.set(sx, 72, sz); g.add(seat);
       cyl(g, 1.4, 70, M.black, sx, 36, sz, null);
       const ring = mesh(new THREE.TorusGeometry(12, .9, 8, 30), M.black); ring.rotation.x = Math.PI / 2; ring.position.set(sx, 30, sz); g.add(ring);
@@ -615,6 +649,8 @@ export function createK3D(container, hooks = {}, opts = {}) {
     return { z1: I.cz + I.ext };
   }
 
+  let globeM = null;
+  const globeGlass = () => globeM || (globeM = new THREE.MeshPhysicalMaterial({ color: '#d8914a', roughness: .08, transmission: 0, transparent: true, opacity: .42, depthWrite: false, clearcoat: 1, side: THREE.DoubleSide }));
   function lamps(M, st, bounds) {
     const n = st.decor.lamps || 0; if (!n) return;
     const I = bounds.isl;
@@ -623,6 +659,14 @@ export function createK3D(container, hooks = {}, opts = {}) {
       if (I) {
         const t = (i + .5) / n - .5, ax = I.r % 180 === 0;
         x = I.cx + (ax ? t * I.L : 0); z = I.cz + (ax ? 0 : t * I.L); y = 165;
+      }
+      if (st.decor.ls === 'globe') {   // янтарный стеклянный шар с лампой накаливания на тонком шнуре
+        const gy = y - 6; cyl(root, .25, st.roomH - gy - 9, M.black, x, (st.roomH + gy + 9) / 2, z, null);
+        const gl = mesh(new THREE.SphereGeometry(9.5, 28, 20), globeGlass(), false); gl.position.set(x, gy, z); root.add(gl);
+        const cap = mesh(new THREE.CylinderGeometry(2.2, 2.2, 3, 14), M.black); cap.position.set(x, gy + 10.5, z); root.add(cap);
+        const fil = mesh(new THREE.CylinderGeometry(1.1, 1.1, 8, 12), M.led, false); fil.position.set(x, gy, z); root.add(fil);
+        const pl = new THREE.PointLight('#ffb35a', 1300, 320, 2); pl.position.set(x, gy, z); root.add(pl);
+        continue;
       }
       cyl(root, .3, st.roomH - y - 20, M.black, x, (st.roomH + y + 20) / 2, z, null);
       const shade = mesh(new THREE.CylinderGeometry(5, 9, 22, 24, 1, true), M.black); shade.position.set(x, y + 11, z); root.add(shade);
@@ -763,7 +807,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     sun.position.set(cx - span * .35, st.roomH + 260, bounds.zMax + span * .55); sun.target.position.set(cx, 60, depthMax / 2);
     const sc = sun.shadow.camera; sc.left = -span * .7; sc.right = span * .7; sc.top = span * .7; sc.bottom = -span * .7; sc.near = 10; sc.far = span * 3; sc.updateProjectionMatrix();
     // применить текущие доли открытия
-    lastM = M; ledBoost(M);
+    lastM = M; { const sc1 = !!(st.decor && st.decor.sc); if (sc1 !== lastSc) { lastSc = sc1; setLight(!dusk); } } ledBoost(M);
     anims.forEach(a => a.apply(ease(openAmt.get(a.key) || 0)));
     highlight();
     if (firstFrame) { setView('angle'); firstFrame = false; }

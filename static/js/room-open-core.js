@@ -45,6 +45,7 @@ export const OPEN_INFO = {
     herr: { ru: 'Ёлочка под дерево', col: '#c49a6c', pat: 'herring', tw: 6, th: 24, grout: '#8f6d47', gloss: .5, price: 600000 },
     marble_w: { ru: 'Мрамор белый (плита)', col: '#ecebe7', pat: 'slab', veins: '#9a9a9a', gloss: .15, price: 1500000 },
     marble_b: { ru: 'Мрамор чёрный (плита)', col: '#23252a', pat: 'slab', veins: '#c8a96a', gloss: .12, price: 1700000 },
+    marble_e: { ru: 'Мрамор коричневый (плита)', col: '#7d6c5e', pat: 'slab', veins: '#e0d0b6', gloss: .15, price: 1700000 },
     stone: { ru: 'Керамогранит под камень', col: '#8d8f91', pat: 'slab', veins: '#6d7073', gloss: .45, price: 1200000 },
     glass_w: { ru: 'Стекло (скинали) белое', col: '#f5f6f6', pat: 'flat', gloss: .05, price: 1300000 },
     glass_b: { ru: 'Стекло (скинали) чёрное', col: '#1b1d20', pat: 'flat', gloss: .05, price: 1300000 },
@@ -131,14 +132,14 @@ export const ROOM_FINISH = {
     t_check: F('Шахматка чёрно-белая 30×30', 'Плитка', 'checker', '#f2f2ef', { col2: '#1c1d1f', tw: 30, gloss: .25 }), t_check_b: F('Шахматка бежево-коричневая', 'Плитка', 'checker', '#d9cdb8', { col2: '#8a6a4a', tw: 30, gloss: .3 }),
     t_hex: F('Соты 20 серые', 'Плитка', 'hex', '#8d8f91', { tw: 20, grout: '#6d7073', gloss: .35 }), t_cement: F('Цементная плитка (узор)', 'Плитка', 'geo', '#e8e4dc', { col2: '#4a5a6a', tw: 20, th: 20, gloss: .5 }),
     s_marble_w: SL('Мрамор белый', '#ecebe7', '#9a9a9a', .15), s_marble_b: SL('Мрамор чёрный', '#23252a', '#c8a96a', .12), s_trav: SL('Травертин', '#d8c9ad', '#b8a98d', .5), s_granite: SL('Гранит серый', '#8d8f91', '#5d6063', .3), s_slate: SL('Сланец тёмный', '#4a4d52', '#2a2c2f', .6), s_lime: SL('Известняк', '#d9d2c3', '#bfb7a6', .7),
-    s_terrazzo: F('Терраццо', 'Камень', 'terrazzo', '#e6e1d8', { gloss: .3 }),
+    s_emp: SL('Мрамор коричневый (эмпрадор)', '#7d6c5e', '#e0d0b6', .15), s_dark: SL('Камень тёмный', '#3b3a39', '#2a2928', .2), s_terrazzo: F('Терраццо', 'Камень', 'terrazzo', '#e6e1d8', { gloss: .3 }),
     c_light: SL('Бетон светлый (микроцемент)', '#b5b6b5', '#9a9b9a', .7, 'Бетон'), c_dark: SL('Бетон тёмный', '#6e7072', '#55575a', .7, 'Бетон'), c_pol: SL('Полированный бетон', '#8b8d8e', '#7c7d7c', .25, 'Бетон'),
     o_cork: SL('Пробка', '#c49a6c', '#8a6a3a', .8, 'Другое'), o_lino: F('Линолеум серый', 'Другое', 'flat', '#a9adb0', { gloss: .6 }), o_carpet: F('Ковролин бежевый', 'Другое', 'linen', '#cbbfa9', { gloss: .98 }), o_resin: F('Наливной пол белый', 'Другое', 'flat', '#f2f2ef', { gloss: .2 })
   },
   wall: {
     w_white: PN('Белая', '#f2f1ee'), w_warm: PN('Тёплый белый', '#efe8dc'), w_cream: PN('Кремовая', '#e9dfc8'), w_beige: PN('Бежевая', '#d9cdb8'), w_sand: PN('Песочная', '#cdbba0'), w_lgray: PN('Светло-серая', '#d6d6d4'), w_gray: PN('Серая', '#a9adb0'),
     w_graph: PN('Графит', '#4a4d52'), w_black: PN('Чёрная', '#1c1d1f'), w_sage: PN('Шалфей', '#9cae9a'), w_olive: PN('Оливковая', '#7d8461'), w_mint: PN('Мятная', '#bcd9cc'), w_blue: PN('Серо-голубая', '#8fa8c0'), w_navy: PN('Тёмно-синяя', '#2f4258'),
-    w_terra: PN('Терракота', '#b8715a'), w_mustard: PN('Горчичная', '#d0a63c'), w_pink: PN('Пыльная роза', '#e0b9b4'), w_lav: PN('Лаванда', '#bfb3d1'), w_mocha: PN('Мокко', '#8a6b55'), w_green: PN('Зелёная', '#5e7d63'), w_teal: PN('Бирюза тёмная', '#3e7a7a'), w_burg: PN('Бордо', '#7a2f3c'),
+    w_terra: PN('Терракота', '#b8715a'), w_mustard: PN('Горчичная', '#d0a63c'), w_pink: PN('Пыльная роза', '#e0b9b4'), w_lav: PN('Лаванда', '#bfb3d1'), w_mocha: PN('Мокко', '#8a6b55'), w_green: PN('Зелёная', '#5e7d63'), w_teal: PN('Бирюза тёмная', '#3e7a7a'), w_burg: PN('Бордо', '#7a2f3c'), w_choc: PN('Тёмный шоколад', '#2e2723'),
     wp_str_b: F('Обои полоска бежевая', 'Обои', 'stripe', '#efe8dc', { col2: '#d9cdb8', tw: 10, gloss: .95 }), wp_str_g: F('Обои полоска серая', 'Обои', 'stripe', '#e6e6e4', { col2: '#b9bcbe', tw: 10, gloss: .95 }), wp_str_bl: F('Обои полоска голубая', 'Обои', 'stripe', '#eaf0f5', { col2: '#a9c0d8', tw: 10, gloss: .95 }),
     wp_geo: F('Обои геометрия', 'Обои', 'geo', '#efe8dc', { col2: '#b8a98a', tw: 15, th: 15, gloss: .95 }), wp_dam: F('Обои дамаск бежевые', 'Обои', 'damask', '#e9dfc8', { col2: '#c9b48a', tw: 30, th: 30, gloss: .95 }), wp_dam_g: F('Обои дамаск серые', 'Обои', 'damask', '#dcdcda', { col2: '#a9adb0', tw: 30, th: 30, gloss: .95 }),
     wp_lin: F('Обои лён бежевые', 'Обои', 'linen', '#d9cdb8', { gloss: .98 }), wp_lin_g: F('Обои лён серые', 'Обои', 'linen', '#b9bcbe', { gloss: .98 }), wp_reed: F('Обои тростник', 'Обои', 'linen', '#c9b48a', { gloss: .98 }),
@@ -147,7 +148,7 @@ export const ROOM_FINISH = {
     tl_sub_w: F('Плитка «кабанчик» белая', 'Плитка', 'brick', '#f3f3f1', { tw: 15, th: 7.5, grout: '#cfcfca', gloss: .25 }), tl_sub_g: F('Плитка «кабанчик» зелёная', 'Плитка', 'brick', '#6f8f78', { tw: 15, th: 7.5, grout: '#c9ccc4', gloss: .25 }), tl_sq: F('Плитка 10×10 белая', 'Плитка', 'grid', '#f2f2ef', { tw: 10, th: 10, grout: '#d4d4cf', gloss: .3 }), tl_sq_b: F('Плитка 20×20 бежевая', 'Плитка', 'grid', '#d9cdb8', { tw: 20, th: 20, grout: '#bfb49f', gloss: .35 }),
     wd_light: F('Дерево светлое (вагонка)', 'Дерево и панели', 'wood', '#d1ad7c', { tw: 10, th: 60, gloss: .6 }), wd_dark: F('Дерево тёмное', 'Дерево и панели', 'wood', '#5a4636', { tw: 10, th: 60, gloss: .6 }), wd_slats: F('Деревянные рейки', 'Дерево и панели', 'slats', '#b98b5a', { tw: 5, th: 5, gloss: .55 }),
     wd_rib: F('Рейка белая', 'Дерево и панели', 'ribbed', '#efede8', { tw: 3, th: 3, gloss: .55 }), wd_rib_o: F('Рейка дуб', 'Дерево и панели', 'ribbed', '#cfa977', { tw: 3, th: 3, gloss: .55 }), wd_rib_g: F('Рейка графит', 'Дерево и панели', 'ribbed', '#3a3d41', { tw: 3, th: 3, gloss: .55 }), p3_wave: F('3D-панель «волна»', 'Дерево и панели', 'wave', '#e9e6df', { tw: 6, th: 6, gloss: .6 }), p3_soft: F('Мягкая стеновая панель', 'Дерево и панели', 'soft', '#8b8c90', { tw: 20, th: 20, gloss: .9 }),
-    st_marble: SL('Мрамор', '#ecebe7', '#9a9a9a', .15, 'Камень'), st_stone: SL('Камень серый', '#8d8f91', '#5d6063', .5, 'Камень'), st_mirror: F('Зеркальная стена', 'Камень', 'mirror', '#dfe6ea', { gloss: .03, metal: .85 })
+    st_emp: SL('Мрамор коричневый', '#7d6c5e', '#e0d0b6', .15, 'Камень'), st_marble: SL('Мрамор', '#ecebe7', '#9a9a9a', .15, 'Камень'), st_stone: SL('Камень серый', '#8d8f91', '#5d6063', .5, 'Камень'), st_mirror: F('Зеркальная стена', 'Камень', 'mirror', '#dfe6ea', { gloss: .03, metal: .85 })
   }
 };
 export const FINISH_TINTS = [['', 'Как на образце'], ['#f2f2f0', 'Белый'], ['#e9dfc8', 'Кремовый'], ['#d9cdb8', 'Бежевый'], ['#a9adb0', 'Серый'], ['#3a3d41', 'Графит'], ['#1c1d1f', 'Чёрный'], ['#6f8f78', 'Зелёный'], ['#3d5a80', 'Синий'], ['#b06a4f', 'Терракота'], ['#c49a6c', 'Дерево'], ['#7a5638', 'Орех']];
