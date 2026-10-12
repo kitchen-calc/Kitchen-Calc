@@ -24,7 +24,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=9'; import * as C from '/static/js/shkaf-pro-core.js?v=29'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=10'; import * as C from '/static/js/shkaf-pro-core.js?v=29'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script src="/static/js/shkaf-lib.js?v=2"></script>
   <script type="module" src="/static/js/shkaf-3dpart.js?v=13"></script>
   <script src="/static/js/color-catalog.js?v=3"></script>
@@ -2846,7 +2846,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=54');
+        const mod = await import('/static/js/kitchen3d.js?v=56');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: (sel, multi) => k3dOnSelect(sel, multi), onMoveMulti: (items, dx, dz) => k3dMoveMulti(items, dx, dz),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -4196,7 +4196,7 @@
     function paintOf(sec) {
       const pc = sec && sec.pc; if (!pc) return null;
       const o = {};
-      ['f', 'b', 'f2'].forEach(k => { if (pc[k]) { const f = findColor(pc[k]); if (f) { const c = colorObj(f); o[k] = { hex: c.hex, img: c.img }; } } });
+      ['f', 'b', 'f2'].forEach(k => { if (pc[k]) { if (String(pc[k]).indexOf('tx:') === 0) { const F = window.ROPEN && window.ROPEN.ROOM_FINISH.floor[pc[k].slice(3)]; if (F) o[k] = { hex: F.col, tex: pc[k].slice(3) }; return; } const f = findColor(pc[k]); if (f) { const c = colorObj(f); o[k] = { hex: c.hex, img: c.img }; } } });
       return Object.keys(o).length ? o : null;
     }
     function k3dPaint(field, val) {
@@ -6163,7 +6163,8 @@
         up: [] },
       // ph-k3 · Камень и графит: прямая. Четыре пенала (две духовки, микроволновка, два шкафа), открытые полки с подсветкой и вытяжка,
       // нижний ряд с мойкой и варочной, большой остров на 4 стула, гола, LEGRABOX.
-      { id: 'stone', seg: 'prem', photo: 'ph-k3', t: 'straight', f: 5, b: 5, c: 2, hw: 4, fcn: ['platinum', 'Инокс Серый'], bcn: ['platinum', 'Графит Металик'], open: 'g', o: [1, 1, 1], lg: [2, 1, 0, 3], isl: [1, 280, 110], dc: [0, 4, 1, 0],
+      { id: 'stone', seg: 'prem', photo: 'ph-k3', t: 'straight', f: 5, b: 5, c: 2, hw: 4, rh: 270, fcn: ['color', 'Капучино'], bcn: ['platinum', 'Графит Металик'], open: 'g', o: [1, 1, 1], lg: [2, 1, 0, 3], isl: [1, 280, 110], dc: [1, 3, 0, 0, 6, 3, 0, 0, 1], tt: 's_gry', rf: ['c_light', 'w_graph', ''], apron: [240, 300, 'marble_g'],
+        ic: { c: [['door', 70, 1, 0, 1, 'L', 'gola', 0, 0, ''], ['door', 70, 1, 0, 1, 'L', 'gola', 0, 0, ''], ['door', 70, 1, 0, 1, 'L', 'gola', 0, 0, ''], ['door', 70, 1, 0, 1, 'L', 'gola', 0, 0, '']], t: 'R', f: 40, b: 2, k: 'panel', h: 0, r: 0, ot: 'gola', p: ['tx:s_gry', 'pl6'], tc: '', ol: 2, or: 2, ct: 4, bh: 0 },
         kh: { hinge: 'std_soft', sinkbox: 'legrabox' },
         lo: [['tower', 60, 0, 0, 'm', 'oven', { dsys: ['lbx_c'] }], ['tower', 60, 0, 0, 'm', 'ovenMicro', { dsys: ['lbx_c', 'lbx_c'] }], ['tower', 60, 0, 0, 'm', 'storage'], ['tower', 60, 0, 0, 'm', 'storage'],
              ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 80, 0, 3, 'm', '', PR_LBX], ['hob', 80, 0, 3, 'm', '', PR_LBX]],
@@ -6354,7 +6355,7 @@
       upperSections = up;
       parkedSections = (Array.isArray(st.pk) ? st.pk.slice(0, 20) : []).map(x => { const tier = x && x[0] ? 'upper' : 'lower', sec = build([x && x[1]], tier)[0]; return sec ? { sec, tier } : null; }).filter(Boolean);
       { const q = st.ic && typeof st.ic === 'object' ? st.ic : null, num = (v, a, b, d) => { v = parseFloat(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
-        islandCfg = { cells: q && Array.isArray(q.c) ? q.c.slice(0, 8).map(a => ({ k: ISL_KINDS[a[0]] ? a[0] : 'door', w: num(a[1], 20, 400, 60), dn: a[2] === 2 ? 2 : 1, dr: num(a[3], 1, 5, 3) | 0, sh: num(a[4], 0, 5, 1) | 0, hg: a[5] === 'R' ? 'R' : 'L', ot: ['handles', 'push', 'gola'].indexOf(a[6]) >= 0 ? a[6] : undefined, glass: a[7] ? true : undefined, led: num(a[8], 0, 3, 0) | 0 || undefined, ml: (MILL_K[a[9]] || a[9] === 'none') ? a[9] : undefined, ov: a[10] ? true : undefined })) : [], top: q && ['L', 'R', 'both'].indexOf(q.t) >= 0 ? q.t : 'top', ovF: q ? num(q.f, 0, 45, 2) : 2, ovB: q ? num(q.b, 0, 45, 2) : 2, back: q && q.k === 'cells' ? 'cells' : 'panel', hood: !!(q && q.h), bar: !!(q && q.r), pc: (() => { if (!q || !Array.isArray(q.p)) return null; const o = {}; if (q.p[0] && findColor(q.p[0])) o.f = q.p[0]; if (q.p[1] && findColor(q.p[1])) o.b = q.p[1]; return Object.keys(o).length ? o : null; })(), ctc: q && /^#[0-9a-f]{6}$/i.test(q.tc || '') ? q.tc.toLowerCase() : '', ovL: q ? num(q.ol, 0, 45, 2) : 2, ovR: q ? num(q.or, 0, 45, 2) : 2, ct: q ? num(q.ct, 0, 10, 0) : 0, bh: q ? num(q.bh, 0, 120, 0) : 0, ot: q && ['push', 'gola'].indexOf(q.ot) >= 0 ? q.ot : 'handles' }; islCell = 0; }
+        islandCfg = { cells: q && Array.isArray(q.c) ? q.c.slice(0, 8).map(a => ({ k: ISL_KINDS[a[0]] ? a[0] : 'door', w: num(a[1], 20, 400, 60), dn: a[2] === 2 ? 2 : 1, dr: num(a[3], 1, 5, 3) | 0, sh: num(a[4], 0, 5, 1) | 0, hg: a[5] === 'R' ? 'R' : 'L', ot: ['handles', 'push', 'gola'].indexOf(a[6]) >= 0 ? a[6] : undefined, glass: a[7] ? true : undefined, led: num(a[8], 0, 3, 0) | 0 || undefined, ml: (MILL_K[a[9]] || a[9] === 'none') ? a[9] : undefined, ov: a[10] ? true : undefined })) : [], top: q && ['L', 'R', 'both'].indexOf(q.t) >= 0 ? q.t : 'top', ovF: q ? num(q.f, 0, 45, 2) : 2, ovB: q ? num(q.b, 0, 45, 2) : 2, back: q && q.k === 'cells' ? 'cells' : 'panel', hood: !!(q && q.h), bar: !!(q && q.r), pc: (() => { if (!q || !Array.isArray(q.p)) return null; const o = {}; if (q.p[0] && (String(q.p[0]).indexOf('tx:') === 0 || findColor(q.p[0]))) o.f = q.p[0]; if (q.p[1] && (String(q.p[1]).indexOf('tx:') === 0 || findColor(q.p[1]))) o.b = q.p[1]; return Object.keys(o).length ? o : null; })(), ctc: q && /^#[0-9a-f]{6}$/i.test(q.tc || '') ? q.tc.toLowerCase() : '', ovL: q ? num(q.ol, 0, 45, 2) : 2, ovR: q ? num(q.or, 0, 45, 2) : 2, ct: q ? num(q.ct, 0, 10, 0) : 0, bh: q ? num(q.bh, 0, 120, 0) : 0, ot: q && ['push', 'gola'].indexOf(q.ot) >= 0 ? q.ot : 'handles' }; islCell = 0; }
       islandPos = Array.isArray(st.ip) && st.ip.length >= 3 && st.ip.every(v => isFinite(v)) ? { cx: +st.ip[0], cz: +st.ip[1], r: +st.ip[2] } : null;
       selIsland = false; swapFrom = null; moveBase = null;
       topTex = (window.ROPEN && window.ROPEN.ROOM_FINISH.floor[st.tt]) ? st.tt : '';

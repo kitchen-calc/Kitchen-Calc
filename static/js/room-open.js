@@ -1,7 +1,7 @@
 /* 3D-часть элементов стен (общая для шкафа и кухни); логика и данные — в room-open-core.js */
 import * as THREE from 'three';
-import { roomEdges, openCenter, OPEN_KINDS, OPEN_COLORS, OPEN_INFO, OPEN_TINTS, ROOM_FINISH } from '/static/js/room-open-core.js?v=9';
-export * from '/static/js/room-open-core.js?v=9';
+import { roomEdges, openCenter, OPEN_KINDS, OPEN_COLORS, OPEN_INFO, OPEN_TINTS, ROOM_FINISH } from '/static/js/room-open-core.js?v=10';
+export * from '/static/js/room-open-core.js?v=10';
 /* ---- текстуры фартука и стеновых панелей: рисуем на canvas по виду (кладка, мозаика, мрамор, рейка…) ---- */
 function rngSeed(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };

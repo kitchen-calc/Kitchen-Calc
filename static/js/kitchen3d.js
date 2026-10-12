@@ -637,7 +637,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
       const v = mat('#1f6b5c', .95), br = mat('#c9a85a', .3, .9);
       seat(v, 19, 62, 7); back(v, 19.5, 80, 24, 1.15); [[-10, -10], [10, -10], [-10, 10], [10, 10]].forEach(q => leg(br, 60, q[0], q[1], .9)); ring(br, 27, 11.5);
     } else if (style === 'leather') {   // кожаный стул-ракушка цвета карамели
-      const l = mat('#c4854a', .55);
+      const l = mat('#b98152', .6);
       const sh = mesh(new THREE.BoxGeometry(40, 3.5, 38), l); sh.position.set(sx, 66, sz); g.add(sh);
       const bk = mesh(new THREE.BoxGeometry(40, 34, 3), l); bk.position.set(sx, 84, sz + dir * 18); bk.rotation.x = -dir * .14; g.add(bk);
       [[-17, -16], [17, -16], [-17, 16], [17, 16]].forEach(q => leg(M.black, 65, q[0], q[1], .8));
@@ -773,7 +773,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   // покраска отдельного шкафа: корпус, фасад, второй цвет фасада (ящики)
   function Mfor(M, st, s) {
     const p = st.paintOf && st.paintOf(s); if (!p && !s.ctc) return M;
-    const mk = (c, rough) => { const t = loadTex(c && c.img); return new THREE.MeshStandardMaterial({ color: t ? '#ffffff' : (c && c.hex) || '#f2f2f2', map: t || null, roughness: rough, metalness: 0, envMapIntensity: .7 }); };
+    const mk = (c, rough) => { if (c && c.tex) { const fm = finishMat('floor', c.tex, '', 240, 120); if (fm) return fm; } const t = loadTex(c && c.img); return new THREE.MeshStandardMaterial({ color: t ? '#ffffff' : (c && c.hex) || '#f2f2f2', map: t || null, roughness: rough, metalness: 0, envMapIntensity: .7 }); };
     const o = Object.assign({}, M), fl = m => { m.userData.isFacade = true; return m; };
     if (p && p.f) o.facade = fl(mk(p.f, .42));
     if (p && p.b) o.body = mk(p.b, .6);

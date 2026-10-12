@@ -45,6 +45,7 @@ export const OPEN_INFO = {
     herr: { ru: 'Ёлочка под дерево', col: '#c49a6c', pat: 'herring', tw: 6, th: 24, grout: '#8f6d47', gloss: .5, price: 600000 },
     marble_w: { ru: 'Мрамор белый (плита)', col: '#ecebe7', pat: 'slab', veins: '#9a9a9a', gloss: .15, price: 1500000 },
     marble_b: { ru: 'Мрамор чёрный (плита)', col: '#23252a', pat: 'slab', veins: '#c8a96a', gloss: .12, price: 1700000 },
+    marble_g: { ru: 'Мрамор серый (плита)', col: '#6b6c70', pat: 'slab', veins: '#dcdcde', gloss: .15, price: 1700000 },
     stone_dk: { ru: 'Камень тёмный (плита)', col: '#3a342e', pat: 'slab', veins: '#4c443b', gloss: .5, price: 1300000 },
     marble_e: { ru: 'Мрамор коричневый (плита)', col: '#5f554d', pat: 'slab', veins: '#d8cdbb', gloss: .15, price: 1700000 },
     stone: { ru: 'Керамогранит под камень', col: '#8d8f91', pat: 'slab', veins: '#6d7073', gloss: .45, price: 1200000 },
