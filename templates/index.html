@@ -6142,7 +6142,9 @@
         up: [['hood', 80, 0, 1, 'r'], ['door', 60, 1, 0, 'r'], ['door', 60, 1, 0, 'r']] },
       // ph-k2 · Графит и белый глянец: прямая. Слева два пенала (духовка + микроволновка, шкаф), низ графитовый глянец, верх белый с ручками,
       // подсветка под верхними шкафами, кварц, большой остров (мойка на фото в острове — на чертеже мойка в ряду), три подвесные лампы.
-      { id: 'grafgloss', seg: 'prem', photo: 'ph-k2', t: 'straight', f: 6, b: 2, c: 3, hw: 2, fcn: ['acryl', 'Графит'], bcn: ['premium', 'Белый'], open: 'h', o: [1, 1, 1], lg: [1, 1, 0, 0], isl: [1, 240, 100], dc: [3, 0, 0, 0],
+      { id: 'grafgloss', seg: 'prem', photo: 'ph-k2', t: 'straight', f: 6, b: 2, c: 3, hw: 2, rh: 270, fcn: ['acryl', 'Графит'], bcn: ['premium', 'Белый'], open: 'h', o: [1, 1, 1], lg: [1, 1, 0, 0], isl: [1, 300, 100], dc: [3, 0, 0, 0, 3, 0, 3, 0, 0], rf: ['fp_oak_l', 'w_white', ''],
+        upo: { pc: { f: 'ac1' } },
+        ic: { c: [['door', 60, 1, 0, 1, 'L', 'push', 0, 0, ''], ['door', 60, 1, 0, 1, 'L', 'push', 0, 0, ''], ['door', 60, 1, 0, 1, 'L', 'push', 0, 0, ''], ['door', 60, 1, 0, 1, 'L', 'push', 0, 0, ''], ['door', 60, 1, 0, 1, 'L', 'push', 0, 0, '']], t: 'both', f: 12, b: 2, k: 'panel', h: 0, r: 0, ot: 'push', p: 0, tc: '', ol: 2, or: 2, ct: 4, bh: 0 },
         kh: { hinge: 'std_soft' },
         lo: [['tower', 60, 0, 0, 'm', 'ovenMicro'], ['tower', 60, 0, 0, 'm', 'storage'], ['drawers', 60, 0, 3], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 80, 1, 0], ['drawers', 60, 0, 3], ['door', 60, 1, 0]],
         up: [['door', 60, 1, 0], ['door', 80, 1, 0], ['door', 60, 1, 0], ['hood', 80, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
@@ -6176,12 +6178,12 @@
     ];
 
     function presetState(p) {
-      const conv = arr => arr.map(e => { const o = e[6] || {}; return [e[0], '', e[1], e[2], e[3], o.open || p.open, e[4] || 'm', e[5] || '', '', 0, '', (o.dsys || []).join(','), o.hx ? HX_FIELDS.map(f => o.hx[f] || '').join('|') : '', [o.dn || '', o.led || '', o.ug != null ? o.ug : '', '', '', '', o.ov ? 1 : ''].join('|'), '', '', o.pc ? [o.pc.f || '', o.pc.b || '', o.pc.f2 || ''].join('|') : '', (o.dp || o.ht) ? [o.dp || '', o.ht || '', '', '', ''].join('|') : '', o.ctc || '', '', o.glass ? ['1', o.gf || '', o.gt || ''].join('|') : '', o.ml || '']; });
+      const conv = (arr, dflt) => arr.map(e => { const o = Object.assign({}, dflt || {}, e[6] || {}); return [e[0], '', e[1], e[2], e[3], o.open || p.open, e[4] || 'm', e[5] || '', '', 0, '', (o.dsys || []).join(','), o.hx ? HX_FIELDS.map(f => o.hx[f] || '').join('|') : '', [o.dn || '', o.led || '', o.ug != null ? o.ug : '', '', '', '', o.ov ? 1 : ''].join('|'), '', '', o.pc ? [o.pc.f || '', o.pc.b || '', o.pc.f2 || ''].join('|') : '', (o.dp || o.ht) ? [o.dp || '', o.ht || '', '', '', ''].join('|') : '', o.ctc || '', '', o.glass ? ['1', o.gf || '', o.gt || ''].join('|') : '', o.ml || '']; });
       const sumWall = (arr, w) => arr.filter(e => (e[4] || 'm') === w).reduce((a, e) => a + e[1], 0);
       const main = sumWall(p.lo, 'm'), left = sumWall(p.lo, 'l'), right = sumWall(p.lo, 'r');
       const byName = (a, d) => { if (!a) return d; const sec = colorCatalog.find(c => c.key === a[0]); const it = sec && sec.items.find(i => i.name === a[1]); return it ? it.id : d; };
       return { v: 5, dc: p.dc || [0, 0, 0, 0], tt: p.tt || 0, rf: p.rf ? [p.rf[0], p.rf[1], p.rf[2]] : 0, ic: p.ic || 0, ox: (p.apron ? [['apron', 0, p.apron[0], p.apron[1], (p.ug || 56), p.ch || 89, 0.6, 1, p.apron[2], 0]] : []).concat(p.ox || []), ch: p.ch || 89, ug: p.ug || 56, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: p.rh || 240, u: p.u === 0 ? 0 : 1, ut: p.ut === 2 ? 2 : 1, uh: p.uh || 72, ud: 35,
-        f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: byName(p.fcn, p.fc), bc: byName(p.bcn, p.bc), lo: conv(p.lo), up: conv(p.up), o: p.o, i: p.isl || [0, 140, 80], kh: p.kh || null };
+        f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: byName(p.fcn, p.fc), bc: byName(p.bcn, p.bc), lo: conv(p.lo, p.loo), up: conv(p.up, p.upo), o: p.o, i: p.isl || [0, 140, 80], kh: p.kh || null };
     }
 
     // e[13] = «двери|подсветка|высота над столешницей|СВЧ на столешнице»
