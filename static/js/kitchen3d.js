@@ -557,11 +557,12 @@ export function createK3D(container, hooks = {}, opts = {}) {
   /* секция острова: двери, ящики, глухая панель или открытые полки — те же узлы, что у обычных нижних шкафов */
   function islCell(cg, M, st, c, w, key) {
     const D = st.LD, PL = st.PL, H = st.BOX - PL, zf = D - FT;
-    if (['sink', 'hob', 'oven', 'dishwasher', 'washer', 'cargo'].indexOf(c.k) >= 0) { lowerModule(cg, M, st, { kind: c.k, drawers: c.k === 'hob' ? (c.dr | 0) : 0, dn: c.dn || 1, hinge: c.hg || 'L', shelves: 0, openType: 'handles', width: w }, w, key); return; }
-    if (c.k === 'door' || c.k === 'drawers') { lowerModule(cg, M, st, { kind: c.k === 'drawers' ? 'drawers' : 'door', drawers: c.k === 'drawers' ? ((c.dr | 0) || 3) : 0, dn: c.dn || 1, hinge: c.hg || 'L', shelves: c.k === 'door' ? (c.sh | 0) : 0, openType: 'handles', width: w }, w, key); return; }
+    const ot = c.ot || st.islOt || 'handles', ex = { openType: ot, glass: !!c.glass, led: c.led | 0, ml: c.ml || undefined, width: w };
+    if (['sink', 'hob', 'oven', 'dishwasher', 'washer', 'cargo'].indexOf(c.k) >= 0) { lowerModule(cg, M, st, Object.assign({ kind: c.k, drawers: c.k === 'hob' ? (c.dr | 0) : 0, dn: c.dn || 1, hinge: c.hg || 'L', shelves: 0 }, ex), w, key); return; }
+    if (c.k === 'door' || c.k === 'drawers') { lowerModule(cg, M, st, Object.assign({ kind: c.k === 'drawers' ? 'drawers' : 'door', drawers: c.k === 'drawers' ? ((c.dr | 0) || 3) : 0, dn: c.dn || 1, hinge: c.hg || 'L', shelves: c.k === 'door' ? (c.sh | 0) : 0 }, ex), w, key); return; }
     box(cg, w - 4, PL, D - 6, M.plinth, 2, 0, 2);
-    if (c.k === 'blind') { carcass(cg, M, w, H, D, PL, 0, {}); box(cg, w - 2 * GAP, H - 2 * GAP, FT, M.facade, GAP, PL + GAP, zf, 60); }
-    else carcass(cg, M, w, H, D, PL, (c.sh | 0) || 2, {});
+    if (c.k === 'blind') { carcass(cg, M, w, H, D, PL, 0, { led: c.led | 0 }); box(cg, w - 2 * GAP, H - 2 * GAP, FT, M.facade, GAP, PL + GAP, zf, 60); }
+    else carcass(cg, M, w, H, D, PL, (c.sh | 0) || 2, { led: c.led | 0 });
   }
   function island(M0, st, bounds) {
     K_MILL = st.mill || '';
@@ -570,9 +571,9 @@ export function createK3D(container, hooks = {}, opts = {}) {
     const M = Mfor(M0, st, { pc: cfg.pc, ctc: cfg.ctc });   // свои цвета острова: фасад, корпус, столешница отдельно
     const cells = cfg.cells && cfg.cells.length ? cfg.cells : [{ k: 'door', w: L, dn: 2 }];
     const g = new THREE.Group(); placeAt(g, L, Wd, I.cx, I.cz, I.r, 0); root.add(g);
-    g.userData.mod = { tier: 'island', id: 0, w: L, h: BX + CT, d: Wd, y0: 0 };
+    g.userData.mod = { tier: 'island', id: 0, w: L, h: BX + CT, d: Wd, y0: 0, cx: I.cx, cz: I.cz, r: I.r, y: 0 };
     pick.push(g);
-    const both = cfg.back === 'cells', Df = both ? Wd / 2 : Wd - FT, stI = Object.assign({}, st, { LD: Df, BOX: BX, CT });
+    const both = cfg.back === 'cells', Df = both ? Wd / 2 : Wd - FT, stI = Object.assign({}, st, { LD: Df, BOX: BX, CT, islOt: cfg.ot || 'handles' });
     let x0 = 0;
     cells.forEach((c, i) => {
       const w = c.w, cg = new THREE.Group(); cg.position.set(x0, 0, both ? 0 : FT); g.add(cg); islCell(cg, M, stI, c, w, 'island:0:' + i);
