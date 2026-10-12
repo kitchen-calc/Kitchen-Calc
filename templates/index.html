@@ -1958,7 +1958,7 @@
     function mixD(s) { return (s && (s.kind === 'door' || s.kind === 'drawers') && (s.drawers | 0) === 1 && +s.mxd > 0) ? +s.mxd : 0; }
     function mixFrac(s, G) { G = G || techGeometry(); return Math.min(.8, Math.max(.08, mixD(s) / (((s && s.ht) ? +s.ht : G.BOX) - G.PL))); }
     /* остров как отдельное изделие: секции (двери / ящики / глухая панель / открытые полки), столешница сверху и с боков, свесы */
-    var islandCfg = { cells: [], top: 'top', ovF: 2, ovB: 2, back: 'panel', hood: false, bar: false, pc: null, ctc: '' }, islCell = 0;
+    var islandCfg = { cells: [], top: 'top', ovF: 2, ovB: 2, ovL: 2, ovR: 2, ct: 0, bh: 0, back: 'panel', hood: false, bar: false, pc: null, ctc: '' }, islCell = 0;
     const ISL_KINDS = { door: 'Двери', drawers: 'Ящики', blind: 'Глухая панель', open: 'Открытые полки', sink: 'Мойка (раковина)', hob: 'Газовая / варочная панель', oven: 'Духовка', dishwasher: 'Посудомойка', washer: 'Стиральная машина', cargo: 'Карго (выдвижные корзины)' };
     function islandCells(L) {   // секции: свои или по умолчанию (двери и ящики по очереди, как раньше)
       L = L || parseFloat((el('islandLength') || {}).value) || 140;
@@ -1967,10 +1967,10 @@
       const sum = c.reduce((a, x) => a + (+x.w || 0), 0); c.forEach(x => { x.w = sum > 0 ? (+x.w || 0) * L / sum : L / c.length; });
       return c.map(x => Object.assign({ dn: 1, dr: 3, sh: 1, hg: 'L' }, x, { w: Math.round(x.w * 10) / 10 }));
     }
-    const islandPlain = L => ({ cells: islandCells(L), top: islandCfg.top, ovF: islandCfg.ovF, ovB: islandCfg.ovB, back: islandCfg.back, hood: !!islandCfg.hood, bar: !!islandCfg.bar, pc: islandCfg.pc, ctc: islandCfg.ctc });
+    const islandPlain = L => ({ cells: islandCells(L), top: islandCfg.top, ovF: islandCfg.ovF, ovB: islandCfg.ovB, back: islandCfg.back, hood: !!islandCfg.hood, bar: !!islandCfg.bar, pc: islandCfg.pc, ctc: islandCfg.ctc, ovL: islandCfg.ovL, ovR: islandCfg.ovR, ct: islandCfg.ct || 0, bh: islandCfg.bh || 0 });
     function islandSecs() {   // секции острова как «шкафы» для раскроя
       if (!chk('hasIsland')) return []; const W = parseFloat(el('islandWidth').value) || 80, both = islandCfg.back === 'cells';
-      return islandCells().map((c, i) => ({ id: 'О' + (i + 1), isl: true, name: 'Остров · секция ' + (i + 1) + ' (' + (ISL_KINDS[c.k] || '').toLowerCase() + ')', kind: ['drawers', 'sink', 'hob', 'oven', 'dishwasher', 'washer', 'cargo'].indexOf(c.k) >= 0 ? c.k : 'door', width: c.w, drawers: c.k === 'drawers' ? ((c.dr | 0) || 3) : (c.k === 'hob' ? (c.dr | 0) : 0), dn: c.dn || 1, hinge: c.hg, shelves: c.k === 'door' ? (c.sh | 0) : (c.k === 'open' ? ((c.sh | 0) || 2) : 0), noDoors: c.k === 'open', dp: Math.round((both ? W / 2 : W - 2) * 10) / 10, openType: 'handles' }));
+      return islandCells().map((c, i) => ({ id: 'О' + (i + 1), isl: true, name: 'Остров · секция ' + (i + 1) + ' (' + (ISL_KINDS[c.k] || '').toLowerCase() + ')', kind: ['drawers', 'sink', 'hob', 'oven', 'dishwasher', 'washer', 'cargo'].indexOf(c.k) >= 0 ? c.k : 'door', width: c.w, drawers: c.k === 'drawers' ? ((c.dr | 0) || 3) : (c.k === 'hob' ? (c.dr | 0) : 0), dn: c.dn || 1, hinge: c.hg, shelves: c.k === 'door' ? (c.sh | 0) : (c.k === 'open' ? ((c.sh | 0) || 2) : 0), noDoors: c.k === 'open', ht: islandCfg.bh || undefined, dp: Math.round((both ? W / 2 : W - 2) * 10) / 10, openType: 'handles' }));
     }
     // положение духовки / микроволновки в пенале можно менять: sec.ovY / sec.mwY — низ ниши, см от пола
     function towerCfg(sec) { const k = (sec && sec.tw) || 'storage'; return (sec && (sec.ovY != null || sec.mwY != null)) ? { k, ov: sec.ovY, mw: sec.mwY } : k; }
@@ -2815,7 +2815,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=42');
+        const mod = await import('/static/js/kitchen3d.js?v=43');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: (sel, multi) => k3dOnSelect(sel, multi), onMoveMulti: (items, dx, dz) => k3dMoveMulti(items, dx, dz),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3766,6 +3766,9 @@
       if (c.k === 'open') h += k3Row(L3('Полок', 'Tokchalar'), k3Step((c.sh | 0) || 2, "k3dIslStep('sh',-1,1,5)", "k3dIslStep('sh',1,1,5)"));
       h += k3Row(L3('Ширина секции', 'Boʻlim kengligi'), k3Step(Math.round(c.w * 10) / 10 + ' ' + cmU(), "k3dIslW(-5)", "k3dIslW(5)")) + `<div class="k3e-r">${k3B(false, 'k3dIslAll()', L3('Эту секцию — всем', 'Hammasiga'))}${k3B(false, 'k3dIslReset()', L3('Сбросить секции', 'Tozalash'))}</div>`;
       h += `<div class="k3s-sub">${esc(L3('Столешница', 'Stol usti'))}</div>` + k3Row(L3('Боковины', 'Yon'), [['top', L3('только сверху', 'faqat ustida')], ['L', L3('+ слева', '+ chap')], ['R', L3('+ справа', '+ oʻng')], ['both', L3('+ с двух сторон', '+ ikki tomon')]].map(([k, n]) => k3B((cfg.top || 'top') === k, `k3dIslTop('${k}')`, n)).join(''));
+      { const G0 = techGeometry(), top = cfg.top || 'top', wl = top === 'L' || top === 'both', wr = top === 'R' || top === 'both';
+        h += `<div class="k3s-sub">${esc(L3('Размеры столешницы и корпуса', 'Stol usti va korpus oʻlchamlari'))}</div>` + k3Row(L3('Высота корпуса', 'Korpus balandligi'), k3Step((cfg.bh || G0.BOX) + ' ' + cmU(), "k3dIslSize('bh',-1)", "k3dIslSize('bh',1)")) + k3Row(L3('Толщина столешницы', 'Stol usti qalinligi'), k3Step(Math.round((cfg.ct || G0.CT) * 10) / 10 + ' ' + cmU(), "k3dIslSize('ct',-.2)", "k3dIslSize('ct',.2)"))
+          + (wl ? '' : k3Row(L3('Свес слева', 'Chap osma'), k3Step((cfg.ovL != null ? cfg.ovL : 2) + ' ' + cmU(), "k3dIslOv('ovL',-5)", "k3dIslOv('ovL',5)"))) + (wr ? '' : k3Row(L3('Свес справа', 'Oʻng osma'), k3Step((cfg.ovR != null ? cfg.ovR : 2) + ' ' + cmU(), "k3dIslOv('ovR',-5)", "k3dIslOv('ovR',5)"))); }
       h += k3Row(L3('Свес спереди', 'Oldi osma'), k3Step((cfg.ovF != null ? cfg.ovF : 2) + ' ' + cmU(), "k3dIslOv('ovF',-5)", "k3dIslOv('ovF',5)")) + k3Row(L3('Свес сзади', 'Orqa osma'), k3Step((cfg.ovB != null ? cfg.ovB : 2) + ' ' + cmU(), "k3dIslOv('ovB',-5)", "k3dIslOv('ovB',5)")) + `<div class="k3s-note">${esc(L3('Свес 30 см и больше — барная сторона: стулья ставятся с неё.', 'Osma 30 sm va undan koʻp — bar tomoni.'))}</div>`;
       { const pc = cfg.pc || {};
         h += `<div class="k3s-sub">🎨 ${esc(L3('Цвета острова', 'Orol ranglari'))}</div>` + k3Row(L3('Фасад', 'Fasad'), paintSelectFn('k3dIslPaint', 'f', pc.f)) + k3Row(L3('Корпус', 'Korpus'), paintSelectFn('k3dIslPaint', 'b', pc.b)) + k3Row(L3('Столешница', 'Stol usti'), '') + topSwatches(cfg.ctc || '', 'k3dIslTopColor', L3('как у кухни', 'oshxonadagidek')); }
@@ -3794,6 +3797,7 @@
     function k3dIslOv(f, d) { islandCfg[f] = Math.max(0, Math.min(45, (islandCfg[f] != null ? islandCfg[f] : 2) + d)); islDone(); }
     function k3dIslPaint(f, v) { const pc = Object.assign({}, islandCfg.pc || {}); if (v) pc[f] = v; else delete pc[f]; islandCfg.pc = Object.keys(pc).length ? pc : null; islDone(); }
     function k3dIslTopColor(h) { islandCfg.ctc = /^#[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : ''; islDone(); }
+    function k3dIslSize(f, d) { const G0 = techGeometry(), cur = islandCfg[f] || (f === 'bh' ? G0.BOX : G0.CT), lim = f === 'bh' ? [50, 120] : [1.2, 10]; islandCfg[f] = Math.round(Math.max(lim[0], Math.min(lim[1], cur + d)) * 10) / 10; islDone(); }
     function k3dIslFlag(f) { islandCfg[f] = !islandCfg[f]; islDone(); }
     function k3dIslBack(v) { islandCfg.back = v; islDone(); }
     function k3dIslandHome() { islandPos = null; moveBase = null; k3dRefresh(); updateShareLinks(); renderK3dEdit(); }
@@ -4587,10 +4591,10 @@
         });
       });
       if (chk('hasIsland')) {   // остров: столешница со свесами и боковины из столешницы
-        const WL = Math.round((parseFloat(el('islandLength').value) || 140) * 10), WW = Math.round((parseFloat(el('islandWidth').value) || 80) * 10), ic = islandCfg, wl = ic.top === 'L' || ic.top === 'both', wr = ic.top === 'R' || ic.top === 'both', ct = Math.round(G.CT * 10), mat = 'Столешница (' + CONFIG.countertops[S.top].ru + ')', gp = 'Остров · столешница';
-        parts.push({ grp: gp, name: 'Столешница острова', qty: 1, L: WL + (wl ? ct : 20) + (wr ? ct : 20), W: WW + Math.round((ic.ovF + ic.ovB) * 10), t: ct, mat, eL: 0, eW: 0, edgeT: '', note: 'торцы по материалу; свес спереди ' + Math.round(ic.ovF * 10) + ', сзади ' + Math.round(ic.ovB * 10) + ' мм', edgeM: 0 });
+        const WL = Math.round((parseFloat(el('islandLength').value) || 140) * 10), WW = Math.round((parseFloat(el('islandWidth').value) || 80) * 10), ic = islandCfg, wl = ic.top === 'L' || ic.top === 'both', wr = ic.top === 'R' || ic.top === 'both', ct = Math.round((ic.ct || G.CT) * 10), bhh = Math.round((ic.bh || G.BOX) * 10), mat = 'Столешница (' + CONFIG.countertops[S.top].ru + ')', gp = 'Остров · столешница';
+        parts.push({ grp: gp, name: 'Столешница острова', qty: 1, L: WL + (wl ? ct : Math.round((ic.ovL != null ? ic.ovL : 2) * 10)) + (wr ? ct : Math.round((ic.ovR != null ? ic.ovR : 2) * 10)), W: WW + Math.round((ic.ovF + ic.ovB) * 10), t: ct, mat, eL: 0, eW: 0, edgeT: '', note: 'торцы по материалу; свес спереди ' + Math.round(ic.ovF * 10) + ', сзади ' + Math.round(ic.ovB * 10) + ' мм', edgeM: 0 });
         if (ic.bar) parts.push({ grp: gp, name: 'Барная столешница', qty: 1, L: WL, W: 350, t: ct, mat, eL: 0, eW: 0, edgeT: '', note: 'повышенная, 1050 мм от пола, на двух опорах', edgeM: 0 });
-        const sides = (wl ? 1 : 0) + (wr ? 1 : 0); if (sides) parts.push({ grp: gp, name: 'Боковина из столешницы', qty: sides, L: Math.round(G.BOX * 10), W: WW, t: ct, mat, eL: 0, eW: 0, edgeT: '', note: 'стык с крышкой под 45° (водопад)', edgeM: 0 });
+        const sides = (wl ? 1 : 0) + (wr ? 1 : 0); if (sides) parts.push({ grp: gp, name: 'Боковина из столешницы', qty: sides, L: bhh, W: WW + Math.round((ic.ovF + ic.ovB) * 10), t: ct, mat, eL: 0, eW: 0, edgeT: '', note: 'стык с крышкой под 45° (водопад)', edgeM: 0 });
       }
       if (window.SCORE && kObjs.length) window.SCORE.objsParts(kObjs, CUT_T === 18 ? 1.8 : 1.6).parts.forEach(p => parts.push({ grp: p.grp, name: p.name, qty: p.qty, L: p.L, W: p.W, t: p.t, mat: p.mat, eL: 0, eW: 0, edgeT: p.edgeT, edgeDesc: p.edgeDesc, note: p.note, edgeM: p.edgeM }));
       return parts;
@@ -4647,8 +4651,8 @@
       });
       if (!both) out.push(B(0, L, PL, G.BOX, 0, FT));
       const wl = cfg.top === 'L' || cfg.top === 'both', wr = cfg.top === 'R' || cfg.top === 'both';
-      out.push(B(wl ? -G.CT : -2, L + (wr ? G.CT : 2), G.BOX, G.BOX + G.CT, -cfg.ovB, Wd + cfg.ovF));
-      if (wl) out.push(B(-G.CT, 0, 0, G.BOX, 0, Wd)); if (wr) out.push(B(L, L + G.CT, 0, G.BOX, 0, Wd));
+      out.push(B(wl ? -G.CT : -(cfg.ovL != null ? cfg.ovL : 2), L + (wr ? G.CT : (cfg.ovR != null ? cfg.ovR : 2)), G.BOX, G.BOX + G.CT, -cfg.ovB, Wd + cfg.ovF));
+      if (wl) out.push(B(-G.CT, 0, 0, G.BOX, -cfg.ovB, Wd + cfg.ovF)); if (wr) out.push(B(L, L + G.CT, 0, G.BOX, -cfg.ovB, Wd + cfg.ovF));
       return out;
     }
     function kitchenSheetCtx(geo) {
@@ -4657,7 +4661,7 @@
       const sec = (s, tier) => { const it = { s, sec: s, tier }, p = getTarget(it, geo), m = odModel(s, tier, geo), y0 = tier === 'upper' ? (+p.y || 0) : Math.max(0, +p.y || 0); put((tier === 'lower' ? 'Н-' : 'В-') + s.id, s.name, footprint(p), y0, y0 + m.H / 10, SO.modelLocal(m), p.r || 0, m.W / 10, m.D / 10, tier === 'upper' ? { noDim: true, noLabel: true } : { noDim: true }); };
       lowerSections.forEach(s => sec(s, 'lower'));
       if (chk('hasIsland')) {   // остров — отдельное изделие: свои секции, столешница, лист «виды»
-        const p = getTarget({ tier: 'island', sec: null }, geo), f = footprint(p), L = parseFloat(el('islandLength').value) || 140, Wd = parseFloat(el('islandWidth').value) || 80, G = geo.G, cfg = islandPlain(L), loc = islandLocal(L, Wd, G, cfg), rot = p.r || 0;
+        const p = getTarget({ tier: 'island', sec: null }, geo), f = footprint(p), L = parseFloat(el('islandLength').value) || 140, Wd = parseFloat(el('islandWidth').value) || 80, cfg = islandPlain(L), G = Object.assign({}, geo.G, cfg.bh ? { BOX: cfg.bh } : {}, cfg.ct ? { CT: cfg.ct } : {}), loc = islandLocal(L, Wd, G, cfg), rot = p.r || 0;
         const ip = kitchenCut().filter(q => /^(О\d|Остров)/.test(q.grp)).map(q => ({ name: q.name, qty: q.qty, L: q.L, W: q.W, t: q.t, mat: q.mat }));
         items.push({ n: 'О', name: 'Остров', x0: f.x0, x1: f.x1, z0: f.z0, z1: f.z1, y0: 0, y1: G.BOX + G.CT, local: loc, lw: L, ld: Wd, lh: G.BOX + G.CT, rot, boxes: SO.placeLocal(loc, rot, L, Wd, f.x0, f.z0, 0), sheet: true, parts: ip, hw: [], kind: 'Остров' });
       }
@@ -4857,7 +4861,7 @@
       const islM = s.island ? s.islL / 100 : 0;
       if (islM) {
         const dEff = s.islW + Math.max(0, islandCfg.ovF - 2) + Math.max(0, islandCfg.ovB - 2), sides = islandCfg.top === 'both' ? 2 : (islandCfg.top === 'L' || islandCfg.top === 'R' ? 1 : 0);
-        total += islM * (rate * PP.lowerShare * 1.5 + topExtra * (dEff / 60));
+        total += islM * (rate * PP.lowerShare * 1.5 * (islandCfg.bh ? 1 + .6 * (islandCfg.bh / boxDef - 1) : 1) + topExtra * (dEff / 60));
         total += sides * (s.counterH / 100) * CONFIG.countertops[s.top].price * (s.islW / 60);   // боковины из столешницы
         if (islandCfg.back === 'cells') total += islM * rate * PP.lowerShare * .5;   // вторая сторона секций
         islandCells(s.islL).forEach(c => { if (c.k === 'sink' || c.k === 'hob') total += 150000; else if (AW[c.k]) total += AW[c.k]; });   // мойка, панель, духовка, посудомойка, стиральная машина: вырез и подключение
@@ -6181,7 +6185,7 @@
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
-        ic: (islandCfg.cells.length || islandCfg.top !== 'top' || islandCfg.ovF !== 2 || islandCfg.ovB !== 2 || islandCfg.back !== 'panel' || islandCfg.hood || islandCfg.bar || islandCfg.pc || islandCfg.ctc) ? { c: islandCfg.cells.map(x => [x.k, Math.round(x.w * 10) / 10, x.dn | 0, x.dr | 0, x.sh | 0, x.hg || 'L']), t: islandCfg.top, f: islandCfg.ovF, b: islandCfg.ovB, k: islandCfg.back, h: islandCfg.hood ? 1 : 0, r: islandCfg.bar ? 1 : 0, p: islandCfg.pc ? [islandCfg.pc.f || '', islandCfg.pc.b || ''] : 0, tc: islandCfg.ctc || '' } : 0, fm: facadeMill || 0, tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
+        ic: (islandCfg.cells.length || islandCfg.top !== 'top' || islandCfg.ovF !== 2 || islandCfg.ovB !== 2 || islandCfg.back !== 'panel' || islandCfg.hood || islandCfg.bar || islandCfg.pc || islandCfg.ctc || islandCfg.ovL !== 2 || islandCfg.ovR !== 2 || islandCfg.ct || islandCfg.bh) ? { c: islandCfg.cells.map(x => [x.k, Math.round(x.w * 10) / 10, x.dn | 0, x.dr | 0, x.sh | 0, x.hg || 'L']), t: islandCfg.top, f: islandCfg.ovF, b: islandCfg.ovB, k: islandCfg.back, h: islandCfg.hood ? 1 : 0, r: islandCfg.bar ? 1 : 0, p: islandCfg.pc ? [islandCfg.pc.f || '', islandCfg.pc.b || ''] : 0, tc: islandCfg.ctc || '', ol: islandCfg.ovL, or: islandCfg.ovR, ct: islandCfg.ct || 0, bh: islandCfg.bh || 0 } : 0, fm: facadeMill || 0, tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
         ox: kOpens.map(o => [o.kind, o.wall, o.off, o.w, o.h, o.y, o.d, o.n || 1, o.v || '', o.c | 0]), oj: kObjs.length ? kObjs : 0,
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW], kh: KHW, ch: s.counterH, ug: s.upperGap };
     }
@@ -6277,7 +6281,7 @@
       upperSections = up;
       parkedSections = (Array.isArray(st.pk) ? st.pk.slice(0, 20) : []).map(x => { const tier = x && x[0] ? 'upper' : 'lower', sec = build([x && x[1]], tier)[0]; return sec ? { sec, tier } : null; }).filter(Boolean);
       { const q = st.ic && typeof st.ic === 'object' ? st.ic : null, num = (v, a, b, d) => { v = parseFloat(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
-        islandCfg = { cells: q && Array.isArray(q.c) ? q.c.slice(0, 8).map(a => ({ k: ISL_KINDS[a[0]] ? a[0] : 'door', w: num(a[1], 20, 400, 60), dn: a[2] === 2 ? 2 : 1, dr: num(a[3], 1, 5, 3) | 0, sh: num(a[4], 0, 5, 1) | 0, hg: a[5] === 'R' ? 'R' : 'L' })) : [], top: q && ['L', 'R', 'both'].indexOf(q.t) >= 0 ? q.t : 'top', ovF: q ? num(q.f, 0, 45, 2) : 2, ovB: q ? num(q.b, 0, 45, 2) : 2, back: q && q.k === 'cells' ? 'cells' : 'panel', hood: !!(q && q.h), bar: !!(q && q.r), pc: (() => { if (!q || !Array.isArray(q.p)) return null; const o = {}; if (q.p[0] && findColor(q.p[0])) o.f = q.p[0]; if (q.p[1] && findColor(q.p[1])) o.b = q.p[1]; return Object.keys(o).length ? o : null; })(), ctc: q && /^#[0-9a-f]{6}$/i.test(q.tc || '') ? q.tc.toLowerCase() : '' }; islCell = 0; }
+        islandCfg = { cells: q && Array.isArray(q.c) ? q.c.slice(0, 8).map(a => ({ k: ISL_KINDS[a[0]] ? a[0] : 'door', w: num(a[1], 20, 400, 60), dn: a[2] === 2 ? 2 : 1, dr: num(a[3], 1, 5, 3) | 0, sh: num(a[4], 0, 5, 1) | 0, hg: a[5] === 'R' ? 'R' : 'L' })) : [], top: q && ['L', 'R', 'both'].indexOf(q.t) >= 0 ? q.t : 'top', ovF: q ? num(q.f, 0, 45, 2) : 2, ovB: q ? num(q.b, 0, 45, 2) : 2, back: q && q.k === 'cells' ? 'cells' : 'panel', hood: !!(q && q.h), bar: !!(q && q.r), pc: (() => { if (!q || !Array.isArray(q.p)) return null; const o = {}; if (q.p[0] && findColor(q.p[0])) o.f = q.p[0]; if (q.p[1] && findColor(q.p[1])) o.b = q.p[1]; return Object.keys(o).length ? o : null; })(), ctc: q && /^#[0-9a-f]{6}$/i.test(q.tc || '') ? q.tc.toLowerCase() : '', ovL: q ? num(q.ol, 0, 45, 2) : 2, ovR: q ? num(q.or, 0, 45, 2) : 2, ct: q ? num(q.ct, 0, 10, 0) : 0, bh: q ? num(q.bh, 0, 120, 0) : 0 }; islCell = 0; }
       islandPos = Array.isArray(st.ip) && st.ip.length >= 3 && st.ip.every(v => isFinite(v)) ? { cx: +st.ip[0], cz: +st.ip[1], r: +st.ip[2] } : null;
       selIsland = false; swapFrom = null; moveBase = null;
       topColorHex = typeof st.tc === 'string' && /^#[0-9a-f]{6}$/i.test(st.tc) ? st.tc.toLowerCase() : '';

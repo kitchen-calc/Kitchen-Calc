@@ -566,33 +566,33 @@ export function createK3D(container, hooks = {}, opts = {}) {
   function island(M0, st, bounds) {
     K_MILL = st.mill || '';
     const I = bounds.isl; if (!I) return null;
-    const L = I.L, Wd = I.Wd, cfg = I.cfg || { cells: [], top: 'top', ovF: 2, ovB: 2, back: 'panel' }, CT = st.CT;
+    const L = I.L, Wd = I.Wd, cfg = I.cfg || { cells: [], top: 'top', ovF: 2, ovB: 2, back: 'panel' }, CT = cfg.ct || st.CT, BX = cfg.bh || st.BOX;   // толщина столешницы и высота корпуса острова — свои
     const M = Mfor(M0, st, { pc: cfg.pc, ctc: cfg.ctc });   // свои цвета острова: фасад, корпус, столешница отдельно
     const cells = cfg.cells && cfg.cells.length ? cfg.cells : [{ k: 'door', w: L, dn: 2 }];
     const g = new THREE.Group(); placeAt(g, L, Wd, I.cx, I.cz, I.r, 0); root.add(g);
-    g.userData.mod = { tier: 'island', id: 0, w: L, h: st.BOX + st.CT, d: Wd, y0: 0 };
+    g.userData.mod = { tier: 'island', id: 0, w: L, h: BX + CT, d: Wd, y0: 0 };
     pick.push(g);
-    const both = cfg.back === 'cells', Df = both ? Wd / 2 : Wd - FT, stI = Object.assign({}, st, { LD: Df });
+    const both = cfg.back === 'cells', Df = both ? Wd / 2 : Wd - FT, stI = Object.assign({}, st, { LD: Df, BOX: BX, CT });
     let x0 = 0;
     cells.forEach((c, i) => {
       const w = c.w, cg = new THREE.Group(); cg.position.set(x0, 0, both ? 0 : FT); g.add(cg); islCell(cg, M, stI, c, w, 'island:0:' + i);
       if (both) { const cb = new THREE.Group(); cb.position.set(x0 + w, 0, Wd); cb.rotation.y = Math.PI; g.add(cb); islCell(cb, M, stI, c, w, 'island:0:b' + i); }
       x0 += w;
     });
-    if (!both) box(g, L, st.BOX - st.PL, FT, M.facade, 0, st.PL, 0, 60);   // задняя сторона — глухая панель
+    if (!both) box(g, L, BX - st.PL, FT, M.facade, 0, st.PL, 0, 60);   // задняя сторона — глухая панель
     // столешница: сверху, свесы спереди и сзади; боковины из столешницы с одной или двух коротких сторон
     const wl = cfg.top === 'L' || cfg.top === 'both', wr = cfg.top === 'R' || cfg.top === 'both', ovF = cfg.ovF != null ? cfg.ovF : 2, ovB = cfg.ovB != null ? cfg.ovB : 2;
-    const xa = wl ? -CT : -2, xb = L + (wr ? CT : 2);
-    box(g, xb - xa, CT, Wd + ovF + ovB, M.top, xa, st.BOX, -ovB, 80);
-    if (wl) box(g, CT, st.BOX, Wd, M.top, -CT, 0, 0, 80);
-    if (wr) box(g, CT, st.BOX, Wd, M.top, L, 0, 0, 80);
+    const xa = wl ? -CT : -(cfg.ovL != null ? cfg.ovL : 2), xb = L + (wr ? CT : (cfg.ovR != null ? cfg.ovR : 2)), dTop = Wd + ovF + ovB;
+    box(g, xb - xa, CT, dTop, M.top, xa, BX, -ovB, 80);
+    if (wl) box(g, CT, BX, dTop, M.top, -CT, 0, -ovB, 80);   // боковина из той же столешницы: тот же материал, толщина и глубина, как у верха
+    if (wr) box(g, CT, BX, dTop, M.top, L, 0, -ovB, 80);
     { const ig = new THREE.Group(); ig.position.set(0, 0, Math.max(0, (Wd - 60) / 2)); g.add(ig); let xx = 0; let hobX = null;
-      cells.forEach(c => { if (c.k === 'sink' || c.k === 'hob') slabItem(ig, M, st, { u0: xx, u1: xx + c.w, sec: { kind: c.k } }); if (c.k === 'hob') hobX = xx + c.w / 2; xx += c.w; });
+      cells.forEach(c => { if (c.k === 'sink' || c.k === 'hob') slabItem(ig, M, stI, { u0: xx, u1: xx + c.w, sec: { kind: c.k } }); if (c.k === 'hob') hobX = xx + c.w / 2; xx += c.w; });
       if (cfg.hood && hobX != null) {   // вытяжка над варочной панелью острова: корпус и труба до потолка
-        const hy = st.BOX + st.CT + 70, hw = Math.min(70, Math.max(50, L * .4)); box(g, hw, 8, 45, M.steel, hobX - hw / 2, hy, Wd / 2 - 22); box(g, 16, st.roomH - hy - 8, 16, M.steel, hobX - 8, hy + 8, Wd / 2 - 8);
+        const hy = BX + CT + 70, hw = Math.min(70, Math.max(50, L * .4)); box(g, hw, 8, 45, M.steel, hobX - hw / 2, hy, Wd / 2 - 22); box(g, 16, st.roomH - hy - 8, 16, M.steel, hobX - 8, hy + 8, Wd / 2 - 8);
       } }
     if (cfg.bar) {   // барная стойка: повышенная столешница с задней стороны на двух опорах
-      const by = 105, bd = 35; box(g, L, st.CT, bd, M.top, 0, by, -bd + 2, 80); [0, L - 4].forEach(x => box(g, 4, by, 4, M.body, x, 0, -bd + 3));
+      const by = 105, bd = 35; box(g, L, CT, bd, M.top, 0, by, -bd + 2, 80); [0, L - 4].forEach(x => box(g, 4, by, 4, M.body, x, 0, -bd + 3));
     }
     // стулья со стороны свеса (где свес больше)
     const nS = Math.min(st.decor.stools || 0, Math.max(1, Math.floor(L / 42))), sz = ovB > ovF ? -(ovB + 28) : Wd + ovF + 28;
