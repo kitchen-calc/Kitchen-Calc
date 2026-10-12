@@ -6150,7 +6150,8 @@
         up: [['door', 60, 1, 0], ['door', 80, 1, 0], ['door', 60, 1, 0], ['hood', 80, 0, 1], ['door', 60, 1, 0], ['door', 60, 1, 0]] },
       // ph-k4 · Светлая классика: Г-образная. Слева тумбы с верхними шкафами и холодильник, на правой стене плита с вытяжкой, мойка,
       // посудомойка, тумбы; белые фасады с ручками, подсветка под верхними, кварц, остров на 4 стула, люстра.
-      { id: 'shaker', seg: 'mid', photo: 'ph-k4', t: 'l-shape', f: 3, b: 0, c: 3, hw: 1, fcn: ['premium', 'Белый (Филвуд)'], bc: 'ec6', open: 'h', o: [1, 1, 0], lg: [1, 1, 0, 0], isl: [1, 240, 100], dc: [1, 4, 1, 0],
+      { id: 'shaker', seg: 'mid', photo: 'ph-k4', t: 'l-shape', f: 3, b: 0, c: 3, hw: 1, rh: 270, fm: 'frame', fcn: ['premium', 'Белый (Филвуд)'], bc: 'ec6', open: 'h', o: [1, 1, 0], lg: [1, 1, 0, 0], isl: [1, 300, 110], dc: [1, 4, 0, 0, 5, 4, 0, 0, 0], tt: 's_marble_w', rf: ['lm_gray', 'w_white', ''],
+        ic: { c: [['door', 75, 2, 0, 1, 'L', 'handles', 0, 0, 'none'], ['door', 75, 2, 0, 1, 'L', 'handles', 0, 0, 'none'], ['door', 75, 2, 0, 1, 'L', 'handles', 0, 0, 'none'], ['door', 75, 2, 0, 1, 'L', 'handles', 0, 0, 'none']], t: 'top', f: 45, b: 2, k: 'panel', h: 0, r: 0, ot: 'handles', p: ['co16', 'co16'], tc: '', ol: 2, or: 2, ct: 4, bh: 0 },
         lo: [['door', 80, 1, 0, 'l'], ['drawers', 60, 0, 3, 'l'], ['fridge', 90, 0, 0, 'l', 'free'], ['corner', 100, 1, 0], ['hob', 80, 1, 0], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['drawers', 60, 0, 3], ['door', 80, 1, 0]],
         up: [['door', 80, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 100, 1, 0], ['hood', 80, 0, 1], ['door', 80, 1, 0], ['door', 60, 1, 0], ['door', 60, 1, 0], ['door', 80, 1, 0]] },
       // ph-k1 · Графит и дерево: прямая без верхних шкафов (стена — декоративные рейки). Пенал-витрина и деревянный пенал,
@@ -6184,7 +6185,7 @@
       const main = sumWall(p.lo, 'm'), left = sumWall(p.lo, 'l'), right = sumWall(p.lo, 'r');
       const byName = (a, d) => { if (!a) return d; const sec = colorCatalog.find(c => c.key === a[0]); const it = sec && sec.items.find(i => i.name === a[1]); return it ? it.id : d; };
       return { v: 5, dc: p.dc || [0, 0, 0, 0], tt: p.tt || 0, rf: p.rf ? [p.rf[0], p.rf[1], p.rf[2]] : 0, ic: p.ic || 0, ox: (p.apron ? [['apron', 0, p.apron[0], p.apron[1], (p.ug || 56), p.ch || 89, 0.6, 1, p.apron[2], 0]] : []).concat(p.ox || []), ch: p.ch || 89, ug: p.ug || 56, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: p.rh || 240, u: p.u === 0 ? 0 : 1, ut: p.ut === 2 ? 2 : 1, uh: p.uh || 72, ud: 35,
-        f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: byName(p.fcn, p.fc), bc: byName(p.bcn, p.bc), lo: conv(p.lo, p.loo), up: conv(p.up, p.upo), o: p.o, i: p.isl || [0, 140, 80], kh: p.kh || null };
+        f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: byName(p.fcn, p.fc), bc: byName(p.bcn, p.bc), lo: conv(p.lo, p.loo), up: conv(p.up, p.upo), fm: p.fm || 0, o: p.o, i: p.isl || [0, 140, 80], kh: p.kh || null };
     }
 
     // e[13] = «двери|подсветка|высота над столешницей|СВЧ на столешнице»
