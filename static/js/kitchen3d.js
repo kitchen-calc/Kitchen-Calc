@@ -303,7 +303,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     if (s.mwTop) microwaveTop(g, M, st, w);
     if (kind === 'cargo') { cargoModule(g, M, st, s, w, key, H, D, PL, zf, open); return; }
     if (kind === 'corner' && s._blind) { cornerModule(g, M, st, s, w, key, H, D, PL, zf, open); return; }
-    if (kind === 'oven') {
+    if (kind === 'oven' || (kind === 'hob' && s.ov)) {   // под плитой — духовка (панель остаётся на столешнице)
       const ovH = H * .7;
       dropDoor(g, M, key, GAP, PL + H - ovH, w - 2 * GAP, ovH - GAP, zf, M.glassBlack, M.chrome);
       drawer(g, M, st, key + ':d0', GAP, PL + GAP, w - 2 * GAP, H - ovH - 2 * GAP, zf, D, open, st.dsysOf(s, 0), 0);
@@ -558,7 +558,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   function islCell(cg, M, st, c, w, key) {
     const D = st.LD, PL = st.PL, H = st.BOX - PL, zf = D - FT;
     const ot = c.ot || st.islOt || 'handles', ex = { openType: ot, glass: !!c.glass, led: c.led | 0, ml: c.ml || undefined, width: w };
-    if (['sink', 'hob', 'oven', 'dishwasher', 'washer', 'cargo'].indexOf(c.k) >= 0) { lowerModule(cg, M, st, Object.assign({ kind: c.k, drawers: c.k === 'hob' ? (c.dr | 0) : 0, dn: c.dn || 1, hinge: c.hg || 'L', shelves: 0 }, ex), w, key); return; }
+    if (['sink', 'hob', 'oven', 'dishwasher', 'washer', 'cargo'].indexOf(c.k) >= 0) { lowerModule(cg, M, st, Object.assign({ kind: c.k, drawers: c.k === 'hob' && !c.ov ? (c.dr | 0) : 0, ov: c.k === 'hob' ? !!c.ov : undefined, dn: c.dn || 1, hinge: c.hg || 'L', shelves: 0 }, ex), w, key); return; }
     if (c.k === 'door' || c.k === 'drawers') { lowerModule(cg, M, st, Object.assign({ kind: c.k === 'drawers' ? 'drawers' : 'door', drawers: c.k === 'drawers' ? ((c.dr | 0) || 3) : 0, dn: c.dn || 1, hinge: c.hg || 'L', shelves: c.k === 'door' ? (c.sh | 0) : 0 }, ex), w, key); return; }
     box(cg, w - 4, PL, D - 6, M.plinth, 2, 0, 2);
     if (c.k === 'blind') { carcass(cg, M, w, H, D, PL, 0, { led: c.led | 0 }); box(cg, w - 2 * GAP, H - 2 * GAP, FT, M.facade, GAP, PL + GAP, zf, 60); }

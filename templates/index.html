@@ -1970,7 +1970,7 @@
     const islandPlain = L => ({ cells: islandCells(L), top: islandCfg.top, ovF: islandCfg.ovF, ovB: islandCfg.ovB, back: islandCfg.back, hood: !!islandCfg.hood, bar: !!islandCfg.bar, pc: islandCfg.pc, ctc: islandCfg.ctc, ovL: islandCfg.ovL, ovR: islandCfg.ovR, ct: islandCfg.ct || 0, bh: islandCfg.bh || 0, ot: islandCfg.ot || 'handles' });
     function islandSecs() {   // секции острова как «шкафы» для раскроя
       if (!chk('hasIsland')) return []; const W = parseFloat(el('islandWidth').value) || 80, both = islandCfg.back === 'cells';
-      return islandCells().map((c, i) => ({ id: 'О' + (i + 1), isl: true, name: 'Остров · секция ' + (i + 1) + ' (' + (ISL_KINDS[c.k] || '').toLowerCase() + ')', kind: ['drawers', 'sink', 'hob', 'oven', 'dishwasher', 'washer', 'cargo'].indexOf(c.k) >= 0 ? c.k : 'door', width: c.w, drawers: c.k === 'drawers' ? ((c.dr | 0) || 3) : (c.k === 'hob' ? (c.dr | 0) : 0), dn: c.dn || 1, hinge: c.hg, shelves: c.k === 'door' ? (c.sh | 0) : (c.k === 'open' ? ((c.sh | 0) || 2) : 0), noDoors: c.k === 'open', glass: c.glass || undefined, ml: c.ml || undefined, openType: c.ot || islandCfg.ot || 'handles', ht: islandCfg.bh || undefined, dp: Math.round((both ? W / 2 : W - 2) * 10) / 10, openType: 'handles' }));
+      return islandCells().map((c, i) => ({ id: 'О' + (i + 1), isl: true, name: 'Остров · секция ' + (i + 1) + ' (' + (ISL_KINDS[c.k] || '').toLowerCase() + ')', kind: ['drawers', 'sink', 'hob', 'oven', 'dishwasher', 'washer', 'cargo'].indexOf(c.k) >= 0 ? c.k : 'door', width: c.w, drawers: c.k === 'drawers' ? ((c.dr | 0) || 3) : (c.k === 'hob' && !c.ov ? (c.dr | 0) : 0), ov: c.ov || undefined, dn: c.dn || 1, hinge: c.hg, shelves: c.k === 'door' ? (c.sh | 0) : (c.k === 'open' ? ((c.sh | 0) || 2) : 0), noDoors: c.k === 'open', glass: c.glass || undefined, ml: c.ml || undefined, openType: c.ot || islandCfg.ot || 'handles', ht: islandCfg.bh || undefined, dp: Math.round((both ? W / 2 : W - 2) * 10) / 10, openType: 'handles' }));
     }
     // положение духовки / микроволновки в пенале можно менять: sec.ovY / sec.mwY — низ ниши, см от пола
     function towerCfg(sec) { const k = (sec && sec.tw) || 'storage'; return (sec && (sec.ovY != null || sec.mwY != null)) ? { k, ov: sec.ovY, mw: sec.mwY } : k; }
@@ -2001,7 +2001,7 @@
       if (sec.kind === 'dishwasher') return [{ k: 'dishwasher' }];
       if (sec.kind === 'washer') return [{ k: 'washer' }];
       const top = sec.mwTop ? [{ k: 'micro', top: true }] : [];
-      if (sec.kind === 'hob') return [{ k: 'hobpanel' }].concat(top);
+      if (sec.kind === 'hob') return [{ k: 'hobpanel' }].concat(sec.ov ? [{ k: 'oven' }] : [], top);
       return top;
     }
 
@@ -2141,7 +2141,7 @@
         b.rect(x0 + g + 2, yt + 2, w - 2 * g - 4, h * 0.1, 'fill="#dfe3e7"', true);
         return;
       }
-      if (tier === 'lower' && k === 'oven') {
+      if (tier === 'lower' && (k === 'oven' || (k === 'hob' && sec.ov))) {
         const ovB = yb - (yb - yt) * 0.22;
         b.rect(x0 + g, ovB, w - 2 * g, yb - ovB, `fill="${col}" stroke="#1f2937" stroke-width="1" ${STK}`);
         L(uc - Math.min(12 * hs.k, w * 0.25 * hs.k), yb - 4, uc + Math.min(12 * hs.k, w * 0.25 * hs.k), yb - 4, handle, hs.w);
@@ -2815,7 +2815,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=44');
+        const mod = await import('/static/js/kitchen3d.js?v=45');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: (sel, multi) => k3dOnSelect(sel, multi), onMoveMulti: (items, dx, dz) => k3dMoveMulti(items, dx, dz),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3015,6 +3015,7 @@
       }
       return h;
     }
+    function k3dSetOv(on) { const s = selSec; if (!s) return; if (on) { s.ov = true; s.drawers = 0; } else delete s.ov; updateCalculator(); renderK3dEdit(); }
     function k3dGlass(what, v) {
       const s = selSec; if (!s) return;
       if (what === 'on') { s.glass = true; if (s.kind === 'glass') s.kind = 'door'; }
@@ -3024,7 +3025,7 @@
       updateCalculator(); renderK3dEdit();
     }
     function k3dDsys(i, k) { const s = selSec; if (!s) return; s.dsys = (s.dsys || []).slice(); while (s.dsys.length <= i) s.dsys.push('tier'); s.dsys[i] = k; updateCalculator(); }
-    function k3dDrawerCount(s) { if (s.kind === 'tower') return towerBands(towerCfg(s), 250).filter(b => b.ty === 'drawer').length; if (s.kind === 'oven') return 1; return s.drawers | 0; }
+    function k3dDrawerCount(s) { if (s.kind === 'tower') return towerBands(towerCfg(s), 250).filter(b => b.ty === 'drawer').length; if (s.kind === 'oven' || (s.kind === 'hob' && s.ov)) return 1; return s.drawers | 0; }
     function renderK3dEdit() {
       const box = el('k3dSide'); if (!box) return;
       box.innerHTML = VIEW_ONLY ? k3dSideView() : (selObjId && kObjs.some(o => o.id === selObjId) ? k3dSideObj() : selOpenId && kOpens.some(o => o.id === selOpenId) ? k3dSideOpen() : selIsland && chk('hasIsland') ? k3dSideIsland() : (selSec ? k3dSidePart(selSec) : k3dSideKitchen()));
@@ -3296,6 +3297,7 @@
           kb(k === 'dishwasher', 'dishwasher', L3('Посудомойка', 'Idish yuvgich')) + kb(k === 'washer', 'washer', L3('Стиральная', 'Kir yuvgich')) + kb(k === 'cargo', 'cargo', L3('Карго', 'Kargo')) + kb(k === 'corner', 'corner', L3('Угловой', 'Burchak'));
       }
       h += `</div>`;
+      if (tier === 'lower' && k === 'hob') h += k3Row(L3('Под плитой', 'Plita ostida'), k3B(!s.ov, "k3dSetOv(false)", L3('шкаф', 'shkaf')) + k3B(!!s.ov, "k3dSetOv(true)", '+ ' + L3('духовка', 'duxovka')));
       { const dOk = tier === 'upper' ? (!(s.gasLifts | 0) && s.kind !== 'open') : (doorsOf(s, 'lower') > 0 || (s.kind === 'fridge' && s.fr === 'built'));
         if (dOk && ['oven', 'dishwasher', 'washer', 'corner'].indexOf(k) < 0) h += k3Row(L3('Двери', 'Eshiklar'), k3B(!s.glass, "k3dGlass('off')", L3('обычные', 'oddiy')) + k3B(!!s.glass, "k3dGlass('on')", L3('со стеклом', 'shishali'))); }
       if (k === 'tower') { const TT = k3dGeo().G.TT, bd = towerBands(towerCfg(s), TT), ap = (ty, fld, lbl) => { const b = bd.find(x => x.ty === ty); return b ? k3Row(lbl, k3Step(Math.round(b.y0) + ' ' + L3('см', 'sm'), `k3dStep('${fld}',-5)`, `k3dStep('${fld}',5)`) + (s[fld] != null ? k3B(false, `k3dStep('${fld}',0)`, L3('как было', 'avvalgidek')) : '')) : ''; }; h += ap('oven', 'ovY', L3('Духовка: низ от пола', 'Duxovka: pol dan')) + ap('micro', 'mwY', L3('Микроволновка: низ от пола', 'Mikroto‘lqinli: pol dan')); }
@@ -3760,7 +3762,8 @@
       h += `<div class="k3s-note">${esc(L3('Секция', 'Boʻlim'))} ${ci + 1}: ${esc(L3('что в ней', 'ichida nima'))}</div>` + k3Row(L3('Вид', 'Turi'), Object.keys(ISL_KINDS).map(k => k3B(c.k === k, `k3dIslKind('${k}')`, ISL_KINDS[k])).join(''));
       if (c.k === 'door') h += k3Row(L3('Дверей', 'Eshiklar'), k3B(c.dn !== 2, "k3dIslSet('dn',1)", '1') + k3B(c.dn === 2, "k3dIslSet('dn',2)", '2')) + (c.dn !== 2 ? k3Row(L3('Петли', 'Ilmoq'), k3B(c.hg !== 'R', "k3dIslSet('hg','L')", L3('слева', 'chapda')) + k3B(c.hg === 'R', "k3dIslSet('hg','R')", L3('справа', 'oʻngda'))) : '') + k3Row(L3('Полок', 'Tokchalar'), k3Step(c.sh | 0, "k3dIslStep('sh',-1,0,4)", "k3dIslStep('sh',1,0,4)"));
       if (c.k === 'drawers') h += k3Row(L3('Ящиков', 'Tortmalar'), k3Step((c.dr | 0) || 3, "k3dIslStep('dr',-1,1,5)", "k3dIslStep('dr',1,1,5)"));
-      if (c.k === 'hob') h += k3Row(L3('Под панелью', 'Panel ostida'), k3Step((c.dr | 0) ? (c.dr | 0) + ' ' + L3('ящ.', 'tort.') : L3('двери', 'eshik'), "k3dIslStep('dr',-1,0,4)", "k3dIslStep('dr',1,0,4)"));
+      if (c.k === 'hob') h += k3Row(L3('Под панелью', 'Panel ostida'), k3B(!c.ov, "k3dIslSet('ov', false)", L3('шкаф', 'shkaf')) + k3B(!!c.ov, "k3dIslSet('ov', true)", '+ ' + L3('духовка', 'duxovka')));
+      if (c.k === 'hob' && !c.ov) h += k3Row(L3('Под панелью', 'Panel ostida'), k3Step((c.dr | 0) ? (c.dr | 0) + ' ' + L3('ящ.', 'tort.') : L3('двери', 'eshik'), "k3dIslStep('dr',-1,0,4)", "k3dIslStep('dr',1,0,4)"));
       if (c.k === 'sink') h += k3Row(L3('Дверей', 'Eshiklar'), k3B(c.dn !== 2, "k3dIslSet('dn',1)", '1') + k3B(c.dn === 2, "k3dIslSet('dn',2)", '2'));
       if (['sink', 'hob', 'oven', 'dishwasher', 'washer'].indexOf(c.k) >= 0) h += `<div class="k3s-note">${esc(L3('Прибор встроен в остров: вырез и подключение учтены в цене.', 'Asbob orolga oʻrnatilgan.'))}</div>`;
       if (c.k === 'open') h += k3Row(L3('Полок', 'Tokchalar'), k3Step((c.sh | 0) || 2, "k3dIslStep('sh',-1,1,5)", "k3dIslStep('sh',1,1,5)"));
@@ -3797,7 +3800,7 @@
       islEdit(); const c = islandCfg.cells, i = Math.min(islCell, c.length - 1), j = i < c.length - 1 ? i + 1 : i - 1; if (j < 0) return;
       const nw = Math.max(20, c[i].w + d), dd = nw - c[i].w; if (c[j].w - dd < 20) return; c[i].w = nw; c[j].w = c[j].w - dd; islDone();
     }
-    function k3dIslAll() { islEdit(); const c = islandCfg.cells, s0 = c[Math.min(islCell, c.length - 1)]; c.forEach(x => { ['k', 'dn', 'dr', 'sh', 'hg', 'ot', 'glass', 'led', 'ml'].forEach(f => { if (s0[f] === undefined) delete x[f]; else x[f] = s0[f]; }); }); islDone(); }
+    function k3dIslAll() { islEdit(); const c = islandCfg.cells, s0 = c[Math.min(islCell, c.length - 1)]; c.forEach(x => { ['k', 'dn', 'dr', 'sh', 'hg', 'ov', 'ot', 'glass', 'led', 'ml'].forEach(f => { if (s0[f] === undefined) delete x[f]; else x[f] = s0[f]; }); }); islDone(); }
     function k3dIslReset() { islandCfg.cells = []; islCell = 0; islDone(); }
     function k3dIslTop(v) { islandCfg.top = v; islDone(); }
     function k3dIslOv(f, d) { islandCfg[f] = Math.max(0, Math.min(45, (islandCfg[f] != null ? islandCfg[f] : 2) + d)); islDone(); }
@@ -4178,7 +4181,7 @@
           else if (tier === 'upper') { const gap = Math.round((srcY - (geoL.G.BOX + geoL.G.CT)) * 10) / 10; if (Math.abs(gap - geoL.G.UGAP) < .05) delete t.ug; else t.ug = Math.max(20, Math.min(120, gap)); }
         }
         if (W.size && isTall(t) === isTall(s)) ['dp', 'ht', 'ctt', 'ctd', 'ctc'].forEach(f => put(t, f));
-        if (W.inner && t.kind === s.kind) ['drawers', 'mxd', 'ml', 'shelves', 'led', 'dsys', 'glass', 'gf', 'gt', 'hinge', 'mwTop'].forEach(f => put(t, f));
+        if (W.inner && t.kind === s.kind) ['drawers', 'ov', 'mxd', 'ml', 'shelves', 'led', 'dsys', 'glass', 'gf', 'gt', 'hinge', 'mwTop'].forEach(f => put(t, f));
         if (W.hw) put(t, 'hx');
         if (W.color && OWNER_ON) put(t, 'pc');
       });
@@ -4253,7 +4256,7 @@
         return m;
       }
       const y0 = PL + G3, y1 = hb;
-      if (k === 'oven') { drawersRow(y0 - G3, PL + 150 + G3, 1); m.niche.push({ x: (W - Math.min(W - 40, 600)) / 2, y: PL + 160, w: Math.min(W - 40, 600), h: Math.min(595, hb - PL - 175), ty: 'oven' }); m.labels.push('духовка'); return m; }
+      if (k === 'oven' || (k === 'hob' && s.ov)) { drawersRow(y0 - G3, PL + 150 + G3, 1); m.niche.push({ x: (W - Math.min(W - 40, 600)) / 2, y: PL + 160, w: Math.min(W - 40, 600), h: Math.min(595, hb - PL - 175), ty: 'oven' }); m.labels.push('духовка'); return m; }
       if (k === 'dishwasher') { P(G3, y0, W - 2 * G3, y1 - y0 - G3, 'drop'); m.labels.push('посудомойка'); return m; }
       if (k === 'washer') { m.niche.push({ x: W / 2 - 220, y: PL + (hb - PL) / 2 - 220, w: 440, h: 440, ty: 'washer' }); m.labels.push('стиральная машина'); return m; }
       if (k === 'corner') {
@@ -4545,7 +4548,7 @@
         else P('Спинка (нет: шкаф под мойку)', 0, 0, 0, body, 0, 0);
         P('Планка под столешницу', 2, w - 2 * t, 70, body, 1, 0, 'между боковин, кромка по 1 длинной');
         const mx = mixD(s), dn = ((s.drawers | 0) > 0 && !mx) ? 0 : doorsOf(s, 'lower');
-        if (k === 'oven') {
+        if (k === 'oven' || (k === 'hob' && s.ov)) {
           P('Полка под духовку', 1, w - 2 * t - 2, db - 20, body, 1, 0);
           P('Фасад ящика под духовкой', 1, 200, w - 4, fac, 2, 2, '', true); drawerBox(w, db, 200, (s.dsys && s.dsys[0]) || 'tier');
           return;
@@ -4649,7 +4652,7 @@
           if (c.k === 'door') { if (c.dn === 2) { const dw = (w - 3 * g) / 2; fr(x + g, x + g + dw, PL + g, G.BOX - g, zz); fr(x + 2 * g + dw, x + w - g, PL + g, G.BOX - g, zz); } else fr(x + g, x + w - g, PL + g, G.BOX - g, zz); }
           else if (c.k === 'drawers') { const n = (c.dr | 0) || 3, hh = (G.BOX - PL - g * (n + 1)) / n; for (let i = 0; i < n; i++) fr(x + g, x + w - g, PL + g + i * (hh + g), PL + g + i * (hh + g) + hh, zz); }
           else if (c.k === 'blind' || c.k === 'dishwasher' || c.k === 'cargo') fr(x + g, x + w - g, PL + g, G.BOX - g, zz, c.k === 'blind' ? 'b' : 'f');
-          else if (c.k === 'sink' || c.k === 'hob') { if (c.k === 'hob' && (c.dr | 0)) { const n = c.dr | 0, hh = (G.BOX - PL - g * (n + 1)) / n; for (let i = 0; i < n; i++) fr(x + g, x + w - g, PL + g + i * (hh + g), PL + g + i * (hh + g) + hh, zz); } else if (w >= 45 && c.dn === 2) { const dw = (w - 3 * g) / 2; fr(x + g, x + g + dw, PL + g, G.BOX - g, zz); fr(x + 2 * g + dw, x + w - g, PL + g, G.BOX - g, zz); } else fr(x + g, x + w - g, PL + g, G.BOX - g, zz); out.push(B(x + 4, x + w - 4, G.BOX + G.CT, G.BOX + G.CT + .8, Math.max(2, Wd / 2 - 22), Math.min(Wd - 2, Wd / 2 + 22), 'a')); }
+          else if (c.k === 'sink' || c.k === 'hob') { if (c.k === 'hob' && c.ov) { fr(x + 2, x + w - 2, PL + 2 + (G.BOX - PL) * .3, G.BOX - 2, zz, 'a'); fr(x + g, x + w - g, PL + g, PL + (G.BOX - PL) * .3, zz); } else if (c.k === 'hob' && (c.dr | 0)) { const n = c.dr | 0, hh = (G.BOX - PL - g * (n + 1)) / n; for (let i = 0; i < n; i++) fr(x + g, x + w - g, PL + g + i * (hh + g), PL + g + i * (hh + g) + hh, zz); } else if (w >= 45 && c.dn === 2) { const dw = (w - 3 * g) / 2; fr(x + g, x + g + dw, PL + g, G.BOX - g, zz); fr(x + 2 * g + dw, x + w - g, PL + g, G.BOX - g, zz); } else fr(x + g, x + w - g, PL + g, G.BOX - g, zz); out.push(B(x + 4, x + w - 4, G.BOX + G.CT, G.BOX + G.CT + .8, Math.max(2, Wd / 2 - 22), Math.min(Wd - 2, Wd / 2 + 22), 'a')); }
           else if (c.k === 'oven' || c.k === 'washer') { fr(x + 2, x + w - 2, PL + 2, G.BOX - 2, zz, 'a'); }
           else fr(x + 2, x + w - 2, PL + 2, G.BOX - 2, zz, 'a');
         };
@@ -4743,7 +4746,7 @@
     /* Количество дверей шкафа (по ним считаются петли): шкаф с ящиками или подъёмником дверей не имеет, шире 45 см — две двери */
     function doorsOf(sec, tier) {
       if (sec.noDoors) return 0;
-      if (isTall(sec) || sec.kind === 'oven' || sec.kind === 'washer' || sec.kind === 'open') return 0;
+      if (isTall(sec) || sec.kind === 'oven' || (sec.kind === 'hob' && sec.ov) || sec.kind === 'washer' || sec.kind === 'open') return 0;
       if (sec.kind === 'dishwasher') return 1;
       if (sec.kind === 'cargo') return 0;
       if (sec.kind === 'corner') return ((parseFloat(sec.width) || 0) - (sec.bw ? +sec.bw : 60)) >= 45 ? 2 : 1;
@@ -4778,7 +4781,7 @@
           return;
         }
         if (x.kind === 'sink' && SB) { sum += SB; handles(x, 1); const eb = effHw(x, K).bin; if (eb !== 'none' && KIS.bin[eb]) sum += KIS.bin[eb].price; return; }   // глубокий ящик Blum вместо дверок под мойкой
-        const doors = doorsOf(x, 'lower'), nd = x.kind === 'oven' ? 1 : (x.drawers | 0);
+        const doors = doorsOf(x, 'lower'), nd = (x.kind === 'oven' || (x.kind === 'hob' && x.ov)) ? 1 : (x.drawers | 0);
         sum += doors * 2 * HG(x) + drawersOf(x, nd);
         if (x.openType === 'push') sum += nd > 0 ? nd * (H.pushDrawer || H.push) : PUSH(x) * Math.max(1, doors);
         handles(x, doors + nd);
@@ -4871,7 +4874,7 @@
         total += islM * (rate * PP.lowerShare * 1.5 * (islandCfg.bh ? 1 + .6 * (islandCfg.bh / boxDef - 1) : 1) + topExtra * (dEff / 60));
         total += sides * (s.counterH / 100) * CONFIG.countertops[s.top].price * (s.islW / 60);   // боковины из столешницы
         if (islandCfg.back === 'cells') total += islM * rate * PP.lowerShare * .5;   // вторая сторона секций
-        islandCells(s.islL).forEach(c => { if (c.k === 'sink' || c.k === 'hob') total += 150000; else if (AW[c.k]) total += AW[c.k]; if (c.glass && (c.k === 'door' || c.k === 'sink' || c.k === 'hob')) total += AW.glass * Math.max(1, Math.round(c.w / 45)); });   // мойка, панель, духовка, посудомойка, стиральная машина: вырез и подключение
+        islandCells(s.islL).forEach(c => { if (c.k === 'sink' || c.k === 'hob') total += 150000; else if (AW[c.k]) total += AW[c.k]; if (c.k === 'hob' && c.ov) total += AW.oven || 0; if (c.glass && (c.k === 'door' || c.k === 'sink' || c.k === 'hob')) total += AW.glass * Math.max(1, Math.round(c.w / 45)); });   // мойка, панель, духовка, посудомойка, стиральная машина: вырез и подключение
         if (islandCfg.hood && islandCells(s.islL).some(c => c.k === 'hob')) total += 800000;
         if (islandCfg.bar) total += (s.islL / 100) * (35 / 60) * CONFIG.countertops[s.top].price + 150000;
       }   // остров: тумбы с двух сторон, столешница шире
@@ -5806,7 +5809,7 @@
           for (let i = 0; i < 3; i++) poly(ring(run, uc - 5 + i * 5, v1 - 2.9, d + 0.1, 0.9, 6), '#9aa3ad', { fit: false });
           return;
         }
-        if (tier === 'lower' && k === 'oven') {
+        if (tier === 'lower' && (k === 'oven' || (k === 'hob' && sec.ov))) {
           // духовой шкаф в нижнем шкафу: ящик внизу, духовка сверху
           const ovB = v0 + (v1 - v0) * 0.22;
           poly(quad(run, u0 + g, u1 - g, v0, ovB - 0.3, d), facade, { stroke: edgeCol, shade: true, side: run.side });
@@ -6128,6 +6131,7 @@
       if (q[1]) r.led = Math.max(0, Math.min(6, q[1] | 0));
       if (q[2] !== undefined && q[2] !== '') { const v = +q[2]; if (v >= 20 && v <= 120) r.ug = v; }
       if (q[3] === '1') r.mwTop = true;
+      if (q[6] === '1') r.ov = true;
       if (typeof e[21] === 'string' && MILL_K[e[21]] || e[21] === 'none') r.ml = e[21];
       if (q[4] !== undefined && q[4] !== '') { const v = +q[4]; if (v >= 12 && v <= 250) r.ovY = v; }
       if (q[5] !== undefined && q[5] !== '') { const v = +q[5]; if (v >= 12 && v <= 250) r.mwY = v; }
@@ -6186,13 +6190,13 @@
     /* ===================== ССЫЛКА «ПОДЕЛИТЬСЯ» ===================== */
     function serializeState() {
       const s = getCalcState();
-      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : '', x.ovY != null ? x.ovY : '', x.mwY != null ? x.mwY : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || '', x.mxd || ''].join('|'), x.ctc || '', x.bw || '', (x.glass || x.kind === 'glass') ? [1, x.gf || '', x.gt || ''].join('|') : '', x.ml || ''];
+      const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : '', x.ovY != null ? x.ovY : '', x.mwY != null ? x.mwY : '', x.ov ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || '', x.mxd || ''].join('|'), x.ctc || '', x.bw || '', (x.glass || x.kind === 'glass') ? [1, x.gf || '', x.gt || ''].join('|') : '', x.ml || ''];
       const enc = (arr, tier) => arr.map(x => encOne(x, tier));
       const dc = decorClean(decorState);
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
-        ic: (islandCfg.cells.length || islandCfg.top !== 'top' || islandCfg.ovF !== 2 || islandCfg.ovB !== 2 || islandCfg.back !== 'panel' || islandCfg.hood || islandCfg.bar || islandCfg.pc || islandCfg.ctc || islandCfg.ovL !== 2 || islandCfg.ovR !== 2 || islandCfg.ct || islandCfg.bh || islandCfg.ot !== 'handles') ? { c: islandCfg.cells.map(x => [x.k, Math.round(x.w * 10) / 10, x.dn | 0, x.dr | 0, x.sh | 0, x.hg || 'L', x.ot || '', x.glass ? 1 : 0, x.led | 0, x.ml || '']), t: islandCfg.top, f: islandCfg.ovF, b: islandCfg.ovB, k: islandCfg.back, h: islandCfg.hood ? 1 : 0, r: islandCfg.bar ? 1 : 0, ot: islandCfg.ot || 'handles', p: islandCfg.pc ? [islandCfg.pc.f || '', islandCfg.pc.b || ''] : 0, tc: islandCfg.ctc || '', ol: islandCfg.ovL, or: islandCfg.ovR, ct: islandCfg.ct || 0, bh: islandCfg.bh || 0 } : 0, fm: facadeMill || 0, tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
+        ic: (islandCfg.cells.length || islandCfg.top !== 'top' || islandCfg.ovF !== 2 || islandCfg.ovB !== 2 || islandCfg.back !== 'panel' || islandCfg.hood || islandCfg.bar || islandCfg.pc || islandCfg.ctc || islandCfg.ovL !== 2 || islandCfg.ovR !== 2 || islandCfg.ct || islandCfg.bh || islandCfg.ot !== 'handles') ? { c: islandCfg.cells.map(x => [x.k, Math.round(x.w * 10) / 10, x.dn | 0, x.dr | 0, x.sh | 0, x.hg || 'L', x.ot || '', x.glass ? 1 : 0, x.led | 0, x.ml || '', x.ov ? 1 : 0]), t: islandCfg.top, f: islandCfg.ovF, b: islandCfg.ovB, k: islandCfg.back, h: islandCfg.hood ? 1 : 0, r: islandCfg.bar ? 1 : 0, ot: islandCfg.ot || 'handles', p: islandCfg.pc ? [islandCfg.pc.f || '', islandCfg.pc.b || ''] : 0, tc: islandCfg.ctc || '', ol: islandCfg.ovL, or: islandCfg.ovR, ct: islandCfg.ct || 0, bh: islandCfg.bh || 0 } : 0, fm: facadeMill || 0, tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
         ox: kOpens.map(o => [o.kind, o.wall, o.off, o.w, o.h, o.y, o.d, o.n || 1, o.v || '', o.c | 0]), oj: kObjs.length ? kObjs : 0,
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW], kh: KHW, ch: s.counterH, ug: s.upperGap };
     }
@@ -6288,7 +6292,7 @@
       upperSections = up;
       parkedSections = (Array.isArray(st.pk) ? st.pk.slice(0, 20) : []).map(x => { const tier = x && x[0] ? 'upper' : 'lower', sec = build([x && x[1]], tier)[0]; return sec ? { sec, tier } : null; }).filter(Boolean);
       { const q = st.ic && typeof st.ic === 'object' ? st.ic : null, num = (v, a, b, d) => { v = parseFloat(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
-        islandCfg = { cells: q && Array.isArray(q.c) ? q.c.slice(0, 8).map(a => ({ k: ISL_KINDS[a[0]] ? a[0] : 'door', w: num(a[1], 20, 400, 60), dn: a[2] === 2 ? 2 : 1, dr: num(a[3], 1, 5, 3) | 0, sh: num(a[4], 0, 5, 1) | 0, hg: a[5] === 'R' ? 'R' : 'L', ot: ['handles', 'push', 'gola'].indexOf(a[6]) >= 0 ? a[6] : undefined, glass: a[7] ? true : undefined, led: num(a[8], 0, 3, 0) | 0 || undefined, ml: (MILL_K[a[9]] || a[9] === 'none') ? a[9] : undefined })) : [], top: q && ['L', 'R', 'both'].indexOf(q.t) >= 0 ? q.t : 'top', ovF: q ? num(q.f, 0, 45, 2) : 2, ovB: q ? num(q.b, 0, 45, 2) : 2, back: q && q.k === 'cells' ? 'cells' : 'panel', hood: !!(q && q.h), bar: !!(q && q.r), pc: (() => { if (!q || !Array.isArray(q.p)) return null; const o = {}; if (q.p[0] && findColor(q.p[0])) o.f = q.p[0]; if (q.p[1] && findColor(q.p[1])) o.b = q.p[1]; return Object.keys(o).length ? o : null; })(), ctc: q && /^#[0-9a-f]{6}$/i.test(q.tc || '') ? q.tc.toLowerCase() : '', ovL: q ? num(q.ol, 0, 45, 2) : 2, ovR: q ? num(q.or, 0, 45, 2) : 2, ct: q ? num(q.ct, 0, 10, 0) : 0, bh: q ? num(q.bh, 0, 120, 0) : 0, ot: q && ['push', 'gola'].indexOf(q.ot) >= 0 ? q.ot : 'handles' }; islCell = 0; }
+        islandCfg = { cells: q && Array.isArray(q.c) ? q.c.slice(0, 8).map(a => ({ k: ISL_KINDS[a[0]] ? a[0] : 'door', w: num(a[1], 20, 400, 60), dn: a[2] === 2 ? 2 : 1, dr: num(a[3], 1, 5, 3) | 0, sh: num(a[4], 0, 5, 1) | 0, hg: a[5] === 'R' ? 'R' : 'L', ot: ['handles', 'push', 'gola'].indexOf(a[6]) >= 0 ? a[6] : undefined, glass: a[7] ? true : undefined, led: num(a[8], 0, 3, 0) | 0 || undefined, ml: (MILL_K[a[9]] || a[9] === 'none') ? a[9] : undefined, ov: a[10] ? true : undefined })) : [], top: q && ['L', 'R', 'both'].indexOf(q.t) >= 0 ? q.t : 'top', ovF: q ? num(q.f, 0, 45, 2) : 2, ovB: q ? num(q.b, 0, 45, 2) : 2, back: q && q.k === 'cells' ? 'cells' : 'panel', hood: !!(q && q.h), bar: !!(q && q.r), pc: (() => { if (!q || !Array.isArray(q.p)) return null; const o = {}; if (q.p[0] && findColor(q.p[0])) o.f = q.p[0]; if (q.p[1] && findColor(q.p[1])) o.b = q.p[1]; return Object.keys(o).length ? o : null; })(), ctc: q && /^#[0-9a-f]{6}$/i.test(q.tc || '') ? q.tc.toLowerCase() : '', ovL: q ? num(q.ol, 0, 45, 2) : 2, ovR: q ? num(q.or, 0, 45, 2) : 2, ct: q ? num(q.ct, 0, 10, 0) : 0, bh: q ? num(q.bh, 0, 120, 0) : 0, ot: q && ['push', 'gola'].indexOf(q.ot) >= 0 ? q.ot : 'handles' }; islCell = 0; }
       islandPos = Array.isArray(st.ip) && st.ip.length >= 3 && st.ip.every(v => isFinite(v)) ? { cx: +st.ip[0], cz: +st.ip[1], r: +st.ip[2] } : null;
       selIsland = false; swapFrom = null; moveBase = null;
       topColorHex = typeof st.tc === 'string' && /^#[0-9a-f]{6}$/i.test(st.tc) ? st.tc.toLowerCase() : '';
@@ -6378,7 +6382,7 @@
       else if (corners && K.corner && K.corner !== 'none' && KIS.corner[K.corner]) r.push('Угловой механизм: ' + KIS.corner[K.corner].ru + ' × ' + corners);
       if (K.sinkbox && K.sinkbox !== 'none' && KIS.sinkbox[K.sinkbox] && s.lower.some(x => x.kind === 'sink')) r.push(KIS.sinkbox[K.sinkbox].ru);
       [['cx', 'cargo'], ['sx', 'space']].forEach(([f, g]) => { if (K[f]) Object.keys(K[f]).forEach(k => { if (K[f][k] > 0 && KIS[g][k]) r.push(KIS[g][k].ru + ' × ' + K[f][k]); }); });
-      const dc = {}; s.lower.forEach(x => (x.dsys || []).forEach((k, i) => { if (k && k !== 'tier' && KIS.drawerSys[k] && i < Math.max(x.drawers | 0, x.kind === 'tower' ? 3 : (x.kind === 'oven' ? 1 : 0))) dc[k] = (dc[k] || 0) + 1; }));
+      const dc = {}; s.lower.forEach(x => (x.dsys || []).forEach((k, i) => { if (k && k !== 'tier' && KIS.drawerSys[k] && i < Math.max(x.drawers | 0, x.kind === 'tower' ? 3 : ((x.kind === 'oven' || (x.kind === 'hob' && x.ov)) ? 1 : 0))) dc[k] = (dc[k] || 0) + 1; }));
       Object.keys(dc).forEach(k => r.push('Ящики: ' + KIS.drawerSys[k].ru + ' × ' + dc[k]));
       const cc = {}; s.lower.forEach(x => { if (x.kind === 'cargo' && cargoItem(x.cg)) cc[x.cg] = (cc[x.cg] || 0) + 1; });
       Object.keys(cc).forEach(k => r.push(cargoItem(k).ru + ' × ' + cc[k] + ' (шкаф ' + CARGO_W[k] + ' см)'));
