@@ -2,9 +2,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildOpenings, pickWall } from '/static/js/room-open.js?v=6';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=26';
-import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=26';
+import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=7';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=27';
+import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=27';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -422,13 +422,14 @@ export function createPro3D(container, hooks = {}, opts = {}) {
   function buildRoom(S) {   // пол и стены комнаты по углам (прямоугольник или нарисованная форма)
     const P = roomPoly(S), H = (S.room && S.room.H) || 260, n = P.length;
     const inside = (x, z) => { let c = false; for (let i = 0, j = n - 1; i < n; j = i++) { const a = P[i], b = P[j]; if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; };
-    const fl = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(P.map(p => new THREE.Vector2(p[0], -p[1])))), stdMat('#cdb48e', { roughness: .7 }));
+    const fin = (S.room && S.room.fin) || {}, finM = (k, W, H, cm) => fin[k] ? finishMat(k, fin[k][0], fin[k][1], W, H, cm) : null;
+    const fl = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(P.map(p => new THREE.Vector2(p[0], -p[1])))), finM('floor', 0, 0, true) || stdMat('#cdb48e', { roughness: .7 }));
     fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; root.add(fl);
     const wallM = stdMat('#efe8dc', { roughness: .95 }), skM = stdMat('#e4dccb', { roughness: .8 });
     for (let i = 0; i < n; i++) {
       const a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
       let nx = -dz / len, nz = dx / len; if (!inside(mx + nx * 2, mz + nz * 2)) { nx = -nx; nz = -nz; }
-      const w = new THREE.Mesh(new THREE.PlaneGeometry(len, H), wallM); w.receiveShadow = true; w.rotation.y = Math.atan2(nx, nz); w.position.set(mx - nx * .8, H / 2, mz - nz * .8); root.add(w);
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(len, H), finM('wall', len, H) || wallM); w.receiveShadow = true; w.rotation.y = Math.atan2(nx, nz); w.position.set(mx - nx * .8, H / 2, mz - nz * .8); root.add(w);
       const sk = new THREE.Mesh(new THREE.BoxGeometry(len, 7, 1.4), skM); sk.rotation.y = Math.atan2(nx, nz); sk.position.set(mx + nx * .1, 3.5, mz + nz * .1); root.add(sk);
     }
   }

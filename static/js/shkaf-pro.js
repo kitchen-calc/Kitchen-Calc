@@ -1,8 +1,8 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=26';
+import * as C from '/static/js/shkaf-pro-core.js?v=27';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
-import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=4';
+import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=5';
 import { openRoomStart, openRoomEditor } from '/static/js/shkaf-room.js?v=2';
 const VIEW = /^\/shkaf\/view\/?$/.test(location.pathname);
 if (VIEW) { ["p3Box"].forEach(i => { const sb = document.getElementById(i); if (sb) sb.remove(); }); }
@@ -169,7 +169,7 @@ function sideGlobal() {
     h += `<div class="sub">Комната</div>`;
     if (custom) h += `<div class="cols">${rp.map((p, i) => `<button type="button" class="colchip" onclick="PRO.room()">Стена ${i + 1}<b>${Math.round(rpEdgeLen(rp, i))}</b></button>`).join('')}</div>`;
     else h += stepper('Ширина стены', 'room.W', S.room.W, 5) + stepper('Глубина комнаты', 'room.D', S.room.D, 5);
-    h += stepper('Высота потолка', 'room.H', S.room.H, 5) + `<div class="r">${btn(0, 'PRO.room()', '✏️ Нарисовать комнату (Г, П и др.)')}</div>`;
+    h += stepper('Высота потолка', 'room.H', S.room.H, 5) + finRow('floor', 'Пол') + finRow('wall', 'Стены') + `<div class="r">${btn(0, 'PRO.room()', '✏️ Нарисовать комнату (Г, П и др.)')}</div>`;
     h += `<div class="sub">Где стоит шкаф</div><div class="note"><b>Как переставить шкаф:</b> нажмите «✋ Двигать шкаф мышью» — любое нажатие на шкаф в 3D берёт его целиком, тяните по полу (пальцем тоже). Магнит прижимает к стене и разворачивает лицом в комнату; можно выключить и ставить свободно. Точные цифры — ниже.</div>`;
     h += `<div class="r">${btn(moveOn, 'PRO.moveMode()', '✋ Двигать шкаф мышью: ' + (moveOn ? 'вкл (обычный режим: выкл)' : 'выкл'))}</div>`;
     h += `<div class="r">${btn(S.room.mag, 'PRO.magnet()', '🧲 Магнит к стенам: ' + (S.room.mag ? 'вкл' : 'выкл'))}${btn(0, 'PRO.rotW(-90)', '↺ 90°')}${btn(0, 'PRO.rotW(90)', '↻ 90°')}</div>`;
@@ -474,7 +474,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=34');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=35');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -618,7 +618,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=37');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=38');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -705,7 +705,15 @@ function between(a, b) {
   mutate(() => { f.it.y = r1(L[a].top); f.it.y1 = r1(L[b].bot); if (f.it.y1 <= f.it.y) f.it.y1 = r1(f.it.y + 10); });
 }
 
+function finRow(k, label) {
+  const cat = ROOM_FINISH[k], cur = (S.room.fin && S.room.fin[k]) || ['', ''], groups = {};
+  Object.keys(cat).forEach(id => { (groups[cat[id].grp] = groups[cat[id].grp] || []).push(id); });
+  return `<div class="r"><span>${label}</span><select onchange="PRO.fin('${k}',this.value)"><option value="">по умолчанию</option>${Object.keys(groups).map(g => `<optgroup label="${esc(g)}">${groups[g].map(id => `<option value="${id}" ${cur[0] === id ? 'selected' : ''}>${esc(cat[id].ru)}</option>`).join('')}</optgroup>`).join('')}</select></div>` +
+    (cur[0] && cat[cur[0]].pat !== 'mirror' ? `<div class="r"><span>Оттенок</span><select onchange="PRO.finT('${k}',this.value)">${FINISH_TINTS.map(([c, n]) => `<option value="${c}" ${cur[1] === c ? 'selected' : ''}>${n}</option>`).join('')}</select></div>` : '');
+}
 window.PRO = {
+  fin: (k, id) => mutate(() => { const f = Object.assign({}, S.room.fin || {}); if (id) f[k] = [id, '']; else delete f[k]; S.room.fin = Object.keys(f).length ? f : null; }),
+  finT: (k, c) => mutate(() => { if (S.room.fin && S.room.fin[k]) S.room.fin[k][1] = c; }),
   set: setVal, nu: nudge, hold, add: addItem, delItem, dupItem, moveItemCol, addCol, dupCol, delCol, moveCol, eqCols, even: evenShelves,
   color: setColor, custom: setCustom, selCol: selectCol, selItem: selectItem, global: selectGlobal,
   tier: i => mutate(() => { S.tier = i; }), t: v => mutate(() => { S.t = v; }), name: v => mutate(() => { S.name = String(v).slice(0, 60); }, true),

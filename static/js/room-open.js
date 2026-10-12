@@ -1,7 +1,7 @@
 /* 3D-часть элементов стен (общая для шкафа и кухни); логика и данные — в room-open-core.js */
 import * as THREE from 'three';
-import { roomEdges, openCenter, OPEN_KINDS, OPEN_COLORS, OPEN_INFO, OPEN_TINTS } from '/static/js/room-open-core.js?v=4';
-export * from '/static/js/room-open-core.js?v=4';
+import { roomEdges, openCenter, OPEN_KINDS, OPEN_COLORS, OPEN_INFO, OPEN_TINTS, ROOM_FINISH } from '/static/js/room-open-core.js?v=5';
+export * from '/static/js/room-open-core.js?v=5';
 /* ---- текстуры фартука и стеновых панелей: рисуем на canvas по виду (кладка, мозаика, мрамор, рейка…) ---- */
 function rngSeed(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
@@ -36,7 +36,31 @@ function panelMat(THREE, inf, base, W, H, id) {
     for (let i = 0; i < 1800; i++) { c.fillStyle = shade(base, (R() - .5) * .08); c.fillRect(R() * 1024, R() * 512, 2 + R() * 3, 2 + R() * 3); }
     c.strokeStyle = inf.veins || shade(base, -.3);
     for (let i = 0; i < 14; i++) { c.globalAlpha = .12 + R() * .35; c.lineWidth = .6 + R() * 3; c.beginPath(); const y0 = R() * 512; c.moveTo(-10, y0); c.bezierCurveTo(300 + R() * 200, y0 + (R() - .5) * 260, 600 + R() * 200, y0 + (R() - .5) * 260, 1034, y0 + (R() - .5) * 300); c.stroke(); }
-    c.globalAlpha = 1;
+    c.globalAlpha = 1; if (inf.fin) rep = [W / 240, H / 120];
+  } else if (p === 'parquet') {   // доски вразбежку: ширина tw, длина th
+    const cw = 256, rows = 4, rh = 256 / rows; c = mk(cw, 256); c.fillStyle = shade(base, -.45); c.fillRect(0, 0, cw, 256);
+    for (let r = 0; r < rows; r++) { let x = -((r * 91) % 256); while (x < cw) { const L = 256; c.fillStyle = shade(base, (R() - .5) * .22); c.fillRect(x + 1, r * rh + 1, L - 2, rh - 2);
+      for (let k = 0; k < 7; k++) { c.strokeStyle = shade(base, -.25); c.globalAlpha = .1 + R() * .12; c.lineWidth = .6 + R(); const yy = r * rh + 4 + R() * (rh - 8); c.beginPath(); c.moveTo(x, yy); c.bezierCurveTo(x + 70, yy + 3 * (R() - .5), x + 170, yy - 3 * (R() - .5), x + L, yy); c.stroke(); } c.globalAlpha = 1; x += L; } }
+    rep = [W / th, H / (rows * tw)];
+  } else if (p === 'stripe') {
+    c = mk(128, 8); c.fillStyle = base; c.fillRect(0, 0, 128, 8); c.fillStyle = inf.col2 || shade(base, -.1); c.fillRect(0, 0, 64, 8); rep = [W / (2 * tw), 1];
+  } else if (p === 'checker') {
+    c = mk(128, 128); c.fillStyle = base; c.fillRect(0, 0, 128, 128); c.fillStyle = inf.col2 || shade(base, -.6); c.fillRect(0, 0, 64, 64); c.fillRect(64, 64, 64, 64);
+    c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 2; c.strokeRect(0, 0, 128, 128); c.beginPath(); c.moveTo(64, 0); c.lineTo(64, 128); c.moveTo(0, 64); c.lineTo(128, 64); c.stroke(); rep = [W / (2 * tw), H / (2 * (inf.th || tw))];
+  } else if (p === 'geo') {
+    c = mk(128, 128); c.fillStyle = base; c.fillRect(0, 0, 128, 128); c.strokeStyle = inf.col2 || shade(base, -.3); c.lineWidth = 3;
+    c.beginPath(); c.moveTo(64, 6); c.lineTo(122, 64); c.lineTo(64, 122); c.lineTo(6, 64); c.closePath(); c.stroke(); c.beginPath(); c.arc(64, 64, 22, 0, 7); c.stroke();
+    c.fillStyle = inf.col2 || shade(base, -.3); [[0, 0], [128, 0], [0, 128], [128, 128]].forEach(q => { c.beginPath(); c.arc(q[0], q[1], 14, 0, 7); c.fill(); }); rep = [W / tw, H / (th || tw)];
+  } else if (p === 'damask') {
+    c = mk(128, 128); c.fillStyle = base; c.fillRect(0, 0, 128, 128); c.fillStyle = inf.col2 || shade(base, -.2);
+    const pet = (cx, cy, s) => { for (let k = 0; k < 4; k++) { c.save(); c.translate(cx, cy); c.rotate(k * Math.PI / 2); c.beginPath(); c.ellipse(0, -s * .55, s * .3, s * .6, 0, 0, 7); c.fill(); c.restore(); } c.beginPath(); c.arc(cx, cy, s * .2, 0, 7); c.fill(); };
+    pet(64, 64, 34); pet(0, 0, 22); pet(128, 0, 22); pet(0, 128, 22); pet(128, 128, 22); c.globalAlpha = .6; c.fillStyle = base; c.beginPath(); c.arc(64, 64, 8, 0, 7); c.fill(); c.globalAlpha = 1; rep = [W / tw, H / (th || tw)];
+  } else if (p === 'linen') {
+    c = mk(128, 128); c.fillStyle = base; c.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 520; i++) { c.fillStyle = R() > .5 ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.09)'; if (R() > .5) c.fillRect(0, R() * 128, 128, .6); else c.fillRect(R() * 128, 0, .6, 128); } rep = [W / 60, H / 60];
+  } else if (p === 'terrazzo') {
+    c = mk(256, 256); c.fillStyle = base; c.fillRect(0, 0, 256, 256); const cols = ['#9a8f82', '#c9b48a', '#6d7073', '#b06a4f', '#f4f1ea', '#4a5a6a'];
+    for (let i = 0; i < 160; i++) { c.fillStyle = cols[(R() * cols.length) | 0]; c.beginPath(); const x = R() * 256, y = R() * 256, r0 = 1.5 + R() * 4; c.moveTo(x, y - r0); c.lineTo(x + r0 * (1 + R() * .5), y + r0 * .3); c.lineTo(x - r0 * .4, y + r0 * (.8 + R() * .5)); c.closePath(); c.fill(); } rep = [W / 120, H / 120];
   } else if (p === 'flat') {
     c = mk(64, 256); const g = c.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, shade(base, .1)); g.addColorStop(.5, base); g.addColorStop(1, shade(base, -.06)); c.fillStyle = g; c.fillRect(0, 0, 64, 256);
   } else if (p === 'wood') {
@@ -64,8 +88,16 @@ function panelMat(THREE, inf, base, W, H, id) {
   } else {   // зеркало
     c = mk(64, 256); const g = c.createLinearGradient(0, 0, 64, 256); g.addColorStop(0, '#f4f9fb'); g.addColorStop(.5, '#c9d9e0'); g.addColorStop(1, '#eef5f8'); c.fillStyle = g; c.fillRect(0, 0, 64, 256);
   }
-  const tex = new THREE.CanvasTexture(cv); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(Math.max(.2, rep[0]), Math.max(.2, rep[1])); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.CanvasTexture(cv); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; if (inf.uvCm) tex.repeat.set(rep[0], rep[1]); else tex.repeat.set(Math.max(.2, rep[0]), Math.max(.2, rep[1])); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   return new THREE.MeshStandardMaterial({ map: tex, roughness: inf.gloss != null ? inf.gloss : .5, metalness: inf.metal || 0, envMapIntensity: p === 'mirror' || p === 'flat' ? 1.2 : .7 });
+}
+/* материал пола или стены по каталогу отделки; uvCm — UV в сантиметрах (многоугольный пол), иначе 0..1 по размеру W×H */
+export function finishMat(kind, id, tint, W, H, uvCm) {
+  const inf = ROOM_FINISH[kind] && ROOM_FINISH[kind][id]; if (!inf) return null;
+  const base = /^#[0-9a-f]{6}$/i.test(tint || '') ? tint : inf.col, g = inf.gloss != null ? inf.gloss : .5;
+  if (inf.pat === 'flat') return new THREE.MeshStandardMaterial({ color: base, roughness: g });
+  if (inf.pat === 'mirror') return new THREE.MeshStandardMaterial({ color: base, roughness: .05, metalness: .85, envMapIntensity: 1.3 });
+  return panelMat(THREE, Object.assign({ fin: 1, uvCm: !!uvCm }, inf), base, uvCm ? 1 : Math.max(10, W), uvCm ? 1 : Math.max(10, H), kind + id + (tint || ''));
 }
 /* ---- 3D ---- */
 export function buildOpenings(parent, opens, P, ctx) {

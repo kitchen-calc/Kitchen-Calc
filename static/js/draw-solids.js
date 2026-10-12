@@ -2,7 +2,7 @@
    Все размеры — см. Коробка: {x0,x1,y0,y1,z0,z1,r}, r: 'b' — корпус, 'f' — фасад (дверца/ящик), 'a' — ниша техники, 'l' — тонкая линия на лице.
    «Многогранник» (свой контур): {poly:[[x,z],…], y0, y1, r}.
    Локальные оси изделия: x — ширина, z — глубина (лицо на z = d), y — вверх. В комнату изделие ставится поворотом rot (0/90/180/270) вокруг вертикали. */
-import { ptAabb, objPoly, objBox, objFoot, bedDims, itemRect, itemBase, freeItem, colRect, geom, doorList, wfoot } from '/static/js/shkaf-pro-core.js?v=26';
+import { ptAabb, objPoly, objBox, objFoot, bedDims, itemRect, itemBase, freeItem, colRect, geom, doorList, wfoot } from '/static/js/shkaf-pro-core.js?v=27';
 
 const B = (x0, x1, y0, y1, z0, z1, r) => ({ x0, x1, y0, y1, z0, z1, r: r || 'b' });
 const rot2 = (x, z, rot) => { const a = (rot || 0) * Math.PI / 180, c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a)); return [x * c + z * s, -x * s + z * c]; };

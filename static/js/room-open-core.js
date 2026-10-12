@@ -110,3 +110,45 @@ export function openRect2D(o, E) {   // прямоугольник на план
   return { x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1) };
 }
 
+/* ---- отделка комнаты: пол и стены (общий каталог для кухни и шкафа PRO) ----
+   ru — название, grp — раздел, pat — рисунок (см. panelMat), col — цвет, tw/th — размер доски / плитки / шага, см */
+const F = (ru, grp, pat, col, o) => Object.assign({ ru, grp, pat, col }, o || {});
+const PQ = (ru, col, g) => F(ru, 'Паркет', 'parquet', col, { tw: 15, th: 90, gloss: g || .5 });
+const HB = (ru, col) => F(ru, 'Ёлочка', 'herring', col, { tw: 6, th: 24, grout: '#6b5438', gloss: .5 });
+const LM = (ru, col) => F(ru, 'Ламинат и винил', 'parquet', col, { tw: 19, th: 120, gloss: .7 });
+const TL = (ru, col, w, h, grout, gl) => F(ru, 'Плитка', 'grid', col, { tw: w, th: h, grout: grout || '#c9c9c4', gloss: gl != null ? gl : .3 });
+const SL = (ru, col, veins, g, grp) => F(ru, grp || 'Камень', 'slab', col, { veins, gloss: g != null ? g : .3 });
+const PN = (ru, col) => F(ru, 'Краска', 'flat', col, { gloss: .95 });
+export const ROOM_FINISH = {
+  floor: {
+    fp_oak_l: PQ('Паркет дуб светлый', '#d6b98a'), fp_oak_n: PQ('Паркет дуб натуральный', '#c49a6c'), fp_oak_b: PQ('Паркет дуб беленый', '#e3d3b8'), fp_ash: PQ('Паркет ясень серый', '#b9a99a'),
+    fp_walnut: PQ('Паркет орех', '#7a5638'), fp_cherry: PQ('Паркет вишня', '#a0522d'), fp_wenge: PQ('Паркет венге', '#3b2b24'), fp_teak: PQ('Паркет тик', '#b07a3f'), fp_maple: PQ('Паркет клён', '#e0c9a0'),
+    fh_oak: HB('Ёлочка дуб', '#c49a6c'), fh_walnut: HB('Ёлочка орех', '#6b4428'), fh_gray: HB('Ёлочка серая', '#8f8a84'), fh_white: HB('Ёлочка беленая', '#e3d3b8'),
+    lm_gray: LM('Ламинат серый дуб', '#bfb7aa'), lm_dark: LM('Ламинат тёмный дуб', '#5a4636'), lm_white: LM('Ламинат белый', '#ece8df'), lm_sand: LM('Ламинат песочный', '#cdb48d'), vn_oak: LM('Винил под дерево', '#c8ab7d'),
+    t_white: TL('Плитка белая глянцевая 60×60', '#f2f2ef', 60, 60, '#d4d4cf', .15), t_beige: TL('Плитка бежевая 60×60', '#d9cdb8', 60, 60, '#bfb49f'), t_gray: TL('Плитка серая 60×60', '#bdbdbb', 60, 60, '#a0a3a5'), t_graph: TL('Плитка графит 60×60', '#3a3d41', 60, 60, '#222427'),
+    t_big_gray: TL('Керамогранит 120×60 серый', '#a9adb0', 120, 60, '#8f9396'), t_big_white: TL('Керамогранит 120×60 белый', '#ecebe7', 120, 60, '#cfcfca'), t_wood: TL('Плитка под дерево 20×120', '#b98b5a', 20, 120, '#7a5a38', .5),
+    t_terra: TL('Терракота 30×30', '#b06a4f', 30, 30, '#8a4f3a', .6),
+    t_check: F('Шахматка чёрно-белая 30×30', 'Плитка', 'checker', '#f2f2ef', { col2: '#1c1d1f', tw: 30, gloss: .25 }), t_check_b: F('Шахматка бежево-коричневая', 'Плитка', 'checker', '#d9cdb8', { col2: '#8a6a4a', tw: 30, gloss: .3 }),
+    t_hex: F('Соты 20 серые', 'Плитка', 'hex', '#8d8f91', { tw: 20, grout: '#6d7073', gloss: .35 }), t_cement: F('Цементная плитка (узор)', 'Плитка', 'geo', '#e8e4dc', { col2: '#4a5a6a', tw: 20, th: 20, gloss: .5 }),
+    s_marble_w: SL('Мрамор белый', '#ecebe7', '#9a9a9a', .15), s_marble_b: SL('Мрамор чёрный', '#23252a', '#c8a96a', .12), s_trav: SL('Травертин', '#d8c9ad', '#b8a98d', .5), s_granite: SL('Гранит серый', '#8d8f91', '#5d6063', .3), s_slate: SL('Сланец тёмный', '#4a4d52', '#2a2c2f', .6), s_lime: SL('Известняк', '#d9d2c3', '#bfb7a6', .7),
+    s_terrazzo: F('Терраццо', 'Камень', 'terrazzo', '#e6e1d8', { gloss: .3 }),
+    c_light: SL('Бетон светлый (микроцемент)', '#b5b6b5', '#9a9b9a', .7, 'Бетон'), c_dark: SL('Бетон тёмный', '#6e7072', '#55575a', .7, 'Бетон'), c_pol: SL('Полированный бетон', '#8b8d8e', '#7c7d7c', .25, 'Бетон'),
+    o_cork: SL('Пробка', '#c49a6c', '#8a6a3a', .8, 'Другое'), o_lino: F('Линолеум серый', 'Другое', 'flat', '#a9adb0', { gloss: .6 }), o_carpet: F('Ковролин бежевый', 'Другое', 'linen', '#cbbfa9', { gloss: .98 }), o_resin: F('Наливной пол белый', 'Другое', 'flat', '#f2f2ef', { gloss: .2 })
+  },
+  wall: {
+    w_white: PN('Белая', '#f2f1ee'), w_warm: PN('Тёплый белый', '#efe8dc'), w_cream: PN('Кремовая', '#e9dfc8'), w_beige: PN('Бежевая', '#d9cdb8'), w_sand: PN('Песочная', '#cdbba0'), w_lgray: PN('Светло-серая', '#d6d6d4'), w_gray: PN('Серая', '#a9adb0'),
+    w_graph: PN('Графит', '#4a4d52'), w_black: PN('Чёрная', '#1c1d1f'), w_sage: PN('Шалфей', '#9cae9a'), w_olive: PN('Оливковая', '#7d8461'), w_mint: PN('Мятная', '#bcd9cc'), w_blue: PN('Серо-голубая', '#8fa8c0'), w_navy: PN('Тёмно-синяя', '#2f4258'),
+    w_terra: PN('Терракота', '#b8715a'), w_mustard: PN('Горчичная', '#d0a63c'), w_pink: PN('Пыльная роза', '#e0b9b4'), w_lav: PN('Лаванда', '#bfb3d1'), w_mocha: PN('Мокко', '#8a6b55'), w_green: PN('Зелёная', '#5e7d63'), w_teal: PN('Бирюза тёмная', '#3e7a7a'), w_burg: PN('Бордо', '#7a2f3c'),
+    wp_str_b: F('Обои полоска бежевая', 'Обои', 'stripe', '#efe8dc', { col2: '#d9cdb8', tw: 10, gloss: .95 }), wp_str_g: F('Обои полоска серая', 'Обои', 'stripe', '#e6e6e4', { col2: '#b9bcbe', tw: 10, gloss: .95 }), wp_str_bl: F('Обои полоска голубая', 'Обои', 'stripe', '#eaf0f5', { col2: '#a9c0d8', tw: 10, gloss: .95 }),
+    wp_geo: F('Обои геометрия', 'Обои', 'geo', '#efe8dc', { col2: '#b8a98a', tw: 15, th: 15, gloss: .95 }), wp_dam: F('Обои дамаск бежевые', 'Обои', 'damask', '#e9dfc8', { col2: '#c9b48a', tw: 30, th: 30, gloss: .95 }), wp_dam_g: F('Обои дамаск серые', 'Обои', 'damask', '#dcdcda', { col2: '#a9adb0', tw: 30, th: 30, gloss: .95 }),
+    wp_lin: F('Обои лён бежевые', 'Обои', 'linen', '#d9cdb8', { gloss: .98 }), wp_lin_g: F('Обои лён серые', 'Обои', 'linen', '#b9bcbe', { gloss: .98 }), wp_reed: F('Обои тростник', 'Обои', 'linen', '#c9b48a', { gloss: .98 }),
+    pl_ven: SL('Венецианская штукатурка', '#d9d2c3', '#bfb7a6', .5, 'Штукатурка и бетон'), pl_dec: SL('Декоративная штукатурка серая', '#b5b6b5', '#9a9b9a', .9, 'Штукатурка и бетон'), pl_conc: SL('Бетонная стена', '#9a9b9a', '#7c7d7c', .85, 'Штукатурка и бетон'), pl_micro: SL('Микроцемент', '#aaa9a6', '#8f8e8b', .6, 'Штукатурка и бетон'), pl_warm: SL('Фактурная штукатурка тёплая', '#d8c9ad', '#b8a98d', .95, 'Штукатурка и бетон'),
+    br_white: F('Кирпич белый', 'Кирпич', 'brick', '#ece8e0', { tw: 25, th: 6.5, grout: '#cfcac0', gloss: .9 }), br_red: F('Кирпич красный', 'Кирпич', 'brick', '#a2503b', { tw: 25, th: 6.5, grout: '#b9b0a4', gloss: .9 }), br_gray: F('Кирпич серый', 'Кирпич', 'brick', '#8d8f91', { tw: 25, th: 6.5, grout: '#6d7073', gloss: .9 }), br_loft: F('Кирпич лофт', 'Кирпич', 'brick', '#b97c5c', { tw: 25, th: 6.5, grout: '#9a8f82', gloss: .9 }),
+    tl_sub_w: F('Плитка «кабанчик» белая', 'Плитка', 'brick', '#f3f3f1', { tw: 15, th: 7.5, grout: '#cfcfca', gloss: .25 }), tl_sub_g: F('Плитка «кабанчик» зелёная', 'Плитка', 'brick', '#6f8f78', { tw: 15, th: 7.5, grout: '#c9ccc4', gloss: .25 }), tl_sq: F('Плитка 10×10 белая', 'Плитка', 'grid', '#f2f2ef', { tw: 10, th: 10, grout: '#d4d4cf', gloss: .3 }), tl_sq_b: F('Плитка 20×20 бежевая', 'Плитка', 'grid', '#d9cdb8', { tw: 20, th: 20, grout: '#bfb49f', gloss: .35 }),
+    wd_light: F('Дерево светлое (вагонка)', 'Дерево и панели', 'wood', '#d1ad7c', { tw: 10, th: 60, gloss: .6 }), wd_dark: F('Дерево тёмное', 'Дерево и панели', 'wood', '#5a4636', { tw: 10, th: 60, gloss: .6 }), wd_slats: F('Деревянные рейки', 'Дерево и панели', 'slats', '#b98b5a', { tw: 5, th: 5, gloss: .55 }),
+    wd_rib: F('Рейка белая', 'Дерево и панели', 'ribbed', '#efede8', { tw: 3, th: 3, gloss: .55 }), wd_rib_o: F('Рейка дуб', 'Дерево и панели', 'ribbed', '#cfa977', { tw: 3, th: 3, gloss: .55 }), wd_rib_g: F('Рейка графит', 'Дерево и панели', 'ribbed', '#3a3d41', { tw: 3, th: 3, gloss: .55 }), p3_wave: F('3D-панель «волна»', 'Дерево и панели', 'wave', '#e9e6df', { tw: 6, th: 6, gloss: .6 }), p3_soft: F('Мягкая стеновая панель', 'Дерево и панели', 'soft', '#8b8c90', { tw: 20, th: 20, gloss: .9 }),
+    st_marble: SL('Мрамор', '#ecebe7', '#9a9a9a', .15, 'Камень'), st_stone: SL('Камень серый', '#8d8f91', '#5d6063', .5, 'Камень'), st_mirror: F('Зеркальная стена', 'Камень', 'mirror', '#dfe6ea', { gloss: .03, metal: .85 })
+  }
+};
+export const FINISH_TINTS = [['', 'Как на образце'], ['#f2f2f0', 'Белый'], ['#e9dfc8', 'Кремовый'], ['#d9cdb8', 'Бежевый'], ['#a9adb0', 'Серый'], ['#3a3d41', 'Графит'], ['#1c1d1f', 'Чёрный'], ['#6f8f78', 'Зелёный'], ['#3d5a80', 'Синий'], ['#b06a4f', 'Терракота'], ['#c49a6c', 'Дерево'], ['#7a5638', 'Орех']];
+export const finishName = (kind, id) => (ROOM_FINISH[kind] && ROOM_FINISH[kind][id]) ? ROOM_FINISH[kind][id].ru : '';

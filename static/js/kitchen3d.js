@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildOpenings, pickWall } from '/static/js/room-open.js?v=6';
+import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=7';
 import { buildObjGroup } from '/static/js/room-objs.js?v=6';
 
 const DEG = Math.PI / 180;
@@ -498,15 +498,24 @@ export function createK3D(container, hooks = {}, opts = {}) {
   }
 
   /* комната произвольной формы: пол и стены по углам st.poly [[x, z], ...] */
+  /* отделка комнаты: пол/стены из каталога (st.finish = {floor:[id,tint], wall:[id,tint], acc:[id,tint]}); без выбора — прежние материалы */
+  const finCache = new Map();
+  function finOf(st, k, W, H, uvCm, dflt) {
+    const f = st.finish && st.finish[k]; if (!f || !f[0]) return dflt;
+    const key = [k, f[0], f[1] || '', uvCm ? 'c' : Math.round(W) + 'x' + Math.round(H)].join('|');
+    if (!finCache.has(key)) finCache.set(key, finishMat(k === 'acc' ? 'wall' : k, f[0], f[1], W, H, uvCm));
+    return finCache.get(key) || dflt;
+  }
+  const wallMat = (M, st, W, H, acc) => (acc && st.finish && st.finish.acc && st.finish.acc[0]) ? finOf(st, 'acc', W, H, false, M.wall) : finOf(st, 'wall', W, H, false, M.wall);
   function roomByPoly(M, st) {
     const P = st.poly, H = st.roomH, n = P.length;
     const inside = (x, z) => { let c = false; for (let i = 0, j = n - 1; i < n; j = i++) { const a = P[i], b = P[j]; if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; };
-    const fl = mesh(new THREE.ShapeGeometry(new THREE.Shape(P.map(p => new THREE.Vector2(p[0], -p[1])))), M.floor, false);
-    fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; M.floor.map.repeat.set(1 / 160, 1 / 160); root.add(fl);
+    const fl = mesh(new THREE.ShapeGeometry(new THREE.Shape(P.map(p => new THREE.Vector2(p[0], -p[1])))), finOf(st, 'floor', 0, 0, true, M.floor), false);
+    fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; if (M.floor.map && fl.material === M.floor) M.floor.map.repeat.set(1 / 160, 1 / 160); root.add(fl);
     for (let i = 0; i < n; i++) {
       const a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
       let nx = -dz / len, nz = dx / len; if (!inside(mx + nx * 2, mz + nz * 2)) { nx = -nx; nz = -nz; }
-      const w = mesh(new THREE.PlaneGeometry(len, H), M.wall, false); w.rotation.y = Math.atan2(nx, nz); w.position.set(mx - nx * .8, H / 2, mz - nz * .8); root.add(w);
+      const w = mesh(new THREE.PlaneGeometry(len, H), wallMat(M, st, len, H, i === 0), false); w.rotation.y = Math.atan2(nx, nz); w.position.set(mx - nx * .8, H / 2, mz - nz * .8); root.add(w);
       const sk = mesh(new THREE.BoxGeometry(len, 7, 1.4), M.inner); sk.rotation.y = Math.atan2(nx, nz); sk.position.set(mx + nx * .1, 3.5, mz + nz * .1); root.add(sk);
     }
   }
@@ -523,17 +532,17 @@ export function createK3D(container, hooks = {}, opts = {}) {
   function roomShell(M, st, bounds) {
     if (st.poly && st.poly.length >= 4) { roomByPoly(M, st); return; }
     const pad = 90, x0 = -pad, x1 = st.W + pad, zMax = bounds.zMax + 220, H = st.roomH;
-    const fl = mesh(new THREE.PlaneGeometry(x1 - x0, zMax + 40), M.floor, false); fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, 0, zMax / 2 - 20); fl.receiveShadow = true;
-    M.floor.map.repeat.set((x1 - x0) / 160, (zMax + 40) / 160); root.add(fl);
-    const back = mesh(new THREE.PlaneGeometry(x1 - x0, H), M.wall, false); back.position.set((x0 + x1) / 2, H / 2, -.8); root.add(back);
+    const fl = mesh(new THREE.PlaneGeometry(x1 - x0, zMax + 40), finOf(st, 'floor', x1 - x0, zMax + 40, false, M.floor), false); fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, 0, zMax / 2 - 20); fl.receiveShadow = true;
+    if (fl.material === M.floor) M.floor.map.repeat.set((x1 - x0) / 160, (zMax + 40) / 160); root.add(fl);
+    const back = mesh(new THREE.PlaneGeometry(x1 - x0, H), wallMat(M, st, x1 - x0, H, true), false); back.position.set((x0 + x1) / 2, H / 2, -.8); root.add(back);
     const rm = st.room || {}, hasL = rm.left != null ? rm.left > 0 : (st.type === 'l-shape' || st.type === 'u-shape'), hasR = rm.right != null ? rm.right > 0 : st.type === 'u-shape';
     if (st.type === 'parallel') {   // стена за противоположным рядом
-      const ow = mesh(new THREE.PlaneGeometry(x1 - x0, H), M.wall, false); ow.rotation.y = Math.PI; ow.position.set((x0 + x1) / 2, H / 2, st.ZOPP + .8); root.add(ow);
+      const ow = mesh(new THREE.PlaneGeometry(x1 - x0, H), wallMat(M, st, x1 - x0, H), false); ow.rotation.y = Math.PI; ow.position.set((x0 + x1) / 2, H / 2, st.ZOPP + .8); root.add(ow);
       box(root, x1 - x0, 7, 1.4, M.inner, x0, 0, st.ZOPP - .8);
     }
     const lz = hasL && rm.left ? Math.max(rm.left, 80) : zMax, rz = hasR && rm.right ? Math.max(rm.right, 80) : zMax;
-    if (hasL) { const lw = mesh(new THREE.PlaneGeometry(lz, H), M.wall, false); lw.rotation.y = Math.PI / 2; lw.position.set(-.8, H / 2, lz / 2); root.add(lw); }
-    if (hasR) { const rw = mesh(new THREE.PlaneGeometry(rz, H), M.wall, false); rw.rotation.y = -Math.PI / 2; rw.position.set(st.W + .8, H / 2, rz / 2); root.add(rw); }
+    if (hasL) { const lw = mesh(new THREE.PlaneGeometry(lz, H), wallMat(M, st, lz, H), false); lw.rotation.y = Math.PI / 2; lw.position.set(-.8, H / 2, lz / 2); root.add(lw); }
+    if (hasR) { const rw = mesh(new THREE.PlaneGeometry(rz, H), wallMat(M, st, rz, H), false); rw.rotation.y = -Math.PI / 2; rw.position.set(st.W + .8, H / 2, rz / 2); root.add(rw); }
     if (st.room) {   // граница комнаты на полу: шкафы за неё не выходят
       const edge = new THREE.MeshBasicMaterial({ color: '#c8952f', transparent: true, opacity: .55 });
       box(root, st.W, .3, 1.2, edge, 0, .2, -.2);

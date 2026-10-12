@@ -24,9 +24,9 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=4'; import * as C from '/static/js/shkaf-pro-core.js?v=26'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=5'; import * as C from '/static/js/shkaf-pro-core.js?v=27'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script src="/static/js/shkaf-lib.js?v=2"></script>
-  <script type="module" src="/static/js/shkaf-3dpart.js?v=10"></script>
+  <script type="module" src="/static/js/shkaf-3dpart.js?v=11"></script>
   <script src="/static/js/color-catalog.js?v=3"></script>
   <script src="/static/js/sheet-fit.js?v=1"></script>
   <script src="/static/js/sheet-export.js?v=1"></script>
@@ -1207,6 +1207,7 @@
                 <div class="hw-desc" id="hwDesc"></div>
               </div>
               <div id="kisKitchen" style="grid-column: span 2;"></div>
+              <div id="roomFinish" style="grid-column: span 2;"></div>
             </div>
             <div class="hw-note" data-i18n="logisticsNote">В цену входят ввоз и доставка материалов, доставка готовой кухни по Ташкенту и монтаж.</div>
           </div>
@@ -1950,6 +1951,30 @@
     function tallTopOf(roomH) { return Math.max(200, Math.min(Number(roomH) || 240, 270)); }
     /* фрезерованные фасады (рейка, как на фото): общий стиль кухни facadeMill и свой у шкафа (sec.ml; 'none' — гладкий) */
     var facadeMill = '';
+    /* отделка комнаты: пол, стены и акцентная задняя стена — каждая отдельно: [id из каталога, оттенок] */
+    var roomFinish = { floor: ['', ''], wall: ['', ''], acc: ['', ''] };
+    function rfClean() { const o = {}; ['floor', 'wall', 'acc'].forEach(k => { const f = roomFinish[k]; if (f && f[0]) o[k] = [f[0], f[1] || '']; }); return Object.keys(o).length ? o : null; }
+    function rfSwatch(kind, id, f, cur) {
+      const hint = { parquet: 'repeating-linear-gradient(90deg,rgba(0,0,0,.18) 0 1px,transparent 1px 9px)', herring: 'repeating-linear-gradient(45deg,rgba(0,0,0,.2) 0 1px,transparent 1px 6px)', grid: 'linear-gradient(rgba(0,0,0,.22) 1px,transparent 1px) 0 0/50% 50%,linear-gradient(90deg,rgba(0,0,0,.22) 1px,transparent 1px) 0 0/50% 50%', brick: 'linear-gradient(rgba(0,0,0,.25) 1px,transparent 1px) 0 0/100% 33%', stripe: 'repeating-linear-gradient(90deg,' + (f.col2 || 'rgba(0,0,0,.1)') + ' 0 4px,transparent 4px 8px)', checker: 'conic-gradient(' + (f.col2 || '#222') + ' 25%,transparent 0 50%,' + (f.col2 || '#222') + ' 0 75%,transparent 0) 0 0/50% 50%', ribbed: 'repeating-linear-gradient(90deg,rgba(0,0,0,.28) 0 2px,transparent 2px 5px)', slats: 'repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 2px,transparent 2px 6px)', wood: 'repeating-linear-gradient(90deg,rgba(0,0,0,.12) 0 1px,transparent 1px 5px)', slab: 'radial-gradient(circle at 30% 40%,rgba(0,0,0,.15),transparent 60%)', geo: 'radial-gradient(circle,rgba(0,0,0,.2) 0 20%,transparent 22%) 0 0/50% 50%', damask: 'radial-gradient(circle,rgba(0,0,0,.18) 0 25%,transparent 27%) 0 0/50% 50%', hex: 'radial-gradient(circle,rgba(0,0,0,.2) 0 30%,transparent 32%) 0 0/50% 50%', terrazzo: 'radial-gradient(circle,rgba(0,0,0,.35) 0 8%,transparent 10%) 0 0/30% 30%', mirror: 'linear-gradient(135deg,rgba(255,255,255,.7),transparent 60%)' }[f.pat] || '';
+      return `<button type="button" title="${esc(f.ru)}" onclick="rfPick('${kind}','${id}')" style="width:38px;height:38px;border-radius:7px;border:2px solid ${cur === id ? '#c8952f' : 'rgba(0,0,0,.18)'};background:${hint ? hint + ',' : ''}${f.col};cursor:pointer;padding:0;box-shadow:${cur === id ? '0 0 0 2px rgba(200,149,47,.4)' : 'none'}"></button>`;
+    }
+    function renderRoomFinish() {
+      const box = el('roomFinish'); if (!box) return; if (!window.ROPEN || !window.ROPEN.ROOM_FINISH) { box.innerHTML = ''; return; }
+      const RF = window.ROPEN.ROOM_FINISH, TN = window.ROPEN.FINISH_TINTS;
+      const block = (kind, title, tab) => {
+        const cat = RF[tab || kind], cur = roomFinish[kind][0], f = cur ? cat[cur] : null, groups = {};
+        Object.keys(cat).forEach(id => { (groups[cat[id].grp] = groups[cat[id].grp] || []).push(id); });
+        let h = `<details style="border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:8px 10px;margin-bottom:8px"><summary style="cursor:pointer;font-weight:600">${esc(title)}: <span style="font-weight:400">${esc(f ? f.ru : L3('по умолчанию', 'standart'))}</span></summary><div style="margin-top:8px">`;
+        h += `<button type="button" class="btn-sm" onclick="rfPick('${kind}','')" style="margin-bottom:6px">${esc(L3('По умолчанию', 'Standart'))}</button>`;
+        Object.keys(groups).forEach(g => { h += `<div style="font-size:12px;opacity:.7;margin:8px 0 4px">${esc(g)}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${groups[g].map(id => rfSwatch(kind, id, cat[id], cur)).join('')}</div>`; });
+        if (f && f.pat !== 'mirror') h += `<div style="font-size:12px;opacity:.7;margin:10px 0 4px">${esc(L3('Оттенок', 'Rang'))}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${TN.map(([c, n]) => `<button type="button" title="${esc(n)}" onclick="rfTint('${kind}','${c}')" style="width:26px;height:26px;border-radius:50%;border:2px solid ${((roomFinish[kind][1] || '') === c) ? '#c8952f' : 'rgba(0,0,0,.2)'};background:${c || 'linear-gradient(135deg,#fff 50%,#ccc 50%)'};cursor:pointer;padding:0"></button>`).join('')}</div>`;
+        return h + '</div></details>';
+      };
+      box.innerHTML = `<label>${esc(L3('Отделка комнаты', 'Xona pardozi'))}</label>` + block('floor', L3('Пол', 'Pol')) + block('wall', L3('Стены', 'Devorlar')) + block('acc', L3('Акцентная задняя стена', 'Aksent devor'), 'wall');
+    }
+    function rfPick(k, id) { roomFinish[k] = [id, ''] ; renderRoomFinish(); updateCalculator(); updateShareLinks(); }
+    function rfTint(k, c) { roomFinish[k][1] = c; renderRoomFinish(); updateCalculator(); updateShareLinks(); }
+    window.addEventListener('ropen-ready', renderRoomFinish);
     const MILL_K = { vgroove: 'рейка вертикальная 30 мм', vfine: 'рейка вертикальная мелкая 15 мм', hgroove: 'рейка горизонтальная 30 мм', frame: 'филёнка (рамка)' };
     const MILL_PRICE = { vgroove: 1, vfine: 1.3, hgroove: 1, frame: .7 };   // доплата за фрезеровку: коэффициент к базе на 1 п.м. ширины шкафа
     function millOf(sec) { const v = (sec && sec.ml) ? sec.ml : facadeMill; return MILL_K[v] ? v : ''; }
@@ -2806,7 +2831,7 @@
         hw: Object.assign({}, KHW), led: Object.assign({}, ledState), decor: decorClean(decorState),
         island: s.island ? { L: s.islL, W: s.islW, cx: islandPos ? islandPos.cx : null, cz: islandPos ? islandPos.cz : null, r: islandPos ? islandPos.r : 0, cfg: islandPlain(s.islL) } : null,
         free: k3dFreeList(hasUpper), paintOf, poly: roomPoly, roomD: roomPoly ? rpBBox().z1 : Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0),
-        opens: kOpens, objs: kObjsState(), mill: facadeMill, millOf, multi: kMulti.slice(), selected: VIEW_ONLY ? null : k3dSelKey(), drawerVis: drawerVisMap(),
+        opens: kOpens, objs: kObjsState(), finish: rfClean(), mill: facadeMill, millOf, multi: kMulti.slice(), selected: VIEW_ONLY ? null : k3dSelKey(), drawerVis: drawerVisMap(),
         dsysOf: (sec, i) => { const k = sec.dsys && sec.dsys[i]; return (k && k !== 'tier' && KIS.drawerSys[k]) ? k : def; }, towerBands: (a, top) => towerBands(a && typeof a === 'object' && a.kind ? towerCfg(a) : a, top) };
     }
     function kWallPoly(st) { st = st || {}; const W = Math.max(60, st.W || parseFloat(el('mainWall').value) || 240), D = st.roomD || Math.max(360, parseFloat(el('leftWall').value) || 0, parseFloat(el('rightWall').value) || 0); return roomPoly || [[0, 0], [W, 0], [W, D], [0, D]]; }
@@ -2815,7 +2840,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=45');
+        const mod = await import('/static/js/kitchen3d.js?v=46');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: (sel, multi) => k3dOnSelect(sel, multi), onMoveMulti: (items, dx, dz) => k3dMoveMulti(items, dx, dz),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -4681,7 +4706,7 @@
         (pp ? pp.hw : []).forEach(h => { const k = h.name + '|' + h.unit; if (!hwAll[k]) hwAll[k] = { grp: 'С' + (i + 1), name: h.name, qty: 0, unit: h.unit }; else if (hwAll[k].grp.indexOf('С' + (i + 1)) < 0) hwAll[k].grp += ', С' + (i + 1); hwAll[k].qty += h.qty; }); });
       return { name: 'Кухня на заказ', poly: kWallPolyCache || kWallPoly(), H: geo.roomH, opens: kOpens, items, hw: Object.keys(hwAll).map(k => hwAll[k]), meta: [['Проект', 'Кухня на заказ'], ['Помещение', Math.round(geo.W * 10) + ' × ' + Math.round(geo.roomD * 10) + ' мм · высота ' + Math.round(geo.roomH * 10)], ['Материал', 'ЛДСП ' + CUT_T + ' мм']] };
     }
-    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=37').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
+    function loadProDraw() { if (window.PRODRAW || window._prodrawLoading) return; window._prodrawLoading = true; import('/static/js/shkaf-pro-draw.js?v=38').then(m => { window.PRODRAW = m; renderOwnerDraw(); }).catch(e => console.error('shkaf-pro-draw', e)); }
     function renderOwnerDraw() {
       const box = el('ownerDrawBody'); if (!box || !OWNER_ON) return;
       const geo = k3dGeo(), groups = new Map();
@@ -4952,7 +4977,7 @@
       if (!h) return;
       el('hwDesc').innerHTML = `<b>${esc(LANG === 'uz' ? h.brandsUz : h.brandsRu)}.</b> ${esc(t('hwDesc_' + h.key))}`;
     }
-    function renderKitchenKis() { syncSinkBox(); const box = el('kisKitchen'); if (box) box.innerHTML = kitchenKisPanel(); }
+    function renderKitchenKis() { renderRoomFinish(); syncSinkBox(); const box = el('kisKitchen'); if (box) box.innerHTML = kitchenKisPanel(); }
     const fmtM = m => (Math.round(m * 10) / 10).toFixed(1).replace('.', ',');
     function updateLedUI() {
       const box = el('ledBox');
@@ -6196,7 +6221,7 @@
       return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0], t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
-        ic: (islandCfg.cells.length || islandCfg.top !== 'top' || islandCfg.ovF !== 2 || islandCfg.ovB !== 2 || islandCfg.back !== 'panel' || islandCfg.hood || islandCfg.bar || islandCfg.pc || islandCfg.ctc || islandCfg.ovL !== 2 || islandCfg.ovR !== 2 || islandCfg.ct || islandCfg.bh || islandCfg.ot !== 'handles') ? { c: islandCfg.cells.map(x => [x.k, Math.round(x.w * 10) / 10, x.dn | 0, x.dr | 0, x.sh | 0, x.hg || 'L', x.ot || '', x.glass ? 1 : 0, x.led | 0, x.ml || '', x.ov ? 1 : 0]), t: islandCfg.top, f: islandCfg.ovF, b: islandCfg.ovB, k: islandCfg.back, h: islandCfg.hood ? 1 : 0, r: islandCfg.bar ? 1 : 0, ot: islandCfg.ot || 'handles', p: islandCfg.pc ? [islandCfg.pc.f || '', islandCfg.pc.b || ''] : 0, tc: islandCfg.ctc || '', ol: islandCfg.ovL, or: islandCfg.ovR, ct: islandCfg.ct || 0, bh: islandCfg.bh || 0 } : 0, fm: facadeMill || 0, tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
+        ic: (islandCfg.cells.length || islandCfg.top !== 'top' || islandCfg.ovF !== 2 || islandCfg.ovB !== 2 || islandCfg.back !== 'panel' || islandCfg.hood || islandCfg.bar || islandCfg.pc || islandCfg.ctc || islandCfg.ovL !== 2 || islandCfg.ovR !== 2 || islandCfg.ct || islandCfg.bh || islandCfg.ot !== 'handles') ? { c: islandCfg.cells.map(x => [x.k, Math.round(x.w * 10) / 10, x.dn | 0, x.dr | 0, x.sh | 0, x.hg || 'L', x.ot || '', x.glass ? 1 : 0, x.led | 0, x.ml || '', x.ov ? 1 : 0]), t: islandCfg.top, f: islandCfg.ovF, b: islandCfg.ovB, k: islandCfg.back, h: islandCfg.hood ? 1 : 0, r: islandCfg.bar ? 1 : 0, ot: islandCfg.ot || 'handles', p: islandCfg.pc ? [islandCfg.pc.f || '', islandCfg.pc.b || ''] : 0, tc: islandCfg.ctc || '', ol: islandCfg.ovL, or: islandCfg.ovR, ct: islandCfg.ct || 0, bh: islandCfg.bh || 0 } : 0, fm: facadeMill || 0, rf: (rfClean() ? ['floor', 'wall', 'acc'].map(k => roomFinish[k][0] ? roomFinish[k][0] + (roomFinish[k][1] ? '|' + roomFinish[k][1] : '') : '') : 0), tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
         ox: kOpens.map(o => [o.kind, o.wall, o.off, o.w, o.h, o.y, o.d, o.n || 1, o.v || '', o.c | 0]), oj: kObjs.length ? kObjs : 0,
         o: [s.sink ? 1 : 0, s.hob ? 1 : 0, s.app ? 1 : 0], i: [s.island ? 1 : 0, s.islL, s.islW], kh: KHW, ch: s.counterH, ug: s.upperGap };
     }
@@ -6315,6 +6340,8 @@
       el('counterHeight').value = clampN(st.ch, 75, 105, 89);
       el('upperGap').value = clampN(st.ug, 30, 100, 56);
       facadeMill = MILL_K[st.fm] ? st.fm : '';
+      { const RFc = window.ROPEN && window.ROPEN.ROOM_FINISH; roomFinish = { floor: ['', ''], wall: ['', ''], acc: ['', ''] };
+        if (Array.isArray(st.rf)) ['floor', 'wall', 'acc'].forEach((k, i) => { const [id, tn] = String(st.rf[i] || '').split('|'); if (id && (!RFc || RFc[k === 'floor' ? 'floor' : 'wall'][id])) roomFinish[k] = [id, /^#[0-9a-f]{6}$/i.test(tn || '') ? tn : '']; }); renderRoomFinish(); }
       el('hasUpperTier').checked = st.u !== 0;
       el('upperHeight').value = clampN(st.uh, 30, 130, 72);
       el('upperDepth').value = clampN(st.ud, 20, 65, 35);
