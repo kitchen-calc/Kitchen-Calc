@@ -116,7 +116,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.6; sun.shadow.radius = 5;
   scene.add(sun); scene.add(sun.target);
   // «Свет»: вечерний режим — тусклее, чтобы подсветка красиво светилась (для фото и показа клиенту)
-  let dusk = false, lastM = null, lastSc = false;
+  let dusk = false, lastM = null, lastSc = false;   // lastSc — «вечерняя сцена» (decor.nt)
   let ledsOn = true;
   const glowTex = (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(255,214,130,1)'); gr.addColorStop(1, 'rgba(255,214,130,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
   const mkGlow = () => new THREE.MeshBasicMaterial({ map: glowTex, color: '#ffffff', transparent: true, opacity: .22, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -545,6 +545,32 @@ export function createK3D(container, hooks = {}, opts = {}) {
     }
     cityT = new THREE.CanvasTexture(c); cityT.colorSpace = THREE.SRGBColorSpace; return cityT;
   }
+  let gardenT = null;
+  function gardenTex() {
+    if (gardenT) return gardenT;
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 640; const g = c.getContext('2d');
+    const sky = g.createLinearGradient(0, 0, 0, 640); sky.addColorStop(0, '#dfeaf0'); sky.addColorStop(1, '#f5f2e6'); g.fillStyle = sky; g.fillRect(0, 0, 1024, 640);
+    let seed = 11; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 70; i++) { g.fillStyle = ['#4f8a46', '#3e7a3c', '#6aa04f', '#2f6a35'][(R() * 4) | 0]; g.globalAlpha = .85; g.beginPath(); g.arc(150 + R() * 800, 330 + R() * 220 - (i % 5) * 20, 30 + R() * 60, 0, 7); g.fill(); }
+    g.globalAlpha = 1; g.fillStyle = '#8a6a48'; g.fillRect(150, 300, 10, 340);
+    for (let k = 0; k < 11; k++) { g.save(); g.translate(155, 300); g.rotate(-Math.PI / 2 + (k - 5) * .42); g.fillStyle = '#2f7a3a'; g.beginPath(); g.ellipse(0, -70, 12, 85, 0, 0, 7); g.fill(); g.restore(); }
+    g.fillStyle = '#c9c1ac'; g.fillRect(0, 560, 1024, 80);
+    gardenT = new THREE.CanvasTexture(c); gardenT.colorSpace = THREE.SRGBColorSpace; return gardenT;
+  }
+  function gardenWindow(st, H) {   // большое окно с чёрной рамой над мойкой: сад за стеклом
+    const W = Math.min(st.W * .5, 230), x0 = st.W / 2 - W / 2, y0 = 100, hh = Math.min(150, H - y0 - 20);
+    const m = mesh(new THREE.PlaneGeometry(W, hh), new THREE.MeshBasicMaterial({ map: gardenTex(), toneMapped: false }), false); m.position.set(x0 + W / 2, y0 + hh / 2, -.55); root.add(m);
+    const fr = new THREE.MeshStandardMaterial({ color: '#151515', roughness: .5 });
+    box(root, W + 6, 3, 3, fr, x0 - 3, y0 - 3, -2.4); box(root, W + 6, 3, 3, fr, x0 - 3, y0 + hh, -2.4); box(root, 3, hh + 6, 3, fr, x0 - 3, y0 - 3, -2.4); box(root, 3, hh + 6, 3, fr, x0 + W, y0 - 3, -2.4); box(root, 2.4, hh, 3, fr, x0 + W * .3, y0, -2.4);
+  }
+  function blindWindow(st, zMax, H) {   // светлое окно справа с рулонной шторой
+    const z0 = Math.max(150, zMax * .35), len = Math.min(110, zMax * .3), y0 = 70, hh = Math.min(170, H - y0 - 25);
+    const c = document.createElement('canvas'); c.width = 128; c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#ecebe6'; g.fillRect(0, 0, 128, 256); g.fillStyle = 'rgba(0,0,0,.07)'; for (let y = 6; y < 256; y += 9) g.fillRect(0, y, 128, 2);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const m = mesh(new THREE.PlaneGeometry(len, hh), new THREE.MeshStandardMaterial({ map: t, emissive: '#f3f1ea', emissiveIntensity: .55, roughness: .9 }), false); m.rotation.y = -Math.PI / 2; m.position.set(st.W + .6, y0 + hh / 2, z0 + len / 2); root.add(m);
+    const fr = new THREE.MeshStandardMaterial({ color: '#f1f0ec', roughness: .6 });
+    box(root, 2, hh + 6, 3, fr, st.W - 1.6, y0 - 3, z0 - 3); box(root, 2, hh + 6, 3, fr, st.W - 1.6, y0 - 3, z0 + len); box(root, 2, 3, len + 6, fr, st.W - 1.6, y0 - 3, z0 - 3); box(root, 2, 3, len + 6, fr, st.W - 1.6, y0 + hh, z0 - 3);
+  }
   function cityWall(st, z0, len, H) {   // панорамное окно в пол с видом на вечерний город
     const m = mesh(new THREE.PlaneGeometry(len, H), new THREE.MeshBasicMaterial({ map: cityTex(), toneMapped: false }), false); m.rotation.y = -Math.PI / 2; m.position.set(st.W + .8, H / 2, z0 + len / 2); root.add(m);
     const fr = new THREE.MeshStandardMaterial({ color: '#17140f', roughness: .5, metalness: .6 });
@@ -563,10 +589,12 @@ export function createK3D(container, hooks = {}, opts = {}) {
       const ow = mesh(new THREE.PlaneGeometry(x1 - x0, H), wallMat(M, st, x1 - x0, H), false); ow.rotation.y = Math.PI; ow.position.set((x0 + x1) / 2, H / 2, st.ZOPP + .8); root.add(ow);
       box(root, x1 - x0, 7, 1.4, M.inner, x0, 0, st.ZOPP - .8);
     }
-    const scn = !!(st.decor && st.decor.sc);
+    const scn = !!(st.decor && st.decor.sc === 'city');
     const lz = hasL && rm.left ? Math.max(rm.left, 80) : zMax, rz = scn ? zMax : (hasR && rm.right ? Math.max(rm.right, 80) : zMax);
     if (hasL) { const lw = mesh(new THREE.PlaneGeometry(lz, H), wallMat(M, st, lz, H), false); lw.rotation.y = Math.PI / 2; lw.position.set(-.8, H / 2, lz / 2); root.add(lw); }
     if (scn) cityWall(st, 80, zMax - 80, H);
+    if (st.decor && st.decor.sc === 'garden') gardenWindow(st, H);
+    if (st.decor && st.decor.sc === 'blind') blindWindow(st, zMax, H);
     if (hasR && !scn) { const rw = mesh(new THREE.PlaneGeometry(rz, H), wallMat(M, st, rz, H), false); rw.rotation.y = -Math.PI / 2; rw.position.set(st.W + .8, H / 2, rz / 2); root.add(rw); }
     if (st.room) {   // граница комнаты на полу: шкафы за неё не выходят
       const edge = new THREE.MeshBasicMaterial({ color: '#c8952f', transparent: true, opacity: .55 });
@@ -597,6 +625,41 @@ export function createK3D(container, hooks = {}, opts = {}) {
     box(cg, w - 4, PL, D - 6, M.plinth, 2, 0, 2);
     if (c.k === 'blind') { carcass(cg, M, w, H, D, PL, 0, { led: c.led | 0 }); box(cg, w - 2 * GAP, H - 2 * GAP, FT, M.facade, GAP, PL + GAP, zf, 60); }
     else carcass(cg, M, w, H, D, PL, (c.sh | 0) || 2, { led: c.led | 0 });
+  }
+  /* ---------- барные стулья (вид: '' круглый · chair · velvet · leather · bar · black) ---------- */
+  function stoolAt(g, M, style, sx, sz, dir) {
+    const mat = (c, r, m) => { const x = new THREE.MeshStandardMaterial({ color: c, roughness: r }); if (m) x.metalness = m; return x; };
+    const leg = (m, h, x, z, r) => cyl(g, r || 1, h, m, sx + x, h / 2, sz + z, null);
+    const ring = (m, y, r) => { const t = mesh(new THREE.TorusGeometry(r, .8, 8, 28), m); t.rotation.x = Math.PI / 2; t.position.set(sx, y, sz); g.add(t); };
+    const back = (m, r, y, h, a) => { const mm = m.clone(); mm.side = THREE.DoubleSide; const b = mesh(new THREE.CylinderGeometry(r, r, h, 32, 1, true, -a, 2 * a), mm); b.position.set(sx, y, sz); if (dir < 0) b.rotation.y = Math.PI; g.add(b); };
+    const seat = (m, r, y, h) => { const e = mesh(new THREE.CylinderGeometry(r, r - 1, h, 32), m); e.position.set(sx, y, sz); g.add(e); };
+    if (style === 'velvet') {   // зелёный бархат на латунных ножках
+      const v = mat('#1f6b5c', .95), br = mat('#c9a85a', .3, .9);
+      seat(v, 19, 62, 7); back(v, 19.5, 80, 24, 1.15); [[-10, -10], [10, -10], [-10, 10], [10, 10]].forEach(q => leg(br, 60, q[0], q[1], .9)); ring(br, 27, 11.5);
+    } else if (style === 'leather') {   // кожаный стул-ракушка цвета карамели
+      const l = mat('#c4854a', .55);
+      const sh = mesh(new THREE.BoxGeometry(40, 3.5, 38), l); sh.position.set(sx, 66, sz); g.add(sh);
+      const bk = mesh(new THREE.BoxGeometry(40, 34, 3), l); bk.position.set(sx, 84, sz + dir * 18); bk.rotation.x = -dir * .14; g.add(bk);
+      [[-17, -16], [17, -16], [-17, 16], [17, 16]].forEach(q => leg(M.black, 65, q[0], q[1], .8));
+    } else if (style === 'bar') {   // хромированный каркас, коричневое мягкое сиденье, низкая спинка
+      const ch = mat('#d5d9dc', .12, 1), br = mat('#4a3a30', .7);
+      seat(br, 17, 67, 6); back(br, 17.5, 77, 11, 1.0); [[-10, -10], [10, -10], [-10, 10], [10, 10]].forEach(q => leg(ch, 64, q[0], q[1], .9)); ring(ch, 28, 12);
+    } else if (style === 'black') {   // круглый чёрно-коричневый кожаный на тонких ножках
+      const b = mat('#2a1f1a', .5), bl = mat('#121212', .5);
+      seat(b, 17, 64, 6); [[-8, -8], [8, -8], [-8, 8], [8, 8]].forEach(q => leg(bl, 62, q[0] * 1.6, q[1] * 1.6, .7)); ring(bl, 28, 13);
+    } else if (style === 'chair') {   // мягкий бежево-коричневый со спинкой
+      const vel = mat('#a98462', .92);
+      seat(vel, 19, 70, 8); back(vel, 19.5, 84, 20, 1.15); [[-9, -9], [9, -9], [-9, 9], [9, 9]].forEach(q => leg(M.black, 66, q[0], q[1], 1)); ring(M.black, 26, 11);
+    } else {
+      seat(mat('#b8956a', .6), 17, 72, 6); cyl(g, 1.4, 70, M.black, sx, 36, sz, null); ring(M.black, 30, 12);
+    }
+  }
+  /* реквизит на столешнице острова: ваза с веткой, чаша, доска */
+  function islandProps(g, M, L, Wd, ty) {
+    const gl = new THREE.MeshPhysicalMaterial({ color: '#7a8f6a', roughness: .1, transparent: true, opacity: .55, clearcoat: 1 }), leaf = new THREE.MeshStandardMaterial({ color: '#4f7a4a', roughness: .7 });
+    const vx = L * .16, vz = Wd * .55; const v = mesh(new THREE.CylinderGeometry(5, 7, 16, 20), gl, false); v.position.set(vx, ty + 8, vz); g.add(v);
+    for (let k = 0; k < 7; k++) { const a = k * 2.4, h = 24 + (k % 3) * 8; const br = mesh(new THREE.CylinderGeometry(.25, .25, h, 5), M.black); br.position.set(vx + Math.cos(a) * 3, ty + 16 + h / 2, vz + Math.sin(a) * 3); br.rotation.set(Math.sin(a) * .35, 0, Math.cos(a) * .35); g.add(br); const lf = mesh(new THREE.SphereGeometry(2.2, 8, 6), leaf); lf.scale.set(1, .5, 1.8); lf.position.set(vx + Math.cos(a) * (3 + h * .18), ty + 16 + h * .95, vz + Math.sin(a) * (3 + h * .18)); g.add(lf); }
+    const bw = mesh(new THREE.SphereGeometry(10, 22, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), new THREE.MeshStandardMaterial({ color: '#d6b85a', roughness: .35, metalness: .6, side: THREE.DoubleSide })); bw.position.set(L * .3, ty + 9.5, Wd * .5); bw.rotation.x = Math.PI; g.add(bw);
   }
   function island(M0, st, bounds) {
     K_MILL = st.mill || '';
@@ -631,41 +694,67 @@ export function createK3D(container, hooks = {}, opts = {}) {
     }
     // стулья со стороны свеса (где свес больше)
     const nS = Math.min(st.decor.stools || 0, Math.max(1, Math.floor(L / 42))), sz = ovB > ovF ? -(ovB + 28) : Wd + ovF + 28;
-    for (let i = 0; i < nS; i++) {
-      const sx = (i + .5) * L / nS;
-      if (st.decor.ss === 'chair') {   // мягкий барный стул со спинкой, обращённой от острова
-        const vel = new THREE.MeshStandardMaterial({ color: '#a98462', roughness: .92 }), dir = sz > Wd / 2 ? 1 : -1;
-        const seat = mesh(new THREE.CylinderGeometry(19, 18, 8, 32), vel); seat.position.set(sx, 70, sz); g.add(seat);
-        const bkm = vel.clone(); bkm.side = THREE.DoubleSide;
-        const bk = mesh(new THREE.CylinderGeometry(19.5, 19.5, 20, 32, 1, true, -1.15, 2.3), bkm); bk.position.set(sx, 84, sz); if (dir < 0) bk.rotation.y = Math.PI; g.add(bk);
-        [[-9, -9], [9, -9], [-9, 9], [9, 9]].forEach(q => cyl(g, 1, 66, M.black, sx + q[0], 33, sz + q[1], null));
-        const ring = mesh(new THREE.TorusGeometry(11, .8, 8, 28), M.black); ring.rotation.x = Math.PI / 2; ring.position.set(sx, 26, sz); g.add(ring);
-        continue;
-      }
-      const seat = mesh(new THREE.CylinderGeometry(17, 17, 6, 28), new THREE.MeshStandardMaterial({ color: '#b8956a', roughness: .6 })); seat.position.set(sx, 72, sz); g.add(seat);
-      cyl(g, 1.4, 70, M.black, sx, 36, sz, null);
-      const ring = mesh(new THREE.TorusGeometry(12, .9, 8, 30), M.black); ring.rotation.x = Math.PI / 2; ring.position.set(sx, 30, sz); g.add(ring);
-    }
+    for (let i = 0; i < nS; i++) stoolAt(g, M, st.decor.ss || '', (i + .5) * L / nS, sz, sz > Wd / 2 ? 1 : -1);
+    if (st.decor.ps) islandProps(g, M, L, Wd, BX + CT);
     return { z1: I.cz + I.ext };
   }
 
   let globeM = null;
-  const globeGlass = () => globeM || (globeM = new THREE.MeshPhysicalMaterial({ color: '#d8914a', roughness: .08, transmission: 0, transparent: true, opacity: .42, depthWrite: false, clearcoat: 1, side: THREE.DoubleSide }));
+  const globeGlass = clear => globeM || (globeM = new THREE.MeshPhysicalMaterial({ color: clear ? '#e8f0f2' : '#d8914a', roughness: .08, transparent: true, opacity: clear ? .22 : .42, depthWrite: false, clearcoat: 1, side: THREE.DoubleSide }));
+  const globeClear = new THREE.MeshPhysicalMaterial({ color: '#e8f0f2', roughness: .06, transparent: true, opacity: .22, depthWrite: false, clearcoat: 1, side: THREE.DoubleSide });
+  const metalM = (c, r) => new THREE.MeshStandardMaterial({ color: c, roughness: r == null ? .25 : r, metalness: .9 });
+  /* одна большая арматура над островом: светодиодная «змейка» на штанге, люстра-рамка, подвесная стальная рама с полкой */
+  function fixture(g, M, st, style, L) {
+    const H = st.roomH, y = 172, light = (c, k, yy) => { const pl = new THREE.PointLight(c, k, 380, 2); pl.position.set(0, yy, 0); g.add(pl); };
+    if (style === 'wave') {
+      const cu = metalM('#b8714e', .35); box(g, L, 1.8, 1.8, cu, -L / 2, y, -.9);
+      [-.44, .44].forEach(k => cyl(g, .25, H - y, M.black, k * L, (H + y) / 2, 0, null));
+      const pts = []; for (let i = 0; i <= 90; i++) { const t = i / 90; pts.push(new THREE.Vector3((t - .5) * L * .96, y - 2 - 46 * Math.pow(Math.sin(t * Math.PI * 2.2 + .35) * .5 + .5, 1.6) * Math.sin(t * Math.PI), 0)); }
+      const tube = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 160, 1.15, 8), M.led, false); g.add(tube);
+      light('#fff2dc', 1800, y - 30);
+    } else if (style === 'frame') {
+      const ch = metalM('#d5d9dc', .12), w = Math.min(L * .6, 62), h = 30, d = 30, yy = y + 6;
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(q => { cyl(g, .7, h, ch, q[0] * w / 2, yy + h / 2, q[1] * d / 2, null); cyl(g, .25, H - yy - h, ch, q[0] * w * .3, (H + yy + h) / 2, q[1] * d * .3, null); });
+      [yy, yy + h].forEach(yv => { [-1, 1].forEach(sz => cyl(g, .7, w, ch, 0, yv, sz * d / 2, 'x')); [-1, 1].forEach(sx => cyl(g, .7, d, ch, sx * w / 2, yv, 0, 'z')); });
+      for (let k = 0; k < 6; k++) { const bx = ((k % 3) - 1) * w * .3, bz = (k < 3 ? -1 : 1) * d * .22; const b = mesh(new THREE.CylinderGeometry(1.5, 1.8, 7, 12), M.led, false); b.position.set(bx, yy + 10, bz); g.add(b); }
+      light('#ffe4b8', 1500, yy + 12);
+    } else if (style === 'rack') {
+      const st2 = metalM('#c9ced3', .2), w = L, dd = 40;
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(q => cyl(g, .9, H - y, st2, q[0] * w * .46, (H + y) / 2, q[1] * dd / 2, null));
+      [-1, 1].forEach(sz => cyl(g, 1, w * .92, st2, 0, y, sz * dd / 2, 'x')); [-1, 1].forEach(sx => cyl(g, 1, dd, st2, sx * w * .46, y, 0, 'z'));
+      const gl = mesh(new THREE.BoxGeometry(w * .92, .8, dd), globeClear, false); gl.position.set(0, y - .5, 0); g.add(gl);
+      const hood = mesh(new THREE.BoxGeometry(w * .2, 70, dd * .9), st2); hood.position.set(w * .3, H - 35, 0); g.add(hood);
+      for (let k = 0; k < 4; k++) { const b = mesh(new THREE.CylinderGeometry(3.5, 3, 2.5, 18), new THREE.MeshStandardMaterial({ color: k % 2 ? '#e8dcc8' : '#8a6a50', roughness: .8 })); b.position.set((k - 1.5) * w * .18, y + .9, 0); g.add(b); }
+      light('#fff0d6', 1400, y - 10);
+    }
+  }
   function lamps(M, st, bounds) {
-    const n = st.decor.lamps || 0; if (!n) return;
+    const n = st.decor.lamps || 0, style = st.decor.ls || ''; if (!n) return;
     const I = bounds.isl;
+    if (['wave', 'frame', 'rack'].indexOf(style) >= 0) {
+      let cx = st.W / 2, cz = 85, ax = true, L = Math.min(st.W * .6, 200);
+      if (I) { cx = I.cx; cz = I.cz; ax = I.r % 180 === 0; L = Math.min(I.L * .85, 260); }
+      const g = new THREE.Group(); g.position.set(cx, 0, cz); if (!ax) g.rotation.y = Math.PI / 2; root.add(g); fixture(g, M, st, style, L); return;
+    }
     for (let i = 0; i < n; i++) {
       let x = (i + .5) * st.W / n, z = 85, y = 185;
       if (I) {
         const t = (i + .5) / n - .5, ax = I.r % 180 === 0;
         x = I.cx + (ax ? t * I.L : 0); z = I.cz + (ax ? 0 : t * I.L); y = 165;
       }
-      if (st.decor.ls === 'globe') {   // янтарный стеклянный шар с лампой накаливания на тонком шнуре
+      if (style === 'globe' || style === 'clear') {   // стеклянный шар с лампой накаливания на тонком шнуре
         const gy = y - 6; cyl(root, .25, st.roomH - gy - 9, M.black, x, (st.roomH + gy + 9) / 2, z, null);
-        const gl = mesh(new THREE.SphereGeometry(9.5, 28, 20), globeGlass(), false); gl.position.set(x, gy, z); root.add(gl);
+        const gl = mesh(new THREE.SphereGeometry(9.5, 28, 20), style === 'clear' ? globeClear : globeGlass(), false); gl.position.set(x, gy, z); root.add(gl);
         const cap = mesh(new THREE.CylinderGeometry(2.2, 2.2, 3, 14), M.black); cap.position.set(x, gy + 10.5, z); root.add(cap);
         const fil = mesh(new THREE.CylinderGeometry(1.1, 1.1, 8, 12), M.led, false); fil.position.set(x, gy, z); root.add(fil);
-        const pl = new THREE.PointLight('#ffb35a', 2600, 380, 2); pl.position.set(x, gy, z); root.add(pl);
+        const pl = new THREE.PointLight(style === 'clear' ? '#ffe2b0' : '#ffb35a', 2600, 380, 2); pl.position.set(x, gy, z); root.add(pl);
+        continue;
+      }
+      if (style === 'cyl') {   // чёрный цилиндр со светящейся колбой внутри
+        const cy = y - 8; cyl(root, .25, st.roomH - cy - 16, M.black, x, (st.roomH + cy + 16) / 2, z, null);
+        const sh = mesh(new THREE.CylinderGeometry(5.5, 5.5, 32, 24, 1, true), new THREE.MeshStandardMaterial({ color: '#121212', roughness: .5, side: THREE.DoubleSide })); sh.position.set(x, cy, z); root.add(sh);
+        const core = mesh(new THREE.CylinderGeometry(3, 3, 26, 14), M.led, false); core.position.set(x, cy, z); root.add(core);
+        const pl = new THREE.PointLight('#ffe1b0', 1700, 360, 2); pl.position.set(x, cy - 4, z); root.add(pl);
         continue;
       }
       cyl(root, .3, st.roomH - y - 20, M.black, x, (st.roomH + y + 20) / 2, z, null);
@@ -807,7 +896,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
     sun.position.set(cx - span * .35, st.roomH + 260, bounds.zMax + span * .55); sun.target.position.set(cx, 60, depthMax / 2);
     const sc = sun.shadow.camera; sc.left = -span * .7; sc.right = span * .7; sc.top = span * .7; sc.bottom = -span * .7; sc.near = 10; sc.far = span * 3; sc.updateProjectionMatrix();
     // применить текущие доли открытия
-    lastM = M; { const sc1 = !!(st.decor && st.decor.sc); if (sc1 !== lastSc) { lastSc = sc1; setLight(!dusk); } } ledBoost(M);
+    lastM = M; { const sc1 = !!(st.decor && st.decor.nt); if (sc1 !== lastSc) { lastSc = sc1; setLight(!dusk); } } ledBoost(M);
     anims.forEach(a => a.apply(ease(openAmt.get(a.key) || 0)));
     highlight();
     if (firstFrame) { setView('angle'); firstFrame = false; }

@@ -24,7 +24,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=8'; import * as C from '/static/js/shkaf-pro-core.js?v=29'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=9'; import * as C from '/static/js/shkaf-pro-core.js?v=29'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script src="/static/js/shkaf-lib.js?v=2"></script>
   <script type="module" src="/static/js/shkaf-3dpart.js?v=13"></script>
   <script src="/static/js/color-catalog.js?v=3"></script>
@@ -2068,12 +2068,17 @@
     }
 
     // Интерьер: подвесные светильники, барные стулья, растения
+    const LAMP_ST = ['globe', 'clear', 'cyl', 'wave', 'frame', 'rack'], STOOL_ST = ['chair', 'velvet', 'leather', 'bar', 'black'], WIN_ST = ['city', 'garden', 'blind'];
+    // сохранение: коды стилей — индекс+1 (0 — по умолчанию); старые ссылки хранили 1 как «globe/chair/город + вечер»
+    const dcEnc = d => [d.lamps, d.stools, d.plant ? 1 : 0, d.fplant ? 1 : 0, LAMP_ST.indexOf(d.ls) + 1, STOOL_ST.indexOf(d.ss) + 1, WIN_ST.indexOf(d.sc) + 1, d.nt ? 1 : 0, d.ps ? 1 : 0];
+    const dcDec = a => Array.isArray(a) ? { lamps: a[0], stools: a[1], plant: a[2], fplant: a[3], ls: LAMP_ST[(a[4] | 0) - 1], ss: STOOL_ST[(a[5] | 0) - 1], sc: WIN_ST[(a[6] | 0) - 1], nt: a.length > 7 ? !!a[7] : !!a[6], ps: !!a[8] } : null;
     const DECOR_DEFAULT = { lamps: 0, stools: 0, plant: false, fplant: false };
     let decorState = Object.assign({}, DECOR_DEFAULT);
     function decorClean(d) {
       d = d || {};
       const n = (v, a, b) => Math.max(a, Math.min(b, Math.round(Number(v) || 0)));
-      return { lamps: n(d.lamps, 0, 6), stools: n(d.stools, 0, 8), plant: !!d.plant, fplant: !!d.fplant, ls: d.ls === 'globe' ? 'globe' : '', ss: d.ss === 'chair' ? 'chair' : '', sc: !!d.sc };
+      const pk = (v, a) => a.indexOf(v) >= 0 ? v : '';
+      return { lamps: n(d.lamps, 0, 6), stools: n(d.stools, 0, 8), plant: !!d.plant, fplant: !!d.fplant, ls: pk(d.ls, LAMP_ST), ss: pk(d.ss, STOOL_ST), sc: pk(d.sc, WIN_ST), nt: !!d.nt, ps: !!d.ps };
     }
     // Где висят светильники и стоят стулья (см): над островом, а без острова — вдоль основной стены перед столешницей
     function decorSpots(st, W, isl) {
@@ -2841,7 +2846,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=52');
+        const mod = await import('/static/js/kitchen3d.js?v=54');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: (sel, multi) => k3dOnSelect(sel, multi), onMoveMulti: (items, dx, dz) => k3dMoveMulti(items, dx, dz),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3300,9 +3305,11 @@
         <div class="k3s-sub">🪴 ${esc(L3('Интерьер (в цену не входит)', 'Interyer (narxga kirmaydi)'))}</div>
         ${k3Row(L3('Лампы', 'Chiroqlar'), k3Step(dc.lamps, 'k3dDecor(\'lamps\',-1)', 'k3dDecor(\'lamps\',1)'))}
         ${k3Row(L3('Стулья', 'Stullar'), k3Step(dc.stools, 'k3dDecor(\'stools\',-1)', 'k3dDecor(\'stools\',1)'))}
-        ${k3Row(L3('Вид ламп', 'Chiroq turi'), k3B(!dc.ls, "k3dDecorS('ls','')", L3('конусы', 'konus')) + k3B(!!dc.ls, "k3dDecorS('ls','globe')", L3('стеклянные шары', 'shisha shar')))}
-        ${k3Row(L3('Вид стульев', 'Stul turi'), k3B(!dc.ss, "k3dDecorS('ss','')", L3('круглые', 'dumaloq')) + k3B(!!dc.ss, "k3dDecorS('ss','chair')", L3('мягкие со спинкой', 'yumshoq')))}
-        ${k3Row(L3('Окно с видом на город', 'Shahar manzarali oyna'), k3B(!dc.sc, "k3dDecorS('sc',false)", L3('нет', 'yoʻq')) + k3B(!!dc.sc, "k3dDecorS('sc',true)", L3('вечер, шторы', 'kech, parda')))}
+        ${k3Row(L3('Вид ламп', 'Chiroq turi'), decSel('ls', dc.ls, [['', L3('конусы', 'konus')], ['globe', L3('янтарные шары', 'shar')], ['clear', L3('прозрачные шары', 'shaffof shar')], ['cyl', L3('чёрные цилиндры', 'silindr')], ['wave', L3('светодиодная змейка', 'LED ilon')], ['frame', L3('люстра-рамка', 'ramka')], ['rack', L3('стальная рама с полкой', 'rama')]]))}
+        ${k3Row(L3('Вид стульев', 'Stul turi'), decSel('ss', dc.ss, [['', L3('круглые', 'dumaloq')], ['chair', L3('мягкие со спинкой', 'yumshoq')], ['velvet', L3('зелёный бархат', 'baxmal')], ['leather', L3('кожаные', 'charm')], ['bar', L3('хром + мягкое сиденье', 'xrom')], ['black', L3('чёрные кожаные', 'qora')]]))}
+        ${k3Row(L3('Окно', 'Oyna'), decSel('sc', dc.sc, [['', L3('нет', 'yoʻq')], ['city', L3('панорама города', 'shahar')], ['garden', L3('сад над мойкой', 'bogʻ')], ['blind', L3('светлое с рулонной шторой', 'parda')]]))}
+        ${k3Row(L3('Вечерний свет', 'Kechki yorugʻlik'), k3B(!dc.nt, "k3dDecorS('nt',false)", L3('день', 'kun')) + k3B(!!dc.nt, "k3dDecorS('nt',true)", L3('вечер', 'kech')))}
+        ${k3Row(L3('Декор на столе', 'Dekor'), k3B(!dc.ps, "k3dDecorS('ps',false)", L3('нет', 'yoʻq')) + k3B(!!dc.ps, "k3dDecorS('ps',true)", L3('ваза, чаша', 'vaza')))}
         <div class="k3e-r">${k3B(false, 'k3dPrestige()', '✨ ' + L3('Стиль «Престиж, вечер» — одним нажатием', 'Prestij uslubi — bir bosishda'))}</div>
         ${k3Row(L3('Растения', 'Oʻsimliklar'), k3B(dc.plant, "k3dDecor('plant')", L3('на столешнице', 'stolda')) + k3B(dc.fplant, "k3dDecor('fplant')", L3('в кадке', 'tuvakda')))}`;
       return h;
@@ -3433,15 +3440,16 @@
       return k3Row(L3('Камень (плита)', 'Tosh (plita)'), `<select onchange="k3dTopTex(this.value)"><option value="">${esc(L3('не использовать', 'ishlatmaslik'))}</option>${ids.map(k => `<option value="${k}" ${topTex === k ? 'selected' : ''}>${esc(F[k].ru)}</option>`).join('')}</select>`);
     }
     function k3dTopTex(v) { topTex = v; updateCalculator(); renderK3dEdit(); updateShareLinks(); }
-    function k3dSceneLight() { k3dLightOn = !decorClean(decorState).sc; k3dLedsOn = true; k3dLightFx(); renderK3dBar(); }
-    function k3dDecorS(k, v) { decorState = decorClean(Object.assign({}, decorState, { [k]: v })); if (k === 'sc') k3dSceneLight(); updateCalculator(); renderK3dEdit(); updateShareLinks(); }
+    const decSel = (k, cur, list) => `<select onchange="k3dDecorS('${k}', this.value)">${list.map(([v, n]) => `<option value="${v}" ${cur === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
+    function k3dSceneLight() { k3dLightOn = !decorClean(decorState).nt; k3dLedsOn = true; k3dLightFx(); renderK3dBar(); }
+    function k3dDecorS(k, v) { decorState = decorClean(Object.assign({}, decorState, { [k]: v })); if (k === 'nt') k3dSceneLight(); updateCalculator(); renderK3dEdit(); updateShareLinks(); }
     /* готовый вид «как на фото»: тёмный шпон-орех, коричневый мрамор, тёмный камень на полу, шары, мягкие стулья, окно с городом, вечерний свет */
     function k3dPrestige() {
       const f = findColor('pl40'), b = findColor('pr23'); if (f) { selectedFacadeColor = colorObj(f); setMaterialForColor('facade', selectedFacadeColor); } if (b) { selectedBodyColor = colorObj(b); setMaterialForColor('body', selectedBodyColor); } updateColorUIBadges();
       topTex = 's_emp'; topColorHex = ''; islandCfg.ctc = ''; roomFinish = { floor: ['s_dark', ''], wall: ['w_choc', ''], acc: ['', ''] };
       kOpens.forEach(o => { if (o.kind === 'apron') { o.v = 'marble_e'; o.c = 0; } });
       lowerSections.concat(upperSections).forEach(x => { delete x.ctc; delete x.pc; });   // единый вид: свои цвета шкафов и столешниц сбрасываем
-      decorState = decorClean({ lamps: 3, stools: 3, plant: true, ls: 'globe', ss: 'chair', sc: true });
+      decorState = decorClean({ lamps: 3, stools: 3, plant: true, ls: 'globe', ss: 'chair', sc: 'city', nt: true, ps: true });
       k3dSceneLight(); updateCalculator(); renderK3dEdit(); renderRoomFinish(); updateShareLinks();
     }
     function k3dDecor(k, d) { if (d == null) decorState[k] = !decorState[k]; else decorState[k] = Math.max(0, (decorState[k] | 0) + d); decorState = decorClean(decorState); updateCalculator(); renderK3dEdit(); }
@@ -6145,9 +6153,11 @@
         up: [['door', 80, 1, 0, 'l'], ['door', 60, 1, 0, 'l'], ['door', 100, 1, 0], ['hood', 80, 0, 1], ['door', 80, 1, 0], ['door', 60, 1, 0], ['door', 60, 1, 0], ['door', 80, 1, 0]] },
       // ph-k1 · Графит и дерево: прямая без верхних шкафов (стена — декоративные рейки). Пенал-витрина и деревянный пенал,
       // нижние ящики под гола-профиль, деревянная столешница, остров на 2 стула, лампа-волна, подсветка витрины.
-      { id: 'graphite', seg: 'prem', photo: 'ph-k1', t: 'straight', f: 5, b: 5, c: 1, hw: 2, u: 0, fcn: ['platinum', 'Дуб Американский'], bcn: ['platinum', 'Графит Металик'], open: 'g', o: [1, 1, 1], lg: [2, 0, 0, 4], isl: [1, 240, 100], dc: [1, 2, 1, 0],
+      { id: 'graphite', seg: 'prem', photo: 'ph-k1', t: 'straight', f: 3, b: 5, c: 1, hw: 2, u: 0, rh: 260, fcn: ['premium', 'Дуб Ланселлот'], bcn: ['platinum', 'Графит Металик'], open: 'g', o: [1, 1, 1], lg: [2, 0, 0, 4], isl: [1, 240, 100], dc: [1, 2, 0, 0, 4, 2, 0, 0, 1], tt: 's_blk', rf: ['s_lime', 'w_lgray', ''],
+        apron: [120, 380, 'stone_dk'], ox: [['wpanel', 0, 120, 380, 115, 145, 1.8, 1, 'rail_dg', 0]],
+        ic: { c: [['door', 60, 1, 0, 1, 'L', 'gola', 0, 0, 'vfine'], ['drawers', 60, 1, 3, 0, 'L', 'gola', 0, 0, 'vfine'], ['door', 60, 1, 0, 1, 'L', 'gola', 0, 0, 'vfine'], ['drawers', 60, 1, 3, 0, 'L', 'gola', 0, 0, 'vfine']], t: 'top', f: 45, b: 2, k: 'panel', h: 0, r: 0, ot: 'gola', p: ['pl6', 'pl6'], tc: '#cfa974', ol: 2, or: 2, ct: 5, bh: 0 },
         kh: { hinge: 'std_soft' },
-        lo: [['tower', 60, 0, 0, 'm', 'storage'], ['tower', 60, 0, 0, 'm', 'storage'], ['drawers', 80, 0, 3, 'm', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_d'] }], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 80, 0, 3, 'm', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_d'] }], ['drawers', 80, 0, 3, 'm', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_d'] }]],
+        lo: [['tower', 60, 0, 0, 'm', 'storage', { glass: true, gt: 'tint', led: 3, pc: { f: 'pl6' } }], ['tower', 60, 0, 0, 'm', 'storage'], ['drawers', 80, 0, 3, 'm', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_d'] }], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 80, 0, 3, 'm', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_d'] }], ['drawers', 80, 0, 3, 'm', '', { dsys: ['tbx_m', 'tbx_b', 'tbx_d'] }]],
         up: [] },
       // ph-k3 · Камень и графит: прямая. Четыре пенала (две духовки, микроволновка, два шкафа), открытые полки с подсветкой и вытяжка,
       // нижний ряд с мойкой и варочной, большой остров на 4 стула, гола, LEGRABOX.
@@ -6158,7 +6168,7 @@
         up: [['open', 80, 2, 0], ['open', 60, 2, 0], ['open', 80, 2, 0], ['hood', 80, 0, 1, 'm', '', { hx: { lift: 'hk_s' } }]] },
       // hero · Престиж с островом: прямая. Холодильник и пенал с нишей слева, пенал с духовкой и микроволновкой справа,
       // верхние шкафы в два яруса с подсветкой, мраморная столешница и фартук, длинный остров на 3 стула, три лампы. Всё на Blum.
-      { id: 'prestige', seg: 'prem', photo: 'hero', t: 'straight', f: 5, b: 2, c: 3, hw: 4, ut: 2, uh: 65, rh: 270, ug: 50, fcn: ['platinum', 'Элегантный Орех'], bcn: ['premium', 'Дуб Графит'], open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 300, 100], dc: [3, 3, 1, 0, 1, 1, 1], tt: 's_emp', rf: ['s_dark', 'w_choc', ''],
+      { id: 'prestige', seg: 'prem', photo: 'hero', t: 'straight', f: 5, b: 2, c: 3, hw: 4, ut: 2, uh: 65, rh: 270, ug: 50, fcn: ['platinum', 'Элегантный Орех'], bcn: ['premium', 'Дуб Графит'], open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 300, 100], dc: [3, 3, 1, 0, 1, 1, 1, 1, 1], tt: 's_emp', rf: ['s_dark', 'w_choc', ''],
         apron: [150, 380, 'marble_e'], ic: { c: [['door', 60, 1, 0, 1, 'L', 'gola', 0, 0, ''], ['door', 60, 1, 0, 1, 'L', 'gola', 0, 0, ''], ['drawers', 60, 1, 3, 0, 'L', 'gola', 0, 0, ''], ['drawers', 60, 1, 3, 0, 'L', 'gola', 0, 0, ''], ['drawers', 60, 1, 3, 0, 'L', 'gola', 0, 0, '']], t: 'both', f: 45, b: 2, k: 'panel', h: 0, r: 0, ot: 'gola', p: 0, tc: '', ol: 2, or: 2, ct: 4, bh: 0 },
         kh: { hinge: 'std_soft', lift: 'hk_top', sinkbox: 'legrabox', sx: { twin_l: 1 } },
         lo: [['fridge', 90, 0, 0, 'm', 'free'], ['tower', 60, 0, 0, 'm', 'storage'], ['drawers', 80, 0, 3, 'm', '', PR_LBX], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 80, 0, 3, 'm', '', PR_LBX], ['drawers', 80, 0, 3, 'm', '', PR_LBX], ['tower', 60, 0, 0, 'm', 'ovenMicro', { dsys: ['lbx_c', 'lbx_c'] }]],
@@ -6166,11 +6176,11 @@
     ];
 
     function presetState(p) {
-      const conv = arr => arr.map(e => { const o = e[6] || {}; return [e[0], '', e[1], e[2], e[3], p.open, e[4] || 'm', e[5] || '', '', 0, '', (o.dsys || []).join(','), o.hx ? HX_FIELDS.map(f => o.hx[f] || '').join('|') : '']; });
+      const conv = arr => arr.map(e => { const o = e[6] || {}; return [e[0], '', e[1], e[2], e[3], o.open || p.open, e[4] || 'm', e[5] || '', '', 0, '', (o.dsys || []).join(','), o.hx ? HX_FIELDS.map(f => o.hx[f] || '').join('|') : '', [o.dn || '', o.led || '', o.ug != null ? o.ug : '', '', '', '', o.ov ? 1 : ''].join('|'), '', '', o.pc ? [o.pc.f || '', o.pc.b || '', o.pc.f2 || ''].join('|') : '', (o.dp || o.ht) ? [o.dp || '', o.ht || '', '', '', ''].join('|') : '', o.ctc || '', '', o.glass ? ['1', o.gf || '', o.gt || ''].join('|') : '', o.ml || '']; });
       const sumWall = (arr, w) => arr.filter(e => (e[4] || 'm') === w).reduce((a, e) => a + e[1], 0);
       const main = sumWall(p.lo, 'm'), left = sumWall(p.lo, 'l'), right = sumWall(p.lo, 'r');
       const byName = (a, d) => { if (!a) return d; const sec = colorCatalog.find(c => c.key === a[0]); const it = sec && sec.items.find(i => i.name === a[1]); return it ? it.id : d; };
-      return { v: 5, dc: p.dc || [0, 0, 0, 0], tt: p.tt || 0, rf: p.rf ? [p.rf[0], p.rf[1], p.rf[2]] : 0, ic: p.ic || 0, ox: p.apron ? [['apron', 0, p.apron[0], p.apron[1], (p.ug || 56), p.ch || 89, 0.6, 1, p.apron[2], 0]] : [], ch: p.ch || 89, ug: p.ug || 56, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: p.rh || 240, u: p.u === 0 ? 0 : 1, ut: p.ut === 2 ? 2 : 1, uh: p.uh || 72, ud: 35,
+      return { v: 5, dc: p.dc || [0, 0, 0, 0], tt: p.tt || 0, rf: p.rf ? [p.rf[0], p.rf[1], p.rf[2]] : 0, ic: p.ic || 0, ox: (p.apron ? [['apron', 0, p.apron[0], p.apron[1], (p.ug || 56), p.ch || 89, 0.6, 1, p.apron[2], 0]] : []).concat(p.ox || []), ch: p.ch || 89, ug: p.ug || 56, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: p.rh || 240, u: p.u === 0 ? 0 : 1, ut: p.ut === 2 ? 2 : 1, uh: p.uh || 72, ud: 35,
         f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: byName(p.fcn, p.fc), bc: byName(p.bcn, p.bc), lo: conv(p.lo), up: conv(p.up), o: p.o, i: p.isl || [0, 140, 80], kh: p.kh || null };
     }
 
@@ -6205,7 +6215,7 @@
         island: !!st.i[0], islL: st.i[1], islW: st.i[2], sink: ao.sink, hob: ao.hob, app: ao.app,
         counterH: st.ch || 89, upperGap: st.ug || 56,
         hw: st.hw === undefined ? CONFIG.defaults.hw : st.hw, led: ledWithCabinets(ledFromArr(st.lg), lo.concat(up)), khw: sanitizeKHW(st.kh),
-        decor: decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3], ls: st.dc[4] ? 'globe' : '', ss: st.dc[5] ? 'chair' : '', sc: st.dc[6] } : null),
+        decor: decorClean(dcDec(st.dc)),
         facadeHex: fcol ? fcol.item.hex : '#f8fafc', bodyHex: bcol ? bcol.item.hex : '#ffffff' };
     }
 
@@ -6243,7 +6253,7 @@
       const encOne = (x, tier) => [x.kind || '', x.autoName ? '' : x.name, x.width, x.shelves | 0, tier === 'lower' ? (x.drawers | 0) : (x.gasLifts | 0), (x.openType || 'handles')[0], (x.wall || 'main')[0], x.tw || x.fr || x.cg || '', String(x.note || '').slice(0, 120), x.gap | 0, x.hinge || '', (x.dsys || []).join(','), x.hx ? HX_FIELDS.map(f => x.hx[f] || '').join('|') : '', [x.dn || '', x.led || '', x.ug != null ? x.ug : '', x.mwTop ? 1 : '', x.ovY != null ? x.ovY : '', x.mwY != null ? x.mwY : '', x.ov ? 1 : ''].join('|'), x.fp ? [fpN(x.fp.x), fpN(x.fp.z), fpN(x.fp.y), x.fp.r | 0].join('|') : '', x.cs || '', x.pc ? [x.pc.f || '', x.pc.b || '', x.pc.f2 || ''].join('|') : '', [x.dp || '', x.ht || '', x.ctt || '', x.ctd || '', x.mxd || ''].join('|'), x.ctc || '', x.bw || '', (x.glass || x.kind === 'glass') ? [1, x.gf || '', x.gt || ''].join('|') : '', x.ml || ''];
       const enc = (arr, tier) => arr.map(x => encOne(x, tier));
       const dc = decorClean(decorState);
-      return { v: 5, dc: [dc.lamps, dc.stools, dc.plant ? 1 : 0, dc.fplant ? 1 : 0, dc.ls ? 1 : 0, dc.ss ? 1 : 0, dc.sc ? 1 : 0], tt: topTex || 0, t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
+      return { v: 5, dc: dcEnc(dc), tt: topTex || 0, t: s.type, m: s.mainW, l: s.leftW, r: s.rightW, h: s.roomH, u: s.hasUpper ? 1 : 0, ut: s.upperTiers === 2 ? 2 : 1, uh: s.upperH, ud: s.upperD,
         f: s.facade, b: s.body, c: s.top, hw: s.hw, lg: [ledState.level, ledState.work ? 1 : 0, ledState.plinth ? 1 : 0, ledState.shelves | 0], fc: selectedFacadeColor.id, bc: selectedBodyColor.id,
         lo: enc(lowerSections, 'lower'), up: enc(upperSections, 'upper'),
         ic: (islandCfg.cells.length || islandCfg.top !== 'top' || islandCfg.ovF !== 2 || islandCfg.ovB !== 2 || islandCfg.back !== 'panel' || islandCfg.hood || islandCfg.bar || islandCfg.pc || islandCfg.ctc || islandCfg.ovL !== 2 || islandCfg.ovR !== 2 || islandCfg.ct || islandCfg.bh || islandCfg.ot !== 'handles') ? { c: islandCfg.cells.map(x => [x.k, Math.round(x.w * 10) / 10, x.dn | 0, x.dr | 0, x.sh | 0, x.hg || 'L', x.ot || '', x.glass ? 1 : 0, x.led | 0, x.ml || '', x.ov ? 1 : 0]), t: islandCfg.top, f: islandCfg.ovF, b: islandCfg.ovB, k: islandCfg.back, h: islandCfg.hood ? 1 : 0, r: islandCfg.bar ? 1 : 0, ot: islandCfg.ot || 'handles', p: islandCfg.pc ? [islandCfg.pc.f || '', islandCfg.pc.b || ''] : 0, tc: islandCfg.ctc || '', ol: islandCfg.ovL, or: islandCfg.ovR, ct: islandCfg.ct || 0, bh: islandCfg.bh || 0 } : 0, fm: facadeMill || 0, rf: (rfClean() ? ['floor', 'wall', 'acc'].map(k => roomFinish[k][0] ? roomFinish[k][0] + (roomFinish[k][1] ? '|' + roomFinish[k][1] : '') : '') : 0), tc: topColorHex || 0, rp: roomPoly ? roomPoly.reduce((a, p) => a.concat(p), []) : 0, pk: parkedSections.map(p => [p.tier === 'lower' ? 0 : 1, encOne(p.sec, p.tier)]), ip: islandPos ? [islandPos.cx, islandPos.cz, islandPos.r] : 0,
@@ -6353,8 +6363,8 @@
       kObjs = window.SCORE && Array.isArray(st.oj) && st.oj.length ? (window.SCORE.sanitize({ cols: [], objs: st.oj.slice(0, 60), room: { poly: roomPoly } }) || { objs: [] }).objs : []; selObjId = null;
       selSec = null;
       addMenuWall = null;
-      decorState = decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3], ls: st.dc[4] ? 'globe' : '', ss: st.dc[5] ? 'chair' : '', sc: st.dc[6] } : null);
-      if (decorState.sc) { k3dLightOn = false; k3dLedsOn = true; }
+      decorState = decorClean(dcDec(st.dc));
+      if (decorState.nt) { k3dLightOn = false; k3dLedsOn = true; } else k3dLightOn = true;
       k3dLightFx(); if (typeof renderK3dBar === 'function' && el('k3dBar')) renderK3dBar();
 
       currentType = ['straight', 'l-shape', 'u-shape', 'parallel'].includes(st.t) ? st.t : 'straight';
