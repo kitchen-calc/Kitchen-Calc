@@ -1,5 +1,5 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=25';
+import * as C from '/static/js/shkaf-pro-core.js?v=26';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=4';
@@ -222,6 +222,7 @@ function sideCol() {
     const nn = c.dn != null ? c.dn : (c.w > 65 ? 2 : 1), dr = c.dd || 'auto';
     h += `<div class="sub">Двери этого отсека</div><div class="r"><span>Дверей</span>${[0, 1, 2, 3, 4].map(k => btn(nn === k, `PRO.set('col.dn',${k})`, k === 0 ? 'Нет' : String(k))).join('')}</div>`;
     if (nn >= 3) h += `<div class="r">${btn(c.dp !== false, 'PRO.colDp()', c.dp !== false ? '▮ У каждой двери своя перегородка: вкл' : '▯ Перегородки между дверями: выкл')}</div>`;
+    if (nn >= 2) h += Array.from({ length: Math.min(nn, 4) }, (_, i) => `<div class="r"><span>Дверь ${i + 1}</span><select onchange="PRO.cdfi(${i}, this.value)"><option value="">как у отсека</option>${Object.keys(FILLS).map(k => `<option value="${k}" ${((c.dfs || [])[i] || '') === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select></div>`).join('');
     if (nn > 0) h += `<div class="r"><span>Материал</span><select onchange="PRO.cdf(this.value)">${Object.keys(FILLS).map(k => `<option value="${k}" ${(c.df || 'dsp') === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select></div><div class="r"><span>Открывание</span>${[['auto', 'авто'], ['L', '◀ влево'], ['R', 'вправо ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => btn(dr === k, `PRO.cdd('${k}')`, t)).join('')}</div><div class="note">Двойной щелчок по двери в 3D открывает её. Двери удаляются вместе с отсеком или кнопкой «Нет».</div>`;
   } else h += `<div class="r">${btn(0, "PRO.doors('swing')", '🚪 Включить двери по отсекам')}</div>`;
   h += `<div class="sub">Добавить в отсек</div>` + addButtons();
@@ -473,7 +474,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=33');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=34');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -617,7 +618,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=36');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=37');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -728,6 +729,7 @@ window.PRO = {
   obDup: () => mutate(() => { const o = JSON.parse(JSON.stringify(S.objs[sel.oi])); o.id = C.uid(); o.x = r1(o.x + 20); o.z = r1(o.z + 20); S.objs.push(o); sel = { k: 'obj', oi: S.objs.length - 1 }; }),
   obToggle: k => mutate(() => { const o = S.objs[sel.oi]; if (o) o[k] = !o[k]; }),
   obMat: v => mutate(() => { const o = S.objs[sel.oi]; if (o) o.mat = v; }), obColor: v => mutate(() => { const o = S.objs[sel.oi]; if (o) o.color = v; }),
+  cdfi: (i, v) => mutate(() => { const c = S.cols[sel.i]; if (!c) return; const a = (c.dfs || []).slice(); while (a.length <= i) a.push(''); a[i] = v || ''; if (a.every(x => !x)) delete c.dfs; else c.dfs = a; }),
   csTog: id => { if (colSync.sel[id]) delete colSync.sel[id]; else colSync.sel[id] = 1; refresh(); },
   csWhat: f => { colSync.what[f] = !colSync.what[f]; refresh(); },
   csPick: how => { colSync.sel = {}; if (how === 'all') S.cols.forEach((c, ci) => { if (ci !== sel.i && !c.gap) colSync.sel[c.id] = 1; }); refresh(); },

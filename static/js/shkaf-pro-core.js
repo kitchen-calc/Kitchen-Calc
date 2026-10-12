@@ -461,7 +461,7 @@ export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, le
       g.cols.forEach((c, ci) => {
         if (c.gap) return; const col = S.cols[ci], L = c.det || ci === 0 || g.cols[ci - 1].gap || g.cols[ci - 1].det ? c.xa - t : c.xa - t / 2, R = c.det || ci === g.cols.length - 1 || g.cols[ci + 1].gap || g.cols[ci + 1].det ? c.xb + t : c.xb + t / 2, cw = R - L;
         const n = col.dn != null ? col.dn : (c.w > 65 ? 2 : 1), fill = col.df || 'dsp', dr = col.dd || 'auto';
-        for (let i = 0; i < n; i++) { const hinge = dr === 'auto' ? (n === 1 ? 'L' : (i < n / 2 ? 'L' : 'R')) : dr; out.push({ zone: 'main', i: k++, ci, ri: i, n, x: L + i * (cw / n) + .15, w: cw / n - .3, h: c.H - S.plinth - .4, y: S.plinth + .2, fill, sliding: false, left: hinge === 'L', hinge, gf: d.gf || 4 }); }
+        for (let i = 0; i < n; i++) { const hinge = dr === 'auto' ? (n === 1 ? 'L' : (i < n / 2 ? 'L' : 'R')) : dr; out.push({ zone: 'main', i: k++, ci, ri: i, n, x: L + i * (cw / n) + .15, w: cw / n - .3, h: c.H - S.plinth - .4, y: S.plinth + .2, fill: (col.dfs && FILLS[col.dfs[i]]) ? col.dfs[i] : fill, sliding: false, left: hinge === 'L', hinge, gf: d.gf || 4 }); }
       });
     }
   }
@@ -804,6 +804,7 @@ export function sanitize(S) {
     if (c && c.det && isFinite(c.det.x) && isFinite(c.det.z)) col.det = { x: r1(n(c.det.x, -1500, 3000, 0)), z: r1(n(c.det.z, -1500, 3000, 0)), rot: [0, 90, 180, 270].includes(c.det.rot) ? c.det.rot : 0 };
     if (c && FILLS[c.df] && c.df !== 'dsp') col.df = c.df;
     if (c && catId(c.cat)) col.cat = c.cat; if (c && catId(c.dcat)) col.dcat = c.dcat;
+    if (c && Array.isArray(c.dfs) && c.dfs.some(f => FILLS[f])) col.dfs = c.dfs.slice(0, 4).map(f => FILLS[f] ? f : '');
     if (c && ['L', 'R', 'U', 'D'].includes(c.dd)) col.dd = c.dd;
     (!col.gap && c && Array.isArray(c.items) ? c.items : []).slice(0, 40).forEach(it => {
       if (it && it.type === 'drawers') { const cnt = n(it.n, 1, 8, 3) | 0, fh0 = n(it.fh, 8, 40, 18); for (let k = 0; k < cnt; k++) { const b0 = mkItem('drawer', n(it.y, 0, 330, 10) + k * fh0); b0.fh = fh0; b0.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; col.items.push(b0); } return; }
