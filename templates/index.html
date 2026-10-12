@@ -24,7 +24,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-  <script type="module">import * as R from '/static/js/room-open-core.js?v=7'; import * as C from '/static/js/shkaf-pro-core.js?v=29'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
+  <script type="module">import * as R from '/static/js/room-open-core.js?v=8'; import * as C from '/static/js/shkaf-pro-core.js?v=29'; window.SCORE = C; window.ROPEN = R; window.dispatchEvent(new Event('ropen-ready'));</script>
   <script src="/static/js/shkaf-lib.js?v=2"></script>
   <script type="module" src="/static/js/shkaf-3dpart.js?v=13"></script>
   <script src="/static/js/color-catalog.js?v=3"></script>
@@ -1707,7 +1707,7 @@
         p_duo: 'Дуэт', p_duo_d: 'Угловая 3 × 1,8 м · холодильник и посудомойка · ЛМДФ Эконом · крем',
         p_comfort: 'Комфорт', p_comfort_d: 'Угловая 3 × 1,8 м · GTV + Blum: ящики TANDEMBOX, AVENTOS, ящик под мойку · пенал, посудомойка',
         p_enamel: 'Индиго Люкс', p_enamel_d: 'Угловая 3 × 1,8 м · пенал с духовкой · встроенный холодильник · Blum · подсветка',
-        p_prestige: 'Престиж с островом', p_prestige_d: 'Прямая · верх в два яруса с подсветкой · 2 пенала и холодильник · мрамор · остров на 3 стула · всё на Blum',
+        p_prestige: 'Престиж с островом', p_prestige_d: 'Прямая · тёмный орех до потолка в два яруса с подсветкой · холодильник и пенал с духовками · мрамор · остров с мраморными боками на 3 стула · стеклянные шары · вечерний свет · всё на Blum',
         p_tier1: 'Два яруса Эконом', p_tier1_d: 'Прямая 3,6 м · верхние шкафы в 2 яруса 600×400 · стиральная машина и холодильник · ЛДСП Эконом',
         p_tier2: 'Два яруса Комфорт', p_tier2_d: 'Угловая 3 × 1,8 м · верхние шкафы в 2 яруса 600×400 · пенал духовка + микроволновка · посудомойка',
         p_tier3: 'Два яруса Люкс', p_tier3_d: 'Прямая 4,2 м · верхние шкафы в 2 яруса 600×400 · встроенный холодильник, пенал с техникой · Blum · подсветка',
@@ -2841,7 +2841,7 @@
       if (K3 || k3dLoading) return;
       k3dLoading = true;
       try {
-        const mod = await import('/static/js/kitchen3d.js?v=50');
+        const mod = await import('/static/js/kitchen3d.js?v=52');
         K3 = mod.createK3D(el('k3dCanvas'), VIEW_ONLY ? {} : {
           onSelect: (sel, multi) => k3dOnSelect(sel, multi), onMoveMulti: (items, dx, dz) => k3dMoveMulti(items, dx, dz),
           onDrag: (sel, res, c0) => k3dDragHook(sel, res, c0),
@@ -3437,7 +3437,7 @@
     function k3dDecorS(k, v) { decorState = decorClean(Object.assign({}, decorState, { [k]: v })); if (k === 'sc') k3dSceneLight(); updateCalculator(); renderK3dEdit(); updateShareLinks(); }
     /* готовый вид «как на фото»: тёмный шпон-орех, коричневый мрамор, тёмный камень на полу, шары, мягкие стулья, окно с городом, вечерний свет */
     function k3dPrestige() {
-      const f = findColor('ec29'), b = findColor('pr23'); if (f) selectedFacadeColor = colorObj(f); if (b) selectedBodyColor = colorObj(b); updateColorUIBadges();
+      const f = findColor('pl40'), b = findColor('pr23'); if (f) { selectedFacadeColor = colorObj(f); setMaterialForColor('facade', selectedFacadeColor); } if (b) { selectedBodyColor = colorObj(b); setMaterialForColor('body', selectedBodyColor); } updateColorUIBadges();
       topTex = 's_emp'; topColorHex = ''; islandCfg.ctc = ''; roomFinish = { floor: ['s_dark', ''], wall: ['w_choc', ''], acc: ['', ''] };
       kOpens.forEach(o => { if (o.kind === 'apron') { o.v = 'marble_e'; o.c = 0; } });
       lowerSections.concat(upperSections).forEach(x => { delete x.ctc; delete x.pc; });   // единый вид: свои цвета шкафов и столешниц сбрасываем
@@ -6158,7 +6158,8 @@
         up: [['open', 80, 2, 0], ['open', 60, 2, 0], ['open', 80, 2, 0], ['hood', 80, 0, 1, 'm', '', { hx: { lift: 'hk_s' } }]] },
       // hero · Престиж с островом: прямая. Холодильник и пенал с нишей слева, пенал с духовкой и микроволновкой справа,
       // верхние шкафы в два яруса с подсветкой, мраморная столешница и фартук, длинный остров на 3 стула, три лампы. Всё на Blum.
-      { id: 'prestige', seg: 'prem', photo: 'hero', t: 'straight', f: 7, b: 5, c: 3, hw: 4, ut: 2, fcn: ['acryl', 'Светло-бежевый'], bcn: ['platinum', 'Элегантный Орех'], open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 300, 100], dc: [3, 3, 1, 1],
+      { id: 'prestige', seg: 'prem', photo: 'hero', t: 'straight', f: 5, b: 2, c: 3, hw: 4, ut: 2, uh: 65, rh: 270, ug: 50, fcn: ['platinum', 'Элегантный Орех'], bcn: ['premium', 'Дуб Графит'], open: 'g', o: [1, 1, 1], lg: [2, 1, 1, 3], isl: [1, 300, 100], dc: [3, 3, 1, 0, 1, 1, 1], tt: 's_emp', rf: ['s_dark', 'w_choc', ''],
+        apron: [150, 380, 'marble_e'], ic: { c: [['door', 60, 1, 0, 1, 'L', 'gola', 0, 0, ''], ['door', 60, 1, 0, 1, 'L', 'gola', 0, 0, ''], ['drawers', 60, 1, 3, 0, 'L', 'gola', 0, 0, ''], ['drawers', 60, 1, 3, 0, 'L', 'gola', 0, 0, ''], ['drawers', 60, 1, 3, 0, 'L', 'gola', 0, 0, '']], t: 'both', f: 45, b: 2, k: 'panel', h: 0, r: 0, ot: 'gola', p: 0, tc: '', ol: 2, or: 2, ct: 4, bh: 0 },
         kh: { hinge: 'std_soft', lift: 'hk_top', sinkbox: 'legrabox', sx: { twin_l: 1 } },
         lo: [['fridge', 90, 0, 0, 'm', 'free'], ['tower', 60, 0, 0, 'm', 'storage'], ['drawers', 80, 0, 3, 'm', '', PR_LBX], ['sink', 80, 1, 0], ['dishwasher', 60, 0, 0], ['hob', 80, 0, 3, 'm', '', PR_LBX], ['drawers', 80, 0, 3, 'm', '', PR_LBX], ['tower', 60, 0, 0, 'm', 'ovenMicro', { dsys: ['lbx_c', 'lbx_c'] }]],
         up: [['door', 80, 1, 1, 'm', '', PR_HK], ['door', 80, 1, 1, 'm', '', PR_HK], ['door', 60, 1, 1, 'm', '', PR_HK], ['hood', 80, 0, 1, 'm', '', { hx: { lift: 'hk_s' } }], ['door', 80, 1, 1, 'm', '', PR_HK]] }
@@ -6169,7 +6170,7 @@
       const sumWall = (arr, w) => arr.filter(e => (e[4] || 'm') === w).reduce((a, e) => a + e[1], 0);
       const main = sumWall(p.lo, 'm'), left = sumWall(p.lo, 'l'), right = sumWall(p.lo, 'r');
       const byName = (a, d) => { if (!a) return d; const sec = colorCatalog.find(c => c.key === a[0]); const it = sec && sec.items.find(i => i.name === a[1]); return it ? it.id : d; };
-      return { v: 5, dc: p.dc || [0, 0, 0, 0], t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: 240, u: p.u === 0 ? 0 : 1, ut: p.ut === 2 ? 2 : 1, uh: p.uh || 72, ud: 35,
+      return { v: 5, dc: p.dc || [0, 0, 0, 0], tt: p.tt || 0, rf: p.rf ? [p.rf[0], p.rf[1], p.rf[2]] : 0, ic: p.ic || 0, ox: p.apron ? [['apron', 0, p.apron[0], p.apron[1], (p.ug || 56), p.ch || 89, 0.6, 1, p.apron[2], 0]] : [], ch: p.ch || 89, ug: p.ug || 56, t: p.t, m: main, l: left ? left + 60 : 120, r: right ? right + 60 : 120, h: p.rh || 240, u: p.u === 0 ? 0 : 1, ut: p.ut === 2 ? 2 : 1, uh: p.uh || 72, ud: 35,
         f: p.f, b: p.b, c: p.c, hw: p.hw, lg: p.lg || [0, 1, 0, 0], fc: byName(p.fcn, p.fc), bc: byName(p.bcn, p.bc), lo: conv(p.lo), up: conv(p.up), o: p.o, i: p.isl || [0, 140, 80], kh: p.kh || null };
     }
 
@@ -6354,6 +6355,7 @@
       addMenuWall = null;
       decorState = decorClean(Array.isArray(st.dc) ? { lamps: st.dc[0], stools: st.dc[1], plant: st.dc[2], fplant: st.dc[3], ls: st.dc[4] ? 'globe' : '', ss: st.dc[5] ? 'chair' : '', sc: st.dc[6] } : null);
       if (decorState.sc) { k3dLightOn = false; k3dLedsOn = true; }
+      k3dLightFx(); if (typeof renderK3dBar === 'function' && el('k3dBar')) renderK3dBar();
 
       currentType = ['straight', 'l-shape', 'u-shape', 'parallel'].includes(st.t) ? st.t : 'straight';
       updateTypeUI();

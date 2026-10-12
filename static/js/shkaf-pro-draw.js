@@ -1,5 +1,5 @@
 /* Чертежи конструктора шкафа PRO в стиле AutoCAD, лист A4 (альбомный). Размеры на чертежах — в мм. Только для режима мастера. */
-import { OPEN_KINDS, openVariantName, roomEdges, openCenter } from '/static/js/room-open-core.js?v=7';
+import { OPEN_KINDS, openVariantName, roomEdges, openCenter } from '/static/js/room-open-core.js?v=8';
 import { modelLocal, placeLocal, wardrobeSolids, detSolid, unitSolid, bedSolid, panelSolid, objSolid } from '/static/js/draw-solids.js?v=4';
 import { runInfo, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1, objsParts } from '/static/js/shkaf-pro-core.js?v=29';
 

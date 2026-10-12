@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=9';
+import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=10';
 import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=29';
 import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=29';
 

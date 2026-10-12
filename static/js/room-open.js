@@ -1,7 +1,7 @@
 /* 3D-часть элементов стен (общая для шкафа и кухни); логика и данные — в room-open-core.js */
 import * as THREE from 'three';
-import { roomEdges, openCenter, OPEN_KINDS, OPEN_COLORS, OPEN_INFO, OPEN_TINTS, ROOM_FINISH } from '/static/js/room-open-core.js?v=7';
-export * from '/static/js/room-open-core.js?v=7';
+import { roomEdges, openCenter, OPEN_KINDS, OPEN_COLORS, OPEN_INFO, OPEN_TINTS, ROOM_FINISH } from '/static/js/room-open-core.js?v=8';
+export * from '/static/js/room-open-core.js?v=8';
 /* ---- текстуры фартука и стеновых панелей: рисуем на canvas по виду (кладка, мозаика, мрамор, рейка…) ---- */
 function rngSeed(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
@@ -35,7 +35,9 @@ function panelMat(THREE, inf, base, W, H, id) {
     c = mk(1024, 512); c.fillStyle = base; c.fillRect(0, 0, 1024, 512);
     for (let i = 0; i < 1800; i++) { c.fillStyle = shade(base, (R() - .5) * .08); c.fillRect(R() * 1024, R() * 512, 2 + R() * 3, 2 + R() * 3); }
     c.strokeStyle = inf.veins || shade(base, -.3);
-    for (let i = 0; i < 14; i++) { c.globalAlpha = .12 + R() * .35; c.lineWidth = .6 + R() * 3; c.beginPath(); const y0 = R() * 512; c.moveTo(-10, y0); c.bezierCurveTo(300 + R() * 200, y0 + (R() - .5) * 260, 600 + R() * 200, y0 + (R() - .5) * 260, 1034, y0 + (R() - .5) * 300); c.stroke(); }
+    if (inf.fin) {   // мрамор: тонкие извилистые жилы, идущие наискосок, и редкие широкие прожилки
+      for (let i = 0; i < 46; i++) { c.globalAlpha = .08 + R() * .4; c.lineWidth = i % 9 === 0 ? 1.8 + R() * 2.2 : .35 + R() * 1.1; c.beginPath(); let x = R() * 1100 - 40, y = -10; c.moveTo(x, y); while (y < 520) { x += (R() - .35) * 70; y += 30 + R() * 50; c.lineTo(x, y); } c.stroke(); }
+    } else for (let i = 0; i < 14; i++) { c.globalAlpha = .12 + R() * .35; c.lineWidth = .6 + R() * 3; c.beginPath(); const y0 = R() * 512; c.moveTo(-10, y0); c.bezierCurveTo(300 + R() * 200, y0 + (R() - .5) * 260, 600 + R() * 200, y0 + (R() - .5) * 260, 1034, y0 + (R() - .5) * 300); c.stroke(); }
     c.globalAlpha = 1; if (inf.fin) rep = [W / 240, H / 120];
   } else if (p === 'parquet') {   // доски вразбежку: ширина tw, длина th
     const cw = 256, rows = 4, rh = 256 / rows; c = mk(cw, 256); c.fillStyle = shade(base, -.45); c.fillRect(0, 0, cw, 256);

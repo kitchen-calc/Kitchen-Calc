@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=9';
+import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=10';
 import { buildObjGroup } from '/static/js/room-objs.js?v=6';
 
 const DEG = Math.PI / 180;
@@ -123,7 +123,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   const glowM = M => M.ledGlow || (M.ledGlow = mkGlow());
   function ledBoost(M) { if (!M) return; const k = ledsOn ? (dusk ? 36 : 2.2) : 0; if (M.led) { M.led.emissiveIntensity = k; M.led.color.set(ledsOn ? '#fff3c4' : '#6b6a66'); } if (M.ledGlow) M.ledGlow.opacity = ledsOn ? (dusk ? .95 : .22) : 0; if (M.glowMat) M.glowMat.opacity = ledsOn ? (dusk ? .55 : .2) : 0; }
   function setLeds(on) { ledsOn = !!on; ledBoost(lastM); invalidate(); }
-  function setLight(on) { dusk = !on; renderer.toneMappingExposure = dusk ? (lastSc ? .95 : .11) : 1.05; hemi.intensity = dusk ? (lastSc ? .2 : .03) : HEMI0; sun.intensity = dusk ? .05 : SUN0; scene.background = new THREE.Color(dusk ? '#15120f' : '#ece6dc'); ledBoost(lastM); invalidate(); }
+  function setLight(on) { dusk = !on; renderer.toneMappingExposure = dusk ? (lastSc ? 1.7 : .11) : 1.05; hemi.intensity = dusk ? (lastSc ? .45 : .03) : HEMI0; sun.intensity = dusk ? (lastSc ? .3 : .05) : SUN0; scene.background = new THREE.Color(dusk ? '#15120f' : '#ece6dc'); ledBoost(lastM); invalidate(); }
 
 
   const tex = { floor: FLOOR_TEX(), tile: TILE_TEX() };
@@ -665,7 +665,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
         const gl = mesh(new THREE.SphereGeometry(9.5, 28, 20), globeGlass(), false); gl.position.set(x, gy, z); root.add(gl);
         const cap = mesh(new THREE.CylinderGeometry(2.2, 2.2, 3, 14), M.black); cap.position.set(x, gy + 10.5, z); root.add(cap);
         const fil = mesh(new THREE.CylinderGeometry(1.1, 1.1, 8, 12), M.led, false); fil.position.set(x, gy, z); root.add(fil);
-        const pl = new THREE.PointLight('#ffb35a', 1300, 320, 2); pl.position.set(x, gy, z); root.add(pl);
+        const pl = new THREE.PointLight('#ffb35a', 2600, 380, 2); pl.position.set(x, gy, z); root.add(pl);
         continue;
       }
       cyl(root, .3, st.roomH - y - 20, M.black, x, (st.roomH + y + 20) / 2, z, null);
