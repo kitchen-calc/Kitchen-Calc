@@ -456,7 +456,10 @@ export function createK3D(container, hooks = {}, opts = {}) {
     const CT = st.CT, D = st.CTD || st.LD + 2;
     box(g, L, CT, D, M.top, 0, st.BOX, 0, 80);
     if (apron && !(st.opens || []).some(q => q.kind === 'apron') && st.UB - st.BOX - CT > 1) box(g, L, st.UB - st.BOX - CT, .6, M.tile, 0, st.BOX + CT, -.6, 30);
-    items.forEach(r => {
+    items.forEach(r => slabItem(g, M, st, r));
+  }
+  function slabItem(g, M, st, r) {   // варочная панель или мойка на столешнице (общее для рядов и острова)
+    const CT = st.CT; {
       const cx = (r.u0 + r.u1) / 2, w = r.u1 - r.u0;
       if (r.sec.kind === 'hob') {
         const hw = Math.min(58, w - 4);
@@ -471,7 +474,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
         cyl(g, .9, 26, M.chrome, fx, st.BOX + CT + 14, fz, null);
         const arc = mesh(new THREE.TorusGeometry(7, .9, 10, 24, Math.PI), M.chrome); arc.rotation.y = Math.PI / 2; arc.position.set(fx, st.BOX + CT + 27, fz + 7); g.add(arc);
       }
-    });
+    }
   }
 
   function countertops(M, st) {
@@ -554,6 +557,7 @@ export function createK3D(container, hooks = {}, opts = {}) {
   /* секция острова: двери, ящики, глухая панель или открытые полки — те же узлы, что у обычных нижних шкафов */
   function islCell(cg, M, st, c, w, key) {
     const D = st.LD, PL = st.PL, H = st.BOX - PL, zf = D - FT;
+    if (['sink', 'hob', 'oven', 'dishwasher', 'washer', 'cargo'].indexOf(c.k) >= 0) { lowerModule(cg, M, st, { kind: c.k, drawers: c.k === 'hob' ? (c.dr | 0) : 0, dn: c.dn || 1, hinge: c.hg || 'L', shelves: 0, openType: 'handles', width: w }, w, key); return; }
     if (c.k === 'door' || c.k === 'drawers') { lowerModule(cg, M, st, { kind: c.k === 'drawers' ? 'drawers' : 'door', drawers: c.k === 'drawers' ? ((c.dr | 0) || 3) : 0, dn: c.dn || 1, hinge: c.hg || 'L', shelves: c.k === 'door' ? (c.sh | 0) : 0, openType: 'handles', width: w }, w, key); return; }
     box(cg, w - 4, PL, D - 6, M.plinth, 2, 0, 2);
     if (c.k === 'blind') { carcass(cg, M, w, H, D, PL, 0, {}); box(cg, w - 2 * GAP, H - 2 * GAP, FT, M.facade, GAP, PL + GAP, zf, 60); }
@@ -581,6 +585,14 @@ export function createK3D(container, hooks = {}, opts = {}) {
     box(g, xb - xa, CT, Wd + ovF + ovB, M.top, xa, st.BOX, -ovB, 80);
     if (wl) box(g, CT, st.BOX, Wd, M.top, -CT, 0, 0, 80);
     if (wr) box(g, CT, st.BOX, Wd, M.top, L, 0, 0, 80);
+    { const ig = new THREE.Group(); ig.position.set(0, 0, Math.max(0, (Wd - 60) / 2)); g.add(ig); let xx = 0; let hobX = null;
+      cells.forEach(c => { if (c.k === 'sink' || c.k === 'hob') slabItem(ig, M, st, { u0: xx, u1: xx + c.w, sec: { kind: c.k } }); if (c.k === 'hob') hobX = xx + c.w / 2; xx += c.w; });
+      if (cfg.hood && hobX != null) {   // вытяжка над варочной панелью острова: корпус и труба до потолка
+        const hy = st.BOX + st.CT + 70, hw = Math.min(70, Math.max(50, L * .4)); box(g, hw, 8, 45, M.steel, hobX - hw / 2, hy, Wd / 2 - 22); box(g, 16, st.roomH - hy - 8, 16, M.steel, hobX - 8, hy + 8, Wd / 2 - 8);
+      } }
+    if (cfg.bar) {   // барная стойка: повышенная столешница с задней стороны на двух опорах
+      const by = 105, bd = 35; box(g, L, st.CT, bd, M.top, 0, by, -bd + 2, 80); [0, L - 4].forEach(x => box(g, 4, by, 4, M.body, x, 0, -bd + 3));
+    }
     // стулья со стороны свеса (где свес больше)
     const nS = Math.min(st.decor.stools || 0, Math.max(1, Math.floor(L / 42))), sz = ovB > ovF ? -(ovB + 28) : Wd + ovF + 28;
     for (let i = 0; i < nS; i++) {
