@@ -3,7 +3,7 @@
    и сохраняется в «Мои изделия». Размеры — в сантиметрах, шаг до 1 мм. */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ptAabb, ledStrips, LED_MODES } from '/static/js/shkaf-pro-core.js?v=31';
+import { ptAabb, ledStrips, LED_MODES } from '/static/js/shkaf-pro-core.js?v=32';
 const $ = id => document.getElementById(id);
 const r1 = v => Math.round(v * 10) / 10;
 let host, renderer, scene, camera, controls, group, raf = 0, st = null, selI = -1, meshes = [], selBox = null, drag = null, alive = false, started = false, bound = false, hist = [], openAll = false;
