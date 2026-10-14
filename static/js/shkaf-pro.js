@@ -1,5 +1,5 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=32';
+import * as C from '/static/js/shkaf-pro-core.js?v=33';
 import { TPL } from '/static/js/shkaf-tpl.js?v=1';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
@@ -224,8 +224,10 @@ function sideCol() {
   if (S.doors.kind === 'swing') {
     const nn = c.dn != null ? c.dn : (c.w > 65 ? 2 : 1), dr = c.dd || 'auto';
     h += `<div class="sub">Двери этого отсека</div><div class="r"><span>Дверей</span>${[0, 1, 2, 3, 4, 5, 6].map(k => btn(nn === k, `PRO.set('col.dn',${k})`, k === 0 ? 'Нет' : String(k))).join('')}</div>`;
+    if (nn >= 2 && (c.dw || []).some(v => v > 0)) h += `<div class="r">${btn(0, 'PRO.cdwReset()', '↺ Все двери одной ширины')}</div>`;
     if (nn >= 3) h += `<div class="r">${btn(c.dp !== false, 'PRO.colDp()', c.dp !== false ? '▮ У каждой двери своя перегородка: вкл' : '▯ Перегородки между дверями: выкл')}</div>`;
-    if (nn >= 1) h += Array.from({ length: Math.min(nn, 6) }, (_, i) => `<div class="r"><span>Дверь ${i + 1}</span><select onchange="PRO.cdhi(${i}, this.value)" title="С какой стороны открывается">${[['', 'открывание: авто'], ['L', '◀ петли слева'], ['R', 'петли справа ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => `<option value="${k}" ${((c.dh || [])[i] || '') === k ? 'selected' : ''}>${t}</option>`).join('')}</select><select onchange="PRO.cdfi(${i}, this.value)"><option value="">как у отсека</option>${Object.keys(FILLS).map(k => `<option value="${k}" ${((c.dfs || [])[i] || '') === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select></div>`).join('');
+    const dwAuto = doorList(S).filter(d => d.zone === 'main' && d.ci === sel.i).map(d => Math.round((d.w + .3) * 10) / 10);
+    if (nn >= 1) h += Array.from({ length: Math.min(nn, 6) }, (_, i) => `<div class="r"><span>Дверь ${i + 1}</span><input type="number" min="8" step="0.5" style="width:62px" placeholder="${dwAuto[i] != null ? dwAuto[i] : ''}" value="${(c.dw || [])[i] > 0 ? (c.dw || [])[i] : ''}" onchange="PRO.cdwi(${i}, this.value)" title="Ширина двери, см (пусто — автоматически)"><small>см</small><select onchange="PRO.cdhi(${i}, this.value)" title="С какой стороны открывается">${[['', 'открывание: авто'], ['L', '◀ петли слева'], ['R', 'петли справа ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => `<option value="${k}" ${((c.dh || [])[i] || '') === k ? 'selected' : ''}>${t}</option>`).join('')}</select><select onchange="PRO.cdfi(${i}, this.value)"><option value="">как у отсека</option>${Object.keys(FILLS).map(k => `<option value="${k}" ${((c.dfs || [])[i] || '') === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select></div>`).join('');
     if (nn > 0) h += `<div class="r"><span>Материал</span><select onchange="PRO.cdf(this.value)">${Object.keys(FILLS).map(k => `<option value="${k}" ${(c.df || 'dsp') === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select></div><div class="r"><span>Открывание</span>${[['auto', 'авто'], ['L', '◀ влево'], ['R', 'вправо ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => btn(dr === k, `PRO.cdd('${k}')`, t)).join('')}</div><div class="note">Двойной щелчок по двери в 3D открывает её. Двери удаляются вместе с отсеком или кнопкой «Нет».</div>`;
   } else h += `<div class="r">${btn(0, "PRO.doors('swing')", '🚪 Включить двери по отсекам')}</div>`;
   h += `<div class="sub">Добавить в отсек</div>` + addButtons();
@@ -740,6 +742,8 @@ window.PRO = {
   obDup: () => mutate(() => { const o = JSON.parse(JSON.stringify(S.objs[sel.oi])); o.id = C.uid(); o.x = r1(o.x + 20); o.z = r1(o.z + 20); S.objs.push(o); sel = { k: 'obj', oi: S.objs.length - 1 }; }),
   obToggle: k => mutate(() => { const o = S.objs[sel.oi]; if (o) o[k] = !o[k]; }),
   obMat: v => mutate(() => { const o = S.objs[sel.oi]; if (o) o.mat = v; }), obColor: v => mutate(() => { const o = S.objs[sel.oi]; if (o) o.color = v; }),
+  cdwi: (i, v) => mutate(() => { const c = S.cols[sel.i]; if (!c) return; const a = (c.dw || []).slice(); while (a.length <= i) a.push(0); const x = parseFloat(String(v).replace(',', '.')); a[i] = x > 0 ? Math.max(8, Math.min(250, x)) : 0; if (a.every(q => !(q > 0))) delete c.dw; else c.dw = a; }),
+  cdwReset: () => mutate(() => { const c = S.cols[sel.i]; if (c) delete c.dw; }),
   cdhi: (i, v) => mutate(() => { const c = S.cols[sel.i]; if (!c) return; const a = (c.dh || []).slice(); while (a.length <= i) a.push(''); a[i] = v || ''; if (a.every(x => !x)) delete c.dh; else c.dh = a; }),
   cdfi: (i, v) => mutate(() => { const c = S.cols[sel.i]; if (!c) return; const a = (c.dfs || []).slice(); while (a.length <= i) a.push(''); a[i] = v || ''; if (a.every(x => !x)) delete c.dfs; else c.dfs = a; }),
   csTog: id => { if (colSync.sel[id]) delete colSync.sel[id]; else colSync.sel[id] = 1; refresh(); },

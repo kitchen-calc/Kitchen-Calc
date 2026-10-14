@@ -440,11 +440,20 @@ export function shelfSpans(col, wcol, t, it) {   // куски полки: ве�
   if (sp.length > 1) { if (it.sd === 'L') sp = [sp[0]]; else if (it.sd === 'R') sp = [sp[sp.length - 1]]; }
   return sp.map(([x0, x1]) => ({ x0, x1, w: x1 - x0 }));
 }
+/* границы дверей отсека: свои ширины (col.dw, см; 0 — автоматически), остальное делится поровну. Возвращает n+1 отметок от 0 до cw */
+export function doorBounds(col, n, cw) {
+  const dw = (col && col.dw) || [], fixed = [], MIN = 8;
+  let sum = 0, autoN = 0; for (let i = 0; i < n; i++) { const v = Number(dw[i]); if (v > 0) { fixed.push(v); sum += v; } else { fixed.push(0); autoN++; } }
+  let k = 1; if (autoN > 0 && sum > cw - autoN * MIN) k = Math.max(0, (cw - autoN * MIN) / sum); else if (autoN === 0 && sum > 0) k = cw / sum;
+  const out = [0]; let acc = 0; const autoW = autoN ? (cw - sum * k) / autoN : 0;
+  for (let i = 0; i < n; i++) { acc += fixed[i] > 0 ? fixed[i] * k : autoW; out.push(i === n - 1 ? cw : acc); }
+  return out;
+}
 export function colSplits(S, g, ci) {   // перегородки «у каждой двери»: при 3–4 дверях в отсеке у каждой своя секция
   const c = g.cols[ci], col = S.cols[ci], t = S.t; if (!c || c.gap || !col || S.doors.kind !== 'swing') return [];
   const n = col.dn != null ? col.dn : (c.w > 65 ? 2 : 1); if (n < 3 || col.dp === false) return [];
   const L = c.det || ci === 0 || g.cols[ci - 1].gap || g.cols[ci - 1].det ? c.xa - t : c.xa - t / 2, R = c.det || ci === g.cols.length - 1 || g.cols[ci + 1].gap || g.cols[ci + 1].det ? c.xb + t : c.xb + t / 2, cw = R - L, out = [];
-  for (let k = 1; k < n; k++) out.push(L + k * cw / n);
+  const bb = doorBounds(col, n, cw); for (let k = 1; k < n; k++) out.push(L + bb[k]);
   return out;
 }
 export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, left, hinge:'L'|'R'|'U'|'D', n, sliding}]
@@ -461,7 +470,8 @@ export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, le
       g.cols.forEach((c, ci) => {
         if (c.gap) return; const col = S.cols[ci], L = c.det || ci === 0 || g.cols[ci - 1].gap || g.cols[ci - 1].det ? c.xa - t : c.xa - t / 2, R = c.det || ci === g.cols.length - 1 || g.cols[ci + 1].gap || g.cols[ci + 1].det ? c.xb + t : c.xb + t / 2, cw = R - L;
         const n = col.dn != null ? col.dn : (c.w > 65 ? 2 : 1), fill = col.df || 'dsp', dr = col.dd || 'auto';
-        for (let i = 0; i < n; i++) { const hinge = (col.dh && col.dh[i]) || (dr === 'auto' ? (n === 1 ? 'L' : (i < n / 2 ? 'L' : 'R')) : dr); out.push({ zone: 'main', i: k++, ci, ri: i, n, x: L + i * (cw / n) + .15, w: cw / n - .3, h: c.H - S.plinth - .4, y: S.plinth + .2, fill: (col.dfs && FILLS[col.dfs[i]]) ? col.dfs[i] : fill, sliding: false, left: hinge === 'L', hinge, gf: d.gf || 4 }); }
+        const bb = doorBounds(col, n, cw);
+        for (let i = 0; i < n; i++) { const hinge = (col.dh && col.dh[i]) || (dr === 'auto' ? (n === 1 ? 'L' : (i < n / 2 ? 'L' : 'R')) : dr); out.push({ zone: 'main', i: k++, ci, ri: i, n, x: L + bb[i] + .15, w: bb[i + 1] - bb[i] - .3, h: c.H - S.plinth - .4, y: S.plinth + .2, fill: (col.dfs && FILLS[col.dfs[i]]) ? col.dfs[i] : fill, sliding: false, left: hinge === 'L', hinge, gf: d.gf || 4 }); }
       });
     }
   }
@@ -805,6 +815,7 @@ export function sanitize(S) {
     if (c && FILLS[c.df] && c.df !== 'dsp') col.df = c.df;
     if (c && catId(c.cat)) col.cat = c.cat; if (c && catId(c.dcat)) col.dcat = c.dcat;
     if (c && Array.isArray(c.dfs) && c.dfs.some(f => FILLS[f])) col.dfs = c.dfs.slice(0, 6).map(f => FILLS[f] ? f : '');
+    if (c && Array.isArray(c.dw) && c.dw.some(v => Number(v) > 0)) col.dw = c.dw.slice(0, 6).map(v => { v = Number(v); return v > 0 ? r1(n(v, 8, 250, 0)) : 0; });   // ширина каждой двери, см (0 — авто)
     if (c && Array.isArray(c.dh) && c.dh.some(v => ['L', 'R', 'U', 'D'].includes(v))) col.dh = c.dh.slice(0, 6).map(v => ['L', 'R', 'U', 'D'].includes(v) ? v : '');   // сторона открывания каждой двери отсека
     if (c && ['L', 'R', 'U', 'D'].includes(c.dd)) col.dd = c.dd;
     (!col.gap && c && Array.isArray(c.items) ? c.items : []).slice(0, 40).forEach(it => {
