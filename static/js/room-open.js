@@ -1,7 +1,7 @@
 /* 3D-часть элементов стен (общая для шкафа и кухни); логика и данные — в room-open-core.js */
 import * as THREE from 'three';
-import { roomEdges, openCenter, OPEN_KINDS, OPEN_COLORS, OPEN_INFO, OPEN_TINTS, ROOM_FINISH } from '/static/js/room-open-core.js?v=10';
-export * from '/static/js/room-open-core.js?v=10';
+import { roomEdges, openCenter, OPEN_KINDS, OPEN_COLORS, OPEN_INFO, OPEN_TINTS, ROOM_FINISH } from '/static/js/room-open-core.js?v=12';
+export * from '/static/js/room-open-core.js?v=12';
 /* ---- текстуры фартука и стеновых панелей: рисуем на canvas по виду (кладка, мозаика, мрамор, рейка…) ---- */
 function rngSeed(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
@@ -44,6 +44,14 @@ function panelMat(THREE, inf, base, W, H, id) {
     for (let r = 0; r < rows; r++) { let x = -((r * 91) % 256); while (x < cw) { const L = 256; c.fillStyle = shade(base, (R() - .5) * .22); c.fillRect(x + 1, r * rh + 1, L - 2, rh - 2);
       for (let k = 0; k < 7; k++) { c.strokeStyle = shade(base, -.25); c.globalAlpha = .1 + R() * .12; c.lineWidth = .6 + R(); const yy = r * rh + 4 + R() * (rh - 8); c.beginPath(); c.moveTo(x, yy); c.bezierCurveTo(x + 70, yy + 3 * (R() - .5), x + 170, yy - 3 * (R() - .5), x + L, yy); c.stroke(); } c.globalAlpha = 1; x += L; } }
     rep = [W / th, H / (rows * tw)];
+  } else if (p === 'woodsq') {   // квадратная плитка с рисунком дерева: у соседних плиток волокна повёрнуты на 90°
+    const cw = 256; c = mk(cw, cw); c.fillStyle = grout; c.fillRect(0, 0, cw, cw);
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+      const x = i * 128, y = j * 128, v = (i + j) % 2; c.save(); c.beginPath(); c.rect(x + 2, y + 2, 124, 124); c.clip(); c.fillStyle = shade(base, (R() - .5) * .12); c.fillRect(x, y, 128, 128);
+      for (let k = 0; k < 46; k++) { c.strokeStyle = shade(base, (R() - .5) * .7); c.globalAlpha = .16 + R() * .26; c.lineWidth = .5 + R() * 1.6; const o = R() * 128; c.beginPath(); if (v) { c.moveTo(x, y + o); c.bezierCurveTo(x + 40, y + o + (R() - .5) * 12, x + 90, y + o + (R() - .5) * 12, x + 128, y + o + (R() - .5) * 6); } else { c.moveTo(x + o, y); c.bezierCurveTo(x + o + (R() - .5) * 12, y + 40, x + o + (R() - .5) * 12, y + 90, x + o + (R() - .5) * 6, y + 128); } c.stroke(); }
+      c.globalAlpha = 1; const g = c.createLinearGradient(x, y, x + 128, y + 128); g.addColorStop(0, 'rgba(255,255,255,.12)'); g.addColorStop(1, 'rgba(0,0,0,.08)'); c.fillStyle = g; c.fillRect(x, y, 128, 128); c.restore();
+    }
+    rep = [W / (2 * tw), H / (2 * th)];
   } else if (p === 'stripe') {
     c = mk(128, 8); c.fillStyle = base; c.fillRect(0, 0, 128, 8); c.fillStyle = inf.col2 || shade(base, -.1); c.fillRect(0, 0, 64, 8); rep = [W / (2 * tw), 1];
   } else if (p === 'checker') {

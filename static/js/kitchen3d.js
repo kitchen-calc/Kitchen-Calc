@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=10';
+import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
 import { buildObjGroup } from '/static/js/room-objs.js?v=6';
 
 const DEG = Math.PI / 180;

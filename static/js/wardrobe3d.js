@@ -4,7 +4,7 @@
    API: createW3D(container, hooks) -> { update(st), setView(name), toggle(key), openAll(on), isOpen(key), select(sel), dispose() } */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { finishMat } from '/static/js/room-open.js?v=10';
+import { finishMat } from '/static/js/room-open.js?v=12';
 
 const DEG = Math.PI / 180, T = 1.6, PL = 8;
 const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;

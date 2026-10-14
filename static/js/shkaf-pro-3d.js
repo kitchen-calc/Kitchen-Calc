@@ -2,9 +2,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=10';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=29';
-import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=29';
+import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=31';
+import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=31';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -445,6 +445,10 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     [[x0, 0], [x1, 0], [x0, zMax], [x1, zMax]].forEach(c => { const v = new THREE.Vector3(c[0], 0, c[1]).applyMatrix4(wg.matrixWorld); wx0 = Math.min(wx0, v.x); wx1 = Math.max(wx1, v.x); wz0 = Math.min(wz0, v.z); wz1 = Math.max(wz1, v.z); });
     state.cols.forEach((c, ci) => { if (c.det) { const f = colFoot(state, ci); wx0 = Math.min(wx0, c.det.x); wx1 = Math.max(wx1, c.det.x + f.w); wz0 = Math.min(wz0, c.det.z); wz1 = Math.max(wz1, c.det.z + f.d); } });
     (state.objs || []).forEach(q => { const f = objFoot(q); wx0 = Math.min(wx0, q.x); wx1 = Math.max(wx1, q.x + f.w); wz0 = Math.min(wz0, q.z); wz1 = Math.max(wz1, q.z + f.d); });
+    if (state.room && state.room.view === 'room' && !state.room.poly) {   // показ всей комнаты целиком (для клиента): камера снаружи, смотрит внутрь
+      const R = state.room, cx = R.W / 2, cz = R.D / 2, dd = Math.hypot(R.W, R.D);
+      controls.target.set(cx, 90, cz); camera.position.set(cx + R.W * .2, R.H * .95 + 70, R.D + dd * .62); controls.update(); invalidate(); return;
+    }
     const lc = new THREE.Vector3((wx0 + wx1) / 2, 0, (wz0 + wz1) / 2), rr = (state.room && state.room.rot) || 0, ff = new THREE.Vector3(Math.sin(rr * Math.PI / 180), 0, Math.cos(rr * Math.PI / 180));
     const W = Math.max(wx1 - wx0, wz1 - wz0), H = g.totalH, dist = Math.max(W * 1.55, H * 1.75, 330);
     controls.target.set(lc.x, H * .46, lc.z); camera.position.set(lc.x + dist * .28 * ff.z + ff.x * dist, H * .6, lc.z + ff.z * dist - dist * .28 * ff.x); controls.update(); invalidate();
