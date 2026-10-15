@@ -37,7 +37,11 @@ const PRESETS = {
   open: { label: 'Открытый стеллаж', W: 800, H: 1800, D: 350, plinth: 0, baseY: 0, topType: 'solid', shelves: 4, doors: 0, drawers: 0 },
 };
 const SHEET = { w: 2800, h: 2070 };
-const KIND_NAMES = {};   // типы модулей (шкаф, полка, …) — см. «Объединить»  // стандартный лист ЛДСП, мм
+// Типы модулей: что это за изделие — видно в списке, свойствах и на чертежах
+const KIND_NAMES = { cabinet: 'Шкаф', base: 'Тумба нижняя', wall: 'Шкаф навесной', tall: 'Пенал', drawers: 'Тумба с ящиками', wardrobe: 'Шкаф-купе / гардероб',
+  rack: 'Стеллаж', shelf: 'Полка', chest: 'Комод', drawer: 'Ящик', nightstand: 'Тумба прикроватная', tv: 'ТВ-тумба', table: 'Стол', desk: 'Письменный стол',
+  bed: 'Кровать', hall: 'Прихожая', kitchen: 'Кухня (набор)', island: 'Остров', bench: 'Скамья / пуф', other: 'Другое' };
+const PRESET_KIND = { lower: 'base', drawers: 'drawers', upper: 'wall', tall: 'tall', wardrobe: 'wardrobe', open: 'rack' };  // стандартный лист ЛДСП, мм
 const AUTOSAVE_KEY = 'kcs-autosave-v1';
 
 // ---------------------------------------------------------------- проект и история
@@ -491,6 +495,57 @@ renderer.domElement.addEventListener('pointermove', e => {
 // ---------------------------------------------------------------- выбор деталей мышкой
 const ray = new THREE.Raycaster();
 let down = null;
+// Рамка: Ctrl + тянуть (или режим «⬚ Рамка»). Слева направо — детали целиком внутри, справа налево — всё, чего касается.
+let boxMode = false, rect = null;
+const rectEl = document.createElement('div'); rectEl.className = 'selrect'; rectEl.hidden = true; vp.appendChild(rectEl);
+function setBoxMode(on) {
+  boxMode = on; document.querySelector('[data-cmd="boxsel"]').classList.toggle('on', on);
+  status(on ? 'Рамка: тяните мышью по сцене. Слева направо — детали целиком внутри, справа налево — всё, чего касается. Shift — добавить к выбранному.' : 'Рамка выключена');
+}
+const _v = new THREE.Vector3();
+function screenBox(it) {
+  const r = renderer.domElement.getBoundingClientRect(), mesh = itemsGroup.children.find(m => m.userData.id === it.id);
+  const M = mesh && !mesh.matrixAutoUpdate ? mesh.matrix.clone().multiply(new THREE.Matrix4().compose(mesh.position, mesh.quaternion, mesh.scale).invert()) : null;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const dx of [0, it.w]) for (const dy of [0, it.h]) for (const dz of [0, it.d]) {
+    _v.set(it.x + dx, it.y + dy, it.z + dz); if (M) _v.applyMatrix4(M);
+    _v.project(camera);
+    const sx = r.left + (_v.x + 1) / 2 * r.width, sy = r.top + (1 - _v.y) / 2 * r.height;
+    x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
+  }
+  return { x0, y0, x1, y1 };
+}
+renderer.domElement.addEventListener('pointerdown', e => {
+  if (e.button === 0 && (boxMode || e.ctrlKey) && tc.axis === null && !measure) {
+    rect = { x: e.clientX, y: e.clientY, ex: e.clientX, ey: e.clientY };
+    orbit.enabled = false;
+    renderer.domElement.setPointerCapture(e.pointerId);
+  }
+});
+renderer.domElement.addEventListener('pointermove', e => {
+  if (!rect) return;
+  rect.ex = e.clientX; rect.ey = e.clientY;
+  const r = vp.getBoundingClientRect(), lr = rect.ex >= rect.x;
+  Object.assign(rectEl.style, { left: Math.min(rect.x, rect.ex) - r.left + 'px', top: Math.min(rect.y, rect.ey) - r.top + 'px', width: Math.abs(rect.ex - rect.x) + 'px', height: Math.abs(rect.ey - rect.y) + 'px' });
+  rectEl.classList.toggle('cross', !lr); rectEl.hidden = false;
+});
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!rect) return;
+  const R = { x0: Math.min(rect.x, rect.ex), y0: Math.min(rect.y, rect.ey), x1: Math.max(rect.x, rect.ex), y1: Math.max(rect.y, rect.ey) }, lr = rect.ex >= rect.x;
+  rect = null; rectEl.hidden = true; orbit.enabled = true; down = null;
+  if (R.x1 - R.x0 < 4 && R.y1 - R.y0 < 4) return;
+  if (!e.shiftKey) sel.clear();
+  let n = 0;
+  for (const it of P.items) {
+    const b = screenBox(it);
+    const inside = b.x0 >= R.x0 && b.x1 <= R.x1 && b.y0 >= R.y0 && b.y1 <= R.y1;
+    const touch = b.x1 >= R.x0 && b.x0 <= R.x1 && b.y1 >= R.y0 && b.y0 <= R.y1;
+    if (lr ? inside : touch) { sel.add(it.id); n++; }
+  }
+  openGroup = 0;
+  selectionChanged();
+  status(n ? `Выделено деталей: ${sel.size}. «Объединить в модуль» (Ctrl+G) — сделать из них шкаф, полку и т. д.` : 'В рамку ничего не попало');
+});
 renderer.domElement.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, gizmo: tc.axis !== null, btn: e.button }; });
 renderer.domElement.addEventListener('pointerup', e => {
   if (!down || down.gizmo || down.btn !== 0 || drag) { down = null; return; }
@@ -765,8 +820,25 @@ function duplicateSel() {
   status('Копия поставлена справа');
 }
 function groupSel() {
-  const list = selItems(); if (list.length < 2) return status('Выберите несколько деталей (Shift + клик)');
-  commit(() => { const g = { id: nid(), name: 'Модуль ' + (P.groups.length + 1) }; P.groups.push(g); list.forEach(i => { i.g = g.id; }); openGroup = 0; });
+  const list = selItems(); if (list.length < 2) return status('Выделите несколько деталей: рамкой (Ctrl + тянуть мышью) или Shift + клик');
+  const b = bbox(list);
+  openDialog(`Объединить ${list.length} деталей`, `
+    <div class="grid3">${fld('Что это', 'gk', 'cabinet', { options: Object.entries(KIND_NAMES) })}${fld('Название', 'gn', '', { text: true })}</div>
+    <div class="note">Габарит: ${fmt(b.x1 - b.x0)} × ${fmt(b.y1 - b.y0)} × ${fmt(b.z1 - b.z0)} мм. Детали из других модулей перейдут в новый.
+    Тип виден в списке слева, в свойствах и на чертежах — по нему понятно, где шкаф, где полка, а где отдельная деталь.</div>`,
+    '<button data-close>Отмена</button><button class="accent" id="grpOk">Объединить</button>');
+  const body = document.getElementById('dlgBody');
+  body.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') document.getElementById('grpOk').click(); };
+  const q = k => body.querySelector(`[data-k="${k}"]`);
+  const autoName = () => `${KIND_NAMES[q('gk').value]} ${P.groups.filter(g => g.kind === q('gk').value).length + 1}`;
+  q('gn').placeholder = autoName();
+  body.onchange = () => { q('gn').placeholder = autoName(); };
+  document.getElementById('grpOk').onclick = () => {
+    const kind = q('gk').value, name = q('gn').value.trim() || autoName();
+    closeDialog();
+    commit(() => { const g = { id: nid(), name, kind }; P.groups.push(g); list.forEach(i => { i.g = g.id; }); openGroup = 0; });
+    status(`Объединено: ${name} (${KIND_NAMES[kind]})`);
+  };
 }
 function ungroupSel() {
   const list = selItems(); if (!list.some(i => i.g)) return;
@@ -822,7 +894,7 @@ function refreshTree() {
   const node = (i, child) => `<div class="node ${child ? 'child' : ''} ${sel.has(i.id) ? 'sel' : ''}" data-item="${i.id}"><span class="sw" style="background:${mat(i.mat).color}"></span>${esc(label(i))}<span class="dim">${fmt(i.w)}×${fmt(i.h)}</span></div>`;
   for (const g of P.groups) {
     const list = groupItems(g.id), all = list.every(i => sel.has(i.id)), b = bbox(list);
-    h += `<div class="node grp ${all ? 'sel' : ''}" data-group="${g.id}">▸ ${esc(g.name)}<span class="dim">${fmt(b.x1 - b.x0)}×${fmt(b.y1 - b.y0)}</span></div>`;
+    h += `<div class="node grp ${all ? 'sel' : ''}" data-group="${g.id}"><span>▸ ${esc(g.name)}</span><span class="dim">${fmt(b.x1 - b.x0)}×${fmt(b.y1 - b.y0)}</span>${g.kind ? `<span class="kind">${esc(KIND_NAMES[g.kind] || g.kind)}</span>` : ''}</div>`;
     if (openGroup === g.id || list.some(i => sel.has(i.id) && !all)) list.forEach(i => { h += node(i, true); });
   }
   P.items.filter(i => !i.g).forEach(i => { h += node(i, false); });
@@ -889,7 +961,7 @@ function refreshInspector() {
   } else {
     const b = bbox(k.list);
     title.textContent = k.type === 'group' ? 'Модуль' : `Выбрано: ${k.list.length}`;
-    if (k.type === 'group') h += `<div class="sec"><b>Модуль</b>${fld('Название', 'gname', k.g.name, { text: true })}</div>`;
+    if (k.type === 'group') h += `<div class="sec"><b>Модуль</b>${fld('Название', 'gname', k.g.name, { text: true })}${fld('Что это', 'gkind', k.g.kind || 'other', { options: Object.entries(KIND_NAMES) })}</div>`;
     h += `<div class="sec"><b>Габарит, мм</b><div class="row">${fld('Ширина', '-', b.x1 - b.x0, { ro: true })}${fld('Высота', '-', b.y1 - b.y0, { ro: true })}${fld('Глубина', '-', b.z1 - b.z0, { ro: true })}</div></div>
       <div class="sec"><b>Положение, мм</b><div class="row">${fld('X слева', 'bx', b.x0)}${fld('Y от пола', 'by', b.y0)}${fld('Z от стены', 'bz', b.z0)}</div></div>
       <div class="sec"><b>Материал</b><div class="row2">${fld('Корпус', 'mBody', '', { options: [['', '— не менять —'], ...matOptions()] })}${fld('Фасады', 'mFront', '', { options: [['', '— не менять —'], ...matOptions()] })}</div></div>`;
@@ -919,7 +991,7 @@ function refreshInspector() {
     h += `<div class="sec"><b>Двигать вместе</b><div class="note">Свяжите фасад ящика с его коробом — тогда направляющие выдвинут их вместе.</div>
       <div class="btns"><button data-cmd="link">🔗 Связать выбранные</button><button data-cmd="unlink">Разъединить</button></div></div>`;
     h += `<div class="sec"><b>Действия</b><div class="btns"><button data-cmd="rot-y">⟲ Повернуть</button><button data-cmd="duplicate">Копия</button>
-      ${k.type === 'group' ? '<button class="accent" data-cmd="drawing-module">📐 Чертёж шкафа</button><button data-cmd="ungroup">Разгруппировать</button>' : '<button data-cmd="group">Объединить в модуль</button>'}
+      ${k.type === 'group' ? '<button class="accent" data-cmd="drawing-module">📐 Чертёж шкафа</button><button data-cmd="ungroup">Разгруппировать</button>' : '<button class="accent" data-cmd="group">Объединить в модуль…</button>'}
       <button class="danger" data-cmd="delete">Удалить</button></div></div>`;
   }
   insp.innerHTML = h;
@@ -957,6 +1029,7 @@ insp.addEventListener('change', e => {
   if (k.type === 'none') return;
   const b = bbox(k.list);
   if (key === 'gname') return commit(() => { k.g.name = raw.trim() || 'Модуль'; });
+  if (key === 'gkind') return commit(() => { k.g.kind = raw; });
   if (key === 'mBody' && raw) return commit(() => setMaterial(k.list.filter(i => !['door', 'drawerFront', 'back'].includes(i.kind) && i.mat !== 'hdf3'), raw));
   if (key === 'mFront' && raw) return commit(() => setMaterial(k.list.filter(i => ['door', 'drawerFront'].includes(i.kind)), raw));
   if (key === 'bx' && num()) return moveSel(v - b.x0, 0, 0);
@@ -1035,7 +1108,7 @@ function cabinetDialog() {
     const baseY = n('baseY'), totalH = p2.plinth + p2.H;
     closeDialog();
     commit(() => {
-      const g = { id: nid(), name: q('cname').value.trim() || 'Корпус', params: p2 };
+      const g = { id: nid(), name: q('cname').value.trim() || 'Корпус', params: p2, kind: PRESET_KIND[q('preset').value] || 'cabinet' };
       P.groups.push(g);
       const parts = buildCabinet(p2, freeX(baseY, totalH), baseY, 0, g.id);
       P.items.push(...parts); sel.clear(); parts.forEach(i => sel.add(i.id)); openGroup = 0;
@@ -1414,7 +1487,7 @@ const COMMANDS = {
   'rot-y': () => rotateSel('y'), 'rot-z': () => rotateSel('z'), 'rebuild-group': rebuildGroupFromInspector,
   fit, spec: specDialog, shot: screenshot, drawing: () => drawingDialog(selItems()), drawings: drawingsCommand, 'drawing-module': drawingsCommand,
   'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'),
-  hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false),
+  hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false), boxsel: () => setBoxMode(!boxMode),
   'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleHw(P.hw.filter(h => ids.includes(h.target)).map(h => h.id)); },
   'hw-toggle-all': () => toggleHw(P.hw.map(h => h.id)),
   'measure-hole': () => startMeasure('hole'), 'measure-cut': () => startMeasure('cut'),
@@ -1459,7 +1532,7 @@ function refreshUI() {
     ? 'Разметка: клик по детали ставит ' + (measure.tool === 'hole' ? 'отверстие' : 'угол выреза') + ' · Shift — по шагу · Esc — выход'
     : sel.size
     ? 'Тяните стрелки, чтобы двигать · двойной клик — деталь внутри модуля · Del — удалить'
-    : 'Левая кнопка — вращать · правая — сдвигать · колесо — приблизить · клик по детали — выбрать';
+    : 'Левая кнопка — вращать · правая — сдвигать · колесо — приблизить · клик — выбрать · Ctrl + тянуть — рамка';
   updateTitle();
 }
 

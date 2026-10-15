@@ -110,3 +110,7 @@ table.spec td.n { text-align: right; font-variant-numeric: tabular-nums; }
 .hwcard .tag { margin-left: 8px; font-size: 10.5px; color: #1a160f; background: var(--gold); border-radius: 4px; padding: 1px 6px; }
 .warn { color: #f0a090; font-size: 12px; margin-top: 4px; }
 .sheet-head .kind { font-style: normal; font-weight: 500; font-size: 11px; color: #fff; background: #1f5fb4; border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
+.selrect { position: absolute; z-index: 3; border: 1.5px solid #1f5fb4; background: rgba(31,95,180,.12); pointer-events: none; }
+.selrect.cross { border-style: dashed; border-color: #2e8b57; background: rgba(46,139,87,.12); }
+.tree .grp { display: grid; grid-template-columns: 1fr auto; row-gap: 3px; }
+.tree .kind { grid-column: 1 / -1; justify-self: start; margin-left: 14px; font-size: 10px; font-weight: 500; color: #1a160f; background: var(--gold); border-radius: 3px; padding: 0 5px; white-space: nowrap; }
