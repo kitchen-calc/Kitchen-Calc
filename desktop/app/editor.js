@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween } from './hardware.js';
 import { panelGeometry, describeOp, drawingSVG, frame, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
 
 // ---------------------------------------------------------------- справочники
@@ -47,7 +48,7 @@ const undoStack = [], redoStack = [];
 
 function newProject() {
   return { app: 'kitchen-calc-studio', version: 1, name: 'Новый проект', room: { w: 3600, d: 3000, h: 2700 },
-    materials: DEFAULT_MATERIALS.map(m => ({ ...m })), items: [], groups: [], seq: 1 };
+    materials: DEFAULT_MATERIALS.map(m => ({ ...m })), items: [], groups: [], hw: [], seq: 1 };
 }
 const nid = () => P.seq++;
 const mat = id => P.materials.find(m => m.id === id) || P.materials[0];
@@ -56,7 +57,7 @@ const group = id => P.groups.find(g => g.id === id);
 const selItems = () => P.items.filter(i => sel.has(i.id));
 const groupItems = g => P.items.filter(i => i.g === g);
 
-function snapshot() { return JSON.stringify({ name: P.name, room: P.room, materials: P.materials, items: P.items, groups: P.groups, seq: P.seq }); }
+function snapshot() { return JSON.stringify({ name: P.name, room: P.room, materials: P.materials, items: P.items, groups: P.groups, hw: P.hw, seq: P.seq }); }
 function restore(s) { Object.assign(P, JSON.parse(s)); }
 function commit(fn) {
   undoStack.push(snapshot()); if (undoStack.length > 200) undoStack.shift();
@@ -73,7 +74,7 @@ function redo() {
   undoStack.push(snapshot()); restore(redoStack.pop()); pruneSel(); afterChange();
 }
 function pruneSel() { for (const id of [...sel]) if (!item(id)) sel.delete(id); if (openGroup && !group(openGroup)) openGroup = 0; }
-function afterChange() { P.groups = P.groups.filter(g => P.items.some(i => i.g === g.id)); pruneSel(); rebuild(); refreshUI(); setDirty(true); autosave(); }
+function afterChange() { P.groups = P.groups.filter(g => P.items.some(i => i.g === g.id)); P.hw = (P.hw || []).filter(h => item(h.target)); pruneSel(); rebuild(); refreshUI(); setDirty(true); autosave(); }
 
 // ---------------------------------------------------------------- 3D-сцена
 const vp = document.getElementById('viewport');
@@ -165,8 +166,87 @@ function rebuild() {
     mesh.add(new THREE.LineSegments(machined ? machined.edges : edgeGeo, selected ? edgeSelMat : edgeMat));
     itemsGroup.add(mesh);
   }
+  buildHardware();
   updateGizmo(); updateDims(); requestRender();
 }
+
+// ---------------------------------------------------------------- фурнитура: вид и действия (открыть / выдвинуть / поднять)
+const hwGroup = new THREE.Group(); scene.add(hwGroup);
+const hwState = new Map();          // id фурнитуры → { t: 0…1 сейчас, to: куда едем }
+let moverByItem = new Map();        // id детали → фурнитура, которая её двигает
+const hwOf = id => P.hw.filter(h => h.target === id);
+const hwT = id => (hwState.get(id) || { t: 0 }).t;
+function buildHardware() {
+  hwGroup.clear();
+  moverByItem = new Map();
+  for (const hw of P.hw) for (const id of movingIds(hw, P.items)) if (!moverByItem.has(id)) moverByItem.set(id, hw);
+  for (const hw of P.hw) {
+    const it = item(hw.target); if (!it) continue;
+    for (const v of hwVisuals(hw, it, P.items, hwOf(it.id))) {
+      const o = v.obj;
+      o.userData = { ...o.userData, hw: hw.id, mode: v.mode, factor: v.factor || 1, fixed: v.fixed, onPart: v.onPart, role: v.role };
+      if (v.mode === 'attach' || v.mode === 'self') { o.updateMatrix(); o.userData.base = o.matrix.clone(); o.matrixAutoUpdate = false; }
+      if (v.mode === 'light') o.material = o.material.clone();
+      hwGroup.add(o);
+    }
+  }
+  applyPoses();
+}
+const _M = new THREE.Matrix4(), _I = new THREE.Matrix4();
+function itemPose(id, out) {
+  const hw = moverByItem.get(id);
+  if (!hw || !hwT(hw.id)) return null;
+  return poseMatrix(hwSteps(hw, item(hw.target), P.items), hwT(hw.id), out);
+}
+function applyPoses() {
+  for (const m of itemsGroup.children) {
+    const M = itemPose(m.userData.id, _M);
+    if (!M) { if (!m.matrixAutoUpdate) { m.matrixAutoUpdate = true; m.updateMatrix(); } continue; }
+    m.updateMatrix(); m.matrix.premultiply(M); m.matrixAutoUpdate = false; m.matrixWorldNeedsUpdate = true;
+  }
+  for (const o of hwGroup.children) {
+    const u = o.userData, hw = P.hw.find(h => h.id === u.hw); if (!hw) continue;
+    if (u.mode === 'attach') {
+      const M = itemPose(hw.target, _M) || _I.identity();
+      o.matrix.copy(u.base).premultiply(M); o.matrixWorldNeedsUpdate = true;
+    } else if (u.mode === 'self') {
+      const M = poseMatrix(hwSteps(hw, item(hw.target), P.items), hwT(hw.id) * u.factor, _M);
+      o.matrix.copy(u.base).premultiply(M); o.matrixWorldNeedsUpdate = true;
+    } else if (u.mode === 'strut') {
+      // газлифт: корпус закреплён в неподвижной точке, шток упирается в деталь и выдвигается при открывании
+      const M = itemPose(hw.target, _M) || _I.identity();
+      const q = u.onPart.clone().applyMatrix4(M), closedLen = u.fixed.distanceTo(u.onPart), dir = q.clone().sub(u.fixed).normalize();
+      if (u.role === 'body') placeBetween(o, u.fixed, u.fixed.clone().addScaledVector(dir, closedLen * 0.62));
+      else placeBetween(o, u.fixed.clone().addScaledVector(dir, closedLen * 0.5), q);
+    } else if (u.mode === 'light') {
+      const on = hwT(hw.id) > 0.5;
+      o.material.emissive.setHex(on ? o.userData.color : 0x000000); o.material.emissiveIntensity = on ? 1.4 : 0;
+    }
+  }
+  requestRender();
+}
+let animating = false;
+function animateHw() {
+  let busy = false;
+  for (const st of hwState.values()) {
+    if (st.t === st.to) continue;
+    st.t = st.to > st.t ? Math.min(st.to, st.t + 1 / 40) : Math.max(st.to, st.t - 1 / 40);
+    busy = true;
+  }
+  applyPoses();
+  if (busy) requestAnimationFrame(animateHw); else animating = false;
+}
+function setHw(ids, to) {
+  for (const id of ids) { const st = hwState.get(id) || { t: 0, to: 0 }; st.to = to; hwState.set(id, st); }
+  if (!animating) { animating = true; requestAnimationFrame(animateHw); }
+}
+function toggleHw(ids) {
+  ids = ids.filter(id => { const h = P.hw.find(x => x.id === id); return h && hasAction(h.type); });
+  if (!ids.length) return status('Здесь нет фурнитуры с действием');
+  const anyClosed = ids.some(id => (hwState.get(id) || { to: 0 }).to < 1);
+  setHw(ids, anyClosed ? 1 : 0);
+}
+function closeAllHw() { for (const st of hwState.values()) { st.t = 0; st.to = 0; } applyPoses(); }
 
 // ---------------------------------------------------------------- габариты и размеры на экране
 function bbox(list) {
@@ -262,6 +342,7 @@ let drag = null;
 tc.addEventListener('dragging-changed', e => {
   orbit.enabled = !e.value;
   if (e.value) {
+    closeAllHw();
     const list = selItems();
     drag = { snap: snapshot(), start: list.map(i => [i.id, i.x, i.y, i.z]), box: bbox(list), pivot: pivot.position.clone(), moved: false };
   } else if (drag) {
@@ -332,6 +413,7 @@ const measureDotMat = new THREE.MeshBasicMaterial({ color: 0xd9770f, depthTest: 
 function startMeasure(tool) {
   const k = kindOfSelection();
   if (k.type !== 'item') return status('Сначала выберите одну деталь (двойной клик по детали внутри модуля)');
+  closeAllHw();
   measure = { tool, id: k.it.id, hit: null };
   tc.detach();
   renderer.domElement.style.cursor = 'crosshair';
@@ -487,6 +569,7 @@ function buildCabinet(p, ox, oy, oz, g) {
     const wb = W - 2 * t - 26, db = Math.max(250, Math.floor((D - 30) / 50) * 50);
     for (let i = 0; i < k; i++) {
       const fy = r1(y0 + 2 + i * (fh + 3));
+      const first = out.length;
       add('drawerFront', `Фасад ящика ${i + 1}`, ox + 2, fy, fz, W - 4, r1(fh), ft, p.facadeMat);
       const hb = Math.max(60, Math.round(fh - 60)), bx = ox + t + 13, by = fy + 20, bz = fz - db;
       add('drawer', `Ящик ${i + 1}: дно`, bx, by, bz, wb, 3, db, 'hdf3');
@@ -494,6 +577,9 @@ function buildCabinet(p, ox, oy, oz, g) {
       add('drawer', `Ящик ${i + 1}: бок правый`, bx + wb - t, by + 3, bz, t, hb, db);
       add('drawer', `Ящик ${i + 1}: передняя стенка`, bx + t, by + 3, bz + db - t, wb - 2 * t, hb, t);
       add('drawer', `Ящик ${i + 1}: задняя стенка`, bx + t, by + 3, bz, wb - 2 * t, hb, t);
+      const link = `L${g}_${i + 1}`;
+      out.slice(first).forEach(o => { o.link = link; });
+      out[first].role = 'drawerFront';
     }
   } else if (p.doors > 0) {
     const k = p.doors, dw = (W - 4 - (k - 1) * 3) / k;
@@ -549,6 +635,23 @@ function drillCabinet(parts, p, kinds) {
   }
   return true;
 }
+// Фурнитура корпуса: петли на дверях (действие «открыть»), направляющие ящиков, ножки под цоколь.
+// Отверстия под петли уже поставила автоприсадка, поэтому здесь drill: '0'.
+function cabinetHardware(parts, p) {
+  const out = [];
+  const doors = parts.filter(i => i.role === 'door').sort((a, b) => a.x - b.x);
+  const ht = p.hinge && p.hinge.type !== 'none' ? p.hinge : null;
+  doors.forEach((d, i) => {
+    const side = doors.length === 1 ? (p.hinge && p.hinge.side) || 'L' : (i < doors.length / 2 ? 'L' : 'R');
+    const hw = newHardware('hinge', d.id, nid());
+    Object.assign(hw, { side, model: ht ? (ht.type === 'mini' ? 'mini' : ht.type) : 'blum', off: (ht && ht.off) || 100, count: (ht && ht.count) || 0, drill: '0', auto: true });
+    if (!p.hinge || p.hinge.type !== 'none') out.push(hw);
+  });
+  for (const f of parts.filter(i => i.role === 'drawerFront')) { const hw = newHardware('ballFull', f.id, nid()); hw.auto = true; out.push(hw); }
+  const bottom = parts.find(i => i.role === 'bottom');
+  if (bottom && p.plinth >= 60) { const hw = newHardware('legAdjust', bottom.id, nid()); Object.assign(hw, { height: p.plinth, auto: true }); out.push(hw); }
+  return out;
+}
 // Заменить петли у готового корпуса (остальная обработка остаётся)
 function applyHingesFromInspector() {
   const k = kindOfSelection(); if (k.type !== 'group' || !k.g.params) return;
@@ -559,6 +662,9 @@ function applyHingesFromInspector() {
     k.g.params = { ...k.g.params, hinge };
     k.list.forEach(i => { i.ops = (i.ops || []).filter(o => o.tag !== 'hinge'); });
     drillCabinet(k.list, k.g.params, ['hinge']);
+    const doors = new Set(k.list.filter(i => i.role === 'door').map(i => i.id));
+    P.hw = P.hw.filter(h => !(doors.has(h.target) && HW_TYPES[h.type].cat === 'hinges'));
+    P.hw.push(...cabinetHardware(k.list, k.g.params).filter(h => h.type === 'hinge'));
   });
   status(hinge.type === 'none' ? 'Петли убраны' : 'Петли обновлены: ' + HINGES.find(h => h.id === hinge.type).name);
 }
@@ -571,7 +677,7 @@ function deleteSel() {
 function duplicateSel() {
   const list = selItems(); if (!list.length) return;
   const b = bbox(list), dx = b.x1 - b.x0;
-  const gmap = new Map();
+  const gmap = new Map(), links = new Map();
   commit(() => {
     sel.clear();
     for (const i of list) {
@@ -584,6 +690,12 @@ function duplicateSel() {
         g = gmap.get(i.g);
       }
       const c = { ...JSON.parse(JSON.stringify(i)), id: nid(), x: i.x + dx, g };
+      if (c.link) { if (!links.has(c.link)) links.set(c.link, 'L' + nid()); c.link = links.get(c.link); }
+      for (const h of hwOf(i.id)) {
+        const nh = { ...JSON.parse(JSON.stringify(h)), id: nid(), target: c.id };
+        c.ops = (c.ops || []).map(o => o.tag === 'hw' + h.id ? { ...o, tag: 'hw' + nh.id } : o);
+        P.hw.push(nh);
+      }
       P.items.push(c); sel.add(c.id);
     }
   });
@@ -605,6 +717,7 @@ function moveSel(dx, dy, dz) {
 function rotateSel(axis) {
   const list = selItems(); if (!list.length) return;
   if (list.some(i => i.ops && i.ops.length)) return status('Деталь с отверстиями и вырезами не поворачивается — обработка привязана к её сторонам');
+  if (list.some(i => hwOf(i.id).length)) return status('Деталь с фурнитурой не поворачивается — сначала удалите фурнитуру');
   const b = bbox(list), cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, cz = (b.z0 + b.z1) / 2;
   commit(() => list.forEach(i => {
     const mx = i.x + i.w / 2, my = i.y + i.h / 2, mz = i.z + i.d / 2;
@@ -695,6 +808,10 @@ function refreshInspector() {
       ${(i.ops || []).map((o, k) => `<div class="op"><span>${k + 1}. ${esc(describeOp(o, i))}</span><button data-op-edit="${k}" title="Изменить">✎</button><button data-op-del="${k}" title="Удалить">✕</button></div>`).join('') || '<div class="note">Отверстий и вырезов нет.</div>'}
       <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез / скругление угла</button></div>
       <div class="btns"><button data-cmd="measure-hole" title="Наведите мышь на деталь — видно расстояния до краёв, клик ставит отверстие">📏 Разметить отверстие</button><button data-cmd="measure-cut" title="Клик ставит левый нижний угол выреза">📏 Разметить вырез</button><button class="accent" data-cmd="drawing">Чертёж</button></div></div>
+      <div class="sec"><b>Фурнитура${hwOf(i.id).length ? ` (${hwOf(i.id).length})` : ''}</b>
+      ${hwOf(i.id).map(h => `<div class="op hwrow"><span>${esc(describeHw(h, i))}</span>${hasAction(h.type) ? `<button class="accent" data-hw-act="${h.id}">${actionLabels(h.type)[(hwState.get(h.id) || { to: 0 }).to > 0 ? 1 : 0]}</button>` : '<i></i>'}<button data-hw-edit="${h.id}" title="Изменить">✎</button><button data-hw-del="${h.id}" title="Удалить">✕</button></div>`).join('') || '<div class="note">Фурнитуры нет.</div>'}
+      ${i.link ? `<div class="note">Двигается вместе со связанными деталями (${P.items.filter(x => x.link === i.link).length} шт.).</div>` : ''}
+      <div class="btns"><button class="accent" data-cmd="hw">＋ Фурнитура</button></div></div>
       <div class="sec"><b>Действия</b><div class="btns"><button data-cmd="rot-y">⟲ Повернуть</button><button data-cmd="rot-z">⤾ Положить</button><button data-cmd="duplicate">Копия</button>
       ${i.g ? '<button data-cmd="ungroup">Вынуть из модуля</button>' : ''}<button class="danger" data-cmd="delete">Удалить</button></div></div>`;
   } else {
@@ -720,6 +837,15 @@ function refreshInspector() {
           <div class="note">Меняются только петли и планки, остальная обработка остаётся. Авто: до 900 мм — 2 петли, до 1600 — 3, до 2000 — 4.</div></div>`;
       }
     }
+    const hwHere = P.hw.filter(x => k.list.some(i => i.id === x.target));
+    if (hwHere.length) {
+      const cnt = new Map();
+      hwHere.forEach(x => cnt.set(HW_TYPES[x.type].name, (cnt.get(HW_TYPES[x.type].name) || 0) + hardwareCount(x, item(x.target))));
+      h += `<div class="sec"><b>Фурнитура</b><div class="note">${[...cnt].map(([n, c]) => `${esc(n)} — ${c} шт.`).join('<br>')}</div>
+        ${hwHere.some(x => hasAction(x.type)) ? '<div class="btns"><button class="accent" data-cmd="hw-toggle-sel">▶ Открыть / закрыть</button></div>' : ''}</div>`;
+    }
+    h += `<div class="sec"><b>Двигать вместе</b><div class="note">Свяжите фасад ящика с его коробом — тогда направляющие выдвинут их вместе.</div>
+      <div class="btns"><button data-cmd="link">🔗 Связать выбранные</button><button data-cmd="unlink">Разъединить</button></div></div>`;
     h += `<div class="sec"><b>Действия</b><div class="btns"><button data-cmd="rot-y">⟲ Повернуть</button><button data-cmd="duplicate">Копия</button>
       ${k.type === 'group' ? '<button data-cmd="ungroup">Разгруппировать</button>' : '<button data-cmd="group">Объединить в модуль</button>'}
       <button class="danger" data-cmd="delete">Удалить</button></div></div>`;
@@ -774,6 +900,7 @@ function rebuildGroupFromInspector() {
     k.g.params = p;
     const parts = buildCabinet(p, b.x0, b.y0, b.z0, k.g.id);
     P.items.push(...parts); sel.clear(); parts.forEach(i => sel.add(i.id));
+    P.hw = P.hw.filter(h => item(h.target)); P.hw.push(...cabinetHardware(parts, p));
   });
   status('Корпус перестроен');
 }
@@ -828,6 +955,7 @@ function cabinetDialog() {
       P.groups.push(g);
       const parts = buildCabinet(p2, freeX(baseY, totalH), baseY, 0, g.id);
       P.items.push(...parts); sel.clear(); parts.forEach(i => sel.add(i.id)); openGroup = 0;
+      P.hw.push(...cabinetHardware(parts, p2));
     });
     status(`Корпус добавлен: ${groupItems([...P.groups].pop().id).length} деталей. Двойной клик — выбрать отдельную деталь.`);
   };
@@ -854,6 +982,12 @@ function specData() {
   }
   return { rows: [...rows.values()].sort((a, b) => a.mat.localeCompare(b.mat) || b.L - a.L), mats: [...mats.values()] };
 }
+function hwSpecTable() {
+  if (!P.hw.length) return '';
+  const cnt = new Map();
+  for (const h of P.hw) { const it = item(h.target); if (!it) continue; const n = describeHw({ ...h, count: h.count }, it).split(' — ')[0]; cnt.set(n, (cnt.get(n) || 0) + hardwareCount(h, it)); }
+  return `<table class="spec"><tr><th>Фурнитура</th><th class="n">Кол-во</th></tr>${[...cnt].map(([n, c]) => `<tr><td>${esc(n)}</td><td class="n">${c}</td></tr>`).join('')}</table>`;
+}
 function specDialog() {
   if (!P.items.length) return status('В проекте пока нет деталей');
   const { rows, mats } = specData();
@@ -863,6 +997,7 @@ function specDialog() {
     ${mats.map(t => `<tr><td>${esc(t.name)}</td><td class="n">${t.n}</td><td class="n">${t.area.toFixed(2)}</td><td class="n">${t.top ? '—' : Math.ceil(t.area * 1.15 / sheet)}</td><td class="n">${t.edge.toFixed(1)}</td></tr>`).join('')}</table>
     <table class="spec"><tr><th>№</th><th>Деталь</th><th>Тип</th><th>Материал</th><th class="n">Длина</th><th class="n">Ширина</th><th class="n">Толщ.</th><th class="n">Обраб.</th><th class="n">Кол-во</th></tr>
     ${rows.map((r, k) => `<tr><td>${k + 1}</td><td>${esc(r.name)}</td><td>${esc(r.kind)}</td><td>${esc(r.mat)}</td><td class="n">${fmt(r.L)}</td><td class="n">${fmt(r.W)}</td><td class="n">${fmt(r.T)}</td><td class="n">${r.ops || ''}</td><td class="n">${r.n}</td></tr>`).join('')}</table>
+    ${hwSpecTable()}
     <div class="note">Лист ${SHEET.w}×${SHEET.h} мм. Число листов — оценка по площади с запасом 15%; точный раскрой — на странице «Раскрой» сайта.
     Кромка считается по видимым торцам: передний торец корпусных деталей и все 4 торца фасадов.</div>`,
     '<button data-close>Закрыть</button><button class="accent" id="csvBtn">Сохранить в Excel (CSV)</button>', true);
@@ -976,11 +1111,76 @@ function opDialog(type, index = -1, init = null) {
   };
 }
 insp.addEventListener('click', e => {
+  const ha = e.target.closest('[data-hw-act]'), he = e.target.closest('[data-hw-edit]'), hd = e.target.closest('[data-hw-del]');
+  if (ha) { toggleHw([+ha.dataset.hwAct]); setTimeout(refreshInspector, 50); return; }
+  if (he) { const hw = P.hw.find(h => h.id === +he.dataset.hwEdit); if (hw) hwForm(item(hw.target), hw, false); return; }
+  if (hd) { hwDelete(+hd.dataset.hwDel); return; }
   const ed = e.target.closest('[data-op-edit]'), del = e.target.closest('[data-op-del]');
   const k = kindOfSelection(); if (k.type !== 'item') return;
   if (ed) opDialog(null, +ed.dataset.opEdit);
   if (del) commit(() => { k.it.ops.splice(+del.dataset.opDel, 1); });
 });
+
+// ---------------------------------------------------------------- фурнитура: каталог и настройки
+function hwSync(hw, it) {   // отверстия под фурнитуру: убрать старые этой фурнитуры, поставить новые
+  it.ops = (it.ops || []).filter(o => o.tag !== 'hw' + hw.id);
+  it.ops.push(...hwDrillOps(hw, it, hwOf(it.id).filter(h => h.id !== hw.id)));
+}
+function hwCatalog(cat) {
+  const k = kindOfSelection();
+  if (k.type !== 'item') return status('Выберите одну деталь (двойной клик по детали в модуле), чтобы поставить на неё фурнитуру');
+  const it = k.it;
+  cat = cat || 'hinges';
+  const tabs = HW_CATEGORIES.map(([id, name]) => `<button class="${id === cat ? 'on' : ''}" data-hwcat="${id}">${esc(name)}</button>`).join('');
+  const cards = Object.values(HW_TYPES).filter(t => t.cat === cat).map(t => {
+    const why = checkTarget(t.id, it);
+    return `<div class="hwcard${why ? ' off' : ''}"><div><b>${esc(t.name)}</b>${t.motion ? `<span class="tag">${t.motion === 'light' ? 'свет' : 'есть действие'}</span>` : ''}<div class="note">${esc(t.desc)}</div>${why ? `<div class="warn">${esc(why)}</div>` : ''}</div>
+      <button class="accent" data-hwadd="${t.id}"${why ? ' disabled' : ''}>Поставить</button></div>`;
+  }).join('');
+  openDialog(`Фурнитура: ${label(it)}`, `<div class="hwtabs">${tabs}</div><div class="hwlist">${cards}</div>`, '<button data-close>Закрыть</button>', true);
+  const body = document.getElementById('dlgBody');
+  body.onclick = e => {
+    const c = e.target.closest('[data-hwcat]'); if (c) return hwCatalog(c.dataset.hwcat);
+    const a = e.target.closest('[data-hwadd]'); if (a && !a.disabled) hwForm(it, newHardware(a.dataset.hwadd, it.id, 0), true);
+  };
+}
+function hwForm(it, hw, isNew) {
+  const t = HW_TYPES[hw.type];
+  const fieldsHtml = t.fields.map(k => {
+    const fd = HW_FIELDS[k];
+    return fd.num ? fld(fd.label, k, hw[k] ?? fd.def) : fld(fd.label, k, hw[k] ?? fd.def, { options: fd.options });
+  }).join('');
+  openDialog(`${t.name}: ${label(it)}`, `<div class="note">${esc(t.desc)}</div><div class="grid3">${fieldsHtml || '<div class="note">Настроек нет.</div>'}</div><div class="warn" id="hwWarn"></div>`,
+    `<button data-close>Отмена</button><button class="accent" id="hwOk">${isNew ? 'Поставить' : 'Сохранить'}</button>`);
+  const body = document.getElementById('dlgBody');
+  body.onkeydown = e => e.stopPropagation();
+  document.getElementById('hwOk').onclick = () => {
+    const nh = { ...hw };
+    body.querySelectorAll('[data-k]').forEach(el => { const fd = HW_FIELDS[el.dataset.k]; nh[el.dataset.k] = fd.num ? (parseFloat(String(el.value).replace(',', '.')) || 0) : el.value; });
+    const why = checkTarget(nh.type, it) || conflict(nh, hwOf(it.id).filter(h => h.id !== hw.id));
+    if (why) { document.getElementById('hwWarn').textContent = why; return; }
+    closeDialog();
+    commit(() => {
+      if (isNew) { nh.id = nid(); P.hw.push(nh); } else { const i = P.hw.findIndex(h => h.id === hw.id); P.hw[i] = nh; delete nh.auto; }
+      hwSync(nh, it);
+    });
+    status(`${isNew ? 'Поставлено' : 'Изменено'}: ${describeHw(nh, it)}`);
+  };
+}
+function hwDelete(id) {
+  const hw = P.hw.find(h => h.id === id); if (!hw) return;
+  commit(() => {
+    const it = item(hw.target);
+    if (it) it.ops = (it.ops || []).filter(o => o.tag !== 'hw' + id);
+    P.hw = P.hw.filter(h => h.id !== id); hwState.delete(id);
+  });
+}
+function linkSel(on) {
+  const list = selItems(); if (list.length < (on ? 2 : 1)) return status('Выберите несколько деталей (Shift + клик), которые должны двигаться вместе — например, фасад и короб ящика');
+  const id = 'L' + nid();
+  commit(() => list.forEach(i => { if (on) i.link = id; else delete i.link; }));
+  status(on ? 'Детали связаны: двигаются вместе с фурнитурой' : 'Связь снята');
+}
 
 // Чертежи: по одной детали на лист, с размерами, координатами обработки и таблицей операций
 function drawingDialog(list) {
@@ -1017,6 +1217,8 @@ function loadProject(text, path) {
   try { d = JSON.parse(text); } catch (e) { return alert('Файл повреждён или это не проект Kitchen Calc'); }
   if (!d || !Array.isArray(d.items)) return alert('Это не проект Kitchen Calc Studio');
   P = Object.assign(newProject(), d);
+  if (!Array.isArray(P.hw)) P.hw = [];
+  hwState.clear();
   for (const m of DEFAULT_MATERIALS) if (!P.materials.some(x => x.id === m.id)) P.materials.push({ ...m });
   P.seq = Math.max(P.seq || 1, ...P.items.map(i => i.id + 1), ...P.groups.map(g => g.id + 1));
   filePath = path || null;
@@ -1077,6 +1279,9 @@ const COMMANDS = {
   'rot-y': () => rotateSel('y'), 'rot-z': () => rotateSel('z'), 'rebuild-group': rebuildGroupFromInspector,
   fit, spec: specDialog, shot: screenshot, drawing: () => drawingDialog(selItems()), drawings: () => drawingDialog(P.items),
   'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'),
+  hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false),
+  'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleHw(P.hw.filter(h => ids.includes(h.target)).map(h => h.id)); },
+  'hw-toggle-all': () => toggleHw(P.hw.map(h => h.id)),
   'measure-hole': () => startMeasure('hole'), 'measure-cut': () => startMeasure('cut'),
 };
 document.addEventListener('click', e => {
@@ -1144,4 +1349,5 @@ async function start() {
   else setView('3d');
 }
 start();
-window.__kcs = { get P() { return P; }, sel, COMMANDS, setView, get camera() { return camera; }, pivot, renderer, select: ids => { sel.clear(); ids.forEach(i => sel.add(i)); openGroup = 0; selectionChanged(); } };  // для автотестов
+window.__kcs = { get P() { return P; }, sel, COMMANDS, setView, get camera() { return camera; }, pivot, renderer, select: ids => { sel.clear(); ids.forEach(i => sel.add(i)); openGroup = 0; selectionChanged(); },
+  hwSetT: (ids, t) => { ids.forEach(id => hwState.set(id, { t, to: t })); applyPoses(); }, meshOf: id => itemsGroup.children.find(m => m.userData.id === id), hwGroup };  // для автотестов
