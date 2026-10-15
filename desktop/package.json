@@ -1,0 +1,64 @@
+{
+  "name": "kitchen-calc-studio",
+  "productName": "Kitchen Calc Studio",
+  "version": "1.0.0",
+  "description": "3D-редактор корпусной мебели Kitchen Calc",
+  "author": "Kitchen Calc",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "vendor": "node scripts/vendor.js",
+    "start": "npm run vendor && electron .",
+    "dist": "npm run vendor && electron-builder --win nsis --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "25.1.8",
+    "three": "0.170.0"
+  },
+  "build": {
+    "appId": "uz.kitchencalc.studio",
+    "productName": "Kitchen Calc Studio",
+    "artifactName": "KitchenCalcStudio-Setup-${version}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Kitchen Calc Studio"
+    },
+    "fileAssociations": [
+      {
+        "ext": "kcp",
+        "name": "Проект Kitchen Calc",
+        "description": "Проект мебели Kitchen Calc Studio"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kitchen-calc/Kitchen-Calc.git"
+  }
+}
