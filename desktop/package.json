@@ -9,7 +9,7 @@
   "scripts": {
     "vendor": "node scripts/vendor.js",
     "start": "npm run vendor && electron .",
-    "dist": "npm run vendor && electron-builder --win nsis --x64 --publish never"
+    "dist": "npm run vendor && electron-builder --win nsis zip --x64 --publish never"
   },
   "devDependencies": {
     "electron": "33.4.11",
@@ -21,7 +21,7 @@
   "build": {
     "appId": "uz.kitchencalc.studio",
     "productName": "Kitchen Calc Studio",
-    "artifactName": "KitchenCalcStudio-Setup-${version}.${ext}",
+    "artifactName": "KitchenCalcStudio-${version}-bez-ustanovki.${ext}",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -40,6 +40,12 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.png"
@@ -49,7 +55,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Kitchen Calc Studio"
+      "shortcutName": "Kitchen Calc Studio",
+      "artifactName": "KitchenCalcStudio-Setup-${version}.${ext}"
     },
     "fileAssociations": [
       {
