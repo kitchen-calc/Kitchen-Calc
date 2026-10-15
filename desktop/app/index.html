@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kitchen Calc Studio</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="brand"><img src="../build/icon.png" alt=""><span>Kitchen Calc <b>Studio</b></span></div>
+    <div class="tb-group">
+      <button data-cmd="new" title="Новый проект (Ctrl+N)">Новый</button>
+      <button data-cmd="open" title="Открыть (Ctrl+O)">Открыть</button>
+      <button data-cmd="save" title="Сохранить (Ctrl+S)">Сохранить</button>
+    </div>
+    <div class="tb-group">
+      <button class="accent" data-cmd="cabinet" title="Корпус из деталей: боковины, дно, крыша, задняя стенка, полки, фасады, ящики">＋ Корпус</button>
+      <button data-cmd="panel-h" title="Горизонтальная деталь (полка, дно)">▭ Горизонт.</button>
+      <button data-cmd="panel-v" title="Вертикальная деталь (боковина, перегородка)">▯ Вертик.</button>
+      <button data-cmd="panel-f" title="Фронтальная деталь (фасад, задняя стенка)">◻ Фронт.</button>
+    </div>
+    <div class="tb-group">
+      <button data-cmd="undo" title="Отменить (Ctrl+Z)">↶</button>
+      <button data-cmd="redo" title="Повторить (Ctrl+Y)">↷</button>
+      <button data-cmd="duplicate" title="Копия рядом (Ctrl+D)">Копия</button>
+      <button data-cmd="delete" title="Удалить (Delete)">Удалить</button>
+    </div>
+    <div class="tb-group views">
+      <button data-view="3d" class="on" title="Перспектива">3D</button>
+      <button data-view="front" title="Вид спереди">Спереди</button>
+      <button data-view="top" title="Вид сверху">Сверху</button>
+      <button data-view="left" title="Вид слева">Слева</button>
+      <button data-cmd="fit" title="Показать всё (F)">⤢</button>
+    </div>
+    <div class="tb-group">
+      <button data-cmd="spec" title="Спецификация и раскрой">Спецификация</button>
+      <button data-cmd="shot" title="Сохранить картинку PNG (для ИИ-рендера)">Картинка</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="side left">
+      <h3>Проект</h3>
+      <div id="tree" class="tree"></div>
+    </aside>
+    <section id="viewport" class="viewport">
+      <div class="vp-hint" id="vpHint"></div>
+    </section>
+    <aside class="side right">
+      <h3 id="inspTitle">Свойства</h3>
+      <div id="inspector" class="inspector"></div>
+    </aside>
+  </main>
+
+  <footer class="status">
+    <span id="statusText">Готово</span>
+    <span class="grow"></span>
+    <label>Шаг <select id="gridStep"><option value="1">1 мм</option><option value="5">5 мм</option><option value="10" selected>10 мм</option><option value="50">50 мм</option><option value="100">100 мм</option></select></label>
+    <label><input type="checkbox" id="magnet" checked> Магнит к деталям</label>
+    <label><input type="checkbox" id="showDims" checked> Размеры</label>
+    <label><input type="checkbox" id="showRoom" checked> Стены</label>
+  </footer>
+
+  <div class="modal" id="modal" hidden>
+    <div class="dialog">
+      <div class="dlg-head"><h2 id="dlgTitle"></h2><button class="x" data-close>×</button></div>
+      <div class="dlg-body" id="dlgBody"></div>
+      <div class="dlg-foot" id="dlgFoot"></div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept=".kcp,.json" hidden>
+  <script type="module" src="editor.js"></script>
+</body>
+</html>
