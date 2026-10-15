@@ -17,7 +17,7 @@ button:disabled { opacity: .4; cursor: default; }
 .brand img { width: 28px; height: 28px; border-radius: 6px; }
 .brand b { color: var(--gold); font-weight: 600; }
 .tb-group { display: flex; gap: 4px; padding-left: 8px; border-left: 1px solid var(--line); }
-@media (max-width: 1560px) { .brand span { display: none; } .toolbar { gap: 8px; } }
+@media (max-width: 1760px) { .brand span { display: none; } .toolbar { gap: 8px; } }
 @media (max-width: 1500px) { .toolbar button { padding: 6px 7px; font-size: 12.5px; } }
 .toolbar::-webkit-scrollbar { display: none; }
 
@@ -101,3 +101,11 @@ table.spec td.n { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .mlabel { background: rgba(255,255,255,.96); color: #1d1a16; border: 1px solid #1f5fb4; border-radius: 6px; padding: 5px 8px; font: 12px/1.45 "Segoe UI", Arial, sans-serif; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
 .mlabel b { color: #1f5fb4; }
+.op.hwrow { grid-template-columns: 1fr auto auto auto; }
+.op.hwrow .accent { padding: 1px 8px; }
+.hwtabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.hwlist { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.hwcard { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.hwcard.off { opacity: .55; }
+.hwcard .tag { margin-left: 8px; font-size: 10.5px; color: #1a160f; background: var(--gold); border-radius: 4px; padding: 1px 6px; }
+.warn { color: #f0a090; font-size: 12px; margin-top: 4px; }
