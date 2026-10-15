@@ -370,6 +370,39 @@ async def raskroy(request: Request):
     return FileResponse(file_path, headers={"X-Robots-Tag": "noindex, nofollow"})
 
 
+# Kitchen Calc Studio в браузере: те же файлы, что в программе для Windows (desktop/app), библиотеки — с CDN
+STUDIO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "desktop", "app")
+STUDIO_IMPORTS = {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+    "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.16/build/index.module.js",
+    "three-bvh-csg": "https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.18/build/index.module.js",
+}
+STUDIO_TYPES = {"editor.js": "application/javascript", "machining.js": "application/javascript", "style.css": "text/css"}
+
+
+@app.get("/studio", response_class=HTMLResponse)
+async def studio():
+    with open(os.path.join(STUDIO_DIR, "index.html"), encoding="utf-8") as f:
+        page = f.read()
+    page = re.sub(r'<script type="importmap">.*?</script>',
+                  lambda m: '<script type="importmap">' + json.dumps({"imports": STUDIO_IMPORTS}) + "</script>", page, count=1, flags=re.S)
+    page = page.replace("<head>", '<head>\n  <base href="/studio/">', 1).replace("../build/icon.png", "/static/home/icon-192.png?v=2")
+    return HTMLResponse(page, headers={"X-Robots-Tag": "noindex", "Cache-Control": "no-cache"})
+
+
+@app.get("/studio/")
+async def studio_slash():
+    return RedirectResponse("/studio", status_code=301)
+
+
+@app.get("/studio/{filename}")
+async def studio_file(filename: str):
+    if filename not in STUDIO_TYPES:
+        raise HTTPException(status_code=404)
+    return FileResponse(os.path.join(STUDIO_DIR, filename), media_type=STUDIO_TYPES[filename], headers={"Cache-Control": "no-cache"})
+
+
 @app.get("/health")
 async def health():
     # Лёгкая страница для сервисов-пингов (UptimeRobot и т.п.)

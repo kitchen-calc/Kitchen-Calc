@@ -41,7 +41,10 @@ jobs:
           tag_name: studio-v1.0.${{ github.run_number }}
           name: Kitchen Calc Studio 1.0.${{ github.run_number }}
           body: |
-            Установщик программы Kitchen Calc Studio для Windows — скачайте файл KitchenCalcStudio-Setup-….exe ниже.
-            Windows может предупредить «Система Windows защитила ваш компьютер»: нажмите «Подробнее» → «Выполнить в любом случае».
-          files: desktop/dist/*.exe
+            **KitchenCalcStudio-Setup-….exe** — установщик для Windows. Windows может предупредить «Система Windows защитила ваш компьютер»: нажмите «Подробнее» → «Выполнить в любом случае».
+            **KitchenCalcStudio-…-bez-ustanovki.zip** — без установки: распакуйте архив и запустите Kitchen Calc Studio.exe.
+            Онлайн-версия без скачивания: https://kitchen-calc.uz/studio
+          files: |
+            desktop/dist/*.exe
+            desktop/dist/*.zip
           make_latest: true

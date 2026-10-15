@@ -77,7 +77,12 @@ function afterChange() { P.groups = P.groups.filter(g => P.items.some(i => i.g =
 
 // ---------------------------------------------------------------- 3D-сцена
 const vp = document.getElementById('viewport');
-const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); }
+catch (err) {
+  window.kcsFail('не удалось включить 3D (WebGL). Обновите драйвер видеокарты или перезагрузите компьютер.\n' + err.message);
+  throw err;
+}
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 vp.appendChild(renderer.domElement);
 const labels = new CSS2DRenderer();

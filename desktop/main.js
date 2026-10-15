@@ -6,6 +6,15 @@ const { pathToFileURL } = require('url');
 
 // Файлы программы отдаются по адресу app://studio/... — так в окне работают JS-модули (с file:// они бы не загрузились)
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
+// Если видеокарта недоступна или в чёрном списке — 3D всё равно работает программно (иначе Chromium отключает WebGL)
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+
+// Журнал ошибок: %APPDATA%\Kitchen Calc Studio\kcs-log.txt — его можно прислать, если программа не работает
+function log(msg) {
+  try { fs.appendFileSync(path.join(app.getPath('userData'), 'kcs-log.txt'), `[${new Date().toISOString()}] ${msg}\n`); } catch (e) { /* нет доступа к папке */ }
+}
+process.on('uncaughtException', e => { log('main: ' + (e.stack || e)); dialog.showErrorBox('Kitchen Calc Studio', 'Ошибка запуска:\n' + (e.message || e)); });
 
 const PROJECT_FILTERS = [{ name: 'Проект Kitchen Calc', extensions: ['kcp'] }, { name: 'Все файлы', extensions: ['*'] }];
 let win = null;
@@ -26,6 +35,15 @@ function createWindow() {
   });
   Menu.setApplicationMenu(null);
   win.loadURL('app://studio/app/index.html');
+  win.webContents.on('console-message', (e, level, message, line, source) => { if (level >= 2) log(`renderer: ${message} (${source}:${line})`); });
+  win.webContents.on('did-fail-load', (e, code, desc, url) => {
+    log(`load failed ${code} ${desc} ${url}`);
+    dialog.showErrorBox('Kitchen Calc Studio', `Не удалось открыть окно программы (${desc}).\nЖурнал: ${path.join(app.getPath('userData'), 'kcs-log.txt')}`);
+  });
+  win.webContents.on('render-process-gone', (e, d) => {
+    log('render process gone: ' + d.reason);
+    dialog.showErrorBox('Kitchen Calc Studio', 'Окно программы аварийно закрылось (' + d.reason + '). Попробуйте запустить ещё раз.');
+  });
   win.on('close', e => {
     if (!dirty) return;
     const r = dialog.showMessageBoxSync(win, {
@@ -69,7 +87,12 @@ ipcMain.handle('export', async (e, { name, ext, text, base64 }) => {
 ipcMain.on('dirty', (e, v) => { dirty = !!v; });
 ipcMain.on('title', (e, t) => { if (win) win.setTitle(t); });
 
+// Второй запуск (двойной клик по ярлыку, пока программа открыта) — просто показываем уже открытое окно
+if (!app.requestSingleInstanceLock()) app.quit();
+app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
+
 app.whenReady().then(() => {
+  log(`start ${app.getVersion()} electron ${process.versions.electron} ${process.platform} ${require('os').release()}`);
   protocol.handle('app', req => {
     const file = path.normalize(path.join(__dirname, decodeURIComponent(new URL(req.url).pathname)));
     if (!file.startsWith(__dirname + path.sep)) return new Response('Not found', { status: 404 });

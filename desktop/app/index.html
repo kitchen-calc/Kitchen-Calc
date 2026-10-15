@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kitchen Calc Studio</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    // Показывает ошибку прямо в окне, если программа не смогла запуститься (раньше, чем загрузится редактор)
+    window.kcsFail = function (text) {
+      var d = document.getElementById('kcsFail') || document.createElement('div');
+      d.id = 'kcsFail';
+      d.style.cssText = 'position:fixed;inset:auto 16px 40px 16px;z-index:999;background:#3a1714;color:#ffd9d2;border:1px solid #d9776a;border-radius:10px;padding:14px 16px;font:13px/1.5 Segoe UI,Arial,sans-serif;white-space:pre-wrap;user-select:text';
+      d.textContent = 'Kitchen Calc Studio: ' + text + '\n\nСделайте снимок экрана с этим сообщением и пришлите его.';
+      (document.body || document.documentElement).appendChild(d);
+    };
+    window.addEventListener('error', function (e) { window.kcsFail((e.message || 'ошибка') + (e.filename ? '\n' + e.filename + ':' + e.lineno : '')); });
+    window.addEventListener('unhandledrejection', function (e) { window.kcsFail(String(e.reason && (e.reason.stack || e.reason.message) || e.reason)); });
+  </script>
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/","three-mesh-bvh":"./vendor/three-mesh-bvh.module.js","three-bvh-csg":"./vendor/three-bvh-csg.module.js"}}</script>
 </head>
 <body>
