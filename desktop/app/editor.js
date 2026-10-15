@@ -354,7 +354,11 @@ tc.addEventListener('objectChange', () => {
   if (!drag) return;
   const b = drag.box, dp = pivot.position.clone().sub(drag.pivot);
   const mins = [b.x0, b.y0, b.z0], sizes = [b.x1 - b.x0, b.y1 - b.y0, b.z1 - b.z0];
-  const delta = [dp.x, dp.y, dp.z].map((v, a) => Math.abs(v) < 1e-6 ? 0 : snapAxis(a, mins[a] + v, sizes[a]) - mins[a]);
+  let delta = [dp.x, dp.y, dp.z].map((v, a) => Math.abs(v) < 1e-6 ? 0 : snapAxis(a, mins[a] + v, sizes[a]) - mins[a]);
+  const movers = drag.start.map(([id, x, y, z]) => ({ ...item(id), x, y, z }));
+  const cm = clampMove(movers, delta, drag.exclude || (drag.exclude = clashedBefore(movers)));
+  delta = cm.d;
+  drag.hit = cm.hit;
   drag.moved = delta.some(v => v !== 0);
   for (const [id, x, y, z] of drag.start) {
     const it = item(id); it.x = x + delta[0]; it.y = y + delta[1]; it.z = z + delta[2];
@@ -366,7 +370,7 @@ tc.addEventListener('objectChange', () => {
   }
   updateDims(); refreshInspectorValues();
   const nb = bbox(selItems());
-  status(`X ${fmt(nb.x0)}   Y ${fmt(nb.y0)}   Z ${fmt(nb.z0)}`);
+  status(`X ${fmt(nb.x0)}   Y ${fmt(nb.y0)}   Z ${fmt(nb.z0)}` + (drag.hit ? `   · упёрлось в ${who(drag.hit)}` : ''));
 });
 
 function gridStep() { return +document.getElementById('gridStep').value || 10; }
@@ -528,12 +532,64 @@ function pick(e) {
 function selectionChanged() { if (measure && !sel.has(measure.id)) stopMeasure(); rebuild(); refreshUI(); }
 
 // ---------------------------------------------------------------- команды
+// ---------------------------------------------------------------- пересечения: деталь не может войти в другую
+// Касаться можно (зазор до 0,5 мм не считается). Пересечения, которые уже были до действия, не мешают — чтобы не «заклинить» проект.
+const TOL = 0.5;
+const noClash = () => document.getElementById('noClash').checked;
+const ov = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0);
+const boxOf = i => [i.x, i.y, i.z, i.x + i.w, i.y + i.h, i.z + i.d];
+function hits(a, b) { const A = boxOf(a), B = boxOf(b); return ov(A[0], A[3], B[0], B[3]) > TOL && ov(A[1], A[4], B[1], B[4]) > TOL && ov(A[2], A[5], B[2], B[5]) > TOL; }
+// Первая деталь, в которую входит одна из cands (exclude — свои детали и те, что уже пересекались)
+function clash(cands, exclude) {
+  for (const c of cands) for (const o of P.items) if (!exclude.has(o.id) && hits(c, o)) return o;
+  return null;
+}
+function clashedBefore(list) {
+  const out = new Set(list.map(i => i.id));
+  for (const i of list) for (const o of P.items) if (!out.has(o.id) && hits(i, o)) out.add(o.id);
+  return out;
+}
+// Сдвиг: детали едут, пока не упрутся в соседнюю, и встают вплотную
+function clampMove(list, delta, exclude) {
+  const d = delta.slice(); let hit = null;
+  if (!noClash()) return { d, hit };
+  for (let a = 0; a < 3; a++) {
+    if (!d[a]) continue;
+    for (const s0 of list) {
+      const S = boxOf(s0).map((v, k) => v + (k % 3 < a ? d[k % 3] : 0));
+      for (const o of P.items) {
+        if (exclude.has(o.id)) continue;
+        const O = boxOf(o);
+        let side = true;
+        for (let b = 0; b < 3; b++) if (b !== a && ov(S[b], S[b + 3], O[b], O[b + 3]) <= TOL) side = false;
+        if (!side) continue;
+        if (d[a] > 0 && O[a] >= S[a + 3] - TOL) { const lim = O[a] - S[a + 3]; if (lim < d[a]) { d[a] = Math.max(0, r1(lim)); hit = o; } }
+        else if (d[a] < 0 && O[a + 3] <= S[a] + TOL) { const lim = O[a + 3] - S[a]; if (lim > d[a]) { d[a] = Math.min(0, r1(lim)); hit = o; } }
+      }
+    }
+  }
+  return { d, hit };
+}
+// Наибольший размер детали по оси key (до want), при котором она ни во что не входит
+function maxSize(it, key, want) {
+  if (!noClash() || want <= it[key]) return { v: want, hit: null };
+  const ex = clashedBefore([it]);
+  const test = v => clash([{ ...it, [key]: v }], ex);
+  const first = test(want);
+  if (!first) return { v: want, hit: null };
+  let lo = it[key], hi = want;
+  for (let n = 0; n < 30 && hi - lo > 0.05; n++) { const m = (lo + hi) / 2; if (test(m)) hi = m; else lo = m; }
+  return { v: Math.max(it[key], r1(lo - TOL)), hit: first };   // допуск касания не отдаём в размер
+}
+const who = o => `«${label(o)}»${o.g && group(o.g) ? ` (${group(o.g).name})` : ''}`;
+
 function addPanel(kind) {
   const m = mat('w16');
   const sizes = { 'panel-h': [600, m.t, 560], 'panel-v': [m.t, 720, 560], 'panel-f': [600, 720, m.t] }[kind];
   const b = sel.size ? bbox(selItems()) : null;
   const it = { id: nid(), name: '', kind: kind === 'panel-f' ? 'panel' : kind === 'panel-v' ? 'side' : 'shelf', mat: m.id,
     w: sizes[0], h: sizes[1], d: sizes[2], x: b ? b.x1 : freeX(0, sizes[1]), y: b ? b.y0 : 0, z: b ? b.z0 : 0, g: 0 };
+  if (noClash() && clash([it], new Set())) it.x = freeX(it.y, it.h);
   commit(() => { P.items.push(it); sel.clear(); sel.add(it.id); openGroup = 0; });
   status('Деталь добавлена. Тяните стрелки или введите размеры справа.');
 }
@@ -678,6 +734,11 @@ function duplicateSel() {
   const list = selItems(); if (!list.length) return;
   const b = bbox(list), dx = b.x1 - b.x0;
   const gmap = new Map(), links = new Map();
+  let shift = dx;
+  if (noClash()) {
+    const moved = list.map(i => ({ ...i, x: i.x + dx }));
+    if (clash(moved, new Set(list.map(i => i.id)))) shift = freeX(b.y0, b.y1 - b.y0) - b.x0;
+  }
   commit(() => {
     sel.clear();
     for (const i of list) {
@@ -689,7 +750,7 @@ function duplicateSel() {
         }
         g = gmap.get(i.g);
       }
-      const c = { ...JSON.parse(JSON.stringify(i)), id: nid(), x: i.x + dx, g };
+      const c = { ...JSON.parse(JSON.stringify(i)), id: nid(), x: i.x + shift, g };
       if (c.link) { if (!links.has(c.link)) links.set(c.link, 'L' + nid()); c.link = links.get(c.link); }
       for (const h of hwOf(i.id)) {
         const nh = { ...JSON.parse(JSON.stringify(h)), id: nid(), target: c.id };
@@ -711,7 +772,11 @@ function ungroupSel() {
 }
 function moveSel(dx, dy, dz) {
   if (!sel.size) return;
-  commit(() => selItems().forEach(i => { i.x = r1(i.x + dx); i.y = r1(i.y + dy); i.z = r1(i.z + dz); }));
+  const list = selItems();
+  const { d, hit } = clampMove(list, [dx, dy, dz], clashedBefore(list));
+  if (hit && d.every(v => v === 0)) { status(`Не помещается: мешает ${who(hit)}`); refreshInspector(); return; }
+  commit(() => list.forEach(i => { i.x = r1(i.x + d[0]); i.y = r1(i.y + d[1]); i.z = r1(i.z + d[2]); }));
+  if (hit) status(`Упёрлось в ${who(hit)} — поставлено вплотную`);
 }
 // Поворот на 90°: меняются местами размеры по двум осям, деталь поворачивается вокруг своего центра
 function rotateSel(axis) {
@@ -719,12 +784,17 @@ function rotateSel(axis) {
   if (list.some(i => i.ops && i.ops.length)) return status('Деталь с отверстиями и вырезами не поворачивается — обработка привязана к её сторонам');
   if (list.some(i => hwOf(i.id).length)) return status('Деталь с фурнитурой не поворачивается — сначала удалите фурнитуру');
   const b = bbox(list), cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, cz = (b.z0 + b.z1) / 2;
-  commit(() => list.forEach(i => {
+  const ex = clashedBefore(list);
+  const turn = (i) => {
     const mx = i.x + i.w / 2, my = i.y + i.h / 2, mz = i.z + i.d / 2;
     if (axis === 'y') { [i.w, i.d] = [i.d, i.w]; const nx = cx + (mz - cz), nz = cz - (mx - cx); i.x = r1(nx - i.w / 2); i.z = r1(nz - i.d / 2); }
     if (axis === 'z') { [i.w, i.h] = [i.h, i.w]; const nx = cx - (my - cy), ny = cy + (mx - cx); i.x = r1(nx - i.w / 2); i.y = r1(ny - i.h / 2); }
     if (axis === 'x') { [i.h, i.d] = [i.d, i.h]; const ny = cy - (mz - cz), nz = cz + (my - cy); i.y = r1(ny - i.h / 2); i.z = r1(nz - i.d / 2); }
-  }));
+  };
+  const trial = list.map(i => { const c = { ...i }; turn(c); return c; });
+  const hit = noClash() && clash(trial, ex);
+  if (hit) return status(`Повернуть нельзя: после поворота войдёт в ${who(hit)}`);
+  commit(() => list.forEach(turn));
 }
 // Смена материала: если толщина другая — меняем самый тонкий размер детали
 function setMaterial(list, id) {
@@ -873,7 +943,14 @@ insp.addEventListener('change', e => {
     if (key === 'mat') return commit(() => setMaterial([i], raw));
     if (!num()) return;
     if (['w', 'h', 'd'].includes(key) && v < 1) return refreshInspector();
-    return commit(() => { i[key] = r1(v); });
+    if (key === 'x') return moveSel(v - i.x, 0, 0);
+    if (key === 'y') return moveSel(0, v - i.y, 0);
+    if (key === 'z') return moveSel(0, 0, v - i.z);
+    const ms = maxSize(i, key, r1(v));
+    if (ms.hit && ms.v <= i[key]) { status(`Не помещается: мешает ${who(ms.hit)}. Максимум — ${fmt(i[key])} мм`); return refreshInspector(); }
+    commit(() => { i[key] = r1(ms.v); });
+    if (ms.hit) status(`Больше не помещается — мешает ${who(ms.hit)}. Поставлен максимум: ${fmt(ms.v)} мм`);
+    return;
   }
   if (k.type === 'none') return;
   const b = bbox(k.list);
@@ -895,6 +972,11 @@ function rebuildGroupFromInspector() {
   p.drill = q('pdrill') !== '0';
   if (p.W < 100 || p.H < 100 || p.D < 100) return status('Слишком маленький корпус');
   const b = bbox(k.list);
+  if (noClash()) {
+    const seq = P.seq, trial = buildCabinet(p, b.x0, b.y0, b.z0, k.g.id); P.seq = seq;
+    const hit = clash(trial, clashedBefore(k.list));
+    if (hit) return status(`Корпус ${p.W}×${p.H}×${p.D} не помещается: мешает ${who(hit)}. Освободите место или уменьшите размер.`);
+  }
   commit(() => {
     P.items = P.items.filter(i => i.g !== k.g.id);
     k.g.params = p;
