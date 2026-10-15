@@ -83,11 +83,12 @@ table.spec td.n { text-align: right; font-variant-numeric: tabular-nums; }
 .fld.chk { display: flex; align-items: center; gap: 6px; padding-top: 16px; cursor: pointer; }
 .fld.chk input { width: auto; }
 .op-preview { background: #fff; border-radius: 8px; overflow: hidden; cursor: crosshair; }
-.op-preview svg { display: block; width: 100%; height: auto; }
+.op-preview svg { display: block; width: 100%; height: auto; max-height: calc(90vh - 400px); min-height: 240px; }  /* чертёж целиком помещается в окно */
 .sheet { background: #fff; color: #1d1a16; border-radius: 8px; padding: 14px; display: grid; gap: 10px; }
 .sheet-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13px; }
 .sheet-head span { color: #5a5348; }
-.sheet svg { width: 100%; height: auto; }
+.sheet svg { width: 100%; height: auto; max-height: calc(90vh - 200px); }
+@media print { .sheet svg { max-height: none; } }
 .sheet table.spec th { background: #fff; color: #5a5348; }
 .sheet table.spec td, .sheet table.spec th { border-color: #ddd5c8; }
 #printArea { display: none; }

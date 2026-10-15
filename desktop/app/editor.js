@@ -954,9 +954,11 @@ function opDialog(type, index = -1, init = null) {
   body.onclick = e => {
     const svgEl = e.target.closest('#opPreview svg');
     if (!svgEl || !map || type === 'corner') return;
-    const r = svgEl.getBoundingClientRect(), k2 = r.width / 700;
+    // точка клика в координатах чертежа (учитывает масштаб и поля, если чертёж вписан в окно)
+    const pt = svgEl.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    const sp = pt.matrixTransform(svgEl.getScreenCTM().inverse());
     const clamp = (x, hi) => Math.min(hi, Math.max(0, x));  // клик мимо детали — ставим на её край
-    const u = clamp(Math.round(((e.clientX - r.left) / k2 - map.x0) / map.s), map.SU), v = clamp(Math.round(map.SV - ((e.clientY - r.top) / k2 - map.y0) / map.s), map.SV);
+    const u = clamp(Math.round((sp.x - map.x0) / map.s), map.SU), v = clamp(Math.round(map.SV - (sp.y - map.y0) / map.s), map.SV);
     if (edge()) op.s = op.face[0] === 'U' ? v : u; else { op.u = u; op.v = v; }
     form();
   };
