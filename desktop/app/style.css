@@ -109,3 +109,4 @@ table.spec td.n { text-align: right; font-variant-numeric: tabular-nums; }
 .hwcard.off { opacity: .55; }
 .hwcard .tag { margin-left: 8px; font-size: 10.5px; color: #1a160f; background: var(--gold); border-radius: 4px; padding: 1px 6px; }
 .warn { color: #f0a090; font-size: 12px; margin-top: 4px; }
+.sheet-head .kind { font-style: normal; font-weight: 500; font-size: 11px; color: #fff; background: #1f5fb4; border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
