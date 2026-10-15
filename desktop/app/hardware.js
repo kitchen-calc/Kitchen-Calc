@@ -23,6 +23,9 @@ const F = {
   model: { label: 'Производитель', options: [['blum', 'Blum'], ['hettich', 'Hettich'], ['gtv', 'GTV'], ['boyard', 'Boyard'], ['mini', 'Мини-петля Ø26']], def: 'blum' },
   angle: { label: 'Угол открывания, °', num: true, def: 110 },
   count: { label: 'Количество (0 — авто)', num: true, def: 0 },
+  place: { label: 'Расстановка', options: [['auto', 'автоматически'], ['manual', 'вручную — свои позиции']], def: 'auto' },
+  positions: { label: 'Позиции, мм от низа/лева (через запятую)', text: true, def: '' },
+  plate: { label: 'Планка на боковине', options: [['1', 'сверлить 2 × Ø5'], ['0', 'не сверлить']], def: '1' },
   off: { label: 'От края фасада, мм', num: true, def: 100 },
   damper: { label: 'Доводчик', options: [['1', 'есть'], ['0', 'нет']], def: '1' },
   drill: { label: 'Сверлить отверстия', options: [['1', 'да'], ['0', 'нет']], def: '1' },
@@ -56,7 +59,7 @@ const F = {
 const T = {};
 const def = (id, o) => { T[id] = { id, ...o }; };
 // Петли
-const hingeFields = ['side', 'model', 'angle', 'count', 'off', 'damper', 'drill'];
+const hingeFields = ['side', 'model', 'angle', 'place', 'count', 'off', 'positions', 'damper', 'drill', 'plate'];
 def('hinge', { cat: 'hinges', name: 'Петля накладная', desc: 'Дверь закрывает торец корпуса полностью. Открывается от стороны петель наружу.', target: 'front', fields: hingeFields, motion: 'part', angle: 110 });
 def('hingeHalf', { cat: 'hinges', name: 'Петля полунакладная', desc: 'Две двери на одну стойку: каждая закрывает половину торца.', target: 'front', fields: hingeFields, motion: 'part', angle: 110 });
 def('hingeInset', { cat: 'hinges', name: 'Петля вкладная', desc: 'Дверь утоплена внутрь корпуса, торцы корпуса видны.', target: 'front', fields: hingeFields, motion: 'part', angle: 110 });
@@ -173,11 +176,23 @@ export function movingIds(hw, items) {
   if (t.motion !== 'part') return [];
   const it = items.find(i => i.id === hw.target);
   if (!it) return [];
-  return it.link ? items.filter(i => i.link === it.link).map(i => i.id) : [it.id];
+  const k = motionKey(hw) || '';
+  // петли, подъёмники, купе: двигается только сам фасад — связь не действует (иначе с дверью поедет корпус)
+  if (!it.link || /^(swing|slideX)/.test(k) || ['aventosHL', 'aventosHS'].includes(hw.type)) return [it.id];
+  return [it.id, ...linkedParts(it, items).map(i => i.id)];
+}
+// Связанные детали, которые реально могут ехать с деталью: для фасада ящика — короб за ним в пределах фасада,
+// для горизонтальной детали (кровать, стол) — то, что лежит на ней в её габарите. Корпус не поедет, даже если связан.
+const CARCASS = new Set(['sideL', 'sideR', 'bottom', 'top', 'railF', 'railB', 'shelf', 'back', 'door']);
+function linkedParts(it, items) {
+  const tol = 0.5, front = thinAxis(it) === 'z';
+  return items.filter(i => i.id !== it.id && i.link === it.link && !CARCASS.has(i.role) && (front
+    ? i.x >= it.x - tol && i.x + i.w <= it.x + it.w + tol && i.y >= it.y - tol && i.y + i.h <= it.y + it.h + tol && i.z + i.d <= it.z + tol
+    : i.x >= it.x - tol && i.x + i.w <= it.x + it.w + tol && i.z >= it.z - tol && i.z + i.d <= it.z + it.d + tol && i.y >= it.y + it.h - tol));
 }
 function linkedBox(it, items) {
   if (!it.link) return null;
-  const list = items.filter(i => i.link === it.link && i.id !== it.id);
+  const list = linkedParts(it, items);
   if (!list.length) return null;
   const b = { x0: Infinity, y0: Infinity, z0: Infinity, x1: -Infinity, y1: -Infinity, z1: -Infinity };
   for (const i of list) {
@@ -244,9 +259,12 @@ export function poseMatrix(list, t, out = new THREE.Matrix4()) {
 const CUPS = { blum: { dia: 35, depth: 13, C: 5 }, hettich: { dia: 35, depth: 13, C: 5 }, gtv: { dia: 35, depth: 12, C: 4 }, boyard: { dia: 35, depth: 11.5, C: 4 }, mini: { dia: 26, depth: 11, C: 4 } };
 function hingeSpots(hw, it) {
   const along = hw.side === 'L' || hw.side === 'R' ? it.h : it.w;
-  const n = +hw.count || (along <= 900 ? 2 : along <= 1600 ? 3 : along <= 2000 ? 4 : 5);
-  const off = Math.min(+hw.off || 100, along / 2);
-  const ps = n === 1 ? [along / 2] : Array.from({ length: n }, (_, k) => off + (along - 2 * off) * k / (n - 1));
+  let ps = hw.place === 'manual' ? String(hw.positions || '').split(/[;, ]+/).map(v => parseFloat(v.replace(',', '.'))).filter(v => v > 0 && v < along) : [];
+  if (!ps.length) {
+    const n = +hw.count || (along <= 900 ? 2 : along <= 1600 ? 3 : along <= 2000 ? 4 : 5);
+    const off = Math.min(+hw.off || 100, along / 2);
+    ps = n === 1 ? [along / 2] : Array.from({ length: n }, (_, k) => off + (along - 2 * off) * k / (n - 1));
+  }
   const c = CUPS[hw.model] || CUPS.blum, cu = c.C + c.dia / 2;
   return ps.map(p => {
     if (hw.side === 'L') return { u: cu, v: p, c };
@@ -254,6 +272,19 @@ function hingeSpots(hw, it) {
     if (hw.side === 'T') return { u: p, v: it.h - cu, c };
     return { u: p, v: cu, c };
   });
+}
+// Боковина корпуса, к которой крепится петля: стоит за фасадом у кромки петель
+export function hingeSide(hw, it, items) {
+  if (hw.side !== 'L' && hw.side !== 'R') return null;
+  const ex = hw.side === 'L' ? [it.x - 5, it.x + 60] : [it.x + it.w - 60, it.x + it.w + 5];
+  return items.find(i => i.id !== it.id && thinAxis(i) === 'x' && Math.abs(i.z + i.d - it.z) <= 4
+    && i.x + i.w >= ex[0] && i.x <= ex[1] && i.y < it.y + it.h && i.y + i.h > it.y) || null;
+}
+export function plateOps(hw, it, items) {
+  const t = T[hw.type];
+  if (t.cat !== 'hinges' || hw.plate === '0' || hw.drill === '0' || !t.motion) return [];
+  const side = hingeSide(hw, it, items); if (!side) return [];
+  return hingeSpots(hw, it).map(s => ({ id: side.id, op: { tag: 'hw' + hw.id, type: 'hole', face: hw.side === 'L' ? 'A' : 'B', u: r1(side.d - 37), v: r1(it.y - side.y + s.v - 16), dia: 5, depth: 12, count: 2, step: 32, dir: 'v' } }));
 }
 export function hardwareCount(hw, it) {
   const t = T[hw.type];
@@ -315,18 +346,18 @@ export function drillOps(hw, it, siblings) {
 
 // ---------------------------------------------------------------- 3D-вид фурнитуры
 const MAT = {
-  metal: new THREE.MeshStandardMaterial({ color: 0xa9adb3, metalness: 0.7, roughness: 0.35 }),
-  chrome: new THREE.MeshStandardMaterial({ color: 0xd6d9de, metalness: 0.9, roughness: 0.15 }),
+  metal: new THREE.MeshStandardMaterial({ color: 0xb4b8be, metalness: 0.35, roughness: 0.4 }),
+  chrome: new THREE.MeshStandardMaterial({ color: 0xdfe2e6, metalness: 0.4, roughness: 0.25 }),
   black: new THREE.MeshStandardMaterial({ color: 0x232323, metalness: 0.3, roughness: 0.6 }),
-  gold: new THREE.MeshStandardMaterial({ color: 0xc9a253, metalness: 0.85, roughness: 0.3 }),
-  steel: new THREE.MeshStandardMaterial({ color: 0x8c9096, metalness: 0.75, roughness: 0.4 }),
+  gold: new THREE.MeshStandardMaterial({ color: 0xcfa85a, metalness: 0.45, roughness: 0.3 }),
+  steel: new THREE.MeshStandardMaterial({ color: 0x9da2a8, metalness: 0.35, roughness: 0.45 }),
   plastic: new THREE.MeshStandardMaterial({ color: 0x2b2b2b, roughness: 0.8 }),
   grey: new THREE.MeshStandardMaterial({ color: 0x6f737a, metalness: 0.4, roughness: 0.5 }),
   rubber: new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9 }),
   red: new THREE.MeshStandardMaterial({ color: 0xb33a2e, roughness: 0.6 }),
   wood: new THREE.MeshStandardMaterial({ color: 0xa57a4c, roughness: 0.8 }),
   glass: new THREE.MeshStandardMaterial({ color: 0xbfd6e0, metalness: 0.2, roughness: 0.05, transparent: true, opacity: 0.45 }),
-  mirror: new THREE.MeshStandardMaterial({ color: 0xdfe8ec, metalness: 0.95, roughness: 0.05 }),
+  mirror: new THREE.MeshStandardMaterial({ color: 0xe6eef2, metalness: 0.5, roughness: 0.05 }),
 };
 const WIRE = new THREE.LineBasicMaterial({ color: 0x9aa0a6 });
 const finishMat = hw => MAT[hw.finish] || MAT.black;
@@ -366,12 +397,31 @@ export function visuals(hw, it, items, siblings) {
   const add = (obj, mode = 'static', extra = {}) => { out.push({ obj, mode, ...extra }); return obj; };
   const front = it.z + it.d, back = it.z, top = it.y + it.h;
   if (t.cat === 'hinges') {
+    const side = hingeSide(hw, it, items), nickel = MAT.chrome;
     for (const s of hingeSpots(hw, it)) {
-      const x = it.x + s.u, y = it.y + s.v;
-      add(cyl(s.c.dia / 2, 4, 'z', x, y, back - 2, MAT.metal), 'attach');
-      const toEdge = hw.side === 'L' ? -1 : hw.side === 'R' ? 1 : 0;
-      if (toEdge) add(box(Math.min(x, x + toEdge * (s.u > it.w / 2 ? it.w - s.u : s.u) + toEdge * 20), y - 9, back - 14, Math.abs((s.u > it.w / 2 ? it.w - s.u : s.u)) + 20, 18, 10, MAT.metal), 'attach');
-      else add(box(x - 9, Math.min(y, hw.side === 'T' ? top + 20 : it.y - 20), back - 14, 18, Math.abs(hw.side === 'T' ? top + 20 - y : y - it.y + 20), 10, MAT.metal), 'attach');
+      const x = it.x + s.u, y = it.y + s.v, R = s.c.dia / 2;
+      if (!t.noCup) {
+        add(cyl(R - 0.5, s.c.depth - 0.5, 'z', x, y, back + (s.c.depth - 0.5) / 2, nickel), 'attach');           // чашка в отверстии
+        add(cyl(R + 6, 1.2, 'z', x, y, back - 0.6, nickel), 'attach');                                            // фланец чашки
+        for (const k of [-1, 1]) add(cyl(2.2, 1.5, 'z', x + k * (R + 2.5) * (hw.side === 'T' || hw.side === 'B' ? 1 : 0), y + k * (R + 2.5) * (hw.side === 'L' || hw.side === 'R' ? 1 : 0), back - 1.6, MAT.steel), 'attach');  // шурупы чашки
+      } else add(box(x - 22, y - 12, back - 6, 44, 24, 6, nickel), 'attach');                                   // прижим стекла
+      const dir = hw.side === 'L' ? -1 : 1;
+      if (hw.side === 'L' || hw.side === 'R') {
+        // колено плеча — у внутренней стороны боковины (где планка), плечо идёт к нему от чашки
+        const kx = side ? (hw.side === 'L' ? side.x + side.w + 12 : side.x - 26) : (hw.side === 'L' ? it.x + 28 : it.x + it.w - 42);
+        const kc = kx + 7, len = Math.abs(kc - x) + 9;
+        add(box(Math.min(x, kc) - (kc < x ? 4.5 : -4.5) * 0, y - 9, back - 16, len, 18, 9, nickel), 'attach');   // плечо петли
+        add(box(kx, y - 9, back - 52, 14, 18, 40, nickel), 'attach');                                             // колено к планке
+        if (side) {                                                                                             // планка на боковине
+          const fx = hw.side === 'L' ? side.x + side.w : side.x - 12;
+          add(box(fx, y - 25, side.z + side.d - 37 - 22, 12, 50, 44, MAT.metal));
+          for (const k of [-16, 16]) add(cyl(4, 2, 'x', hw.side === 'L' ? fx + 12.5 : fx - 0.5, y + k, side.z + side.d - 37, MAT.steel));
+        }
+      } else {
+        const edgeY = hw.side === 'T' ? top : it.y, d2 = hw.side === 'T' ? 1 : -1, len = Math.abs(edgeY - y) + 22;
+        add(box(x - 9, Math.min(y, y + d2 * len), back - 16, 18, len, 9, nickel), 'attach');
+      }
+      if (hw.damper === '1') add(cyl(5, 22, 'x', x + (hw.side === 'R' ? -6 : 6), y + 14, back - 12, MAT.plastic), 'attach');   // доводчик в плече
     }
   } else if (['gasLift', 'aventosHK', 'aventosHKXS', 'aventosHF', 'flapStay'].includes(hw.type)) {
     const xs = (hw.sides === 'L' ? [30] : hw.sides === 'R' ? [it.w - 30] : [30, it.w - 30]).map(v => it.x + v);
@@ -383,6 +433,8 @@ export function visuals(hw, it, items, siblings) {
       const body = add(new THREE.Mesh(strutGeo(11), MAT.black), 'strut', { fixed, onPart, role: 'body' });
       const rod = add(new THREE.Mesh(strutGeo(4), MAT.chrome), 'strut', { fixed, onPart, role: 'rod' });
       placeBetween(body, fixed, onPart); placeBetween(rod, fixed, onPart);
+      add(box(x - 12, fixed.y - 14, fixed.z - 14, 24, 28, 28, MAT.metal));                      // кронштейн на боковине
+      add(box(x - 12, onPart.y - 12, back - 20, 24, 24, 18, MAT.metal), 'attach');            // кронштейн на фасаде
     }
   } else if (hw.type === 'aventosHL' || hw.type === 'aventosHS') {
     for (const x of hw.sides === 'L' ? [it.x + 15] : hw.sides === 'R' ? [it.x + it.w - 45] : [it.x + 15, it.x + it.w - 45]) {
@@ -441,8 +493,17 @@ export function visuals(hw, it, items, siblings) {
     cols.forEach(x => rows.forEach(z => spots.push([x, z])));
     const H = hw.type === 'castor' ? (+hw.size || 50) + 15 : +hw.height || 100;
     for (const [x, z] of spots.slice(0, Math.max(n, 4) === 8 && cols.length * rows.length === 9 ? 8 : spots.length)) {
-      if (hw.type === 'legAdjust') { add(cyl(15, H - 6, 'y', x, it.y - (H - 6) / 2, z, MAT.plastic)); add(cyl(25, 6, 'y', x, it.y - H + 3, z, MAT.plastic)); }
-      else if (hw.type === 'legMetal') { add(cyl(15, H, 'y', x, it.y - H / 2, z, finishMat(hw))); }
+      if (hw.type === 'legAdjust') {
+        add(box(x - 27, it.y - 4, z - 27, 54, 4, 54, MAT.plastic));                              // площадка под дно
+        add(cyl(16, H - 26, 'y', x, it.y - 4 - (H - 26) / 2, z, MAT.plastic));                   // корпус ножки
+        add(cyl(7, 12, 'y', x, it.y - H + 16, z, MAT.steel));                                     // регулировочный винт
+        add(cyl(24, 10, 'y', x, it.y - H + 5, z, MAT.plastic, 20));                               // пятка
+        add(box(x - 6, it.y - 28, z + 14, 12, 18, 6, MAT.plastic));                               // зацеп для клипсы цоколя
+      } else if (hw.type === 'legMetal') {
+        add(cyl(25, 4, 'y', x, it.y - 2, z, finishMat(hw)));                                       // фланец с 4 винтами
+        add(cyl(15, H - 12, 'y', x, it.y - 4 - (H - 12) / 2, z, finishMat(hw)));
+        add(cyl(16, 8, 'y', x, it.y - H + 4, z, MAT.rubber));                                     // подпятник
+      }
       else if (hw.type === 'legDecor') { add(cyl(12, H, 'y', x, it.y - H / 2, z, MAT.wood, 22)); }
       else if (hw.type === 'plinthClip') { add(box(x - 15, it.y - 40, it.z + it.d - 70, 30, 20, 30, MAT.plastic)); }
       else {

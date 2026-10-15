@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween } from './hardware.js';
+import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween, plateOps } from './hardware.js';
 import { moduleSVG, overviewSVG } from './drawings.js';
 import { panelGeometry, describeOp, drawingSVG, frame, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
 
@@ -182,8 +182,42 @@ const hwState = new Map();          // id фурнитуры → { t: 0…1 се
 let moverByItem = new Map();        // id детали → фурнитура, которая её двигает
 const hwOf = id => P.hw.filter(h => h.target === id);
 const hwT = id => (hwState.get(id) || { t: 0 }).t;
+const fastMat = { screw: new THREE.MeshStandardMaterial({ color: 0xa3a8af, metalness: 0.35, roughness: 0.4 }), head: new THREE.MeshStandardMaterial({ color: 0xc3c7cc, metalness: 0.35, roughness: 0.35 }) };
+// Точка и направление «внутрь детали» для отверстия обработки — в мировых координатах
+function holeWorld(it, o, off = 0) {
+  const fr = frame(it), put = (u, v, n) => { const q = { [fr.U]: u, [fr.V]: v, [fr.N]: n }; return new THREE.Vector3(it.x + q.x, it.y + q.y, it.z + q.z); };
+  const unit = k => new THREE.Vector3(k === 'x' ? 1 : 0, k === 'y' ? 1 : 0, k === 'z' ? 1 : 0);
+  if (o.face === 'A' || o.face === 'B') {
+    const u = o.u + (o.dir === 'v' ? 0 : off), v = o.v + (o.dir === 'v' ? off : 0);
+    return o.face === 'A' ? { p: put(u, v, fr.T), dir: unit(fr.N).negate() } : { p: put(u, v, 0), dir: unit(fr.N) };
+  }
+  const sv = o.s + off;
+  if (o.face === 'U0') return { p: put(0, sv, o.o), dir: unit(fr.U) };
+  if (o.face === 'U1') return { p: put(fr.SU, sv, o.o), dir: unit(fr.U).negate() };
+  if (o.face === 'V0') return { p: put(sv, 0, o.o), dir: unit(fr.V) };
+  return { p: put(sv, fr.SV, o.o), dir: unit(fr.V).negate() };
+}
+function rod(r, a, b, m) { const g = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1, 12), m); placeBetween(g, a, b); return g; }
+function buildFasteners() {
+  if (!document.getElementById('showFast').checked) return;
+  for (const it of P.items) for (const o of it.ops || []) {
+    const n = Math.max(1, o.count | 0);
+    for (let k = 0; k < n; k++) {
+      const { p, dir } = holeWorld(it, o, k * (+o.step || 0));
+      if (o.tag === 'conf' && o.face.length === 2) {          // конфирмат: из торца дна/крыши через боковину
+        const head = p.clone().addScaledVector(dir, -16 - 1);
+        hwGroup.add(rod(3.5, head, p.clone().addScaledVector(dir, 48), fastMat.screw));
+        const h = rod(5, head.clone().addScaledVector(dir, -1.5), head.clone().addScaledVector(dir, 0.5), fastMat.head); hwGroup.add(h);
+      } else if (o.tag === 'shelf') {                           // полкодержатель: штырёк + полочка
+        hwGroup.add(rod(2.5, p.clone().addScaledVector(dir, 10), p.clone().addScaledVector(dir, -8), fastMat.screw));
+        const tab = rod(4, p.clone().addScaledVector(dir, -2), p.clone().addScaledVector(dir, -9), fastMat.head); tab.position.y += 3; hwGroup.add(tab);
+      }
+    }
+  }
+}
 function buildHardware() {
   hwGroup.clear();
+  buildFasteners();
   moverByItem = new Map();
   for (const hw of P.hw) for (const id of movingIds(hw, P.items)) if (!moverByItem.has(id)) moverByItem.set(id, hw);
   for (const hw of P.hw) {
@@ -211,7 +245,8 @@ function applyPoses() {
     m.updateMatrix(); m.matrix.premultiply(M); m.matrixAutoUpdate = false; m.matrixWorldNeedsUpdate = true;
   }
   for (const o of hwGroup.children) {
-    const u = o.userData, hw = P.hw.find(h => h.id === u.hw); if (!hw) continue;
+    const u = o.userData; if (!u.hw) continue;
+    const hw = P.hw.find(h => h.id === u.hw); if (!hw) continue;
     if (u.mode === 'attach') {
       const M = itemPose(hw.target, _M) || _I.identity();
       o.matrix.copy(u.base).premultiply(M); o.matrixWorldNeedsUpdate = true;
@@ -711,7 +746,9 @@ function drillCabinet(parts, p, kinds) {
   if (!L || !R) return false;
   const t = L.w, D = L.d, y0 = L.y, cz = L.z;
   const push = (it, op) => { (it.ops = it.ops || []).push({ count: 1, step: 32, dir: 'u', ...op }); };
-  const along = d => d <= 350 ? [50, d - 50] : [50, Math.round(d / 2), d - 50];
+  const nConf = +p.confCount || 0;   // 0 — авто: 2 при глубине до 350 мм, иначе 3
+  const along = d => { const n = nConf || (d <= 350 ? 2 : 3); return n === 1 ? [Math.round(d / 2)] : Array.from({ length: n }, (_, k) => Math.round(50 + (d - 100) * k / (n - 1))); };
+  const pin = +p.pinOff || 37;
   if (kinds.includes('conf')) {
     for (const part of parts.filter(i => ['bottom', 'top', 'railF', 'railB'].includes(i.role))) {
       const v = r1(part.y - y0 + part.h / 2);
@@ -725,7 +762,7 @@ function drillCabinet(parts, p, kinds) {
   if (kinds.includes('shelf')) {
     for (const sh of by('shelf')) {
       const v = r1(sh.y - y0 - 8);
-      for (const z of [37, sh.d - 37]) {
+      for (const z of [pin, sh.d - pin]) {
         push(L, { tag: 'shelf', type: 'hole', face: 'A', u: r1(sh.z - cz + z), v, dia: 5, depth: 12 });
         push(R, { tag: 'shelf', type: 'hole', face: 'B', u: r1(sh.z - cz + z), v, dia: 5, depth: 12 });
       }
@@ -765,6 +802,17 @@ function cabinetHardware(parts, p) {
   if (bottom && p.plinth >= 60) { const hw = newHardware('legAdjust', bottom.id, nid()); Object.assign(hw, { height: p.plinth, auto: true }); out.push(hw); }
   return out;
 }
+// Ставит фурнитуру корпуса. Отверстия петель (чашки + планки на боковинах) переходят к самим петлям:
+// удалили или заменили петлю — пропали и её отверстия. Детали корпуса уже должны быть в P.items.
+function attachCabinetHardware(parts, p, onlyHinges) {
+  const hws = cabinetHardware(parts, p).filter(h => !onlyHinges || HW_TYPES[h.type].cat === 'hinges');
+  P.hw.push(...hws);
+  const hinges = hws.filter(h => HW_TYPES[h.type].cat === 'hinges');
+  if (hinges.length && p.drill !== false) {
+    parts.forEach(i => { i.ops = (i.ops || []).filter(o => o.tag !== 'hinge'); });
+    hinges.forEach(h => { h.drill = '1'; h.plate = '1'; hwSync(h, item(h.target)); });
+  }
+}
 // Заменить петли у готового корпуса (остальная обработка остаётся)
 function applyHingesFromInspector() {
   const k = kindOfSelection(); if (k.type !== 'group' || !k.g.params) return;
@@ -773,11 +821,11 @@ function applyHingesFromInspector() {
   if (!k.list.some(i => i.role === 'sideL')) return status('У этого модуля нет разметки деталей — нажмите «Перестроить корпус»');
   commit(() => {
     k.g.params = { ...k.g.params, hinge };
-    k.list.forEach(i => { i.ops = (i.ops || []).filter(o => o.tag !== 'hinge'); });
-    drillCabinet(k.list, k.g.params, ['hinge']);
     const doors = new Set(k.list.filter(i => i.role === 'door').map(i => i.id));
+    const old = P.hw.filter(h => doors.has(h.target) && HW_TYPES[h.type].cat === 'hinges').map(h => 'hw' + h.id);
+    k.list.forEach(i => { i.ops = (i.ops || []).filter(o => o.tag !== 'hinge' && !old.includes(o.tag)); });
     P.hw = P.hw.filter(h => !(doors.has(h.target) && HW_TYPES[h.type].cat === 'hinges'));
-    P.hw.push(...cabinetHardware(k.list, k.g.params).filter(h => h.type === 'hinge'));
+    attachCabinetHardware(k.list, k.g.params, true);
   });
   status(hinge.type === 'none' ? 'Петли убраны' : 'Петли обновлены: ' + HINGES.find(h => h.id === hinge.type).name);
 }
@@ -970,7 +1018,7 @@ function refreshInspector() {
       h += `<div class="sec"><b>Параметры корпуса</b><div class="row">${fld('Ширина', 'pW', p.W)}${fld('Высота', 'pH', p.H)}${fld('Глубина', 'pD', p.D)}</div>
         <div class="row">${fld('Полки', 'pshelves', p.shelves)}${fld('Двери', 'pdoors', p.doors)}${fld('Ящики', 'pdrawers', p.drawers)}</div>
         <div class="row2">${fld('Цоколь', 'pplinth', p.plinth)}${fld('Верх', 'ptopType', p.topType, { options: [['solid', 'Крыша'], ['rails', 'Царги']] })}</div>
-        <div class="row2">${fld('Присадка', 'pdrill', p.drill === false ? '0' : '1', { options: [['1', 'Автоматически'], ['0', 'Без отверстий']] })}</div>
+        <div class="row">${fld('Присадка', 'pdrill', p.drill === false ? '0' : '1', { options: [['1', 'Автоматически'], ['0', 'Без отверстий']] })}${fld('Конфирматов', 'pconfCount', String(p.confCount || 0), { options: [['0', 'авто'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5']] })}${fld('Полкодерж. от края', 'ppinOff', p.pinOff || 37)}</div>
         <div class="btns"><button class="accent" data-cmd="rebuild-group">Перестроить корпус</button></div>
         <div class="note">Корпус соберётся заново по этим параметрам. Ручные правки деталей этого модуля пропадут.</div></div>`;
       if (p.doors > 0 && !(p.drawers > 0)) {
@@ -988,8 +1036,9 @@ function refreshInspector() {
       h += `<div class="sec"><b>Фурнитура</b><div class="note">${[...cnt].map(([n, c]) => `${esc(n)} — ${c} шт.`).join('<br>')}</div>
         ${hwHere.some(x => hasAction(x.type)) ? '<div class="btns"><button class="accent" data-cmd="hw-toggle-sel">▶ Открыть / закрыть</button></div>' : ''}</div>`;
     }
-    h += `<div class="sec"><b>Двигать вместе</b><div class="note">Свяжите фасад ящика с его коробом — тогда направляющие выдвинут их вместе.</div>
-      <div class="btns"><button data-cmd="link">🔗 Связать выбранные</button><button data-cmd="unlink">Разъединить</button></div></div>`;
+    h += `<div class="sec"><b>Ящик: фасад + короб</b><div class="note">Только для ящиков: свяжите фасад ящика с его коробом — направляющие выдвинут их вместе.
+      Это не объединение в шкаф (для этого — «Объединить в модуль»). Двери, подъёмники и купе всегда двигают только свой фасад.</div>
+      <div class="btns"><button data-cmd="link">🔗 Ездят вместе</button><button data-cmd="unlink">Разъединить</button></div></div>`;
     h += `<div class="sec"><b>Действия</b><div class="btns"><button data-cmd="rot-y">⟲ Повернуть</button><button data-cmd="duplicate">Копия</button>
       ${k.type === 'group' ? '<button class="accent" data-cmd="drawing-module">📐 Чертёж шкафа</button><button data-cmd="ungroup">Разгруппировать</button>' : '<button class="accent" data-cmd="group">Объединить в модуль…</button>'}
       <button class="danger" data-cmd="delete">Удалить</button></div></div>`;
@@ -1042,7 +1091,7 @@ function rebuildGroupFromInspector() {
   const k = kindOfSelection(); if (k.type !== 'group' || !k.g.params) return;
   const q = s => insp.querySelector(`[data-k="${s}"]`).value;
   const p = { ...k.g.params };
-  for (const f of ['W', 'H', 'D', 'shelves', 'doors', 'drawers', 'plinth']) { const v = parseFloat(q('p' + f)); if (isFinite(v) && v >= 0) p[f] = v; }
+  for (const f of ['W', 'H', 'D', 'shelves', 'doors', 'drawers', 'plinth', 'confCount', 'pinOff']) { const v = parseFloat(q('p' + f)); if (isFinite(v) && v >= 0) p[f] = v; }
   p.topType = q('ptopType');
   p.drill = q('pdrill') !== '0';
   if (p.W < 100 || p.H < 100 || p.D < 100) return status('Слишком маленький корпус');
@@ -1057,7 +1106,7 @@ function rebuildGroupFromInspector() {
     k.g.params = p;
     const parts = buildCabinet(p, b.x0, b.y0, b.z0, k.g.id);
     P.items.push(...parts); sel.clear(); parts.forEach(i => sel.add(i.id));
-    P.hw = P.hw.filter(h => item(h.target)); P.hw.push(...cabinetHardware(parts, p));
+    P.hw = P.hw.filter(h => item(h.target)); attachCabinetHardware(parts, p);
   });
   status('Корпус перестроен');
 }
@@ -1084,6 +1133,7 @@ function cabinetDialog() {
     <div class="grid4">${fld('Ширина, мм', 'W', p.W)}${fld('Высота корпуса', 'H', p.H)}${fld('Глубина корпуса', 'D', p.D)}${fld('Цоколь / ножки', 'plinth', p.plinth)}</div>
     <div class="grid4">${fld('Полки', 'shelves', p.shelves)}${fld('Двери', 'doors', p.doors)}${fld('Ящики', 'drawers', p.drawers)}${fld('Низ корпуса от пола', 'baseY', p.baseY)}</div>
     <div class="grid3">${fld('Верх', 'topType', p.topType, { options: [['solid', 'Крыша'], ['rails', 'Царги 100 мм']] })}${fld('Задняя стенка', 'back', '1', { options: [['1', 'ХДФ 3 мм'], ['0', 'Без задней стенки']] })}${fld('Материал фасадов', 'fmat', 'acrylb18', { options: matOptions() })}</div>
+    <div class="grid4">${fld('Конфирматов на соединение', 'confCount', '0', { options: [['0', 'авто (2–3 по глубине)'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5']] })}${fld('Полкодержатели от края, мм', 'pinOff', 37)}</div>
     <div class="grid4">${fld('Присадка', 'drill', '1', { options: [['1', 'Автоматически'], ['0', 'Без отверстий']] })}${fld('Петли', 'htype', 'blum', { options: HINGES.map(h => [h.id, h.name]) })}${fld('Петли у одной двери', 'hside', 'L', { options: [['L', 'слева'], ['R', 'справа']] })}${fld('Петля от края двери, мм', 'hoff', 100)}</div>
     <div class="note">Корпус собирается из отдельных деталей: боковины, дно, крыша или царги, задняя стенка, полки, фасады, ящики (с боками, стенками и дном).
     Потом любую деталь можно выбрать двойным кликом и изменить. Если есть ящики — двери и полки не ставятся.<br>
@@ -1103,7 +1153,7 @@ function cabinetDialog() {
     const n = k => Math.max(0, parseFloat(String(q(k).value).replace(',', '.')) || 0);
     const p2 = { W: n('W'), H: n('H'), D: n('D'), plinth: n('plinth'), shelves: Math.round(n('shelves')), doors: Math.min(6, Math.round(n('doors'))),
       drawers: Math.min(8, Math.round(n('drawers'))), topType: q('topType').value, back: q('back').value === '1', mat: q('cmat').value, facadeMat: q('fmat').value,
-      drill: q('drill').value === '1', hinge: { type: q('htype').value, side: q('hside').value, off: n('hoff') || 100, count: 0 } };
+      drill: q('drill').value === '1', confCount: +q('confCount').value || 0, pinOff: n('pinOff') || 37, hinge: { type: q('htype').value, side: q('hside').value, off: n('hoff') || 100, count: 0 } };
     if (p2.W < 100 || p2.H < 100 || p2.D < 100) return alert('Ширина, высота и глубина — не меньше 100 мм');
     const baseY = n('baseY'), totalH = p2.plinth + p2.H;
     closeDialog();
@@ -1112,7 +1162,7 @@ function cabinetDialog() {
       P.groups.push(g);
       const parts = buildCabinet(p2, freeX(baseY, totalH), baseY, 0, g.id);
       P.items.push(...parts); sel.clear(); parts.forEach(i => sel.add(i.id)); openGroup = 0;
-      P.hw.push(...cabinetHardware(parts, p2));
+      attachCabinetHardware(parts, p2);
     });
     status(`Корпус добавлен: ${groupItems([...P.groups].pop().id).length} деталей. Двойной клик — выбрать отдельную деталь.`);
   };
@@ -1279,9 +1329,12 @@ insp.addEventListener('click', e => {
 });
 
 // ---------------------------------------------------------------- фурнитура: каталог и настройки
-function hwSync(hw, it) {   // отверстия под фурнитуру: убрать старые этой фурнитуры, поставить новые
-  it.ops = (it.ops || []).filter(o => o.tag !== 'hw' + hw.id);
+// Отверстия под фурнитуру: убрать старые этой фурнитуры (на фасаде и на боковине), поставить новые
+function hwSync(hw, it) {
+  for (const x of P.items) if (x.ops) x.ops = x.ops.filter(o => o.tag !== 'hw' + hw.id);
+  it.ops = it.ops || [];
   it.ops.push(...hwDrillOps(hw, it, hwOf(it.id).filter(h => h.id !== hw.id)));
+  for (const { id, op } of plateOps(hw, it, P.items)) { const side = item(id); side.ops = side.ops || []; side.ops.push(op); }
 }
 function hwCatalog(cat) {
   const k = kindOfSelection();
@@ -1305,7 +1358,7 @@ function hwForm(it, hw, isNew) {
   const t = HW_TYPES[hw.type];
   const fieldsHtml = t.fields.map(k => {
     const fd = HW_FIELDS[k];
-    return fd.num ? fld(fd.label, k, hw[k] ?? fd.def) : fld(fd.label, k, hw[k] ?? fd.def, { options: fd.options });
+    return fd.num ? fld(fd.label, k, hw[k] ?? fd.def) : fd.text ? fld(fd.label, k, hw[k] ?? fd.def, { text: true }) : fld(fd.label, k, hw[k] ?? fd.def, { options: fd.options });
   }).join('');
   openDialog(`${t.name}: ${label(it)}`, `<div class="note">${esc(t.desc)}</div><div class="grid3">${fieldsHtml || '<div class="note">Настроек нет.</div>'}</div><div class="warn" id="hwWarn"></div>`,
     `<button data-close>Отмена</button><button class="accent" id="hwOk">${isNew ? 'Поставить' : 'Сохранить'}</button>`);
@@ -1327,8 +1380,7 @@ function hwForm(it, hw, isNew) {
 function hwDelete(id) {
   const hw = P.hw.find(h => h.id === id); if (!hw) return;
   commit(() => {
-    const it = item(hw.target);
-    if (it) it.ops = (it.ops || []).filter(o => o.tag !== 'hw' + id);
+    for (const x of P.items) if (x.ops) x.ops = x.ops.filter(o => o.tag !== 'hw' + id);
     P.hw = P.hw.filter(h => h.id !== id); hwState.delete(id);
   });
 }
@@ -1516,6 +1568,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'f') fit();
 });
 document.getElementById('showDims').addEventListener('change', updateDims);
+document.getElementById('showFast').addEventListener('change', rebuild);
 document.getElementById('showRoom').addEventListener('change', buildRoom);
 document.getElementById('showRoom').addEventListener('change', requestRender);
 
