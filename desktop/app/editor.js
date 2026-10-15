@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { panelGeometry, describeOp, drawingSVG, frame, fromName, HOLE_PRESETS, CUT_PRESETS } from './machining.js';
 
 // ---------------------------------------------------------------- справочники
 const DEFAULT_MATERIALS = [
@@ -151,11 +152,12 @@ function rebuild() {
   itemsGroup.clear();
   for (const it of P.items) {
     const selected = sel.has(it.id);
-    const mesh = new THREE.Mesh(boxGeo, surface(mat(it.mat).color, selected));
-    mesh.scale.set(Math.max(it.w, 0.5), Math.max(it.h, 0.5), Math.max(it.d, 0.5));
+    const machined = panelGeometry(it);  // деталь с отверстиями и вырезами — своя геометрия, иначе единичный бокс
+    const mesh = new THREE.Mesh(machined ? machined.geo : boxGeo, surface(mat(it.mat).color, selected));
+    if (!machined) mesh.scale.set(Math.max(it.w, 0.5), Math.max(it.h, 0.5), Math.max(it.d, 0.5));
     mesh.position.set(it.x + it.w / 2, it.y + it.h / 2, it.z + it.d / 2);
     mesh.userData.id = it.id;
-    mesh.add(new THREE.LineSegments(edgeGeo, selected ? edgeSelMat : edgeMat));
+    mesh.add(new THREE.LineSegments(machined ? machined.edges : edgeGeo, selected ? edgeSelMat : edgeMat));
     itemsGroup.add(mesh);
   }
   updateGizmo(); updateDims(); requestRender();
@@ -428,7 +430,7 @@ function duplicateSel() {
         }
         g = gmap.get(i.g);
       }
-      const c = { ...i, id: nid(), x: i.x + dx, g };
+      const c = { ...JSON.parse(JSON.stringify(i)), id: nid(), x: i.x + dx, g };
       P.items.push(c); sel.add(c.id);
     }
   });
@@ -449,6 +451,7 @@ function moveSel(dx, dy, dz) {
 // Поворот на 90°: меняются местами размеры по двум осям, деталь поворачивается вокруг своего центра
 function rotateSel(axis) {
   const list = selItems(); if (!list.length) return;
+  if (list.some(i => i.ops && i.ops.length)) return status('Деталь с отверстиями и вырезами не поворачивается — обработка привязана к её сторонам');
   const b = bbox(list), cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, cz = (b.z0 + b.z1) / 2;
   commit(() => list.forEach(i => {
     const mx = i.x + i.w / 2, my = i.y + i.h / 2, mz = i.z + i.d / 2;
@@ -535,6 +538,9 @@ function refreshInspector() {
       <div class="row2">${fld('Тип', 'kind', i.kind, { options: Object.entries(KINDS) })}${fld('Материал', 'mat', i.mat, { options: matOptions() })}</div></div>
       <div class="sec"><b>Размеры, мм</b><div class="row">${fld('Ширина (X)', 'w', i.w)}${fld('Высота (Y)', 'h', i.h)}${fld('Глубина (Z)', 'd', i.d)}</div></div>
       <div class="sec"><b>Положение, мм</b><div class="row">${fld('X слева', 'x', i.x)}${fld('Y от пола', 'y', i.y)}${fld('Z от стены', 'z', i.z)}</div></div>
+      <div class="sec"><b>Обработка${(i.ops || []).length ? ` (${i.ops.length})` : ''}</b>
+      ${(i.ops || []).map((o, k) => `<div class="op"><span>${k + 1}. ${esc(describeOp(o, i))}</span><button data-op-edit="${k}" title="Изменить">✎</button><button data-op-del="${k}" title="Удалить">✕</button></div>`).join('') || '<div class="note">Отверстий и вырезов нет.</div>'}
+      <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез угла</button><button class="accent" data-cmd="drawing">Чертёж</button></div></div>
       <div class="sec"><b>Действия</b><div class="btns"><button data-cmd="rot-y">⟲ Повернуть</button><button data-cmd="rot-z">⤾ Положить</button><button data-cmd="duplicate">Копия</button>
       ${i.g ? '<button data-cmd="ungroup">Вынуть из модуля</button>' : ''}<button class="danger" data-cmd="delete">Удалить</button></div></div>`;
   } else {
@@ -613,7 +619,10 @@ function rebuildGroupFromInspector() {
 const modal = document.getElementById('modal');
 function openDialog(title, body, foot, wide) {
   document.getElementById('dlgTitle').textContent = title;
-  document.getElementById('dlgBody').innerHTML = body;
+  const b = document.getElementById('dlgBody');
+  b.oninput = b.onchange = b.onclick = b.onkeydown = null;
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();  // иначе Esc ловит кнопка под окном
+  b.innerHTML = body;
   document.getElementById('dlgFoot').innerHTML = foot;
   modal.querySelector('.dialog').classList.toggle('wide', !!wide);
   modal.hidden = false;
@@ -633,12 +642,14 @@ function cabinetDialog() {
     '<button data-close>Отмена</button><button class="accent" id="cabOk">Добавить корпус</button>');
   const body = document.getElementById('dlgBody');
   const q = k => body.querySelector(`[data-k="${k}"]`);
-  q('preset').addEventListener('change', () => {
+  body.oninput = null; body.onclick = null;
+  body.onchange = e => {
+    if (e.target.dataset.k !== 'preset') return;
     const pr = PRESETS[q('preset').value];
     for (const k of ['W', 'H', 'D', 'plinth', 'shelves', 'doors', 'drawers', 'baseY']) q(k).value = pr[k];
     q('topType').value = pr.topType; q('cname').value = pr.label;
-  });
-  body.addEventListener('keydown', e => e.stopPropagation());
+  };
+  body.onkeydown = e => e.stopPropagation();
   document.getElementById('cabOk').onclick = () => {
     const n = k => Math.max(0, parseFloat(String(q(k).value).replace(',', '.')) || 0);
     const p2 = { W: n('W'), H: n('H'), D: n('D'), plinth: n('plinth'), shelves: Math.round(n('shelves')), doors: Math.min(6, Math.round(n('doors'))),
@@ -663,8 +674,8 @@ function specData() {
     const m = mat(i.mat);
     const s = [i.w, i.h, i.d].map(r1).sort((a, b) => b - a);
     const [L, Wd, T] = s;
-    const key = [m.id, L, Wd, T, label(i)].join('|');
-    const r = rows.get(key) || { name: label(i), kind: KINDS[i.kind] || '', mat: m.name, L, W: Wd, T, n: 0 };
+    const key = [m.id, L, Wd, T, label(i), JSON.stringify(i.ops || [])].join('|');
+    const r = rows.get(key) || { name: label(i), kind: KINDS[i.kind] || '', mat: m.name, L, W: Wd, T, n: 0, ops: (i.ops || []).length };
     r.n++; rows.set(key, r);
     const thin = ['w', 'h', 'd'].reduce((a, c) => i[c] < i[a] ? c : a, 'w');
     let edge = 0;
@@ -684,16 +695,143 @@ function specDialog() {
   openDialog('Спецификация и раскрой', `
     <table class="spec"><tr><th>Материал</th><th class="n">Деталей</th><th class="n">Площадь, м²</th><th class="n">Листов ≈ (+15%)</th><th class="n">Кромка ≈, м</th></tr>
     ${mats.map(t => `<tr><td>${esc(t.name)}</td><td class="n">${t.n}</td><td class="n">${t.area.toFixed(2)}</td><td class="n">${t.top ? '—' : Math.ceil(t.area * 1.15 / sheet)}</td><td class="n">${t.edge.toFixed(1)}</td></tr>`).join('')}</table>
-    <table class="spec"><tr><th>№</th><th>Деталь</th><th>Тип</th><th>Материал</th><th class="n">Длина</th><th class="n">Ширина</th><th class="n">Толщ.</th><th class="n">Кол-во</th></tr>
-    ${rows.map((r, k) => `<tr><td>${k + 1}</td><td>${esc(r.name)}</td><td>${esc(r.kind)}</td><td>${esc(r.mat)}</td><td class="n">${fmt(r.L)}</td><td class="n">${fmt(r.W)}</td><td class="n">${fmt(r.T)}</td><td class="n">${r.n}</td></tr>`).join('')}</table>
+    <table class="spec"><tr><th>№</th><th>Деталь</th><th>Тип</th><th>Материал</th><th class="n">Длина</th><th class="n">Ширина</th><th class="n">Толщ.</th><th class="n">Обраб.</th><th class="n">Кол-во</th></tr>
+    ${rows.map((r, k) => `<tr><td>${k + 1}</td><td>${esc(r.name)}</td><td>${esc(r.kind)}</td><td>${esc(r.mat)}</td><td class="n">${fmt(r.L)}</td><td class="n">${fmt(r.W)}</td><td class="n">${fmt(r.T)}</td><td class="n">${r.ops || ''}</td><td class="n">${r.n}</td></tr>`).join('')}</table>
     <div class="note">Лист ${SHEET.w}×${SHEET.h} мм. Число листов — оценка по площади с запасом 15%; точный раскрой — на странице «Раскрой» сайта.
     Кромка считается по видимым торцам: передний торец корпусных деталей и все 4 торца фасадов.</div>`,
     '<button data-close>Закрыть</button><button class="accent" id="csvBtn">Сохранить в Excel (CSV)</button>', true);
   document.getElementById('csvBtn').onclick = () => {
-    const lines = [['№', 'Деталь', 'Тип', 'Материал', 'Длина', 'Ширина', 'Толщина', 'Кол-во'].join(';')];
-    rows.forEach((r, k) => lines.push([k + 1, r.name, r.kind, r.mat, fmt(r.L), fmt(r.W), fmt(r.T), r.n].map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')));
+    const lines = [['№', 'Деталь', 'Тип', 'Материал', 'Длина', 'Ширина', 'Толщина', 'Обработка', 'Кол-во'].join(';')];
+    rows.forEach((r, k) => lines.push([k + 1, r.name, r.kind, r.mat, fmt(r.L), fmt(r.W), fmt(r.T), r.ops || '', r.n].map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')));
     saveExport(P.name + ' — спецификация', 'csv', { text: '﻿' + lines.join('\r\n') });
   };
+}
+
+// ---------------------------------------------------------------- обработка: отверстия, вырезы, срезы углов
+function defaultOp(type, fr) {
+  const half = v => Math.round(v / 2);
+  if (type === 'hole') return { type, face: 'A', u: half(fr.SU), v: half(fr.SV), s: half(fr.SV), o: r1(fr.T / 2), dia: 8, depth: 12, through: false, count: 1, step: 32, dir: 'u', preset: 'custom' };
+  if (type === 'cut') return { type, face: 'A', u: 50, v: 50, cw: 100, ch: 60, depth: 8, through: true, angle: 0, preset: 'custom' };
+  return { type: 'corner', corner: 'RT', a: 100, b: 100 };
+}
+function opDialog(type, index = -1) {
+  const k = kindOfSelection();
+  if (k.type !== 'item') return status('Выберите одну деталь: двойной клик по детали внутри модуля');
+  const it = k.it, fr = frame(it), N = fr.names;
+  const old = index >= 0 ? it.ops[index] : null;
+  if (old) type = old.type;
+  const op = old ? JSON.parse(JSON.stringify(old)) : defaultOp(type, fr);
+  const others = (it.ops || []).filter((_, j) => j !== index);
+  const edge = () => op.type === 'hole' && !['A', 'B'].includes(op.face);
+  const title = { hole: 'Отверстие', cut: 'Вырез / паз', corner: 'Срез угла' }[type];
+  const chk = (key, text, on) => `<label class="fld chk"><input type="checkbox" data-k="${key}"${on ? ' checked' : ''}><span>${text}</span></label>`;
+  function form() {
+    let h = '';
+    if (type === 'hole') {
+      h += `<div class="grid3">${fld('Тип отверстия', 'preset', op.preset, { options: HOLE_PRESETS.map(p => [p.id, p.name]) })}
+        ${fld('Где сверлить', 'face', op.face, { options: ['A', 'B', 'U0', 'U1', 'V0', 'V1'].map(f => [f, (f.length === 1 ? 'Пласть: ' : 'Торец: ') + N[f]]) })}
+        ${fld('Диаметр Ø, мм', 'dia', op.dia)}</div>`;
+      if (edge()) {
+        const along = op.face[0] === 'U' ? fromName(N.V0) : fromName(N.U0);
+        h += `<div class="grid3">${fld('Позиция ' + along, 's', op.s)}${fld('Отступ ' + fromName(N.B), 'o', op.o)}${fld('Глубина в торец', 'depth', op.depth)}</div>
+          <div class="grid3">${fld('Количество', 'count', op.count)}${fld('Шаг, мм', 'step', op.step)}</div>`;
+      } else {
+        h += `<div class="grid4">${fld('X — ' + fromName(N.U0), 'u', op.u)}${fld('Y — ' + fromName(N.V0), 'v', op.v)}${fld('Глубина, мм', 'depth', op.depth)}${chk('through', 'Сквозное', op.through)}</div>
+          <div class="grid3">${fld('Количество (ряд)', 'count', op.count)}${fld('Шаг, мм', 'step', op.step)}${fld('Ряд идёт', 'dir', op.dir, { options: [['u', 'вправо (по X)'], ['v', 'вверх (по Y)']] })}</div>`;
+      }
+    } else if (type === 'cut') {
+      h += `<div class="grid3">${fld('Тип', 'preset', op.preset, { options: CUT_PRESETS.map(p => [p.id, p.name]) })}${fld('Сторона', 'face', op.face, { options: [['A', N.A], ['B', N.B]] })}${fld('Поворот, °', 'angle', op.angle)}</div>
+        <div class="grid4">${fld('X угла — ' + fromName(N.U0), 'u', op.u)}${fld('Y угла — ' + fromName(N.V0), 'v', op.v)}${fld('Ширина (по X)', 'cw', op.cw)}${fld('Высота (по Y)', 'ch', op.ch)}</div>
+        <div class="grid4">${fld('Глубина, мм', 'depth', op.depth)}${chk('through', 'Насквозь', op.through)}</div>`;
+    } else {
+      h += `<div class="grid3">${fld('Угол', 'corner', op.corner, { options: [['LB', 'Левый нижний'], ['LT', 'Левый верхний'], ['RB', 'Правый нижний'], ['RT', 'Правый верхний']] })}${fld('Срез по X, мм', 'a', op.a)}${fld('Срез по Y, мм', 'b', op.b)}</div>`;
+    }
+    h += `<div class="note">${type === 'corner' ? 'Угол срезается по прямой насквозь (скос).' : 'Кликните по чертежу, чтобы поставить ' + (type === 'cut' ? 'левый нижний угол выреза' : 'отверстие') + '. Координаты — от левого нижнего угла чертежа.'}</div>
+      <div class="op-preview" id="opPreview"></div>`;
+    document.getElementById('dlgBody').innerHTML = h;
+    preview();
+  }
+  let map = null;
+  function preview() {
+    const d = drawingSVG(it, { ops: [...others, op], hl: others.length, width: 700, height: 440 });
+    map = d.map;
+    document.getElementById('opPreview').innerHTML = d.svg;
+  }
+  function read() {
+    const body = document.getElementById('dlgBody');
+    body.querySelectorAll('[data-k]').forEach(el => {
+      const key = el.dataset.k;
+      if (el.type === 'checkbox') op[key] = el.checked;
+      else if (el.tagName === 'SELECT') op[key] = el.value;
+      else { const v = parseFloat(String(el.value).replace(',', '.')); if (isFinite(v)) op[key] = v; }
+    });
+  }
+  openDialog(`${title}: ${label(it)}`, '', `<button data-close>Отмена</button><button class="accent" id="opOk">${old ? 'Сохранить' : 'Добавить'}</button>`, true);
+  form();
+  const body = document.getElementById('dlgBody');
+  body.onkeydown = e => e.stopPropagation();
+  body.oninput = () => { read(); preview(); };
+  body.onchange = e => {
+    const key = e.target.dataset.k;
+    if (key === 'preset') {
+      const pr = (type === 'hole' ? HOLE_PRESETS : CUT_PRESETS).find(p => p.id === e.target.value);
+      Object.assign(op, { dia: pr.dia ?? op.dia, depth: pr.depth || op.depth, through: !!pr.through, count: pr.count || 1, step: pr.step || op.step });
+      if (type === 'cut') Object.assign(op, { cw: pr.cw, ch: pr.ch || fr.SV, depth: pr.depth || op.depth });
+      if (type === 'cut' && pr.groove) Object.assign(op, { u: 10, v: 0, ch: fr.SV, angle: 0 });
+      if (pr.edge && !edge()) op.face = 'U0';
+      if (!pr.edge && edge()) op.face = 'A';
+      form();
+    } else if (key === 'face') form();
+  };
+  body.onclick = e => {
+    const svgEl = e.target.closest('#opPreview svg');
+    if (!svgEl || !map || type === 'corner') return;
+    const r = svgEl.getBoundingClientRect(), k2 = r.width / 700;
+    const clamp = (x, hi) => Math.min(hi, Math.max(0, x));  // клик мимо детали — ставим на её край
+    const u = clamp(Math.round(((e.clientX - r.left) / k2 - map.x0) / map.s), map.SU), v = clamp(Math.round(map.SV - ((e.clientY - r.top) / k2 - map.y0) / map.s), map.SV);
+    if (edge()) op.s = op.face[0] === 'U' ? v : u; else { op.u = u; op.v = v; }
+    form();
+  };
+  document.getElementById('opOk').onclick = () => {
+    read();
+    if (type === 'hole' && (!(op.dia > 0) || (!op.through && !(op.depth > 0)))) return alert('Укажите диаметр и глубину отверстия');
+    if (type === 'cut' && (!(op.cw > 0) || !(op.ch > 0) || (!op.through && !(op.depth > 0)))) return alert('Укажите размеры и глубину выреза');
+    if (type === 'corner' && (!(op.a > 0) || !(op.b > 0))) return alert('Укажите размеры среза');
+    if (op.type === 'hole' && !edge() && op.through) op.depth = fr.T;
+    closeDialog();
+    const saved = JSON.parse(JSON.stringify(op));
+    commit(() => { it.ops = it.ops || []; if (index >= 0) it.ops[index] = saved; else it.ops.push(saved); });
+    status(`${title} ${old ? 'изменено' : 'добавлено'}: ${describeOp(op, it)}`);
+  };
+}
+insp.addEventListener('click', e => {
+  const ed = e.target.closest('[data-op-edit]'), del = e.target.closest('[data-op-del]');
+  const k = kindOfSelection(); if (k.type !== 'item') return;
+  if (ed) opDialog(null, +ed.dataset.opEdit);
+  if (del) commit(() => { k.it.ops.splice(+del.dataset.opDel, 1); });
+});
+
+// Чертежи: по одной детали на лист, с размерами, координатами обработки и таблицей операций
+function drawingDialog(list) {
+  if (!list.length) return status('Выберите деталь или модуль — или нажмите «Чертежи» без выбора, чтобы получить все детали');
+  const sorted = [...list].sort((a, b) => (b.ops || []).length - (a.ops || []).length);
+  const sheets = sorted.map(it => {
+    const fr = frame(it), g = it.g ? group(it.g) : null;
+    const ops = (it.ops || []).map((o, k) => `<tr><td>${k + 1}</td><td>${esc(describeOp(o, it))}</td></tr>`).join('');
+    return `<section class="sheet"><div class="sheet-head"><b>${esc(label(it))}</b><span>${g ? esc(g.name) + ' · ' : ''}${esc(mat(it.mat).name)} ${fmt(mat(it.mat).t)} мм · ${fmt(fr.SU)} × ${fmt(fr.SV)} × ${fmt(fr.T)} мм</span></div>
+      ${drawingSVG(it).svg}${ops ? `<table class="spec"><tr><th>№</th><th>Обработка</th></tr>${ops}</table>` : '<div class="note">Без обработки.</div>'}</section>`;
+  });
+  openDialog(list.length > 1 ? `Чертежи деталей (${list.length})` : `Чертёж: ${label(list[0])}`, sheets.join(''),
+    `<button data-close>Закрыть</button>${list.length === 1 ? '<button id="svgBtn">Сохранить SVG</button>' : ''}<button class="accent" id="printBtn">Печать / PDF</button>`, true);
+  document.getElementById('printBtn').onclick = () => {
+    const pa = document.getElementById('printArea');
+    pa.innerHTML = document.getElementById('dlgBody').innerHTML;
+    document.body.classList.add('printing');
+    window.print();
+    setTimeout(() => { document.body.classList.remove('printing'); pa.innerHTML = ''; }, 300);
+  };
+  const sb = document.getElementById('svgBtn');
+  if (sb) sb.onclick = () => saveExport(`${P.name} — ${label(list[0])}`, 'svg', { text: drawingSVG(list[0]).svg });
 }
 
 // ---------------------------------------------------------------- файлы
@@ -734,7 +872,7 @@ async function saveFile(saveAs) {
 }
 async function saveExport(name, ext, payload) {
   if (desktop) { const p = await window.kc.exportFile({ name, ext, ...payload }); if (p) status('Сохранено: ' + p); return; }
-  const blob = payload.base64 != null ? await (await fetch('data:image/png;base64,' + payload.base64)).blob() : new Blob([payload.text], { type: 'text/csv' });
+  const blob = payload.base64 != null ? await (await fetch('data:image/png;base64,' + payload.base64)).blob() : new Blob([payload.text], { type: ext === 'svg' ? 'image/svg+xml' : 'text/csv' });
   downloadBlob(blob, name + '.' + ext);
 }
 function downloadBlob(blob, name) {
@@ -766,7 +904,8 @@ const COMMANDS = {
   'panel-h': () => addPanel('panel-h'), 'panel-v': () => addPanel('panel-v'), 'panel-f': () => addPanel('panel-f'),
   undo, redo, duplicate: duplicateSel, delete: deleteSel, group: groupSel, ungroup: ungroupSel,
   'rot-y': () => rotateSel('y'), 'rot-z': () => rotateSel('z'), 'rebuild-group': rebuildGroupFromInspector,
-  fit, spec: specDialog, shot: screenshot,
+  fit, spec: specDialog, shot: screenshot, drawing: () => drawingDialog(selItems()), drawings: () => drawingDialog(P.items),
+  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'),
 };
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-cmd]'); if (b && COMMANDS[b.dataset.cmd]) { COMMANDS[b.dataset.cmd](); return; }
