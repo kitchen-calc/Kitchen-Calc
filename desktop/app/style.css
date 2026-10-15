@@ -98,3 +98,5 @@ table.spec td.n { text-align: right; font-variant-numeric: tabular-nums; }
   #printArea .sheet { page-break-after: always; break-after: page; padding: 0; }
   @page { size: A4 landscape; margin: 12mm; }
 }
+.mlabel { background: rgba(255,255,255,.96); color: #1d1a16; border: 1px solid #1f5fb4; border-radius: 6px; padding: 5px 8px; font: 12px/1.45 "Segoe UI", Arial, sans-serif; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+.mlabel b { color: #1f5fb4; }
