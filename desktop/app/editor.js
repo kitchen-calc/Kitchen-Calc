@@ -6,6 +6,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween } from './hardware.js';
+import { moduleSVG, overviewSVG } from './drawings.js';
 import { panelGeometry, describeOp, drawingSVG, frame, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
 
 // ---------------------------------------------------------------- справочники
@@ -35,7 +36,8 @@ const PRESETS = {
   wardrobe: { label: 'Шкаф', W: 1000, H: 2300, D: 580, plinth: 60, baseY: 0, topType: 'solid', shelves: 4, doors: 2, drawers: 0 },
   open: { label: 'Открытый стеллаж', W: 800, H: 1800, D: 350, plinth: 0, baseY: 0, topType: 'solid', shelves: 4, doors: 0, drawers: 0 },
 };
-const SHEET = { w: 2800, h: 2070 };  // стандартный лист ЛДСП, мм
+const SHEET = { w: 2800, h: 2070 };
+const KIND_NAMES = {};   // типы модулей (шкаф, полка, …) — см. «Объединить»  // стандартный лист ЛДСП, мм
 const AUTOSAVE_KEY = 'kcs-autosave-v1';
 
 // ---------------------------------------------------------------- проект и история
@@ -917,7 +919,7 @@ function refreshInspector() {
     h += `<div class="sec"><b>Двигать вместе</b><div class="note">Свяжите фасад ящика с его коробом — тогда направляющие выдвинут их вместе.</div>
       <div class="btns"><button data-cmd="link">🔗 Связать выбранные</button><button data-cmd="unlink">Разъединить</button></div></div>`;
     h += `<div class="sec"><b>Действия</b><div class="btns"><button data-cmd="rot-y">⟲ Повернуть</button><button data-cmd="duplicate">Копия</button>
-      ${k.type === 'group' ? '<button data-cmd="ungroup">Разгруппировать</button>' : '<button data-cmd="group">Объединить в модуль</button>'}
+      ${k.type === 'group' ? '<button class="accent" data-cmd="drawing-module">📐 Чертёж шкафа</button><button data-cmd="ungroup">Разгруппировать</button>' : '<button data-cmd="group">Объединить в модуль</button>'}
       <button class="danger" data-cmd="delete">Удалить</button></div></div>`;
   }
   insp.innerHTML = h;
@@ -1265,17 +1267,62 @@ function linkSel(on) {
 }
 
 // Чертежи: по одной детали на лист, с размерами, координатами обработки и таблицей операций
-function drawingDialog(list) {
-  if (!list.length) return status('Выберите деталь или модуль — или нажмите «Чертежи» без выбора, чтобы получить все детали');
-  const sorted = [...list].sort((a, b) => (b.ops || []).length - (a.ops || []).length);
-  const sheets = sorted.map(it => {
-    const fr = frame(it), g = it.g ? group(it.g) : null;
-    const ops = (it.ops || []).map((o, k) => `<tr><td>${k + 1}</td><td>${esc(describeOp(o, it))}</td></tr>`).join('');
-    return `<section class="sheet"><div class="sheet-head"><b>${esc(label(it))}</b><span>${g ? esc(g.name) + ' · ' : ''}${esc(mat(it.mat).name)} ${fmt(mat(it.mat).t)} мм · ${fmt(fr.SU)} × ${fmt(fr.SV)} × ${fmt(fr.T)} мм</span></div>
-      ${drawingSVG(it).svg}${ops ? `<table class="spec"><tr><th>№</th><th>Обработка</th></tr>${ops}</table>` : '<div class="note">Без обработки.</div>'}</section>`;
-  });
-  openDialog(list.length > 1 ? `Чертежи деталей (${list.length})` : `Чертёж: ${label(list[0])}`, sheets.join(''),
-    `<button data-close>Закрыть</button>${list.length === 1 ? '<button id="svgBtn">Сохранить SVG</button>' : ''}<button class="accent" id="printBtn">Печать / PDF</button>`, true);
+function partSheet(it) {
+  const fr = frame(it), g = it.g ? group(it.g) : null;
+  const ops = (it.ops || []).map((o, k) => `<tr><td>${k + 1}</td><td>${esc(describeOp(o, it))}</td></tr>`).join('');
+  return `<section class="sheet"><div class="sheet-head"><b>${esc(label(it))}</b><span>${g ? esc(g.name) + ' · ' : ''}${esc(mat(it.mat).name)} ${fmt(mat(it.mat).t)} мм · ${fmt(fr.SU)} × ${fmt(fr.SV)} × ${fmt(fr.T)} мм</span></div>
+    ${drawingSVG(it).svg}${ops ? `<table class="spec"><tr><th>№</th><th>Обработка</th></tr>${ops}</table>` : '<div class="note">Без обработки.</div>'}</section>`;
+}
+const colorOf = i => mat(i.mat).color;
+// Шкаф: три вида, список деталей и фурнитуры
+function moduleSheet(g, k) {
+  const list = groupItems(g.id), b = bbox(list);
+  const rows = new Map();
+  for (const i of list) {
+    const m = mat(i.mat), [L, W, T] = [i.w, i.h, i.d].map(r1).sort((a, c) => c - a);
+    const key = [label(i), m.id, L, W, T, (i.ops || []).length].join('|');
+    const r = rows.get(key) || { name: label(i), mat: `${m.name} ${m.t}`, L, W, T, ops: (i.ops || []).length, n: 0 };
+    r.n++; rows.set(key, r);
+  }
+  const hw = new Map();
+  for (const h of P.hw) { const it = item(h.target); if (it && it.g === g.id) { const n = HW_TYPES[h.type].name; hw.set(n, (hw.get(n) || 0) + hardwareCount(h, it)); } }
+  return `<section class="sheet"><div class="sheet-head"><b>${k ? k + '. ' : ''}${esc(g.name)}${g.kind ? ` <i class="kind">${esc(KIND_NAMES[g.kind] || g.kind)}</i>` : ''}</b><span>Габарит ${fmt(b.x1 - b.x0)} × ${fmt(b.y1 - b.y0)} × ${fmt(b.z1 - b.z0)} мм · деталей: ${list.length}</span></div>
+    ${moduleSVG(list, { colorOf })}
+    <table class="spec"><tr><th>Деталь</th><th>Материал</th><th class="n">Длина</th><th class="n">Ширина</th><th class="n">Толщ.</th><th class="n">Обраб.</th><th class="n">Кол-во</th></tr>
+    ${[...rows.values()].sort((a, c) => c.L - a.L).map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.mat)}</td><td class="n">${fmt(r.L)}</td><td class="n">${fmt(r.W)}</td><td class="n">${fmt(r.T)}</td><td class="n">${r.ops || ''}</td><td class="n">${r.n}</td></tr>`).join('')}</table>
+    ${hw.size ? `<table class="spec"><tr><th>Фурнитура</th><th class="n">Кол-во</th></tr>${[...hw].map(([n, c]) => `<tr><td>${esc(n)}</td><td class="n">${c}</td></tr>`).join('')}</table>` : ''}</section>`;
+}
+function overviewSheet() {
+  const ov = overviewSVG(P.items, P.groups, { colorOf });
+  const b = bbox(P.items);
+  const mods = ov.order.map((id, k) => { const g = group(id), l = groupItems(id), mb = bbox(l); return `<tr><td>${k + 1}</td><td>${esc(g.name)}</td><td>${esc(KIND_NAMES[g.kind] || '')}</td><td class="n">${fmt(mb.x1 - mb.x0)} × ${fmt(mb.y1 - mb.y0)} × ${fmt(mb.z1 - mb.z0)}</td><td class="n">${l.length}</td></tr>`; }).join('');
+  const loose = P.items.filter(i => !i.g).length;
+  return `<section class="sheet"><div class="sheet-head"><b>Общий вид: ${esc(P.name)}</b><span>Габарит ${fmt(b.x1 - b.x0)} × ${fmt(b.y1 - b.y0)} × ${fmt(b.z1 - b.z0)} мм · шкафов: ${ov.order.length} · деталей: ${P.items.length}</span></div>
+    ${ov.svg}<table class="spec"><tr><th>№</th><th>Шкаф / модуль</th><th>Тип</th><th class="n">Ш × В × Г, мм</th><th class="n">Деталей</th></tr>${mods}
+    ${loose ? `<tr><td></td><td>Отдельные детали</td><td></td><td></td><td class="n">${loose}</td></tr>` : ''}</table>${hwSpecTable()}</section>`;
+}
+// Комплект чертежей: scope 'all' — общий вид, каждый шкаф со своими деталями, отдельные детали;
+// группа — шкаф и его детали; список деталей — только детали
+function drawingDialog(list, scope) {
+  let sheets = [], title;
+  if (scope === 'all') {
+    if (!P.items.length) return status('В проекте пока нет деталей');
+    const ov = overviewSVG(P.items, P.groups, {}).order;
+    sheets.push(overviewSheet());
+    ov.forEach((id, k) => { sheets.push(moduleSheet(group(id), k + 1)); groupItems(id).forEach(i => sheets.push(partSheet(i))); });
+    P.items.filter(i => !i.g).forEach(i => sheets.push(partSheet(i)));
+    title = `Чертежи проекта (${sheets.length} листов)`;
+  } else if (scope && scope.group) {
+    sheets.push(moduleSheet(scope.group, 0));
+    groupItems(scope.group.id).forEach(i => sheets.push(partSheet(i)));
+    title = `Чертёж шкафа: ${scope.group.name}`;
+  } else {
+    if (!list.length) return status('Выберите деталь или модуль');
+    [...list].sort((a, b) => (b.ops || []).length - (a.ops || []).length).forEach(i => sheets.push(partSheet(i)));
+    title = list.length > 1 ? `Чертежи деталей (${list.length})` : `Чертёж: ${label(list[0])}`;
+  }
+  const one = !scope && list.length === 1;
+  openDialog(title, sheets.join(''), `<button data-close>Закрыть</button>${one ? '<button id="svgBtn">Сохранить SVG</button>' : ''}<button class="accent" id="printBtn">Печать / PDF</button>`, true);
   document.getElementById('printBtn').onclick = () => {
     const pa = document.getElementById('printArea');
     pa.innerHTML = document.getElementById('dlgBody').innerHTML;
@@ -1285,6 +1332,12 @@ function drawingDialog(list) {
   };
   const sb = document.getElementById('svgBtn');
   if (sb) sb.onclick = () => saveExport(`${P.name} — ${label(list[0])}`, 'svg', { text: drawingSVG(list[0]).svg });
+}
+function drawingsCommand() {
+  const k = kindOfSelection();
+  if (k.type === 'group') return drawingDialog(k.list, { group: k.g });
+  if (k.type === 'item' || k.type === 'multi') return drawingDialog(k.list || [k.it]);
+  return drawingDialog([], 'all');
 }
 
 // ---------------------------------------------------------------- файлы
@@ -1359,7 +1412,7 @@ const COMMANDS = {
   'panel-h': () => addPanel('panel-h'), 'panel-v': () => addPanel('panel-v'), 'panel-f': () => addPanel('panel-f'),
   undo, redo, duplicate: duplicateSel, delete: deleteSel, group: groupSel, ungroup: ungroupSel, 'apply-hinges': applyHingesFromInspector,
   'rot-y': () => rotateSel('y'), 'rot-z': () => rotateSel('z'), 'rebuild-group': rebuildGroupFromInspector,
-  fit, spec: specDialog, shot: screenshot, drawing: () => drawingDialog(selItems()), drawings: () => drawingDialog(P.items),
+  fit, spec: specDialog, shot: screenshot, drawing: () => drawingDialog(selItems()), drawings: drawingsCommand, 'drawing-module': drawingsCommand,
   'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'),
   hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false),
   'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleHw(P.hw.filter(h => ids.includes(h.target)).map(h => h.id)); },
