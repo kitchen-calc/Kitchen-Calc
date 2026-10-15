@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kitchen Calc Studio</title>
   <link rel="stylesheet" href="style.css">
-  <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/","three-mesh-bvh":"./vendor/three-mesh-bvh.module.js","three-bvh-csg":"./vendor/three-bvh-csg.module.js"}}</script>
 </head>
 <body>
   <header class="toolbar">
@@ -36,6 +36,7 @@
     </div>
     <div class="tb-group">
       <button data-cmd="spec" title="Спецификация и раскрой">Спецификация</button>
+      <button data-cmd="drawings" title="Чертежи деталей с обработкой (выбранных или всех)">Чертежи</button>
       <button data-cmd="shot" title="Сохранить картинку PNG (для ИИ-рендера)">Картинка</button>
     </div>
   </header>
@@ -71,6 +72,7 @@
     </div>
   </div>
 
+  <div id="printArea"></div>
   <input type="file" id="fileInput" accept=".kcp,.json" hidden>
   <script type="module" src="editor.js"></script>
 </body>
