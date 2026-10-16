@@ -13,7 +13,7 @@ const DECOR_BASE = typeof location !== 'undefined' && location.pathname.startsWi
 export const DECORS = [], DECOR = {};
 // tabs: корпус — ЛДСП…Стекло; пол и стены — отдельные вкладки
 export const TABS = [
-  ['ldsp', 'ЛДСП'], ['lmdf', 'ЛМДФ'], ['acryl', 'Акрил'], ['ral', 'Эмаль RAL'], ['film', 'Плёнка ПВХ'], ['veneer', 'Шпон'], ['top', 'Столешницы'], ['glass', 'Стекло, зеркало'],
+  ['ldsp', 'ЛДСП'], ['lmdf', 'ЛМДФ'], ['acryl', 'Акрил'], ['ral', 'Эмаль RAL'], ['film', 'Плёнка ПВХ'], ['plywood', 'Фанера'], ['veneer', 'Шпон'], ['top', 'Столешницы'], ['glass', 'Стекло, зеркало'],
   ['floor', 'Пол'], ['wall', 'Стены'],
 ];
 export const PURPOSE = { floor: 'floor', wall: 'wall' };   // остальные вкладки — корпус
@@ -53,6 +53,15 @@ for (const s of RAL.split('|')) {
   ['Бетон', '#a8a6a0', 'concrete'], ['Мрамор белый', '#ebe8e2', 'stone'], ['Белый матовый', '#efeeea', 'uni'], ['Кашемир матовый', '#d3c3ad', 'uni'], ['Капучино', '#b79f87', 'uni'], ['Графит матовый', '#4d5054', 'uni'],
   ['Лён бежевый', '#d4c6ae', 'textile'], ['Шёлк серый', '#bdbbb6', 'textile']]
   .forEach(([n, h, k, r], i) => add('film', 'МДФ в плёнке', 'pvc' + (i + 1), n, h, k, { mat: 'Плёнка ПВХ', rough: r || 0.6 }));
+// Фанера: берёзовая разных сортов (чем ниже сорт — тем больше сучков и вставок), хвойная, тонированная, ламинированная
+[['Берёзовая ФК, сорт 1/1', '#e3d0aa', 'plywood', 0], ['Берёзовая ФК, сорт 2/2', '#ddc79c', 'plywood', 1], ['Берёзовая ФК, сорт 3/3', '#d6be90', 'plywood', 2], ['Берёзовая ФСФ (влагостойкая)', '#d9c093', 'plywood', 1],
+  ['Шлифованная Ш2 светлая', '#e8d8b5', 'plywood', 0], ['Хвойная (сосновая)', '#d9b47c', 'plywood', 2], ['Под лаком (янтарная)', '#d1a465', 'plywood', 0], ['Под маслом (тёплая)', '#c99a62', 'plywood', 0],
+  ['Белёная', '#ece3d2', 'plywood', 0], ['Тонированная дуб', '#b48a5c', 'plywood', 0], ['Тонированная орех', '#8a6040', 'plywood', 0], ['Тонированная венге', '#4a3a30', 'plywood', 0],
+  ['Тонированная серая', '#9a958c', 'plywood', 0], ['Тонированная чёрная', '#2e2b28', 'plywood', 0], ['Окрашенная белая', '#f0eeea', 'uni'],
+  ['Ламинированная коричневая (F/F)', '#5a3a2a', 'textile'], ['Ламинированная сетчатая (F/W)', '#4a3326', 'textile'], ['Ламинированная чёрная', '#232222', 'textile'], ['Ламинированная белая', '#ecebe6', 'textile'],
+  ['Ламинированная серая', '#8f8f8d', 'textile'], ['Ламинированная зелёная', '#3f5a3a', 'textile'], ['Ламинированная красная', '#8a2b22', 'textile'], ['Ламинированная жёлтая', '#c9a43a', 'textile'],
+  ['Бакелитовая ФБС', '#6b3a1f', 'textile']]
+  .forEach(([n, h, k, knots], i) => add('plywood', k === 'plywood' ? 'Натуральная и тонированная' : 'Ламинированная и окрашенная', 'pw' + (i + 1), n, h, k, { mat: 'Фанера', rough: k === 'textile' ? 0.5 : 0.7, knots }));
 [['Дуб натуральный', '#c49a6c'], ['Дуб мореный', '#4b3a2c'], ['Орех американский', '#6b4a33'], ['Ясень', '#d3bf9c'], ['Анегри', '#c8a47c'], ['Зебрано', '#b89462'], ['Тик', '#8f6a42'], ['Бук', '#d3a679'], ['Вишня', '#9c5a3a'], ['Эвкалипт', '#a7856a'], ['Дуб беленый', '#ddd0bb'], ['Дуб копчёный', '#6d5643']]
   .forEach(([n, h], i) => add('veneer', 'Натуральный шпон', 'vn' + (i + 1), n, h, 'wood', { mat: 'Шпон', rough: 0.55, contrast: 1.15 }));
 [['Мрамор Каррара', '#ece9e4', 'stone'], ['Калакатта', '#f0ece4', 'stone', { vein: '#b39a6e' }], ['Неро Маркина', '#24232a', 'stone', { vein: '#e8e6e2' }], ['Гранит серый', '#8c8a88', 'granite'], ['Гранит чёрный', '#2a2a2c', 'granite'],
@@ -171,6 +180,21 @@ function terrazzo(x, y, P, s) {
   }
   return c;
 }
+// Берёзовая фанера: спокойная текстура шпона, у низких сортов — сучки и овальные вставки
+function plywoodAt(x, y, P, s, knots) {
+  let c = woodAt(x * 0.6, y * 1.4, P, s, 0.55);
+  if (knots) {
+    const cell = 260, i = Math.floor(x / cell), j = Math.floor(y / cell), h = hash(i, j, s + 40);
+    if (h > 1 - 0.12 * knots) {
+      const cx = (i + 0.2 + hash(i, j, s + 41) * 0.6) * cell, cy = (j + 0.2 + hash(i, j, s + 42) * 0.6) * cell;
+      const patch = hash(i, j, s + 43) > 0.55, rx = patch ? 40 : 7 + hash(i, j, s + 44) * 8, ry = patch ? 16 : rx * 0.8;
+      const e = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2;
+      if (e < 1) c = patch ? mix(c, P.light, 0.35) : mix(P.dark, [60, 40, 25], 0.4 * (1 - e));
+      else if (!patch && e < 2.2) c = mix(c, P.dark, 0.25);
+    }
+  }
+  return c;
+}
 function textile(x, y, P, s) {
   const a = noise(x * 0.9, y * 0.06, s) * 0.5 + noise(x * 0.06, y * 0.9, s + 3) * 0.5, w = (Math.sin(x * 3.2) * Math.sin(y * 3.2)) * 0.5 + 0.5;
   return mix(P.light, P.dark, a * 0.35 + w * 0.12 + fbm(x * 0.004, y * 0.004, s + 6, 2) * 0.15);
@@ -188,6 +212,7 @@ function baseFn(kind, d, P, s) {
     case 'granite': return (x, y) => granite(x, y, P, s);
     case 'terrazzo': return (x, y) => terrazzo(x, y, P, s);
     case 'textile': return (x, y) => textile(x, y, P, s);
+    case 'plywood': return (x, y) => plywoodAt(x, y, P, s, d.knots || 0);
     case 'metal': case 'mirror': return (x, y) => metal(x, y, P, s);
     case 'carpet': return (x, y) => mix(P.light, P.dark, noise(x * 0.8, y * 0.8, s) * 0.45 + fbm(x * 0.01, y * 0.01, s + 2, 3) * 0.3);
     case 'plaster': return (x, y) => mix(P.light, P.dark, fbm(x * 0.0025, y * 0.0025, s, 5) * 0.55 + Math.pow(Math.abs(Math.sin(x * 0.004 + fbm(x * 0.003, y * 0.003, s + 4, 4) * 6)), 8) * 0.25);
