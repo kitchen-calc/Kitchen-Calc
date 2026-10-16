@@ -117,3 +117,8 @@ table.spec td.n { text-align: right; font-variant-numeric: tabular-nums; }
 .op small.base { color: #8fb8e8; font-size: 11px; }
 .op small.warn { font-size: 11px; }
 .op.hwrow { grid-template-columns: 1fr auto auto auto auto; }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modecard { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+.modecard:has(input:checked) { border-color: var(--gold); background: rgba(200,164,107,.1); }
+.modecard input { margin: 2px 0 0; }
+.modecard span { grid-column: 2; color: var(--muted); font-size: 12px; line-height: 1.45; }
