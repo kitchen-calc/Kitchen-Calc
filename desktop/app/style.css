@@ -197,3 +197,6 @@ table.rtab tr.cur td { background: rgba(217,119,15,.15); }
 .viewport.ruling canvas { cursor: crosshair; }
 .ruler.mini { width: 300px; } .ruler .pal-head button { padding: 0 6px; font-size: 16px; background: none; border: none; }
 .ruler, .palette { z-index: 10; }
+.picklist { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.pick { display: grid; gap: 2px; text-align: left; white-space: normal; padding: 8px 10px; }
+.pick span { color: var(--muted); font-size: 11.5px; font-weight: 400; }

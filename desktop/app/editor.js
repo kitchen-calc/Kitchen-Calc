@@ -1167,7 +1167,7 @@ function refreshTree() {
   for (const g of P.groups) {
     const list = groupItems(g.id), all = list.every(i => sel.has(i.id)), b = bbox(list);
     h += `<div class="node grp ${all ? 'sel' : ''}" data-group="${g.id}"><span>${g.mode === 'solid' ? '■' : '▸'} ${esc(g.name)}</span><span class="dim">${fmt(b.x1 - b.x0)}×${fmt(b.y1 - b.y0)}</span>${g.kind ? `<span class="kind">${esc(KIND_NAMES[g.kind] || g.kind)}${g.mode === 'solid' ? ' · один предмет' : ' · сборка'}</span>` : ''}</div>`;
-    if (g.mode !== 'solid' && (openGroup === g.id || list.some(i => sel.has(i.id) && !all))) list.forEach(i => { h += node(i, true); });
+    if (g.mode !== 'solid' && (openGroup === g.id || list.some(i => sel.has(i.id)))) list.forEach(i => { h += node(i, true); });   // выбран модуль — видны его детали, клик выбирает одну (из модуля она не выходит)
   }
   P.items.filter(i => !i.g).forEach(i => { h += node(i, false); });
   el.innerHTML = h;
@@ -1267,8 +1267,9 @@ function refreshInspector() {
       const cnt = new Map();
       hwHere.forEach(x => cnt.set(HW_TYPES[x.type].name, (cnt.get(HW_TYPES[x.type].name) || 0) + hardwareCount(x, item(x.target))));
       h += `<div class="sec"><b>Фурнитура</b><div class="note">${[...cnt].map(([n, c]) => `${esc(n)} — ${c} шт.`).join('<br>')}</div>
-        ${hwHere.some(x => hasAction(x.type)) ? '<div class="btns"><button class="accent" data-cmd="hw-toggle-sel">▶ Открыть / закрыть</button></div>' : ''}</div>`;
-    }
+        ${hwHere.map(x => `<div class="op hwrow"><span>${esc(describeHw(x, item(x.target)))}<br><small class="base">на «${esc(label(item(x.target)))}»${x.base && item(x.base) ? ` · Б — ${esc(label(item(x.base)))}` : ''}</small></span>${hasAction(x.type) ? `<button class="accent" data-hw-act="${x.id}">${actionLabels(x.type)[(hwState.get(x.id) || { to: 0 }).to > 0 ? 1 : 0]}</button>` : '<i></i>'}<button data-hw-edit="${x.id}" title="Изменить">✎</button><button data-hw-place="${x.id}" title="Где стоит">📍</button><button data-hw-del="${x.id}" title="Удалить">✕</button></div>`).join('')}
+        <div class="btns">${hwHere.some(x => hasAction(x.type)) ? '<button class="accent" data-cmd="hw-toggle-sel">▶ Открыть / закрыть всё</button>' : ''}<button data-cmd="hw">＋ Фурнитура</button></div></div>`;
+    } else h += `<div class="sec"><b>Фурнитура</b><div class="note">Фурнитуры нет.</div><div class="btns"><button class="accent" data-cmd="hw">＋ Фурнитура</button></div></div>`;
     h += `<div class="sec"><b>Ящик: фасад + короб</b><div class="note">Только для ящиков: свяжите фасад ящика с его коробом — направляющие выдвинут их вместе.
       Это не объединение в шкаф (для этого — «Объединить в модуль»). Двери, подъёмники и купе всегда двигают только свой фасад.</div>
       <div class="btns"><button data-cmd="link">🔗 Ездят вместе</button><button data-cmd="unlink">Разъединить</button></div></div>`;
@@ -1846,23 +1847,45 @@ function hwSync(hw, it) {
   it.ops.push(...hwDrillOps(hw, it, hwOf(it.id).filter(h => h.id !== hw.id)));
   for (const { id, op } of plateOps(hw, it, P.items)) { const side = item(id); side.ops = side.ops || []; side.ops.push(op); }
 }
+// Каталог фурнитуры: для одной детали — сразу на неё; для модуля (шкафа, ящика) или нескольких деталей —
+// после выбора фурнитуры спрашиваем, на какую из деталей её поставить
 function hwCatalog(cat) {
   const k = kindOfSelection();
-  if (k.type !== 'item') return status('Выберите одну деталь (двойной клик по детали в модуле), чтобы поставить на неё фурнитуру');
-  const it = k.it;
-  cat = cat || 'hinges';
+  if (k.type === 'none') return status('Выберите деталь или модуль (шкаф, ящик), куда ставить фурнитуру');
+  const one = k.type === 'item' ? k.it : null, list = one ? [one] : k.list;
+  cat = cat || (one && thinAxis(one) === 'x' ? 'slides' : 'hinges');
   const tabs = HW_CATEGORIES.map(([id, name]) => `<button class="${id === cat ? 'on' : ''}" data-hwcat="${id}">${esc(name)}</button>`).join('');
   const cards = Object.values(HW_TYPES).filter(t => t.cat === cat).map(t => {
-    const why = checkTarget(t.id, it);
+    const ok = list.filter(i => !checkTarget(t.id, i));
+    const why = one ? checkTarget(t.id, one) : ok.length ? '' : 'В этом модуле нет подходящей детали: ' + checkTarget(t.id, list[0]);
     return `<div class="hwcard${why ? ' off' : ''}"><div><b>${esc(t.name)}</b>${t.motion ? `<span class="tag">${t.motion === 'light' ? 'свет' : 'есть действие'}</span>` : ''}<div class="note">${esc(t.desc)}</div>${why ? `<div class="warn">${esc(why)}</div>` : ''}</div>
-      <button class="accent" data-hwadd="${t.id}"${why ? ' disabled' : ''}>Поставить</button></div>`;
+      <button class="accent" data-hwadd="${t.id}"${why ? ' disabled' : ''}>${one ? 'Поставить' : 'Выбрать деталь…'}</button></div>`;
   }).join('');
-  openDialog(`Фурнитура: ${label(it)}`, `<div class="hwtabs">${tabs}</div><div class="hwlist">${cards}</div>`, '<button data-close>Закрыть</button>', true);
+  const title = one ? label(one) : k.type === 'group' ? k.g.name : `${list.length} дет.`;
+  openDialog(`Фурнитура: ${title}`, `<div class="hwtabs">${tabs}</div><div class="hwlist">${cards}</div>`, '<button data-close>Закрыть</button>', true);
   const body = document.getElementById('dlgBody');
   body.onclick = e => {
     const c = e.target.closest('[data-hwcat]'); if (c) return hwCatalog(c.dataset.hwcat);
-    const a = e.target.closest('[data-hwadd]'); if (a && !a.disabled) hwForm(it, newHardware(a.dataset.hwadd, it.id, 0), true);
+    const a = e.target.closest('[data-hwadd]'); if (!a || a.disabled) return;
+    if (one) return hwForm(one, newHardware(a.dataset.hwadd, one.id, 0), true);
+    hwPickTarget(a.dataset.hwadd, list.filter(i => !checkTarget(a.dataset.hwadd, i)), cat);
   };
+}
+// На какую деталь модуля ставить: подходящие по типу, сначала самые вероятные (для направляющих — боковины ящиков)
+function hwPickTarget(type, cands, cat) {
+  const t = HW_TYPES[type];
+  const score = i => (t.cat === 'slides' ? (thinAxis(i) === 'x' && !['sideL', 'sideR'].includes(i.role) ? 0 : thinAxis(i) === 'x' ? 2 : 1)
+    : t.cat === 'hinges' || t.target === 'front' ? (['door', 'drawerFront'].includes(i.role || i.kind) ? 0 : 1) : 0) - (hwOf(i.id).length ? 0 : 0.1);
+  cands = [...cands].sort((a, b) => score(a) - score(b) || a.y - b.y || a.x - b.x);
+  openDialog(`${t.name}: на какую деталь?`, `<div class="note">Выберите деталь — фурнитура встанет на неё. ${t.cat === 'slides' ? 'Направляющие ставьте на боковину ящика: внешняя шина сама найдёт боковину корпуса (зазор 13 мм), а в следующем окне можно сразу поставить пару.' : ''} Наведите на строку — деталь подсветится.</div>
+    <div class="picklist">${cands.map(i => `<button class="pick" data-pick="${i.id}"><b>${esc(label(i))}</b><span>${dims(i)} мм · X ${fmt(i.x)}, Y ${fmt(i.y)}, Z ${fmt(i.z)}${hwOf(i.id).length ? ` · уже есть: ${hwOf(i.id).map(h => esc(HW_TYPES[h.type].name)).join(', ')}` : ''}</span></button>`).join('')}</div>`,
+    '<button data-back>← Назад</button><button data-close>Отмена</button>', true);
+  const body = document.getElementById('dlgBody'), keep = new Set(sel);
+  const hl = id => { sel.clear(); if (id) sel.add(id); else keep.forEach(x => sel.add(x)); rebuild(); };
+  body.onmouseover = e => { const b = e.target.closest('[data-pick]'); if (b) hl(+b.dataset.pick); };
+  body.onmouseleave = () => hl(0);
+  body.onclick = e => { const b = e.target.closest('[data-pick]'); if (!b) return; hl(0); hwForm(item(+b.dataset.pick), newHardware(type, +b.dataset.pick, 0), true); };
+  document.getElementById('dlgFoot').onclick = e => { if (e.target.closest('[data-back]')) { hl(0); hwCatalog(cat); } };
 }
 function hwForm(it, hw, isNew) {
   const t = HW_TYPES[hw.type];
