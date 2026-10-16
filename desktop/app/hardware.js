@@ -33,6 +33,8 @@ const F = {
   force: { label: 'Усилие, Н', options: [['60', '60 Н'], ['80', '80 Н'], ['100', '100 Н'], ['120', '120 Н'], ['150', '150 Н']], def: '80' },
   sides: { label: 'Где ставить', options: [['LR', 'с двух сторон'], ['L', 'только слева'], ['R', 'только справа']], def: 'LR' },
   len: { label: 'Длина, мм (0 — по ящику)', num: true, def: 0 },
+  level: { label: 'Центр шины от низа детали, мм (0 — по середине)', num: true, def: 0 },
+  setback: { label: 'Отступ от переднего края, мм', num: true, def: 2 },
   slideDir: { label: 'Куда едет', options: [['L', 'влево'], ['R', 'вправо']], def: 'L' },
   travel: { label: 'Ход, мм (0 — на ширину)', num: true, def: 0 },
   centers: { label: 'Межцентровое, мм', options: [96, 128, 160, 192, 224, 256, 320, 448].map(v => [String(v), v + ' мм']), def: '128' },
@@ -77,12 +79,12 @@ def('aventosHS', { cat: 'lifts', name: 'Подъёмник Aventos HS (ввер�
 def('aventosHF', { cat: 'lifts', name: 'Подъёмник Aventos HF (складной)', desc: 'Для двухсекционных фасадов; здесь показан как подъём вверх.', target: 'front', fields: ['sides', 'angle'], motion: 'part', angle: 90 });
 def('flapStay', { cat: 'lifts', name: 'Откидной кронштейн (секретер, бар)', desc: 'Фасад откидывается вниз и держится горизонтально.', target: 'front', fields: ['sides'], motion: 'part', angle: 90 });
 // Направляющие
-const slideFields = ['len', 'damper'];
-def('ballFull', { cat: 'slides', name: 'Шариковые полного выдвижения', desc: 'Три шины: внешняя на корпусе, средняя проходит половину пути, внутренняя едет с ящиком. Ящик выдвигается полностью.', target: 'front', fields: slideFields, motion: 'part', ext: 1 });
-def('roller', { cat: 'slides', name: 'Роликовые (частичное выдвижение)', desc: 'Две шины, ящик выдвигается на 3/4 длины.', target: 'front', fields: ['len'], motion: 'part', ext: 0.75 });
-def('tandem', { cat: 'slides', name: 'Скрытого монтажа (Tandem, Movento)', desc: 'Направляющие под дном ящика, не видны. Полное выдвижение.', target: 'front', fields: slideFields, motion: 'part', ext: 1, under: true });
-def('metabox', { cat: 'slides', name: 'Metabox (металлические борта)', desc: 'Металлические борта вместо боков ящика, выдвижение 3/4.', target: 'front', fields: ['len'], motion: 'part', ext: 0.75, boxSides: true });
-def('legrabox', { cat: 'slides', name: 'Legrabox / Tandembox (премиум)', desc: 'Тонкие металлические борта, полное выдвижение, доводчик.', target: 'front', fields: slideFields, motion: 'part', ext: 1, boxSides: true });
+const slideFields = ['len', 'level', 'setback', 'damper'];
+def('ballFull', { cat: 'slides', name: 'Шариковые полного выдвижения', desc: 'Три шины: внешняя на корпусе, средняя проходит половину пути, внутренняя едет с ящиком. Ящик выдвигается полностью.', target: 'slide', fields: slideFields, motion: 'part', ext: 1 });
+def('roller', { cat: 'slides', name: 'Роликовые (частичное выдвижение)', desc: 'Две шины, ящик выдвигается на 3/4 длины.', target: 'slide', fields: ['len', 'level', 'setback'], motion: 'part', ext: 0.75 });
+def('tandem', { cat: 'slides', name: 'Скрытого монтажа (Tandem, Movento)', desc: 'Направляющие под дном ящика, не видны. Полное выдвижение.', target: 'slide', fields: slideFields, motion: 'part', ext: 1, under: true });
+def('metabox', { cat: 'slides', name: 'Metabox (металлические борта)', desc: 'Металлические борта вместо боков ящика, выдвижение 3/4.', target: 'slide', fields: ['len', 'level', 'setback'], motion: 'part', ext: 0.75, boxSides: true });
+def('legrabox', { cat: 'slides', name: 'Legrabox / Tandembox (премиум)', desc: 'Тонкие металлические борта, полное выдвижение, доводчик.', target: 'slide', fields: slideFields, motion: 'part', ext: 1, boxSides: true });
 def('tipOnDrawer', { cat: 'slides', name: 'Push-to-open для ящика (Tip-On)', desc: 'Ящик без ручки: нажал — выехал. Ставится вместе с направляющими.', target: 'front', fields: [], motion: null, staticBehind: true });
 // Купе
 def('slidingDoor', { cat: 'sliding', name: 'Система купе (верхние и нижние ролики)', desc: 'Дверь едет вдоль шкафа по направляющим. Выберите, в какую сторону она уезжает.', target: 'front', fields: ['slideDir', 'travel'], motion: 'part' });
@@ -146,6 +148,7 @@ export function checkTarget(type, it) {
   const t = T[type], ax = thinAxis(it);
   if (t.target === 'front' && ax !== 'z') return 'Ставится на фасад — деталь, которая стоит лицом к вам (самая тонкая сторона — глубина).';
   if (t.target === 'horizontal' && ax !== 'y') return 'Ставится на горизонтальную деталь: дно, полку, крышу или столешницу.';
+  if (t.target === 'slide' && t.under && ax === 'x') return 'Скрытые направляющие ставятся под дно ящика (или на фасад).';
   return '';
 }
 // «Подпись» движения детали: две фурнитуры на одной детали допустимы, только если двигают её одинаково
@@ -177,6 +180,13 @@ export function movingIds(hw, items) {
   const it = items.find(i => i.id === hw.target);
   if (!it) return [];
   const k = motionKey(hw) || '';
+  // направляющие на боковине или дне ящика: едет объединённый ящик целиком (модуль), иначе — только эта деталь
+  if (t.cat === 'slides' && slideMount(it) !== 'front') {
+    const base = hw.base && items.find(i => i.id === hw.base);
+    if (it.g && !(base && base.g === it.g)) return items.filter(i => i.g === it.g && i.id !== hw.base).map(i => i.id);
+    if (it.link) return items.filter(i => i.link === it.link && i.id !== hw.base).map(i => i.id);
+    return [it.id];
+  }
   // петли, подъёмники, купе: двигается только сам фасад — связь не действует (иначе с дверью поедет корпус)
   if (!it.link || /^(swing|slideX)/.test(k) || ['aventosHL', 'aventosHS'].includes(hw.type)) return [it.id];
   return [it.id, ...linkedParts(it, items).map(i => i.id)];
@@ -201,8 +211,19 @@ function linkedBox(it, items) {
   }
   return b;
 }
+// Куда поставлены направляющие: на фасад (старый способ — шины по коробу за ним), на боковину ящика, под дно
+export const slideMount = it => ({ z: 'front', x: 'side', y: 'bottom' })[thinAxis(it)];
+// В какую сторону от боковины ящика корпус (+1 — вправо, −1 — влево): к стороне Б, иначе — от центра ящика
+function slideOut(hw, it, items) {
+  const base = hw.base && items.find(i => i.id === hw.base), cx = it.x + it.w / 2;
+  if (base) return base.x + base.w / 2 > cx ? 1 : -1;
+  const mates = items.filter(i => i.id !== it.id && ((it.g && i.g === it.g) || (it.link && i.link === it.link)));
+  if (mates.length) { const c = mates.reduce((s, i) => s + i.x + i.w / 2, 0) / mates.length; return cx >= c ? 1 : -1; }
+  return 1;
+}
 function slideLen(hw, it, items) {
   if (+hw.len > 0) return +hw.len;
+  if (slideMount(it) !== 'front') return Math.min(700, Math.max(250, Math.floor((it.d - (+hw.setback || 0)) / 50) * 50));
   const b = linkedBox(it, items);
   return b ? Math.max(250, Math.round((b.z1 - b.z0) / 50) * 50) : 450;
 }
@@ -289,7 +310,7 @@ export function baseNeeded(type) {
 export function baseHint(type) {
   const t = T[type];
   if (t.cat === 'hinges') return 'планка — к боковине корпуса за дверью (у кромки петель)';
-  if (t.cat === 'slides') return 'внешняя шина — к боковине корпуса рядом с коробом ящика';
+  if (t.cat === 'slides') return 'внешняя шина — к боковине корпуса сбоку от ящика (зазор 13 мм)';
   if (t.cat === 'sliding') return 'направляющая — к крыше или полке над дверью';
   if (['bedLift', 'tableFold', 'tableSlide'].includes(type)) return 'механизм — к основанию под деталью или к стене за ней';
   return 'корпус механизма — к боковине за фасадом';
@@ -315,6 +336,17 @@ export function findBase(hw, it, items, reach = 40, only = null) {
       if (side === 'R' && !(p.x + p.w >= it.x + it.w - 60 && p.x <= it.x + it.w + 5)) continue;
       if (side.endsWith('*') && ovl(p.x, p.x + p.w, it.x - 5, it.x + it.w + 5) <= 0) continue;
       consider(p, gap);
+    }
+  } else if (t.cat === 'slides' && slideMount(it) !== 'front') {
+    // внешняя шина — на ближайшую вертикальную деталь корпуса сбоку; нужный зазор между ними — 13 мм
+    for (const p of cands) {
+      if (thinAxis(p) !== 'x' || ovl(p.y, p.y + p.h, it.y - 30, it.y + it.h + 30) < 10 || ovl(p.z, p.z + p.d, it.z, it.z + it.d) < 50) continue;
+      for (const out of [1, -1]) {
+        const raw = out > 0 ? p.x - (it.x + it.w) : it.x - (p.x + p.w);
+        if (raw < -0.5) continue;
+        const g = Math.abs(raw - 13);
+        if (g <= reach && (!best || g < best.gap)) best = { part: p, gap: g };
+      }
     }
   } else if (t.cat === 'slides') {
     const b = linkedBox(it, items) || { x0: it.x + 13, x1: it.x + it.w - 13, z0: it.z - 450, z1: it.z };
@@ -342,6 +374,10 @@ export function snapDelta(hw, it, base) {
   if (t.cat === 'hinges' || FRONT_BASED.includes(hw.type)) return [0, 0, r1(base.z + base.d - it.z)];
   if (['bedLift', 'tableSlide'].includes(hw.type) && thinAxis(base) === 'y') return [0, r1(base.y + base.h - it.y), 0];
   if (hw.type === 'tableFold' && thinAxis(base) === 'z') return [0, 0, r1(base.z + base.d - it.z)];
+  if (t.cat === 'slides' && slideMount(it) !== 'front' && thinAxis(base) === 'x') {   // зазор 13 мм между ящиком и корпусом
+    const out = base.x + base.w / 2 > it.x + it.w / 2 ? 1 : -1, raw = out > 0 ? base.x - (it.x + it.w) : it.x - (base.x + base.w);
+    return slideMount(it) === 'side' ? [r1(out * (raw - 13)), 0, 0] : [0, 0, 0];
+  }
   return [0, 0, 0];
 }
 // Боковина корпуса, к которой крепится петля (сторона Б); без присоединения — ищем ту, что стоит вплотную
@@ -525,6 +561,21 @@ function visuals0(hw, it, items, siblings) {
     for (const x of hw.sides === 'L' ? [it.x + 15] : hw.sides === 'R' ? [it.x + it.w - 45] : [it.x + 15, it.x + it.w - 45]) {
       add(box(x, top - 160, back - 140, 30, 150, 120, MAT.grey));
       add(box(x + 5, top - 40, back - 20, 20, 30, 18, MAT.metal), 'attach');
+    }
+  } else if (t.cat === 'slides' && slideMount(it) === 'side') {
+    // одна направляющая: внутренняя шина на боковине ящика, внешняя — на корпусе (13 мм), средняя — половина хода
+    const out = slideOut(hw, it, items), len = slideLen(hw, it, items), z1 = it.z + it.d - (+hw.setback || 0), z0 = z1 - len;
+    const H = t.boxSides ? Math.min(it.h, 90) : 45, yc = it.y + (+hw.level > 0 ? +hw.level : it.h / 2), y0 = yc - H / 2;
+    const face = out > 0 ? it.x + it.w : it.x, at = (a, w) => (out > 0 ? face + a : face - a - w);
+    add(box(at(8.5, 4.5), y0, z0, 4.5, H, len, MAT.metal));                                            // внешняя — на корпусе
+    if (t.ext === 1) add(box(at(4.5, 4), y0 + 3, z0, 4, H - 6, len, MAT.steel), 'self', { factor: 0.5 });
+    add(box(at(0, 4.5), y0 + 6, z0, 4.5, H - 12, len, MAT.chrome), 'attach');                        // внутренняя — с ящиком
+  } else if (t.cat === 'slides' && slideMount(it) === 'bottom') {
+    // скрытые (или любые) под дном: пара шин у боковых краёв дна
+    const len = slideLen(hw, it, items), z1 = it.z + it.d - (+hw.setback || 0), z0 = z1 - len;
+    for (const x of [it.x + 8, it.x + it.w - 33]) {
+      add(box(x, it.y - 18, z0, 25, 14, len, MAT.metal));
+      add(box(x + 3, it.y - 13, z0, 19, 12, len, MAT.steel), 'attach');
     }
   } else if (t.cat === 'slides') {
     const b = linkedBox(it, items) || { x0: it.x + 20, x1: it.x + it.w - 20, y0: it.y + 40, y1: it.y + it.h - 40, z0: back - 450, z1: back };
