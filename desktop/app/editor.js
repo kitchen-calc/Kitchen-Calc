@@ -696,10 +696,11 @@ renderer.domElement.addEventListener('dblclick', e => {
   if (!hit) return;
   const it = item(hit);
   if (solid(it.id)) { sel.clear(); groupItems(it.g).forEach(i => sel.add(i.id)); openGroup = 0; selectionChanged(); return status(`«${group(it.g).name}» — один предмет: детали не разделяются. Чтобы менять отдельные детали — в свойствах «Как объединено: Сборка» или «Разобрать»`); }
+  if ((sel.size === 1 && sel.has(it.id)) || (!it.g && openGroup === 0)) return partEditor(it.id);   // уже выбрана — открываем окно детали
   openGroup = it.g || 0;
   sel.clear(); sel.add(it.id);
   selectionChanged();
-  if (it.g) status(`Модуль «${group(it.g).name}» открыт: выбирайте отдельные детали. Клик мимо — выйти.`);
+  if (it.g) status(`Модуль «${group(it.g).name}» открыт: выбирайте отдельные детали. Двойной клик по детали ещё раз — окно детали. Клик мимо — выйти.`);
 });
 function pick(e) {
   const r = renderer.domElement.getBoundingClientRect();
@@ -1172,6 +1173,22 @@ function kindOfSelection() {
   if (g && list.every(i => i.g === g) && groupItems(g).length === list.length) return { type: 'group', g: group(g), list };
   return { type: 'multi', list };
 }
+// Всё о детали: свойства, размеры, обработка, фурнитура — общее для правой панели и окна детали
+function itemPanel(i) {
+  return `<div class="sec"><b>Деталь</b>${fld('Название', 'name', label(i), { text: true })}
+      <div class="row2">${fld('Тип', 'kind', i.kind, { options: Object.entries(KINDS) })}${fld('Материал', 'mat', i.mat, { options: matOptions() })}</div>
+      <div class="btns"><button data-cmd="paint" title="Каталог декоров: кликните цвет, потом деталь">🪣 Цвет из каталога (${DECORS.length})</button></div></div>
+      <div class="sec"><b>Размеры, мм</b><div class="row">${fld('Ширина (X)', 'w', i.w)}${fld('Высота (Y)', 'h', i.h)}${fld('Глубина (Z)', 'd', i.d)}</div></div>
+      <div class="sec"><b>Положение, мм</b><div class="row">${fld('X слева', 'x', i.x)}${fld('Y от пола', 'y', i.y)}${fld('Z от стены', 'z', i.z)}</div></div>
+      <div class="sec"><b>Обработка${(i.ops || []).length ? ` (${i.ops.length})` : ''}</b>
+      ${(i.ops || []).map((o, k) => `<div class="op"><span>${k + 1}. ${esc(describeOp(o, i))}</span><button data-op-edit="${k}" title="Изменить">✎</button><button data-op-del="${k}" title="Удалить">✕</button></div>`).join('') || '<div class="note">Отверстий и вырезов нет.</div>'}
+      <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез / скругление угла</button><button data-cmd="op-shape" title="Любая форма: точки, острые или скруглённые углы, плавная кривая">＋ Вырез по точкам</button></div>
+      <div class="btns"><button data-cmd="measure-hole" title="Наведите мышь на деталь — видно расстояния до краёв, клик ставит отверстие">📏 Разметить отверстие</button><button data-cmd="measure-cut" title="Клик ставит левый нижний угол выреза">📏 Разметить вырез</button><button class="accent" data-cmd="drawing">Чертёж</button></div></div>
+      <div class="sec"><b>Фурнитура${hwOf(i.id).length ? ` (${hwOf(i.id).length})` : ''}</b>
+      ${hwOf(i.id).map(h => `<div class="op hwrow"><span>${esc(describeHw(h, i))}${baseNeeded(h.type) ? (h.base && item(h.base) ? `<br><small class="base">🔗 сторона Б — ${esc(who(item(h.base)))}</small>` : '<br><small class="warn">⚠ вторая сторона свободна</small>') : ''}</span>${hasAction(h.type) ? `<button class="accent" data-hw-act="${h.id}">${actionLabels(h.type)[(hwState.get(h.id) || { to: 0 }).to > 0 ? 1 : 0]}</button>` : '<i></i>'}<button data-hw-edit="${h.id}" title="Изменить">✎</button><button data-hw-place="${h.id}" title="Где стоит — окно с видом детали">📍</button><button data-hw-del="${h.id}" title="Удалить">✕</button>${baseNeeded(h.type) ? `<button data-hw-base="${h.id}" title="Присоединить вторую сторону к другой детали (магнит)">🧲</button>` : ''}</div>`).join('') || '<div class="note">Фурнитуры нет.</div>'}
+      ${i.link ? `<div class="note">Двигается вместе со связанными деталями (${P.items.filter(x => x.link === i.link).length} шт.).</div>` : ''}
+      <div class="btns"><button class="accent" data-cmd="hw">＋ Фурнитура</button></div></div>`;
+}
 function refreshInspector() {
   const k = kindOfSelection();
   const title = document.getElementById('inspTitle');
@@ -1190,19 +1207,7 @@ function refreshInspector() {
   } else if (k.type === 'item') {
     const i = k.it;
     title.textContent = 'Деталь';
-    h += `<div class="sec"><b>Деталь</b>${fld('Название', 'name', label(i), { text: true })}
-      <div class="row2">${fld('Тип', 'kind', i.kind, { options: Object.entries(KINDS) })}${fld('Материал', 'mat', i.mat, { options: matOptions() })}</div>
-      <div class="btns"><button data-cmd="paint" title="Каталог декоров: кликните цвет, потом деталь">🪣 Цвет из каталога (${DECORS.length})</button></div></div>
-      <div class="sec"><b>Размеры, мм</b><div class="row">${fld('Ширина (X)', 'w', i.w)}${fld('Высота (Y)', 'h', i.h)}${fld('Глубина (Z)', 'd', i.d)}</div></div>
-      <div class="sec"><b>Положение, мм</b><div class="row">${fld('X слева', 'x', i.x)}${fld('Y от пола', 'y', i.y)}${fld('Z от стены', 'z', i.z)}</div></div>
-      <div class="sec"><b>Обработка${(i.ops || []).length ? ` (${i.ops.length})` : ''}</b>
-      ${(i.ops || []).map((o, k) => `<div class="op"><span>${k + 1}. ${esc(describeOp(o, i))}</span><button data-op-edit="${k}" title="Изменить">✎</button><button data-op-del="${k}" title="Удалить">✕</button></div>`).join('') || '<div class="note">Отверстий и вырезов нет.</div>'}
-      <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез / скругление угла</button><button data-cmd="op-shape" title="Любая форма: точки, острые или скруглённые углы, плавная кривая">＋ Вырез по точкам</button></div>
-      <div class="btns"><button data-cmd="measure-hole" title="Наведите мышь на деталь — видно расстояния до краёв, клик ставит отверстие">📏 Разметить отверстие</button><button data-cmd="measure-cut" title="Клик ставит левый нижний угол выреза">📏 Разметить вырез</button><button class="accent" data-cmd="drawing">Чертёж</button></div></div>
-      <div class="sec"><b>Фурнитура${hwOf(i.id).length ? ` (${hwOf(i.id).length})` : ''}</b>
-      ${hwOf(i.id).map(h => `<div class="op hwrow"><span>${esc(describeHw(h, i))}${baseNeeded(h.type) ? (h.base && item(h.base) ? `<br><small class="base">🔗 сторона Б — ${esc(who(item(h.base)))}</small>` : '<br><small class="warn">⚠ вторая сторона свободна</small>') : ''}</span>${hasAction(h.type) ? `<button class="accent" data-hw-act="${h.id}">${actionLabels(h.type)[(hwState.get(h.id) || { to: 0 }).to > 0 ? 1 : 0]}</button>` : '<i></i>'}<button data-hw-edit="${h.id}" title="Изменить">✎</button><button data-hw-place="${h.id}" title="Где стоит — окно с видом детали">📍</button><button data-hw-del="${h.id}" title="Удалить">✕</button>${baseNeeded(h.type) ? `<button data-hw-base="${h.id}" title="Присоединить вторую сторону к другой детали (магнит)">🧲</button>` : ''}</div>`).join('') || '<div class="note">Фурнитуры нет.</div>'}
-      ${i.link ? `<div class="note">Двигается вместе со связанными деталями (${P.items.filter(x => x.link === i.link).length} шт.).</div>` : ''}
-      <div class="btns"><button class="accent" data-cmd="hw">＋ Фурнитура</button></div></div>
+    h += `<div class="btns"><button class="accent" data-cmd="part-edit" title="Всё о детали в одном окне (или двойной клик по выбранной детали, Enter)">✎ Изменить в окне</button></div>${itemPanel(i)}
       <div class="sec"><b>Действия</b><div class="btns"><button data-cmd="rot-y">⟲ Повернуть</button><button data-cmd="rot-z">⤾ Положить</button><button data-cmd="duplicate">Копия</button>
       ${i.g ? '<button data-cmd="ungroup">Вынуть из модуля</button>' : ''}<button class="danger" data-cmd="delete">Удалить</button></div></div>`;
   } else {
@@ -1253,7 +1258,8 @@ function refreshInspectorValues() {
   if (k.type === 'item') { set('x', k.it.x); set('y', k.it.y); set('z', k.it.z); }
   else if (k.type !== 'none') { const b = bbox(k.list); set('bx', b.x0); set('by', b.y0); set('bz', b.z0); }
 }
-insp.addEventListener('change', e => {
+insp.addEventListener('change', e => inspChange(e));
+function inspChange(e) {
   const key = e.target.dataset.k; if (!key || key === '-') return;
   const raw = e.target.value, v = parseFloat(String(raw).replace(',', '.'));
   const k = kindOfSelection();
@@ -1271,7 +1277,7 @@ insp.addEventListener('change', e => {
     if (key === 'z') return moveSel(0, 0, v - i.z);
     const ms = maxSize(i, key, r1(v));
     if (ms.hit && ms.v <= i[key]) { status(`Не помещается: мешает ${who(ms.hit)}. Максимум — ${fmt(i[key])} мм`); return refreshInspector(); }
-    commit(() => { i[key] = r1(ms.v); });
+    commit(() => { i[key] = r1(ms.v); hwOf(i.id).forEach(h => { if (h.drill !== '0' || HW_TYPES[h.type].cat === 'hinges') hwSync(h, i); }); });   // отверстия фурнитуры — по новому размеру
     if (ms.hit) status(`Больше не помещается — мешает ${who(ms.hit)}. Поставлен максимум: ${fmt(ms.v)} мм`);
     return;
   }
@@ -1285,7 +1291,7 @@ insp.addEventListener('change', e => {
   if (key === 'bx' && num()) return moveSel(v - b.x0, 0, 0);
   if (key === 'by' && num()) return moveSel(0, v - b.y0, 0);
   if (key === 'bz' && num()) return moveSel(0, 0, v - b.z0);
-});
+}
 insp.addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); e.stopPropagation(); });
 
 function rebuildGroupFromInspector() {
@@ -1315,6 +1321,7 @@ function rebuildGroupFromInspector() {
 // ---------------------------------------------------------------- диалоги
 const modal = document.getElementById('modal');
 function openDialog(title, body, foot, wide) {
+  dlgIsPart = false;
   document.getElementById('dlgTitle').textContent = title;
   const b = document.getElementById('dlgBody');
   b.oninput = b.onchange = b.onclick = b.onkeydown = null;
@@ -1322,9 +1329,17 @@ function openDialog(title, body, foot, wide) {
   b.innerHTML = body;
   document.getElementById('dlgFoot').innerHTML = foot;
   modal.querySelector('.dialog').classList.toggle('wide', !!wide);
+  modal.querySelector('.dialog').classList.remove('xwide');
+  document.getElementById('dlgFoot').onclick = null;
   modal.hidden = false;
 }
-const closeDialog = () => { modal.hidden = true; };
+// Окно детали — «домашнее»: окна, открытые из него (отверстие, вырез, фурнитура…), после закрытия возвращают в него
+let dlgIsPart = false, partEditorId = 0;
+const closeDialog = () => {
+  modal.hidden = true;
+  if (!dlgIsPart && partEditorId && item(partEditorId)) setTimeout(() => { if (modal.hidden) partEditor(partEditorId); }, 0);
+  else partEditorId = 0;
+};
 modal.addEventListener('click', e => { if (e.target === modal || e.target.closest('[data-close]')) closeDialog(); });
 
 // Комната до мебели: готовая форма, стены по длинам и поворотам или нарисовать мышью; потом высота, проёмы, колонны.
@@ -1732,7 +1747,8 @@ function shapeDialog(index = -1) {
   };
   draw();
 }
-insp.addEventListener('click', e => {
+insp.addEventListener('click', e => inspClick(e));
+function inspClick(e) {
   const ha = e.target.closest('[data-hw-act]'), he = e.target.closest('[data-hw-edit]'), hd = e.target.closest('[data-hw-del]');
   if (ha) { toggleHw([+ha.dataset.hwAct]); setTimeout(refreshInspector, 50); return; }
   if (he) { const hw = P.hw.find(h => h.id === +he.dataset.hwEdit); if (hw) hwForm(item(hw.target), hw, false); return; }
@@ -1745,7 +1761,7 @@ insp.addEventListener('click', e => {
   const k = kindOfSelection(); if (k.type !== 'item') return;
   if (ed) opDialog(null, +ed.dataset.opEdit);
   if (del) commit(() => { k.it.ops.splice(+del.dataset.opDel, 1); });
-});
+}
 
 // ---------------------------------------------------------------- фурнитура: каталог и настройки
 // Отверстия под фурнитуру: убрать старые этой фурнитуры (на фасаде и на боковине), поставить новые
@@ -1916,6 +1932,32 @@ function hwPlace(it, hw0, isNew, warn = '') {
   };
   draw();
 }
+// ---------------------------------------------------------------- окно детали
+function partEditor(id) {
+  const it = item(id); if (!it) return;
+  if (!(sel.size === 1 && sel.has(id))) { sel.clear(); sel.add(id); openGroup = it.g || 0; selectionChanged(); }
+  openDialog('', '', `<button class="danger" data-pe="delete">Удалить деталь</button><span class="grow"></span><button data-cmd="drawing">📐 Чертёж на печать</button><button class="accent" data-close>Готово</button>`, true);
+  dlgIsPart = true; partEditorId = id;
+  modal.querySelector('.dialog').classList.add('xwide');
+  const body = document.getElementById('dlgBody');
+  body.onclick = e => {
+    const c = e.target.closest('[data-cmd]');
+    if (c && ['measure-hole', 'measure-cut', 'paint'].includes(c.dataset.cmd)) { partEditorId = 0; closeDialog(); return; }   // эти инструменты работают в 3D
+    inspClick(e);
+  };
+  body.onchange = e => inspChange(e);
+  body.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter' && e.target.tagName === 'INPUT') e.target.blur(); if (e.key === 'Escape') closeDialog(); };
+  document.getElementById('dlgFoot').onclick = e => { if (e.target.closest('[data-pe="delete"]')) { partEditorId = 0; closeDialog(); deleteSel(); } };
+  renderPartEditor();
+}
+function renderPartEditor() {
+  const it = item(partEditorId); if (!it) { partEditorId = 0; closeDialog(); return; }
+  const g = it.g && group(it.g);
+  document.getElementById('dlgTitle').textContent = `Деталь: ${label(it)}${g ? ` · ${g.name}` : ''} · ${dims(it)} мм`;
+  const body = document.getElementById('dlgBody'), sc = body.querySelector('.pe-side')?.scrollTop || 0;
+  body.innerHTML = `<div class="partgrid"><div class="op-preview pe-draw">${drawingSVG(it, { width: 680, height: 540 }).svg}</div><div class="inspector pe-side">${itemPanel(it)}</div></div>`;
+  body.querySelector('.pe-side').scrollTop = sc;
+}
 function hwDelete(id) {
   const hw = P.hw.find(h => h.id === id); if (!hw) return;
   commit(() => {
@@ -2082,7 +2124,7 @@ const COMMANDS = {
   undo, redo, duplicate: duplicateSel, delete: deleteSel, group: groupSel, ungroup: ungroupSel, 'apply-hinges': applyHingesFromInspector,
   'rot-y': () => rotateSel('y'), 'rot-z': () => rotateSel('z'), 'rebuild-group': rebuildGroupFromInspector,
   fit, spec: specDialog, shot: screenshot, drawing: () => drawingDialog(selItems()), drawings: drawingsCommand, 'drawing-module': drawingsCommand,
-  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'), 'op-shape': () => shapeDialog(),
+  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'), 'part-edit': () => { const k = kindOfSelection(); if (k.type === 'item') partEditor(k.it.id); else status('Выберите одну деталь'); }, 'op-shape': () => shapeDialog(),
   hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false), boxsel: () => setBoxMode(!boxMode),
   'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleHw(P.hw.filter(h => ids.includes(h.target)).map(h => h.id)); },
   'hw-toggle-all': () => toggleHw(P.hw.map(h => h.id)),
@@ -2102,6 +2144,7 @@ document.addEventListener('keydown', e => {
   };
   if (ctrl && map[k]) { e.preventDefault(); map[k](); return; }
   if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSel(); }
+  else if (e.key === 'Enter') { const k = kindOfSelection(); if (k.type === 'item') partEditor(k.it.id); }
   else if (e.key === 'Escape') { if (bucket.open) closePalette(); else if (basePick) { basePick = null; status('Присоединение отменено'); } else if (measure) stopMeasure(); else { sel.clear(); openGroup = 0; selectionChanged(); } }
   else if (e.key === 'ArrowLeft') { e.preventDefault(); moveSel(-step, 0, 0); }
   else if (e.key === 'ArrowRight') { e.preventDefault(); moveSel(step, 0, 0); }
@@ -2123,6 +2166,7 @@ function status(t) {
 }
 function refreshUI() {
   refreshTree(); refreshInspector();
+  if (!modal.hidden && dlgIsPart) renderPartEditor();
   document.querySelector('[data-cmd="undo"]').disabled = !undoStack.length;
   document.querySelector('[data-cmd="redo"]').disabled = !redoStack.length;
   document.getElementById('vpHint').textContent = measure
