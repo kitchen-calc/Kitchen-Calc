@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween, plateOps, baseNeeded, baseHint, findBase, snapDelta } from './hardware.js';
+import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween, plateOps, hingeSpots, baseNeeded, baseHint, findBase, snapDelta } from './hardware.js';
 import { moduleSVG, overviewSVG } from './drawings.js';
 import { DECOR, DECORS, TABS, texture as decorTexture, thumb as decorThumb, surfaceParams, sheetLayout, applySheetUV, onTextureUpdate } from './materials.js';
 import { normRoom, buildRoom3D, roomObstacles, roomSVG, ROOM_PRESETS, OPENING_TYPES, wallsToPts, ptsToWalls, checkPts, checkOpening, tidyPts, wallLen } from './room.js';
@@ -238,7 +238,7 @@ function rebuild() {
 // ---------------------------------------------------------------- фурнитура: вид и действия (открыть / выдвинуть / поднять)
 const hwGroup = new THREE.Group(); scene.add(hwGroup);
 const hwState = new Map();          // id фурнитуры → { t: 0…1 сейчас, to: куда едем }
-let moverByItem = new Map();        // id детали → фурнитура, которая её двигает
+let moverByItem = new Map();        // id детали → список фурнитуры, которая её двигает (по очереди)
 const hwOf = id => P.hw.filter(h => h.target === id);
 const hwT = id => (hwState.get(id) || { t: 0 }).t;
 const fastMat = { screw: new THREE.MeshStandardMaterial({ color: 0xa3a8af, metalness: 0.35, roughness: 0.4 }), head: new THREE.MeshStandardMaterial({ color: 0xc3c7cc, metalness: 0.35, roughness: 0.35 }) };
@@ -278,7 +278,7 @@ function buildHardware() {
   hwGroup.clear();
   buildFasteners();
   moverByItem = new Map();
-  for (const hw of P.hw) if (!solid(hw.target)) for (const id of movingIds(hw, P.items)) if (!moverByItem.has(id)) moverByItem.set(id, hw);
+  for (const hw of P.hw) if (!solid(hw.target)) for (const id of movingIds(hw, P.items)) { if (!moverByItem.has(id)) moverByItem.set(id, []); moverByItem.get(id).push(hw); }
   for (const hw of P.hw) {
     const it = item(hw.target); if (!it) continue;
     for (const v of hwVisuals(hw, it, P.items, hwOf(it.id))) {
@@ -293,7 +293,8 @@ function buildHardware() {
 }
 const _M = new THREE.Matrix4(), _I = new THREE.Matrix4(), _L = new THREE.Matrix4();
 // Чем деталь держится: фурнитура, которая её двигает, иначе любая фурнитура на ней со стороной Б
-function holderOf(id) { return moverByItem.get(id) || P.hw.find(h => h.target === id && h.base); }
+const moves = (hw, id) => (moverByItem.get(id) || []).includes(hw);
+function holderOf(id) { const ms = moverByItem.get(id) || []; return ms.find(h => h.base) || ms[0] || P.hw.find(h => h.target === id && h.base); }
 // Положение детали с учётом цепочки: сначала двигается её сторона Б (корпус, дверь…), потом её собственная фурнитура.
 // Например, дверца на двери: открыли большую дверь — маленькая едет с ней и открывается относительно неё.
 function itemPose(id, out, seen = new Set()) {
@@ -301,7 +302,8 @@ function itemPose(id, out, seen = new Set()) {
   if (!hw || seen.has(id)) return null;
   seen.add(id);
   const parent = hw.base ? itemPose(hw.base, new THREE.Matrix4(), seen) : null;
-  const local = moverByItem.get(id) === hw && hwT(hw.id) ? poseMatrix(hwSteps(hw, item(hw.target), P.items), hwT(hw.id), _L) : null;
+  let local = null;   // все механизмы детали по очереди: сначала первый поставленный, потом следующий
+  for (const h of moverByItem.get(id) || []) if (hwT(h.id)) { const M = poseMatrix(hwSteps(h, item(h.target), P.items), hwT(h.id), new THREE.Matrix4()); local = local ? local.premultiply(M) : M; }
   if (!parent && !local) return null;
   out.identity();
   if (local) out.copy(local);
@@ -318,7 +320,7 @@ function applyPoses() {
   for (const o of hwGroup.children) {
     const u = o.userData; if (!u.hw) continue;
     const hw = P.hw.find(h => h.id === u.hw); if (!hw) continue;
-    const ref = hw.base || (moverByItem.get(hw.target) === hw ? 0 : hw.target);   // на чём держится сторона Б
+    const ref = hw.base || (moves(hw, hw.target) ? 0 : hw.target);   // на чём держится сторона Б
     if (u.mode === 'attach') {                     // сторона А: едет вместе с деталью
       o.matrix.copy(u.base).premultiply(poseOf(hw.target)); o.matrixWorldNeedsUpdate = true;
     } else if (u.mode === 'static') {              // сторона Б (планка, корпус механизма): держится за свою деталь
@@ -1198,7 +1200,7 @@ function refreshInspector() {
       <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез / скругление угла</button></div>
       <div class="btns"><button data-cmd="measure-hole" title="Наведите мышь на деталь — видно расстояния до краёв, клик ставит отверстие">📏 Разметить отверстие</button><button data-cmd="measure-cut" title="Клик ставит левый нижний угол выреза">📏 Разметить вырез</button><button class="accent" data-cmd="drawing">Чертёж</button></div></div>
       <div class="sec"><b>Фурнитура${hwOf(i.id).length ? ` (${hwOf(i.id).length})` : ''}</b>
-      ${hwOf(i.id).map(h => `<div class="op hwrow"><span>${esc(describeHw(h, i))}${baseNeeded(h.type) ? (h.base && item(h.base) ? `<br><small class="base">🔗 сторона Б — ${esc(who(item(h.base)))}</small>` : '<br><small class="warn">⚠ вторая сторона свободна</small>') : ''}</span>${hasAction(h.type) ? `<button class="accent" data-hw-act="${h.id}">${actionLabels(h.type)[(hwState.get(h.id) || { to: 0 }).to > 0 ? 1 : 0]}</button>` : '<i></i>'}<button data-hw-edit="${h.id}" title="Изменить">✎</button><button data-hw-del="${h.id}" title="Удалить">✕</button>${baseNeeded(h.type) ? `<button data-hw-base="${h.id}" title="Присоединить вторую сторону к другой детали (магнит)">🧲</button>` : ''}</div>`).join('') || '<div class="note">Фурнитуры нет.</div>'}
+      ${hwOf(i.id).map(h => `<div class="op hwrow"><span>${esc(describeHw(h, i))}${baseNeeded(h.type) ? (h.base && item(h.base) ? `<br><small class="base">🔗 сторона Б — ${esc(who(item(h.base)))}</small>` : '<br><small class="warn">⚠ вторая сторона свободна</small>') : ''}</span>${hasAction(h.type) ? `<button class="accent" data-hw-act="${h.id}">${actionLabels(h.type)[(hwState.get(h.id) || { to: 0 }).to > 0 ? 1 : 0]}</button>` : '<i></i>'}<button data-hw-edit="${h.id}" title="Изменить">✎</button><button data-hw-place="${h.id}" title="Где стоит — окно с видом детали">📍</button><button data-hw-del="${h.id}" title="Удалить">✕</button>${baseNeeded(h.type) ? `<button data-hw-base="${h.id}" title="Присоединить вторую сторону к другой детали (магнит)">🧲</button>` : ''}</div>`).join('') || '<div class="note">Фурнитуры нет.</div>'}
       ${i.link ? `<div class="note">Двигается вместе со связанными деталями (${P.items.filter(x => x.link === i.link).length} шт.).</div>` : ''}
       <div class="btns"><button class="accent" data-cmd="hw">＋ Фурнитура</button></div></div>
       <div class="sec"><b>Действия</b><div class="btns"><button data-cmd="rot-y">⟲ Повернуть</button><button data-cmd="rot-z">⤾ Положить</button><button data-cmd="duplicate">Копия</button>
@@ -1645,6 +1647,8 @@ insp.addEventListener('click', e => {
   if (ha) { toggleHw([+ha.dataset.hwAct]); setTimeout(refreshInspector, 50); return; }
   if (he) { const hw = P.hw.find(h => h.id === +he.dataset.hwEdit); if (hw) hwForm(item(hw.target), hw, false); return; }
   if (hd) { hwDelete(+hd.dataset.hwDel); return; }
+  const hp = e.target.closest('[data-hw-place]');
+  if (hp) { const hw = P.hw.find(h => h.id === +hp.dataset.hwPlace); if (hw) hwPlace(item(hw.target), hw, false); return; }
   const hb = e.target.closest('[data-hw-base]');
   if (hb) { startBasePick(+hb.dataset.hwBase); return; }
   const ed = e.target.closest('[data-op-edit]'), del = e.target.closest('[data-op-del]');
@@ -1692,8 +1696,10 @@ function hwForm(it, hw, isNew) {
   document.getElementById('hwOk').onclick = () => {
     const nh = { ...hw };
     body.querySelectorAll('[data-k]').forEach(el => { const fd = HW_FIELDS[el.dataset.k]; nh[el.dataset.k] = fd.num ? (parseFloat(String(el.value).replace(',', '.')) || 0) : el.value; });
-    const why = checkTarget(nh.type, it) || conflict(nh, hwOf(it.id).filter(h => h.id !== hw.id));
+    const why = checkTarget(nh.type, it);
     if (why) { document.getElementById('hwWarn').textContent = why; return; }
+    const others = hwOf(it.id).filter(h => h.id !== hw.id), cl = hwClash(nh, it, others);
+    if (cl) return hwPlace(it, nh, isNew, `Здесь уже стоит «${HW_TYPES[cl.type].name}» — выберите свободное место`);
     closeDialog();
     let msg = '';
     commit(() => {
@@ -1734,6 +1740,91 @@ function finishBasePick(partId) {
   let msg = '';
   commit(() => { msg = attachBase(hw, it, b); hwSync(hw, it); });
   status(msg[0] === 'к' ? 'Не присоединено: ' + msg : 'Присоединено: ' + msg);
+}
+// ---------------------------------------------------------------- где стоит фурнитура: окно с видом детали, перетаскивание, проверка наложений
+// Объём фурнитуры (в закрытом положении) — набор коробок; две фурнитуры на детали не должны входить друг в друга
+function hwBoxes(hw, it) {
+  return hwVisuals(hw, it, P.items, hwOf(it.id).filter(h => h.id !== hw.id)).map(v => { v.obj.updateMatrixWorld(true); return new THREE.Box3().setFromObject(v.obj).expandByScalar(-0.6); }).filter(b => !b.isEmpty());
+}
+function hwClash(hw, it, others) {
+  const mine = hwBoxes(hw, it);
+  for (const o of others) for (const b of hwBoxes(o, it)) if (mine.some(a => a.intersectsBox(b))) return o;
+  return null;
+}
+function hwPlace(it, hw0, isNew, warn = '') {
+  const hw = { ...hw0 }, fr = frame(it), others = hwOf(it.id).filter(h => h.id !== hw.id);
+  const t = HW_TYPES[hw.type], hinge = t.cat === 'hinges', along = hw.side === 'L' || hw.side === 'R' ? 'v' : 'u';
+  const org = { x: it.x, y: it.y, z: it.z };
+  const W = 640, H = 430, m = 60, s = Math.min((W - 2 * m) / fr.SU, (H - 2 * m) / fr.SV);
+  const X = u => m + u * s, Y = v => H - m - v * s;
+  // проекция коробок на пласть детали (вид со стороны A)
+  const rects = (h) => hwBoxes(h, it).map(b => ({ u0: b.min[fr.U] - org[fr.U], u1: b.max[fr.U] - org[fr.U], v0: b.min[fr.V] - org[fr.V], v1: b.max[fr.V] - org[fr.V] }));
+  openDialog(`Где стоит: ${t.name}`, `<div class="note">Тяните фурнитуру мышью или вводите сдвиг. Стрелки — по 1 мм, с <kbd>Shift</kbd> — по 10 мм.${hinge ? ' Каждую петлю можно тянуть отдельно вдоль кромки.' : ''} Серым — другая фурнитура этой детали.</div>
+    <div class="op-preview" id="hpPrev"></div>
+    <div class="grid4">${fld('Сдвиг по ' + fr.U.toUpperCase() + ', мм', 'du', +hw.du || 0)}${fld('Сдвиг по ' + fr.V.toUpperCase() + ', мм', 'dv', +hw.dv || 0)}${hinge ? fld('Петли, мм от края', 'positions', hingeSpots({ ...hw, du: 0, dv: 0 }, it).map(p => Math.round(p[along])).join(', '), { text: true }) : ''}</div>
+    <div class="warn" id="hpWarn"></div>`,
+    `<button data-close>Отмена</button><button id="hpReset">Сбросить сдвиг</button><button class="accent" id="hpOk">${isNew ? 'Поставить' : 'Готово'}</button>`, true);
+  const body = document.getElementById('dlgBody'), prev = document.getElementById('hpPrev'), q = k => body.querySelector(`[data-k="${k}"]`);
+  let clash = null;
+  function draw() {
+    clash = hwClash(hw, it, others);
+    let g = `<rect x="${X(0)}" y="${Y(fr.SV)}" width="${fr.SU * s}" height="${fr.SV * s}" fill="#f6efe2" stroke="#1d1a16" stroke-width="1.5"/>`;
+    for (const o of it.ops || []) if (o.type === 'hole' && (o.face === 'A' || o.face === 'B') && !String(o.tag || '').startsWith('hw' + hw.id)) g += `<circle cx="${X(o.u)}" cy="${Y(o.v)}" r="${Math.max(1.5, o.dia / 2 * s)}" fill="none" stroke="#8a8378" stroke-dasharray="2 2"/>`;
+    for (const o of others) for (const r of rects(o)) g += `<rect x="${X(r.u0)}" y="${Y(r.v1)}" width="${(r.u1 - r.u0) * s}" height="${(r.v1 - r.v0) * s}" fill="${clash === o ? 'rgba(217,72,60,.35)' : 'rgba(120,115,105,.28)'}" stroke="${clash === o ? '#d9483c' : '#8a8378'}"/>`;
+    for (const r of rects(hw)) g += `<rect class="hpme" x="${X(r.u0)}" y="${Y(r.v1)}" width="${(r.u1 - r.u0) * s}" height="${(r.v1 - r.v0) * s}" fill="${clash ? 'rgba(217,72,60,.45)' : 'rgba(31,95,180,.35)'}" stroke="${clash ? '#d9483c' : '#1f5fb4'}" style="cursor:move"/>`;
+    if (hinge) hingeSpots(hw, it).forEach((p, k) => { g += `<circle cx="${X(p.u)}" cy="${Y(p.v)}" r="${p.c.dia / 2 * s}" fill="none" stroke="#1f5fb4" stroke-width="2"/><text x="${X(p.u) + 4}" y="${Y(p.v) - p.c.dia / 2 * s - 4}" font-size="11" fill="#1f5fb4">${Math.round(p[along])}</text>`; });
+    g += `<text x="${X(fr.SU / 2)}" y="${H - 18}" font-size="12" text-anchor="middle">${fmt(fr.SU)} мм</text><text x="18" y="${Y(fr.SV / 2)}" font-size="12" text-anchor="middle" transform="rotate(-90 18 ${Y(fr.SV / 2)})">${fmt(fr.SV)} мм</text>`;
+    prev.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Segoe UI, Arial">${g}</svg>`;
+    document.getElementById('hpWarn').textContent = warn || (clash ? `✕ Накладывается на «${HW_TYPES[clash.type].name}» — сдвиньте в свободное место` : '');
+    document.getElementById('hpWarn').className = clash || warn ? 'warn' : 'note';
+    if (!clash && !warn) document.getElementById('hpWarn').textContent = '✓ Место свободно';
+    warn = '';
+  }
+  const syncFields = () => { q('du').value = fmtIn(+hw.du || 0); q('dv').value = fmtIn(+hw.dv || 0); if (hinge) q('positions').value = hingeSpots({ ...hw, du: 0, dv: 0 }, it).map(p => Math.round(p[along])).join(', '); };
+  const toFace = e => { const svg = prev.querySelector('svg'), pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const p = pt.matrixTransform(svg.getScreenCTM().inverse()); return { u: (p.x - m) / s, v: (H - m - p.y) / s }; };
+  let drag = null;
+  prev.onpointerdown = e => {
+    e.preventDefault();
+    const f = toFace(e);
+    if (hinge) {   // ближайшая чашка — тянем её вдоль кромки
+      const sp = hingeSpots(hw, it); let k = -1, best = 1e9;
+      sp.forEach((p, i) => { const d = Math.hypot(p.u - f.u, p.v - f.v); if (d < best) { best = d; k = i; } });
+      if (best < 60) { drag = { cup: k, list: hingeSpots({ ...hw, du: 0, dv: 0 }, it).map(p => p[along]) }; prev.setPointerCapture(e.pointerId); return; }
+    }
+    if (e.target.classList.contains('hpme')) { drag = { f, du: +hw.du || 0, dv: +hw.dv || 0 }; prev.setPointerCapture(e.pointerId); }
+  };
+  prev.onpointermove = e => {
+    if (!drag) return;
+    const f = toFace(e);
+    if (drag.cup !== undefined) { drag.list[drag.cup] = Math.round(Math.max(30, Math.min((along === 'v' ? fr.SV : fr.SU) - 30, f[along] - (along === 'v' ? +hw.dv || 0 : +hw.du || 0)))); hw.place = 'manual'; hw.positions = drag.list.join(', '); }
+    else { hw.du = Math.round(drag.du + f.u - drag.f.u); hw.dv = Math.round(drag.dv + f.v - drag.f.v); }
+    syncFields(); draw();
+  };
+  prev.onpointerup = () => { drag = null; };
+  body.onchange = e => {
+    const k = e.target.dataset.k; if (!k) return;
+    if (k === 'positions') { hw.place = 'manual'; hw.positions = e.target.value; } else hw[k] = parseFloat(String(e.target.value).replace(',', '.')) || 0;
+    draw();
+  };
+  body.onkeydown = e => {
+    e.stopPropagation();
+    if (e.target.tagName === 'INPUT') return;
+    const st = e.shiftKey ? 10 : 1, d = { ArrowLeft: [-st, 0], ArrowRight: [st, 0], ArrowUp: [0, st], ArrowDown: [0, -st] }[e.key];
+    if (d) { e.preventDefault(); hw.du = (+hw.du || 0) + d[0]; hw.dv = (+hw.dv || 0) + d[1]; syncFields(); draw(); }
+  };
+  document.getElementById('hpReset').onclick = () => { hw.du = 0; hw.dv = 0; syncFields(); draw(); };
+  document.getElementById('hpOk').onclick = () => {
+    if (clash) { warn = `Нельзя: накладывается на «${HW_TYPES[clash.type].name}». Сдвиньте или удалите ту фурнитуру.`; return draw(); }
+    closeDialog();
+    let msg = '';
+    commit(() => {
+      if (isNew) { hw.id = nid(); P.hw.push(hw); if (baseNeeded(hw.type)) msg = attachBase(hw, it, null); }
+      else { const i = P.hw.findIndex(h => h.id === hw.id); P.hw[i] = hw; delete hw.auto; }
+      hwSync(hw, it);
+    });
+    status(`${isNew ? 'Поставлено' : 'Место изменено'}: ${describeHw(hw, it)}${msg ? ' · ' + msg : ''}`);
+  };
+  draw();
 }
 function hwDelete(id) {
   const hw = P.hw.find(h => h.id === id); if (!hw) return;
