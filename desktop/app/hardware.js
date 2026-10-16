@@ -273,8 +273,77 @@ function hingeSpots(hw, it) {
     return { u: p, v: cu, c };
   });
 }
-// Боковина корпуса, к которой крепится петля: стоит за фасадом у кромки петель
+// ---------------------------------------------------------------- две стороны фурнитуры
+// Сторона А — на детали, к которой фурнитуру поставили (чашка петли, кронштейн на фасаде, внутренняя шина).
+// Сторона Б — на другой детали (планка петли на боковине, корпус газлифта, внешняя шина, рельс купе).
+// Б ищется «магнитом»: ближайшая подходящая деталь; если она в пределах 40 мм — деталь А притягивается вплотную.
+const FRONT_BASED = ['gasLift', 'aventosHK', 'aventosHKXS', 'aventosHL', 'aventosHS', 'aventosHF', 'flapStay', 'wallBed', 'foldingDoor', 'damper', 'magnet', 'pushOpen', 'tipOnDrawer'];
+export function baseNeeded(type) {
+  const t = T[type];
+  return t.cat === 'hinges' || t.cat === 'slides' || t.cat === 'sliding' || FRONT_BASED.includes(type) || ['bedLift', 'tableFold', 'tableSlide'].includes(type);
+}
+export function baseHint(type) {
+  const t = T[type];
+  if (t.cat === 'hinges') return 'планка — к боковине корпуса за дверью (у кромки петель)';
+  if (t.cat === 'slides') return 'внешняя шина — к боковине корпуса рядом с коробом ящика';
+  if (t.cat === 'sliding') return 'направляющая — к крыше или полке над дверью';
+  if (['bedLift', 'tableFold', 'tableSlide'].includes(type)) return 'механизм — к основанию под деталью или к стене за ней';
+  return 'корпус механизма — к боковине за фасадом';
+}
+const ovl = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0);
+export function findBase(hw, it, items, reach = 40, only = null) {
+  const t = T[hw.type];
+  let best = null;
+  const consider = (p, gap) => { if (gap <= reach && gap >= -1 && (!best || gap < best.gap)) best = { part: p, gap: Math.max(0, gap) }; };
+  const cands = (only ? [only] : items).filter(p => p.id !== it.id && !(it.link && p.link === it.link));
+  const yOv = p => ovl(p.y, p.y + p.h, it.y, it.y + it.h) > 10;
+  if (t.cat === 'hinges' || FRONT_BASED.includes(hw.type)) {
+    const side = t.cat === 'hinges' || hw.type === 'foldingDoor' ? hw.side : (hw.type === 'gasLift' && hw.dir === 'down') || hw.type === 'flapStay' || hw.type === 'wallBed' ? 'B*' : 'T*';
+    for (const p of cands) {
+      const gap = it.z - (p.z + p.d);
+      if (side === 'T' || side === 'B') {
+        if (thinAxis(p) !== 'y' || ovl(p.x, p.x + p.w, it.x, it.x + it.w) < 20) continue;
+        if (Math.abs((side === 'T' ? p.y + p.h : p.y) - (side === 'T' ? it.y + it.h : it.y)) > 60) continue;
+        consider(p, gap); continue;
+      }
+      if (thinAxis(p) !== 'x' || !yOv(p)) continue;
+      if (side === 'L' && !(p.x + p.w >= it.x - 5 && p.x <= it.x + 60)) continue;
+      if (side === 'R' && !(p.x + p.w >= it.x + it.w - 60 && p.x <= it.x + it.w + 5)) continue;
+      if (side.endsWith('*') && ovl(p.x, p.x + p.w, it.x - 5, it.x + it.w + 5) <= 0) continue;
+      consider(p, gap);
+    }
+  } else if (t.cat === 'slides') {
+    const b = linkedBox(it, items) || { x0: it.x + 13, x1: it.x + it.w - 13, z0: it.z - 450, z1: it.z };
+    for (const p of cands) {
+      if (thinAxis(p) !== 'x' || !yOv(p) || ovl(p.z, p.z + p.d, b.z0, b.z1) < 50) continue;
+      consider(p, Math.min(Math.abs(b.x0 - (p.x + p.w)), Math.abs(p.x - b.x1)) - 13);
+    }
+  } else if (t.cat === 'sliding') {
+    for (const p of cands) {
+      if (thinAxis(p) !== 'y' || ovl(p.x, p.x + p.w, it.x, it.x + it.w) < 20 || ovl(p.z, p.z + p.d, it.z - 150, it.z + it.d + 150) <= 0) continue;
+      consider(p, p.y - (it.y + it.h));
+    }
+  } else if (['bedLift', 'tableFold', 'tableSlide'].includes(hw.type)) {
+    for (const p of cands) {
+      if (ovl(p.x, p.x + p.w, it.x, it.x + it.w) < 20) continue;
+      if (thinAxis(p) === 'y' && ovl(p.z, p.z + p.d, it.z, it.z + it.d) > 20) consider(p, it.y - (p.y + p.h));
+      else if (thinAxis(p) === 'z' && ovl(p.y, p.y + p.h, it.y - 400, it.y + it.h) > 0) consider(p, it.z - (p.z + p.d));
+    }
+  }
+  return best;
+}
+// На сколько сдвинуть деталь А, чтобы она встала вплотную к стороне Б (магнит)
+export function snapDelta(hw, it, base) {
+  const t = T[hw.type];
+  if (t.cat === 'hinges' || FRONT_BASED.includes(hw.type)) return [0, 0, r1(base.z + base.d - it.z)];
+  if (['bedLift', 'tableSlide'].includes(hw.type) && thinAxis(base) === 'y') return [0, r1(base.y + base.h - it.y), 0];
+  if (hw.type === 'tableFold' && thinAxis(base) === 'z') return [0, 0, r1(base.z + base.d - it.z)];
+  return [0, 0, 0];
+}
+// Боковина корпуса, к которой крепится петля (сторона Б); без присоединения — ищем ту, что стоит вплотную
 export function hingeSide(hw, it, items) {
+  if (hw.base) { const b = items.find(i => i.id === hw.base); if (b && thinAxis(b) === 'x') return b; }
+  if (hw.base !== undefined && hw.base !== null) return null;
   if (hw.side !== 'L' && hw.side !== 'R') return null;
   const ex = hw.side === 'L' ? [it.x - 5, it.x + 60] : [it.x + it.w - 60, it.x + it.w + 5];
   return items.find(i => i.id !== it.id && thinAxis(i) === 'x' && Math.abs(i.z + i.d - it.z) <= 4
