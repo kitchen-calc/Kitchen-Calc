@@ -310,6 +310,10 @@ function featureEdges(it, fr) {
 // ---------------------------------------------------------------- описание операции
 const f = v => String(Math.round(v * 10) / 10).replace('.', ',');
 export function describeOp(op, it) {
+  const d = describeOp0(op, it);
+  return op.what ? `${d} — ${op.what}` : d;
+}
+function describeOp0(op, it) {
   const n = frame(it).names;
   const rep = (op.count | 0) > 1 ? `, ${op.count} шт. шаг ${f(op.step)}` : '';
   if (op.type === 'hole') {
@@ -417,7 +421,7 @@ export function drawingSVG(it, { width = 760, height = 520, ops = it.ops || [], 
   g += `<text x="${X(0)}" y="${pad.t - 50}" ${lbl}>↑ ${names.V1}</text>`;
   g += `<text x="${X(0) - 14}" y="${(Y(0) + Y(SV)) / 2}" text-anchor="middle" ${lbl} transform="rotate(-90 ${X(0) - 14} ${(Y(0) + Y(SV)) / 2})">${names.U0}</text>`;
   g += `<text x="${width - 10}" y="${(Y(0) + Y(SV)) / 2}" text-anchor="middle" ${lbl} transform="rotate(90 ${width - 10} ${(Y(0) + Y(SV)) / 2})">${names.U1}</text>`;
-  g += `<text x="${X(0)}" y="${height - 8}" font-size="11" fill="#5a5348">Вид на ${names.A} · толщина ${f(T)} мм · пунктир — обратная сторона или торец · отсчёт от левого нижнего угла</text>`;
+  g += `<text x="${X(0)}" y="${height - 8}" font-size="11" fill="#5a5348">Вид: ${names.A} · толщина ${f(T)} мм · пунктир — обратная сторона или торец · отсчёт от левого нижнего угла</text>`;
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" font-family="Segoe UI, Arial, sans-serif" fill="${ink}">
 <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 2L10 5L0 8" fill="none" stroke="${ink}"/></marker></defs>
