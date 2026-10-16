@@ -227,3 +227,11 @@ table.rtab tr.cur td { background: rgba(217,119,15,.15); }
 .apptags .tag.std { background: #c9c2b6; }
 .appdims { font-size: 12.5px; color: var(--gold2); font-variant-numeric: tabular-nums; }
 .sheet .note { color: #5a5348; }
+/* Люди и свет */
+.tb-chk { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; white-space: nowrap; font-size: 13px; user-select: none; }
+.tb-chk input { margin: 0; }
+#lightBtn.off { background: #23262e; color: #9fb0c8; border-color: #3a4150; }
+.speech { position: relative; background: #fff; color: #b3141c; border: 2px solid #b3141c; border-radius: 16px; padding: 6px 14px; font: 800 18px/1.2 "Segoe UI", Arial, sans-serif; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 18px rgba(0,0,0,.25); margin-bottom: 12px; }
+.speech::after { content: ""; position: absolute; left: 50%; bottom: -12px; margin-left: -9px; border: 9px solid transparent; border-top-color: #b3141c; border-bottom: 0; }
+.speech.loud { font-size: 24px; background: #fff3c4; animation: shout .25s ease-in-out infinite alternate; }
+@keyframes shout { from { transform: scale(1); } to { transform: scale(1.08); } }
