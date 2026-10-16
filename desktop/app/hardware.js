@@ -29,6 +29,7 @@ const F = {
   off: { label: 'От края фасада, мм', num: true, def: 100 },
   damper: { label: 'Доводчик', options: [['1', 'есть'], ['0', 'нет']], def: '1' },
   drill: { label: 'Сверлить отверстия', options: [['1', 'да'], ['0', 'нет']], def: '1' },
+  fix: { label: 'Крепление чашки', options: [['screw', 'саморезы — наколка Ø2,5'], ['inserta', 'дюбели INSERTA Ø8×11'], ['none', 'без отверстий под крепёж']], def: 'screw' },
   dir: { label: 'Открывание', options: [['up', 'вверх (петли сверху)'], ['down', 'вниз (петли снизу)']], def: 'up' },
   force: { label: 'Усилие, Н', options: [['60', '60 Н'], ['80', '80 Н'], ['100', '100 Н'], ['120', '120 Н'], ['150', '150 Н']], def: '80' },
   sides: { label: 'Где ставить', options: [['LR', 'с двух сторон'], ['L', 'только слева'], ['R', 'только справа']], def: 'LR' },
@@ -61,7 +62,7 @@ const F = {
 const T = {};
 const def = (id, o) => { T[id] = { id, ...o }; };
 // Петли
-const hingeFields = ['side', 'model', 'angle', 'place', 'count', 'off', 'positions', 'damper', 'drill', 'plate'];
+const hingeFields = ['side', 'model', 'angle', 'place', 'count', 'off', 'positions', 'damper', 'drill', 'fix', 'plate'];
 def('hinge', { cat: 'hinges', name: 'Петля накладная', desc: 'Дверь закрывает торец корпуса полностью. Открывается от стороны петель наружу.', target: 'front', fields: hingeFields, motion: 'part', angle: 110 });
 def('hingeHalf', { cat: 'hinges', name: 'Петля полунакладная', desc: 'Две двери на одну стойку: каждая закрывает половину торца.', target: 'front', fields: hingeFields, motion: 'part', angle: 110 });
 def('hingeInset', { cat: 'hinges', name: 'Петля вкладная', desc: 'Дверь утоплена внутрь корпуса, торцы корпуса видны.', target: 'front', fields: hingeFields, motion: 'part', angle: 110 });
@@ -221,6 +222,17 @@ function slideOut(hw, it, items) {
   if (mates.length) { const c = mates.reduce((s, i) => s + i.x + i.w / 2, 0) / mates.length; return cx >= c ? 1 : -1; }
   return 1;
 }
+// Шина на боковине ящика: где проходит (передний конец z1, длина, высота оси yc, сторона out)
+function slideRail(hw, it, items) {
+  const out = slideOut(hw, it, items), len = slideLen(hw, it, items), z1 = it.z + it.d - (+hw.setback || 0);
+  return { out, len, z1, z0: z1 - len, yc: it.y + (+hw.level > 0 ? +hw.level : it.h / 2) };
+}
+// Отверстия по шине от её переднего конца (система 32): корпус — 37 мм и далее кратно 32, ящик — 35 мм, середина, задний конец
+function slideHoles(len, kind) {
+  const first = kind === 'cab' ? 37 : 35, grid = v => first + Math.round((v - first) / 32) * 32;
+  const pts = [first, grid(len / 2), first + Math.floor((len - 30 - first) / 32) * 32];
+  return [...new Set(pts.filter(p => p >= first && p <= len - 20))];
+}
 function slideLen(hw, it, items) {
   if (+hw.len > 0) return +hw.len;
   if (slideMount(it) !== 'front') return Math.min(700, Math.max(250, Math.floor((it.d - (+hw.setback || 0)) / 50) * 50));
@@ -277,7 +289,10 @@ export function poseMatrix(list, t, out = new THREE.Matrix4()) {
 }
 
 // ---------------------------------------------------------------- петли: где стоят и сколько
-const CUPS = { blum: { dia: 35, depth: 13, C: 5 }, hettich: { dia: 35, depth: 13, C: 5 }, gtv: { dia: 35, depth: 12, C: 4 }, boyard: { dia: 35, depth: 11.5, C: 4 }, mini: { dia: 26, depth: 11, C: 4 } };
+// Чашка петли по инструкциям: Ø, глубина, C — от края фасада до края чашки (3–7 мм), крепёж чашки:
+// s — расстояние между отверстиями вдоль кромки, e — смещение их линии от центра чашки внутрь фасада.
+// Blum CLIP top: Ø35, 45/9,5; Hettich Sensys и петли под схему 48/6 (GTV, Boyard): Ø35, 48/6; мини-петля Ø26 — без отверстий.
+const CUPS = { blum: { dia: 35, depth: 13, C: 5, s: 45, e: 9.5 }, hettich: { dia: 35, depth: 13, C: 5, s: 48, e: 6 }, gtv: { dia: 35, depth: 12, C: 4, s: 48, e: 6 }, boyard: { dia: 35, depth: 11.5, C: 4, s: 48, e: 6 }, mini: { dia: 26, depth: 11, C: 4, s: 0, e: 0 } };
 export function hingeSpots(hw, it) {
   const along = hw.side === 'L' || hw.side === 'R' ? it.h : it.w;
   let ps = hw.place === 'manual' ? String(hw.positions || '').split(/[;, ]+/).map(v => parseFloat(v.replace(',', '.'))).filter(v => v > 0 && v < along) : [];
@@ -389,11 +404,42 @@ export function hingeSide(hw, it, items) {
   return items.find(i => i.id !== it.id && thinAxis(i) === 'x' && Math.abs(i.z + i.d - it.z) <= 4
     && i.x + i.w >= ex[0] && i.x <= ex[1] && i.y < it.y + it.h && i.y + i.h > it.y) || null;
 }
+// Отверстия на детали стороны Б (корпус): планка петли, внешняя шина направляющей, кронштейн подъёмника
 export function plateOps(hw, it, items) {
-  const t = T[hw.type];
-  if (t.cat !== 'hinges' || hw.plate === '0' || hw.drill === '0' || !t.motion) return [];
-  const side = hingeSide(hw, it, items); if (!side) return [];
-  return hingeSpots(hw, it).map(s => ({ id: side.id, op: { tag: 'hw' + hw.id, type: 'hole', face: hw.side === 'L' ? 'A' : 'B', u: r1(side.d - 37), v: r1(it.y - side.y + s.v - 16), dia: 5, depth: 12, count: 2, step: 32, dir: 'v' } }));
+  const t = T[hw.type], tag = 'hw' + hw.id;
+  if (hw.drill === '0') return [];
+  if (t.cat === 'hinges') {
+    if (hw.plate === '0' || !t.motion) return [];
+    const side = hingeSide(hw, it, items); if (!side) return [];
+    // планка петли: 2 отверстия Ø5×12 под евровинты, 37 мм от переднего края боковины, 32 мм между ними — по оси чашки (система 32)
+    return hingeSpots(hw, it).map(s => ({ id: side.id, op: { tag, type: 'hole', face: hw.side === 'L' ? 'A' : 'B', u: r1(side.d - 37), v: r1(it.y - side.y + s.v - 16), dia: 5, depth: 12, count: 2, step: 32, dir: 'v', what: 'планка петли (37/32)' } }));
+  }
+  const base = hw.base && items.find(i => i.id === hw.base);
+  if (!base) return [];
+  if (t.cat === 'slides' && slideMount(it) !== 'front' && thinAxis(base) === 'x') {
+    // внешняя шина на боковине корпуса: ось шины на высоте шины ящика, отверстия 37 мм от переднего конца шины и далее кратно 32
+    const r = slideMount(it) === 'side' ? slideRail(hw, it, items) : { len: slideLen(hw, it, items), z1: it.z + it.d - (+hw.setback || 0), yc: it.y - 9 };
+    const face = base.x + base.w / 2 > it.x + it.w / 2 ? 'B' : 'A', v = r1(r.yc - base.y);
+    return slideHoles(r.len, 'cab').map(dz => ({ id: base.id, op: { tag, type: 'hole', face, u: r1(r.z1 - dz - base.z), v, dia: 2.5, depth: 10, count: 1, step: 32, dir: 'u', what: 'шина на корпусе: саморез 4×16 (система 32)' } }));
+  }
+  if (t.cat === 'slides' && slideMount(it) === 'front' && !t.under) {
+    // направляющие на фасаде ящика из корпуса: шины по обе стороны короба — отверстия на обеих боковинах корпуса
+    const b = linkedBox(it, items); if (!b) return [];
+    const len = slideLen(hw, it, items), yc = b.y0 + 40, out = [];
+    const sides = items.filter(p => thinAxis(p) === 'x' && p.y < yc && p.y + p.h > yc && ovl(p.z, p.z + p.d, b.z1 - len, b.z1) > 50 &&
+      (Math.abs(p.x + p.w - (b.x0 - 13)) < 3 || Math.abs(p.x - (b.x1 + 13)) < 3));
+    for (const sd of sides) {
+      const face = sd.x > b.x1 ? 'B' : 'A';
+      for (const dz of slideHoles(len, 'cab')) out.push({ id: sd.id, op: { tag, type: 'hole', face, u: r1(b.z1 - dz - sd.z), v: r1(yc - sd.y), dia: 2.5, depth: 10, count: 1, step: 32, dir: 'u', what: 'шина на корпусе: саморез 4×16 (система 32)' } });
+    }
+    return out;
+  }
+  if (['gasLift', 'flapStay', 'aventosHK', 'aventosHKXS', 'aventosHF'].includes(hw.type) && thinAxis(base) === 'x') {
+    const down = hw.type === 'flapStay' || hw.dir === 'down', y = down ? it.y + 260 : it.y + it.h - 260;
+    const face = base.x + base.w / 2 > it.x + it.w / 2 ? 'B' : 'A';
+    return [{ id: base.id, op: { tag, type: 'hole', face, u: r1(it.z - 160 - 16 - base.z), v: r1(y - base.y), dia: 2.5, depth: 10, count: 2, step: 32, dir: 'u', what: 'корпус подъёмника на боковине' } }];
+  }
+  return [];
 }
 export function hardwareCount(hw, it) {
   const t = T[hw.type];
@@ -423,17 +469,34 @@ function handleVertical(hw, it, siblings) {
 }
 
 // ---------------------------------------------------------------- отверстия под фурнитуру (на фасаде: U — по X, V — по Y; пласть A — лицевая)
-export function drillOps(hw, it, siblings) {
-  const ops = drillOps0(hw, it, siblings), du = +hw.du || 0, dv = +hw.dv || 0;
+export function drillOps(hw, it, siblings, items = []) {
+  const ops = drillOps0(hw, it, siblings, items), du = +hw.du || 0, dv = +hw.dv || 0;
   if (T[hw.type].cat === 'hinges' || (!du && !dv)) return ops;
   return ops.map(o => o.face === 'A' || o.face === 'B' ? { ...o, u: r1(o.u + du), v: r1(o.v + dv) } : { ...o, s: r1(o.s + (o.face[0] === 'U' ? dv : du)) });
 }
-function drillOps0(hw, it, siblings) {
+function drillOps0(hw, it, siblings, items) {
   const t = T[hw.type], tag = 'hw' + hw.id, ops = [];
   if (hw.drill === '0') return ops;
   const base = { tag, count: 1, step: 32, dir: 'u' };
   if (t.cat === 'hinges' && !t.noCup) {
-    for (const s of hingeSpots(hw, it)) ops.push({ ...base, type: 'hole', face: 'B', u: r1(s.u), v: r1(s.v), dia: s.c.dia, depth: s.c.depth });
+    const fix = hw.fix || 'screw';
+    for (const s of hingeSpots(hw, it)) {
+      ops.push({ ...base, type: 'hole', face: 'B', u: r1(s.u), v: r1(s.v), dia: s.c.dia, depth: s.c.depth, what: `чашка петли C=${s.c.C}` });
+      if (fix === 'none' || !s.c.s) continue;
+      // отверстия под крепёж чашки: вдоль кромки петель, со смещением внутрь фасада
+      const lr = hw.side === 'L' || hw.side === 'R', inw = hw.side === 'L' || hw.side === 'B' ? 1 : -1;
+      const d = fix === 'inserta' ? { dia: 8, depth: 11, what: 'дюбель INSERTA' } : { dia: 2.5, depth: 8, what: 'наколка под саморез' };
+      if (lr) ops.push({ ...base, type: 'hole', face: 'B', u: r1(s.u + inw * s.c.e), v: r1(s.v - s.c.s / 2), dia: d.dia, depth: d.depth, count: 2, step: s.c.s, dir: 'v', what: d.what + ` (${s.c.s}/${String(s.c.e).replace('.', ',')})` });
+      else ops.push({ ...base, type: 'hole', face: 'B', u: r1(s.u - s.c.s / 2), v: r1(s.v + inw * s.c.e), dia: d.dia, depth: d.depth, count: 2, step: s.c.s, dir: 'u', what: d.what + ` (${s.c.s}/${String(s.c.e).replace('.', ',')})` });
+    }
+  } else if (t.cat === 'slides' && slideMount(it) === 'side' && items.length) {
+    // внутренняя шина на боковине ящика: наколки под саморезы 4×16 по оси шины — у переднего конца, посередине и у заднего
+    const r = slideRail(hw, it, items), face = r.out > 0 ? 'A' : 'B', v = r1(r.yc - it.y);
+    for (const dz of slideHoles(r.len, 'drawer')) ops.push({ ...base, type: 'hole', face, u: r1(r.z1 - dz - it.z), v, dia: 2.5, depth: 10, what: 'шина на ящике: саморез 4×16' });
+  } else if (['gasLift', 'flapStay', 'aventosHK', 'aventosHKXS', 'aventosHF'].includes(hw.type)) {
+    // кронштейн на фасаде: 2 наколки под саморезы (по шаблону кронштейна)
+    const xs = (hw.sides === 'L' ? [30] : hw.sides === 'R' ? [it.w - 30] : [30, it.w - 30]), down = hw.type === 'flapStay' || hw.dir === 'down';
+    for (const x of xs) ops.push({ ...base, type: 'hole', face: 'B', u: r1(x), v: r1(down ? 120 - 8 : it.h - 120 - 8), dia: 2.5, depth: 10, count: 2, step: 16, dir: 'v', what: 'кронштейн подъёмника на фасаде' });
   } else if (hw.type === 'handleBar') {
     const c = +hw.centers || 128, p = handleSpot(hw, it, siblings), vert = handleVertical(hw, it, siblings);
     ops.push({ ...base, type: 'hole', face: 'A', u: r1(vert ? p.u : p.u - c / 2), v: r1(vert ? p.v - c / 2 : p.v), dia: 5, depth: it.d, through: true, count: 2, step: c, dir: vert ? 'v' : 'u' });

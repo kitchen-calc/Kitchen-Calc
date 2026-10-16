@@ -6,7 +6,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, motionKey, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween, plateOps, hingeSpots, slideMount, baseNeeded, baseHint, findBase, snapDelta } from './hardware.js';
-import { moduleSVG, overviewSVG } from './drawings.js';
+import { moduleSVG, overviewSVG, isoModuleSVG } from './drawings.js';
 import { MILLS, MILL_CATS, millDefaults } from './mill.js';
 import { createRuler } from './ruler.js';
 import { DECOR, DECORS, TABS, texture as decorTexture, thumb as decorThumb, surfaceParams, sheetLayout, applySheetUV, onTextureUpdate } from './materials.js';
@@ -927,6 +927,7 @@ function attachCabinetHardware(parts, p, onlyHinges) {
     parts.forEach(i => { i.ops = (i.ops || []).filter(o => o.tag !== 'hinge'); });
     hinges.forEach(h => { h.drill = '1'; h.plate = '1'; hwSync(h, item(h.target)); });
   }
+  if (p.drill !== false) hws.filter(h => HW_TYPES[h.type].cat !== 'hinges').forEach(h => hwSync(h, item(h.target)));   // направляющие: отверстия на боковинах корпуса
 }
 // Заменить петли у готового корпуса (остальная обработка остаётся)
 function applyHingesFromInspector() {
@@ -1844,7 +1845,7 @@ function inspClick(e) {
 function hwSync(hw, it) {
   for (const x of P.items) if (x.ops) x.ops = x.ops.filter(o => o.tag !== 'hw' + hw.id);
   it.ops = it.ops || [];
-  it.ops.push(...hwDrillOps(hw, it, hwOf(it.id).filter(h => h.id !== hw.id)));
+  it.ops.push(...hwDrillOps(hw, it, hwOf(it.id).filter(h => h.id !== hw.id), P.items));
   for (const { id, op } of plateOps(hw, it, P.items)) { const side = item(id); side.ops = side.ops || []; side.ops.push(op); }
 }
 // Каталог фурнитуры: для одной детали — сразу на неё; для модуля (шкафа, ящика) или нескольких деталей —
@@ -2103,30 +2104,39 @@ function linkSel(on) {
 }
 
 // Чертежи: по одной детали на лист, с размерами, координатами обработки и таблицей операций
-function partSheet(it) {
-  const fr = frame(it), g = it.g ? group(it.g) : null;
-  const ops = (it.ops || []).map((o, k) => `<tr><td>${k + 1}</td><td>${esc(describeOp(o, it))}</td></tr>`).join('');
-  return `<section class="sheet"><div class="sheet-head"><b>${esc(label(it))}</b><span>${g ? esc(g.name) + ' · ' : ''}${esc(mat(it.mat).name)} ${fmt(mat(it.mat).t)} мм · ${fmt(fr.SU)} × ${fmt(fr.SV)} × ${fmt(fr.T)} мм</span></div>
-    ${drawingSVG(it).svg}${ops ? `<table class="spec"><tr><th>№</th><th>Обработка</th></tr>${ops}</table>` : '<div class="note">Без обработки.</div>'}</section>`;
+// Отдельный лист детали: сверления с диаметрами, глубинами и назначением; где деталь стоит в шкафу
+const sheetPart = i => (i.ops || []).some(o => o.tag !== 'conf' && o.tag !== 'shelf');   // есть фурнитура или своя обработка
+function partSheet(it, num) {
+  const fr = frame(it), g = it.g ? group(it.g) : null, gb = g ? bbox(groupItems(g.id)) : null;
+  const hwName = tag => { const h = String(tag || '').startsWith('hw') && P.hw.find(x => 'hw' + x.id === tag); return h ? HW_TYPES[h.type].name : tag === 'conf' ? 'конфирмат' : tag === 'shelf' ? 'полкодержатель' : tag === 'hinge' ? 'петля' : tag === 'sidecut' ? 'срез боковины' : ''; };
+  const ops = (it.ops || []).map((o, k) => `<tr><td>${k + 1}</td><td>${esc(describeOp(o, it))}</td><td>${esc(o.mill || hwName(o.tag))}</td></tr>`).join('');
+  const where = gb ? ` · в шкафу: от левого края ${fmt(it.x - gb.x0)}, от низа ${fmt(it.y - gb.y0)}, от задней кромки ${fmt(it.z - gb.z0)} мм` : '';
+  return `<section class="sheet"><div class="sheet-head"><b>${num ? num + '. ' : ''}${esc(label(it))}</b><span>${g ? esc(g.name) + ' · ' : ''}${esc(mat(it.mat).name)} ${fmt(mat(it.mat).t)} мм · ${fmt(fr.SU)} × ${fmt(fr.SV)} × ${fmt(fr.T)} мм${where}</span></div>
+    ${drawingSVG(it).svg}${ops ? `<table class="spec"><tr><th>№</th><th>Обработка: где, диаметр, глубина</th><th>Для чего</th></tr>${ops}</table>` : '<div class="note">Без обработки.</div>'}</section>`;
 }
 const colorOf = i => mat(i.mat).color;
-// Шкаф: три вида, список деталей и фурнитуры
+// Шкаф на одном листе: вид 45° в сборе и без фасадов, все размеры, таблица всех деталей с номерами
+const FRONT_KINDS = new Set(['door', 'drawerFront']);
 function moduleSheet(g, k) {
   const list = groupItems(g.id), b = bbox(list);
-  const rows = new Map();
-  for (const i of list) {
-    const m = mat(i.mat), [L, W, T] = [i.w, i.h, i.d].map(r1).sort((a, c) => c - a);
-    const key = [label(i), m.id, L, W, T, (i.ops || []).length].join('|');
-    const r = rows.get(key) || { name: label(i), mat: `${m.name} ${m.t}`, L, W, T, ops: (i.ops || []).length, n: 0 };
-    r.n++; rows.set(key, r);
-  }
+  const order = [...list].sort((a, c) => (FRONT_KINDS.has(a.kind) - FRONT_KINDS.has(c.kind)) || a.y - c.y || a.x - c.x || a.z - c.z);
+  const num = new Map(order.map((i, n) => [i.id, n + 1]));
+  const hwOn = i => hwOf(i.id).map(h => HW_TYPES[h.type].name);
+  const conf = i => (i.ops || []).filter(o => o.tag === 'conf').reduce((s, o) => s + Math.max(1, o.count | 0), 0), shelf = i => (i.ops || []).filter(o => o.tag === 'shelf').reduce((s, o) => s + Math.max(1, o.count | 0), 0);
+  const rows = order.map(i => {
+    const m = mat(i.mat), [L, W, T] = [i.w, i.h, i.d].map(r1).sort((a, c) => c - a), notes = [];
+    if (hwOn(i).length) notes.push(hwOn(i).join(', '));
+    if (conf(i)) notes.push(`конфирматы ${conf(i)}`); if (shelf(i)) notes.push(`полкодерж. ${shelf(i)}`);
+    if (sheetPart(i)) notes.push('<b>→ отдельный лист</b>');
+    return `<tr><td>${num.get(i.id)}</td><td>${esc(label(i))}</td><td class="n">${fmt(L)}</td><td class="n">${fmt(W)}</td><td class="n">${fmt(T)}</td><td>${esc(m.name)}</td><td class="n">${fmt(i.x - b.x0)}; ${fmt(i.y - b.y0)}; ${fmt(i.z - b.z0)}</td><td>${notes.join(' · ')}</td></tr>`;
+  }).join('');
   const hw = new Map();
   for (const h of P.hw) { const it = item(h.target); if (it && it.g === g.id) { const n = HW_TYPES[h.type].name; hw.set(n, (hw.get(n) || 0) + hardwareCount(h, it)); } }
+  const svg = isoModuleSVG(list, { colorOf, numOf: i => num.get(i.id), isFront: i => FRONT_KINDS.has(i.kind) });
   return `<section class="sheet"><div class="sheet-head"><b>${k ? k + '. ' : ''}${esc(g.name)}${g.kind ? ` <i class="kind">${esc(KIND_NAMES[g.kind] || g.kind)}</i>` : ''}</b><span>Габарит ${fmt(b.x1 - b.x0)} × ${fmt(b.y1 - b.y0)} × ${fmt(b.z1 - b.z0)} мм · деталей: ${list.length}</span></div>
-    ${moduleSVG(list, { colorOf })}
-    <table class="spec"><tr><th>Деталь</th><th>Материал</th><th class="n">Длина</th><th class="n">Ширина</th><th class="n">Толщ.</th><th class="n">Обраб.</th><th class="n">Кол-во</th></tr>
-    ${[...rows.values()].sort((a, c) => c.L - a.L).map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.mat)}</td><td class="n">${fmt(r.L)}</td><td class="n">${fmt(r.W)}</td><td class="n">${fmt(r.T)}</td><td class="n">${r.ops || ''}</td><td class="n">${r.n}</td></tr>`).join('')}</table>
-    ${hw.size ? `<table class="spec"><tr><th>Фурнитура</th><th class="n">Кол-во</th></tr>${[...hw].map(([n, c]) => `<tr><td>${esc(n)}</td><td class="n">${c}</td></tr>`).join('')}</table>` : ''}</section>`;
+    ${svg}
+    <table class="spec"><tr><th>№</th><th>Деталь</th><th class="n">Длина</th><th class="n">Ширина</th><th class="n">Толщ.</th><th>Материал</th><th class="n">X; Y; Z в шкафу</th><th>Фурнитура и присадка</th></tr>${rows}</table>
+    ${hw.size ? `<table class="spec"><tr><th>Фурнитура шкафа</th><th class="n">Кол-во</th></tr>${[...hw].map(([n, c]) => `<tr><td>${esc(n)}</td><td class="n">${c}</td></tr>`).join('')}</table>` : ''}</section>`;
 }
 function overviewSheet() {
   const ov = overviewSVG(P.items, P.groups, { colorOf });
@@ -2139,18 +2149,23 @@ function overviewSheet() {
 }
 // Комплект чертежей: scope 'all' — общий вид, каждый шкаф со своими деталями, отдельные детали;
 // группа — шкаф и его детали; список деталей — только детали
+// Детали шкафа для отдельных листов — с теми же номерами, что на виде 45°
+function hwParts(gid) {
+  const order = [...groupItems(gid)].sort((a, c) => (FRONT_KINDS.has(a.kind) - FRONT_KINDS.has(c.kind)) || a.y - c.y || a.x - c.x || a.z - c.z);
+  return order.map((i, n) => [i, n + 1]).filter(([i]) => sheetPart(i));
+}
 function drawingDialog(list, scope) {
   let sheets = [], title;
   if (scope === 'all') {
     if (!P.items.length) return status('В проекте пока нет деталей');
     const ov = overviewSVG(P.items, P.groups, {}).order;
     sheets.push(overviewSheet());
-    ov.forEach((id, k) => { sheets.push(moduleSheet(group(id), k + 1)); groupItems(id).forEach(i => sheets.push(partSheet(i))); });
+    ov.forEach((id, k) => { sheets.push(moduleSheet(group(id), k + 1)); hwParts(id).forEach(([i, n]) => sheets.push(partSheet(i, `${k + 1}.${n}`))); });   // детали шкафа — только с фурнитурой и своей обработкой
     P.items.filter(i => !i.g).forEach(i => sheets.push(partSheet(i)));
     title = `Чертежи проекта (${sheets.length} листов)`;
   } else if (scope && scope.group) {
     sheets.push(moduleSheet(scope.group, 0));
-    groupItems(scope.group.id).forEach(i => sheets.push(partSheet(i)));
+    hwParts(scope.group.id).forEach(([i, n]) => sheets.push(partSheet(i, n)));
     title = `Чертёж шкафа: ${scope.group.name}`;
   } else {
     if (!list.length) return status('Выберите деталь или модуль');

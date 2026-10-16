@@ -117,3 +117,101 @@ export function overviewSVG(items, groups, { colorOf = () => null, width = 1000,
   g += `<text x="${m}" y="${height - 10}" font-size="10.5" fill="#5a5348">Размеры в мм · номера — шкафы из таблицы ниже · пунктир — скрытые детали</text>`;
   return { svg: wrap(width, height, g), order: mods.map(md => md.gr.id) };
 }
+
+// ---------------------------------------------------------------- аксонометрия шкафа (вид 45° сбоку и сверху)
+// Камера спереди-слева-сверху: видны левые, верхние и передние грани. Детали рисуются от дальних к ближним
+// (порядок по разделяющим плоскостям), размеры — вдоль осей, номера деталей — выноски к таблице.
+const AZ = Math.PI / 4, EL = Math.atan(1 / Math.SQRT2);   // 45° вокруг вертикали, ≈35° сверху (изометрия)
+const R = [Math.cos(AZ), 0, Math.sin(AZ)], U = [Math.sin(AZ) * Math.sin(EL), Math.cos(EL), -Math.cos(AZ) * Math.sin(EL)];
+const prj = (x, y, z) => [x * R[0] + z * R[2], x * U[0] + y * U[1] + z * U[2]];
+function behind(a, b) {   // a целиком дальше b от зрителя (зритель: −x, +y, +z)
+  const t = 0.01;
+  return a.x >= b.x + b.w - t || a.y + a.h <= b.y + t || a.z + a.d <= b.z + t;
+}
+function paintOrder(items) {
+  const n = items.length, after = items.map(() => []), deg = new Array(n).fill(0);
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (i !== j && behind(items[i], items[j]) && !behind(items[j], items[i])) { after[i].push(j); deg[j]++; }
+  const out = [], q = [];
+  const depth = i => { const it = items[i]; return -(it.x + it.w / 2) + (it.y + it.h / 2) + (it.z + it.d / 2); };
+  for (let i = 0; i < n; i++) if (!deg[i]) q.push(i);
+  const used = new Array(n).fill(false);
+  while (out.length < n) {
+    if (!q.length) { let k = -1; for (let i = 0; i < n; i++) if (!used[i] && (k < 0 || depth(i) < depth(k))) k = i; q.push(k); }   // цикл — по глубине
+    q.sort((a, b) => depth(a) - depth(b));
+    const i = q.shift(); if (used[i]) continue; used[i] = true; out.push(items[i]);
+    for (const j of after[i]) if (--deg[j] === 0 && !used[j]) q.push(j);
+  }
+  return out;
+}
+const shade = (hex, k) => { const c = parseInt(hex.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${f(c >> 16)},${f((c >> 8) & 255)},${f(c & 255)})`; };
+// iso: { svg, scale } — items: детали, numOf: id → номер выноски (или null), hide: id → не рисовать (фасады на втором виде)
+function isoView(items, { x0, y0, s, colorOf, numOf, hidden = new Set() }) {
+  const P = (x, y, z) => { const [a, b] = prj(x, y, z); return [x0 + a * s, y0 - b * s]; };
+  const poly = pts => pts.map(p => p.map(v => v.toFixed(1)).join(',')).join(' ');
+  let g = '';
+  const shown = paintOrder(items.filter(i => !hidden.has(i.id)));
+  for (const i of shown) {
+    const X0 = i.x, X1 = i.x + i.w, Y0 = i.y, Y1 = i.y + i.h, Z0 = i.z, Z1 = i.z + i.d, base = colorOf(i) || '#f1efe9';
+    const top = [P(X0, Y1, Z0), P(X1, Y1, Z0), P(X1, Y1, Z1), P(X0, Y1, Z1)];
+    const front = [P(X0, Y0, Z1), P(X1, Y0, Z1), P(X1, Y1, Z1), P(X0, Y1, Z1)];
+    const left = [P(X0, Y0, Z0), P(X0, Y0, Z1), P(X0, Y1, Z1), P(X0, Y1, Z0)];
+    g += `<polygon points="${poly(left)}" fill="${shade(base, 0.82)}" stroke="${INK}" stroke-width=".7" stroke-linejoin="round"/>`;
+    g += `<polygon points="${poly(front)}" fill="${shade(base, 0.95)}" stroke="${INK}" stroke-width=".7" stroke-linejoin="round"/>`;
+    g += `<polygon points="${poly(top)}" fill="${shade(base, 1.04)}" stroke="${INK}" stroke-width=".7" stroke-linejoin="round"/>`;
+  }
+  // выноски: точка на самой заметной видимой грани детали; номера раздвигаются, чтобы не налезали друг на друга
+  const placed = [];
+  for (const i of shown) {
+    const n = numOf(i); if (n == null) continue;
+    const thin = i.w <= i.h && i.w <= i.d ? 'x' : i.h <= i.d ? 'y' : 'z';
+    const c = thin === 'x' ? P(i.x, i.y + i.h * 0.55, i.z + i.d * 0.5) : thin === 'y' ? P(i.x + i.w * 0.5, i.y + i.h, i.z + i.d * 0.55) : P(i.x + i.w * 0.5, i.y + i.h * 0.5, i.z + i.d);
+    let lx = c[0] + 10, ly = c[1] - 10;
+    for (let k = 0; k < 12 && placed.some(([px, py]) => Math.hypot(px - lx, py - ly) < 16); k++) { ly -= 9; lx += 7; }
+    placed.push([lx, ly]);
+    g += `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="1.6" fill="#1f5fb4"/><path d="M${c[0].toFixed(1)} ${c[1].toFixed(1)}L${lx.toFixed(1)} ${ly.toFixed(1)}" stroke="#1f5fb4" stroke-width=".5"/><g><circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="7.5" fill="#fff" stroke="#1f5fb4"/><text x="${lx.toFixed(1)}" y="${(ly + 3.4).toFixed(1)}" font-size="9" text-anchor="middle" fill="#1f5fb4" font-weight="600">${n}</text></g>`;
+  }
+  return { g, P };
+}
+// размер вдоль оси на аксонометрии: от a до b (мировые точки), сдвиг off (мировой вектор), подпись
+function isoDim(P, a, b, off, text, color = INK) {
+  const A = P(a[0] + off[0], a[1] + off[1], a[2] + off[2]), B = P(b[0] + off[0], b[1] + off[1], b[2] + off[2]);
+  const a0 = P(...a), b0 = P(...b);
+  let ang = Math.atan2(B[1] - A[1], B[0] - A[0]) * 180 / Math.PI; if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
+  const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
+  return `<path d="M${a0[0].toFixed(1)} ${a0[1].toFixed(1)}L${A[0].toFixed(1)} ${A[1].toFixed(1)}M${b0[0].toFixed(1)} ${b0[1].toFixed(1)}L${B[0].toFixed(1)} ${B[1].toFixed(1)}" stroke="${color}" stroke-width=".45" opacity=".7"/>` +
+    `<path d="M${A[0].toFixed(1)} ${A[1].toFixed(1)}L${B[0].toFixed(1)} ${B[1].toFixed(1)}" stroke="${color}" stroke-width=".8" marker-start="url(#ar)" marker-end="url(#ar)"/>` +
+    `<text x="${mx.toFixed(1)}" y="${my.toFixed(1)}" dy="-3" font-size="10.5" font-weight="600" text-anchor="middle" fill="${color}" transform="rotate(${ang.toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)})">${text}</text>`;
+}
+// Лист шкафа: слева — собранный (с фасадами), справа — без фасадов (видно полки, ящики, перегородки); размеры и выноски
+export function isoModuleSVG(items, { colorOf = () => null, numOf = () => null, isFront = () => false, width = 1100, height = 640 } = {}) {
+  const b = extents(items), W = b.x1 - b.x0, H = b.y1 - b.y0, D = b.z1 - b.z0;
+  const fronts = new Set(items.filter(isFront).map(i => i.id));
+  const corners = []; for (const x of [b.x0, b.x1]) for (const y of [b.y0, b.y1]) for (const z of [b.z0, b.z1]) corners.push(prj(x, y, z));
+  const xs = corners.map(c => c[0]), ys = corners.map(c => c[1]);
+  const pw = Math.max(...xs) - Math.min(...xs), ph = Math.max(...ys) - Math.min(...ys);
+  const two = fronts.size > 0, cols = two ? 2 : 1, pad = 95;
+  const s = Math.min((width / cols - 2 * pad) / pw, (height - 2 * pad - 20) / ph);
+  let g = '';
+  for (let k = 0; k < cols; k++) {
+    const cx = width / cols * k + width / cols / 2, cy = height / 2 + 5;
+    const x0 = cx - (Math.min(...xs) + pw / 2) * s, y0 = cy + (Math.min(...ys) + ph / 2) * s;
+    const v = isoView(items, { x0, y0, s, colorOf, numOf: k === 0 && two ? (i => (fronts.has(i.id) ? numOf(i) : null)) : (i => numOf(i)), hidden: k === 1 ? fronts : new Set() });
+    g += v.g;
+    const P = v.P, o = 55 / s;   // отступ размерных линий ~55 px
+    // габариты: ширина — по переднему нижнему ребру, высота — по левому переднему, глубина — по левому нижнему
+    g += isoDim(P, [b.x0, b.y0, b.z1], [b.x1, b.y0, b.z1], [0, 0, o], f(W));
+    g += isoDim(P, [b.x0, b.y0, b.z1], [b.x0, b.y1, b.z1], [-o * 0.8, 0, 0], f(H));
+    g += isoDim(P, [b.x0, b.y0, b.z0], [b.x0, b.y0, b.z1], [-o, 0, 0], f(D));
+    if (k === cols - 1) {
+      // цепочки: уровни горизонтальных деталей (по высоте от низа) и положение вертикальных (по ширине) — на правом заднем ребре
+      const lv = [...new Set(items.filter(i => i.h < i.w && i.h < i.d && !fronts.has(i.id)).flatMap(i => [r1(i.y - b.y0), r1(i.y + i.h - b.y0)]))].sort((a, c) => a - c);
+      for (let j = 1; j < lv.length; j++) if (lv[j] - lv[j - 1] > 25) g += isoDim(P, [b.x1, b.y0 + lv[j - 1], b.z0], [b.x1, b.y0 + lv[j], b.z0], [o * 0.6, 0, -o * 0.3], f(lv[j] - lv[j - 1]), '#1f5fb4');
+      const vx = [...new Set(items.filter(i => i.w < i.h && i.w < i.d).flatMap(i => [r1(i.x - b.x0), r1(i.x + i.w - b.x0)]))].sort((a, c) => a - c);
+      for (let j = 1; j < vx.length; j++) if (vx[j] - vx[j - 1] > 25) g += isoDim(P, [b.x0 + vx[j - 1], b.y1, b.z0], [b.x0 + vx[j], b.y1, b.z0], [0, o * 0.45, -o * 0.3], f(vx[j] - vx[j - 1]), '#1f5fb4');
+    }
+    g += `<text x="${width / cols * k + 14}" y="22" font-size="12" font-weight="600" fill="#5a5348">${two ? (k === 0 ? 'Вид 45° — в сборе' : 'Вид 45° — без фасадов (видно внутреннее)') : 'Вид 45°'}</text>`;
+  }
+  g += `<text x="14" y="${height - 10}" font-size="10.5" fill="#5a5348">Размеры в мм · чёрные — габарит, синие — цепочки: высоты между горизонтальными деталями и ширины между вертикальными · номера — детали из таблицы</text>`;
+  return wrap(width, height, g);
+}
+function r1(v) { return Math.round(v * 10) / 10; }
