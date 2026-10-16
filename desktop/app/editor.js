@@ -1197,7 +1197,7 @@ function refreshInspector() {
       <div class="sec"><b>Положение, мм</b><div class="row">${fld('X слева', 'x', i.x)}${fld('Y от пола', 'y', i.y)}${fld('Z от стены', 'z', i.z)}</div></div>
       <div class="sec"><b>Обработка${(i.ops || []).length ? ` (${i.ops.length})` : ''}</b>
       ${(i.ops || []).map((o, k) => `<div class="op"><span>${k + 1}. ${esc(describeOp(o, i))}</span><button data-op-edit="${k}" title="Изменить">✎</button><button data-op-del="${k}" title="Удалить">✕</button></div>`).join('') || '<div class="note">Отверстий и вырезов нет.</div>'}
-      <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез / скругление угла</button></div>
+      <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез / скругление угла</button><button data-cmd="op-shape" title="Любая форма: точки, острые или скруглённые углы, плавная кривая">＋ Вырез по точкам</button></div>
       <div class="btns"><button data-cmd="measure-hole" title="Наведите мышь на деталь — видно расстояния до краёв, клик ставит отверстие">📏 Разметить отверстие</button><button data-cmd="measure-cut" title="Клик ставит левый нижний угол выреза">📏 Разметить вырез</button><button class="accent" data-cmd="drawing">Чертёж</button></div></div>
       <div class="sec"><b>Фурнитура${hwOf(i.id).length ? ` (${hwOf(i.id).length})` : ''}</b>
       ${hwOf(i.id).map(h => `<div class="op hwrow"><span>${esc(describeHw(h, i))}${baseNeeded(h.type) ? (h.base && item(h.base) ? `<br><small class="base">🔗 сторона Б — ${esc(who(item(h.base)))}</small>` : '<br><small class="warn">⚠ вторая сторона свободна</small>') : ''}</span>${hasAction(h.type) ? `<button class="accent" data-hw-act="${h.id}">${actionLabels(h.type)[(hwState.get(h.id) || { to: 0 }).to > 0 ? 1 : 0]}</button>` : '<i></i>'}<button data-hw-edit="${h.id}" title="Изменить">✎</button><button data-hw-place="${h.id}" title="Где стоит — окно с видом детали">📍</button><button data-hw-del="${h.id}" title="Удалить">✕</button>${baseNeeded(h.type) ? `<button data-hw-base="${h.id}" title="Присоединить вторую сторону к другой детали (магнит)">🧲</button>` : ''}</div>`).join('') || '<div class="note">Фурнитуры нет.</div>'}
@@ -1548,7 +1548,9 @@ function defaultOp(type, fr) {
   return { type: 'corner', corner: 'RT', shape: 'chamfer', a: 100, b: 100 };
 }
 function opDialog(type, index = -1, init = null) {
-  const k = kindOfSelection();
+  const k0 = kindOfSelection();
+  if (k0.type === 'item' && index >= 0 && k0.it.ops[index].type === 'shape') return shapeDialog(index);
+  const k = k0;
   if (k.type !== 'item') return status('Выберите одну деталь: двойной клик по детали внутри модуля');
   const it = k.it, fr = frame(it), N = fr.names;
   const old = index >= 0 ? it.ops[index] : null;
@@ -1641,6 +1643,94 @@ function opDialog(type, index = -1, init = null) {
     commit(() => { it.ops = it.ops || []; if (index >= 0) it.ops[index] = saved; else it.ops.push(saved); });
     status(`${title} ${old ? 'изменено' : 'добавлено'}: ${describeOp(op, it)}`);
   };
+}
+// Вырез по точкам: клик по чертежу — новая точка, точки тянутся мышью; у каждой — радиус (0 — острый угол)
+const SHAPE_TEMPLATES = [
+  ['', 'Свой (ставьте точки кликами)'], ['tri', 'Треугольник'], ['trap', 'Трапеция'], ['hex', 'Шестиугольник'], ['arch', 'Арка'], ['oval', 'Овал (плавный)'],
+  ['wave', 'Волна по краю (плавная)'], ['star', 'Звезда'], ['round', 'Прямоугольник, скругления R30'],
+];
+function shapeTemplate(id, fr) {
+  const cu = fr.SU / 2, cv = fr.SV / 2, w = Math.min(fr.SU, fr.SV) * 0.35, R = (k, n, rad, ph = Math.PI / 2) => [r1(cu + rad * Math.cos(ph + 2 * Math.PI * k / n)), r1(cv + rad * Math.sin(ph + 2 * Math.PI * k / n)), 0];
+  switch (id) {
+    case 'tri': return { pts: [0, 1, 2].map(k => R(k, 3, w)) };
+    case 'trap': return { pts: [[cu - w, cv - w * 0.6, 0], [cu + w, cv - w * 0.6, 0], [cu + w * 0.5, cv + w * 0.6, 0], [cu - w * 0.5, cv + w * 0.6, 0]].map(p => p.map(r1)) };
+    case 'hex': return { pts: [0, 1, 2, 3, 4, 5].map(k => R(k, 6, w, 0)) };
+    case 'arch': return { pts: [[cu - w, cv - w, 0], [cu + w, cv - w, 0], [cu + w, cv + w * 0.2, w], [cu - w, cv + w * 0.2, w]].map(p => p.map(r1)) };
+    case 'oval': return { pts: [R(0, 4, w), [r1(cu - w * 1.4), r1(cv), 0], R(2, 4, w), [r1(cu + w * 1.4), r1(cv), 0]], smooth: true };
+    case 'wave': { const n = 7, pts = []; for (let k = 0; k <= n; k++) pts.push([r1(fr.SU * k / n), r1(fr.SV - 40 - (k % 2 ? 40 : 0)), k && k < n ? 30 : 0]); pts.push([fr.SU + 20, fr.SV + 20, 0], [-20, fr.SV + 20, 0]); return { pts, smooth: false, waveTop: true }; }
+    case 'star': return { pts: Array.from({ length: 10 }, (_, k) => R(k, 10, k % 2 ? w * 0.45 : w)) };
+    case 'round': return { pts: [[cu - w, cv - w * 0.6, 30], [cu + w, cv - w * 0.6, 30], [cu + w, cv + w * 0.6, 30], [cu - w, cv + w * 0.6, 30]].map(p => p.map(r1)) };
+    default: return { pts: [] };
+  }
+}
+function shapeDialog(index = -1) {
+  const k = kindOfSelection();
+  if (k.type !== 'item') return status('Выберите одну деталь: двойной клик по детали внутри модуля');
+  const it = k.it, fr = frame(it), N = fr.names;
+  const old = index >= 0 ? it.ops[index] : null;
+  const op = old ? JSON.parse(JSON.stringify(old)) : { type: 'shape', face: 'A', pts: [], smooth: false, through: true, depth: 8 };
+  const others = (it.ops || []).filter((_, j) => j !== index);
+  let cur = op.pts.length - 1, map = null, drag = null;
+  openDialog(`Вырез по точкам: ${label(it)}`, `<div class="shapegrid"><div class="op-preview" id="shPrev"></div><div id="shSide"></div></div>`,
+    `<button data-close>Отмена</button><button class="accent" id="shOk">${old ? 'Сохранить' : 'Вырезать'}</button>`, true);
+  const body = document.getElementById('dlgBody'), prev = document.getElementById('shPrev'), side = document.getElementById('shSide');
+  const chk = (key, text, on) => `<label class="fld chk"><input type="checkbox" data-s="${key}"${on ? ' checked' : ''}><span>${text}</span></label>`;
+  const inp = (key, v) => `<input class="rin" data-s="${key}" value="${fmtIn(v)}" style="width:66px">`;
+  function draw() {
+    const d = drawingSVG(it, { ops: op.pts.length >= 3 ? [...others, op] : others, hl: others.length, width: 720, height: 500 });
+    map = d.map;
+    const X = u => map.x0 + u * map.s, Y = v => map.y0 + (map.SV - v) * map.s;
+    let g = '';
+    if (op.pts.length && op.pts.length < 3) g += `<polyline points="${op.pts.map(p => `${X(p[0])},${Y(p[1])}`).join(' ')}" fill="none" stroke="#1f5fb4" stroke-width="2" stroke-dasharray="5 4"/>`;
+    op.pts.forEach((p, i) => { g += `<g class="shpt" data-i="${i}" style="cursor:move"><circle cx="${X(p[0])}" cy="${Y(p[1])}" r="${i === cur ? 8 : 6}" fill="${i === cur ? '#d9770f' : '#fff'}" stroke="#d9770f" stroke-width="2"/><text x="${X(p[0]) + 9}" y="${Y(p[1]) - 9}" font-size="11" fill="#d9770f" font-weight="700">${i + 1}${p[2] > 0 ? ' R' + fmt(p[2]) : ''}</text></g>`; });
+    prev.innerHTML = d.svg.replace('</svg>', g + '</svg>');
+    side.innerHTML = `<div class="grid2">${fld('Шаблон', 'tpl', '', { options: SHAPE_TEMPLATES })}${fld('Сторона', 'face', op.face, { options: [['A', N.A], ['B', N.B]] })}</div>
+      <div class="btns">${chk('through', 'Насквозь', op.through)}${op.through ? '' : `<label class="fld"><span>Глубина, мм</span>${inp('depth', op.depth)}</label>`}${chk('smooth', 'Плавная кривая через все точки', op.smooth)}</div>
+      <div class="note">Клик по чертежу — новая точка${op.pts.length ? ' после выбранной (оранжевой)' : ''}. Точки тяните мышью, <kbd>Shift</kbd> — по сетке 10 мм. Радиус у точки: 0 — острый угол, больше — скруглённый.</div>
+      <table class="spec rtab"><tr><th>№</th><th>X</th><th>Y</th><th>Радиус</th><th></th></tr>${op.pts.map((p, i) => `<tr class="${i === cur ? 'cur' : ''}" data-row="${i}"><td>${i + 1}</td><td>${inp('u' + i, p[0])}</td><td>${inp('v' + i, p[1])}</td><td>${inp('r' + i, p[2] || 0)}</td><td><button data-del="${i}">✕</button></td></tr>`).join('')}</table>
+      <div class="btns"><button data-allr="0">Все углы острые</button><button data-allr="20">Все R20</button><button data-allr="50">Все R50</button><button data-clear>Очистить</button></div>
+      <div class="warn" id="shWarn"></div>`;
+  }
+  const toFace = e => { const svg = prev.querySelector('svg'), pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(svg.getScreenCTM().inverse()); const sn = e.shiftKey ? 10 : 1; return [Math.round((q.x - map.x0) / map.s / sn) * sn, Math.round((map.SV - (q.y - map.y0) / map.s) / sn) * sn]; };
+  prev.onpointerdown = e => {
+    e.preventDefault();
+    const h = e.target.closest('.shpt');
+    if (h) { cur = +h.dataset.i; drag = cur; prev.setPointerCapture(e.pointerId); return draw(); }
+    const [u, v] = toFace(e);
+    op.pts.splice(cur + 1, 0, [u, v, 0]); cur++;
+    draw();
+  };
+  prev.onpointermove = e => { if (drag === null) return; const [u, v] = toFace(e); op.pts[drag][0] = u; op.pts[drag][1] = v; draw(); };
+  prev.onpointerup = () => { drag = null; };
+  side.onclick = e => {
+    const t = e.target.closest('button,[data-row]'); if (!t) return;
+    if (t.dataset.del !== undefined) { op.pts.splice(+t.dataset.del, 1); cur = Math.min(cur, op.pts.length - 1); }
+    else if (t.dataset.allr !== undefined) { op.smooth = false; op.pts.forEach(p => { p[2] = +t.dataset.allr; }); }
+    else if ('clear' in t.dataset) { op.pts = []; cur = -1; }
+    else if (t.dataset.row !== undefined && e.target.tagName !== 'INPUT') cur = +t.dataset.row;
+    else return;
+    draw();
+  };
+  side.onchange = e => {
+    const kk = e.target.dataset.s || e.target.dataset.k; if (!kk) return;
+    const val = parseFloat(String(e.target.value).replace(',', '.'));
+    if (kk === 'tpl') { if (e.target.value) { const t = shapeTemplate(e.target.value, fr); op.pts = t.pts; op.smooth = !!t.smooth; cur = op.pts.length - 1; } }
+    else if (kk === 'face') op.face = e.target.value;
+    else if (kk === 'through' || kk === 'smooth') op[kk] = e.target.checked;
+    else if (kk === 'depth') { if (val > 0) op.depth = val; }
+    else { const m = kk.match(/^([uvr])(\d+)$/); if (m && isFinite(val)) op.pts[+m[2]][{ u: 0, v: 1, r: 2 }[m[1]]] = Math.max(m[1] === 'r' ? 0 : -1e9, val); }
+    draw();
+  };
+  body.onkeydown = e => { e.stopPropagation(); if ((e.key === 'Delete' || e.key === 'Backspace') && e.target.tagName !== 'INPUT' && cur >= 0) { op.pts.splice(cur, 1); cur = Math.min(cur, op.pts.length - 1); draw(); } };
+  document.getElementById('shOk').onclick = () => {
+    if (op.pts.length < 3) { document.getElementById('shWarn').textContent = 'Нужно хотя бы 3 точки'; return; }
+    if (!op.through && !(op.depth > 0)) { document.getElementById('shWarn').textContent = 'Укажите глубину'; return; }
+    closeDialog();
+    const saved = JSON.parse(JSON.stringify(op));
+    commit(() => { it.ops = it.ops || []; if (index >= 0) it.ops[index] = saved; else it.ops.push(saved); });
+    status(`Вырез ${old ? 'изменён' : 'сделан'}: ${describeOp(saved, it)}`);
+  };
+  draw();
 }
 insp.addEventListener('click', e => {
   const ha = e.target.closest('[data-hw-act]'), he = e.target.closest('[data-hw-edit]'), hd = e.target.closest('[data-hw-del]');
@@ -1992,7 +2082,7 @@ const COMMANDS = {
   undo, redo, duplicate: duplicateSel, delete: deleteSel, group: groupSel, ungroup: ungroupSel, 'apply-hinges': applyHingesFromInspector,
   'rot-y': () => rotateSel('y'), 'rot-z': () => rotateSel('z'), 'rebuild-group': rebuildGroupFromInspector,
   fit, spec: specDialog, shot: screenshot, drawing: () => drawingDialog(selItems()), drawings: drawingsCommand, 'drawing-module': drawingsCommand,
-  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'),
+  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'), 'op-shape': () => shapeDialog(),
   hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false), boxsel: () => setBoxMode(!boxMode),
   'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleHw(P.hw.filter(h => ids.includes(h.target)).map(h => h.id)); },
   'hw-toggle-all': () => toggleHw(P.hw.map(h => h.id)),
