@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween, plateOps, hingeSpots, baseNeeded, baseHint, findBase, snapDelta } from './hardware.js';
+import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, motionKey, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween, plateOps, hingeSpots, slideMount, baseNeeded, baseHint, findBase, snapDelta } from './hardware.js';
 import { moduleSVG, overviewSVG } from './drawings.js';
 import { MILLS, MILL_CATS, millDefaults } from './mill.js';
 import { createRuler } from './ruler.js';
@@ -305,7 +305,8 @@ function itemPose(id, out, seen = new Set()) {
   seen.add(id);
   const parent = hw.base ? itemPose(hw.base, new THREE.Matrix4(), seen) : null;
   let local = null;   // все механизмы детали по очереди: сначала первый поставленный, потом следующий
-  for (const h of moverByItem.get(id) || []) if (hwT(h.id)) { const M = poseMatrix(hwSteps(h, item(h.target), P.items), hwT(h.id), new THREE.Matrix4()); local = local ? local.premultiply(M) : M; }
+  const seen2 = new Set();   // пара одинаковых механизмов (две направляющие, две петли) двигает деталь один раз
+  for (const h of moverByItem.get(id) || []) if (hwT(h.id)) { const key = motionKey(h) || h.type; if (seen2.has(key)) continue; seen2.add(key); const M = poseMatrix(hwSteps(h, item(h.target), P.items), hwT(h.id), new THREE.Matrix4()); local = local ? local.premultiply(M) : M; }
   if (!parent && !local) return null;
   out.identity();
   if (local) out.copy(local);
@@ -1878,6 +1879,7 @@ function hwForm(it, hw, isNew) {
     body.querySelectorAll('[data-k]').forEach(el => { const fd = HW_FIELDS[el.dataset.k]; nh[el.dataset.k] = fd.num ? (parseFloat(String(el.value).replace(',', '.')) || 0) : el.value; });
     const why = checkTarget(nh.type, it);
     if (why) { document.getElementById('hwWarn').textContent = why; return; }
+    if (isNew && HW_TYPES[nh.type].cat === 'slides' && slideMount(it) !== 'front') return hwPlace(it, nh, true);   // направляющие — сразу в окно расположения
     const others = hwOf(it.id).filter(h => h.id !== hw.id), cl = hwClash(nh, it, others);
     if (cl) return hwPlace(it, nh, isNew, `Здесь уже стоит «${HW_TYPES[cl.type].name}» — выберите свободное место`);
     closeDialog();
@@ -1899,6 +1901,11 @@ function attachBase(hw, it, only) {
   let moved = '';
   if (f.gap > 0.5) {
     const d = snapDelta(hw, it, f.part);
+    const lone = HW_TYPES[hw.type].cat === 'slides' && slideMount(it) !== 'front' && movingIds(hw, P.items).length <= 1;
+    if (lone && d.some(v => v)) {   // ящик не объединён — двигать одну боковину нельзя, только подсказываем
+      const b = f.part, raw = b.x + b.w / 2 > it.x + it.w / 2 ? b.x - (it.x + it.w) : it.x - (b.x + b.w);
+      return `вторая сторона — к ${who(b)}; зазор ${fmt(raw)} мм, а нужно 13 — объедините ящик и нажмите 🧲, он встанет сам`;
+    }
     if (d.some(v => v)) {
       for (const x of attachedClosure([it, ...movingIds(hw, P.items).map(item).filter(Boolean)])) { x.x = r1(x.x + d[0]); x.y = r1(x.y + d[1]); x.z = r1(x.z + d[2]); }
       moved = `, притянуто на ${fmt(f.gap)} мм`;
@@ -1934,6 +1941,7 @@ function hwClash(hw, it, others) {
 function hwPlace(it, hw0, isNew, warn = '') {
   const hw = { ...hw0 }, fr = frame(it), others = hwOf(it.id).filter(h => h.id !== hw.id);
   const t = HW_TYPES[hw.type], hinge = t.cat === 'hinges', along = hw.side === 'L' || hw.side === 'R' ? 'v' : 'u';
+  const slide = t.cat === 'slides' && slideMount(it) !== 'front', twin = slide && isNew && slideMount(it) === 'side' ? slideTwin(it) : null;
   const org = { x: it.x, y: it.y, z: it.z };
   const W = 640, H = 430, m = 60, s = Math.min((W - 2 * m) / fr.SU, (H - 2 * m) / fr.SV);
   const X = u => m + u * s, Y = v => H - m - v * s;
@@ -1941,6 +1949,8 @@ function hwPlace(it, hw0, isNew, warn = '') {
   const rects = (h) => hwBoxes(h, it).map(b => ({ u0: b.min[fr.U] - org[fr.U], u1: b.max[fr.U] - org[fr.U], v0: b.min[fr.V] - org[fr.V], v1: b.max[fr.V] - org[fr.V] }));
   openDialog(`Где стоит: ${t.name}`, `<div class="note">Тяните фурнитуру мышью или вводите сдвиг. Стрелки — по 1 мм, с <kbd>Shift</kbd> — по 10 мм.${hinge ? ' Каждую петлю можно тянуть отдельно вдоль кромки.' : ''} Серым — другая фурнитура этой детали.</div>
     <div class="op-preview" id="hpPrev"></div>
+    ${slide ? `<div class="grid4">${fld('Центр шины от низа детали, мм (0 — середина)', 'level', +hw.level || 0)}${fld('Отступ от переднего края, мм', 'setback', +hw.setback || 0)}${fld('Длина направляющей, мм (0 — по детали)', 'len', +hw.len || 0)}${twin ? `<label class="fld chk"><input type="checkbox" id="hpPair" checked><span>Сразу пара: вторая — на «${esc(label(twin))}»</span></label>` : ''}</div>
+      <div class="note">Внутренняя шина крепится к этой детали, внешняя — магнитом к боковине корпуса с зазором 13 мм. С двух сторон — 26 мм: ящик должен быть на 26 мм уже проёма. ${it.g ? `Выезжает весь модуль «${esc(group(it.g).name)}».` : 'Детали ящика не объединены — выедет только эта деталь (объедините ящик: Shift + клик по деталям, Ctrl+G).'}</div>` : ''}
     <div class="grid4">${fld('Сдвиг по ' + fr.U.toUpperCase() + ', мм', 'du', +hw.du || 0)}${fld('Сдвиг по ' + fr.V.toUpperCase() + ', мм', 'dv', +hw.dv || 0)}${hinge ? fld('Петли, мм от края', 'positions', hingeSpots({ ...hw, du: 0, dv: 0 }, it).map(p => Math.round(p[along])).join(', '), { text: true }) : ''}</div>
     <div class="warn" id="hpWarn"></div>`,
     `<button data-close>Отмена</button><button id="hpReset">Сбросить сдвиг</button><button class="accent" id="hpOk">${isNew ? 'Поставить' : 'Готово'}</button>`, true);
@@ -1983,7 +1993,7 @@ function hwPlace(it, hw0, isNew, warn = '') {
   prev.onpointerup = () => { drag = null; };
   body.onchange = e => {
     const k = e.target.dataset.k; if (!k) return;
-    if (k === 'positions') { hw.place = 'manual'; hw.positions = e.target.value; } else hw[k] = parseFloat(String(e.target.value).replace(',', '.')) || 0;
+    if (k === 'positions') { hw.place = 'manual'; hw.positions = e.target.value; } else hw[k] = Math.max(k === 'du' || k === 'dv' ? -1e9 : 0, parseFloat(String(e.target.value).replace(',', '.')) || 0);
     draw();
   };
   body.onkeydown = e => {
@@ -1995,16 +2005,39 @@ function hwPlace(it, hw0, isNew, warn = '') {
   document.getElementById('hpReset').onclick = () => { hw.du = 0; hw.dv = 0; syncFields(); draw(); };
   document.getElementById('hpOk').onclick = () => {
     if (clash) { warn = `Нельзя: накладывается на «${HW_TYPES[clash.type].name}». Сдвиньте или удалите ту фурнитуру.`; return draw(); }
+    const pair = twin && document.getElementById('hpPair')?.checked;
     closeDialog();
     let msg = '';
     commit(() => {
       if (isNew) { hw.id = nid(); P.hw.push(hw); if (baseNeeded(hw.type)) msg = attachBase(hw, it, null); }
       else { const i = P.hw.findIndex(h => h.id === hw.id); P.hw[i] = hw; delete hw.auto; }
       hwSync(hw, it);
+      if (pair) {   // вторая направляющая — на противоположную боковину ящика, ящик уже стоит по первой; проверяем зазор
+        const h2 = { ...hw, id: nid(), target: twin.id, base: null };
+        const f = findBase(h2, twin, P.items, 60);
+        if (f) h2.base = f.part.id;
+        P.hw.push(h2); hwSync(h2, twin);
+        msg += ' · ' + slideFit(it, twin, item(hw.base), f && f.part);
+      }
     });
     status(`${isNew ? 'Поставлено' : 'Место изменено'}: ${describeHw(hw, it)}${msg ? ' · ' + msg : ''}`);
   };
   draw();
+}
+// Противоположная боковина того же ящика (модуль или связка): параллельная, на одной высоте и глубине
+function slideTwin(it) {
+  const mates = P.items.filter(i => i.id !== it.id && ((it.g && i.g === it.g) || (it.link && i.link === it.link)));
+  const ov = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0);
+  return mates.filter(i => thinAxis(i) === 'x' && Math.abs(i.x - it.x) > 50 && ov(i.y, i.y + i.h, it.y, it.y + it.h) > it.h * 0.5 && ov(i.z, i.z + i.d, it.z, it.z + it.d) > it.d * 0.5)
+    .sort((a, b) => Math.abs(a.h - it.h) + Math.abs(a.d - it.d) - Math.abs(b.h - it.h) - Math.abs(b.d - it.d))[0] || null;
+}
+// Подходит ли ящик в проём: с каждой стороны нужно 13 мм под направляющую
+function slideFit(a, b, ca, cb) {
+  if (!ca || !cb) return 'вторая направляющая: боковина корпуса не найдена рядом — присоедините 🧲';
+  const L = Math.min(a.x, b.x), R = Math.max(a.x + a.w, b.x + b.w), box = R - L;
+  const opening = Math.max(ca.x, cb.x) - Math.min(ca.x + ca.w, cb.x + cb.w), need = opening - 26;
+  if (Math.abs(box - need) <= 0.5) return `ящик ${fmt(box)} мм в проёме ${fmt(opening)} — по 13 мм с каждой стороны ✓`;
+  return `⚠ ящик ${fmt(box)} мм, а нужно ${fmt(need)} (проём ${fmt(opening)} − 26): ${box > need ? 'уменьшите' : 'увеличьте'} ширину на ${fmt(Math.abs(box - need))} мм`;
 }
 // ---------------------------------------------------------------- окно детали
 function partEditor(id) {
