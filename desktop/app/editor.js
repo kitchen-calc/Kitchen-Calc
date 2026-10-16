@@ -9,6 +9,7 @@ import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget,
 import { moduleSVG, overviewSVG, isoModuleSVG } from './drawings.js';
 import { MILLS, MILL_CATS, millDefaults } from './mill.js';
 import { createRuler } from './ruler.js';
+import { createPeople } from './people.js';
 import { APP_CATS, MOUNTS, APPLIANCES, appBox, appInfo, FINISHES, finishColor, CUSTOM_OPEN, buildAppliance, hasMotion, poseAppliance, appIcon, appSheetSVG, frontReach } from './appliances.js';
 import { DECOR, DECORS, TABS, texture as decorTexture, thumb as decorThumb, surfaceParams, sheetLayout, applySheetUV, onTextureUpdate } from './materials.js';
 import { normRoom, buildRoom3D, roomObstacles, roomSVG, ROOM_PRESETS, OPENING_TYPES, wallsToPts, ptsToWalls, checkPts, checkOpening, tidyPts, wallLen } from './room.js';
@@ -114,7 +115,7 @@ vp.appendChild(labels.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#e7e3dc');
-scene.add(new THREE.HemisphereLight(0xffffff, 0x8f877b, 1.9));
+const hemi = new THREE.HemisphereLight(0xffffff, 0x8f877b, 1.9); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(2500, 5000, 4000); scene.add(sun);
 const fill = new THREE.DirectionalLight(0xffffff, 0.5); fill.position.set(-3000, 2000, -1000); scene.add(fill);
 
@@ -374,6 +375,25 @@ function toggleHw(ids) {
   if (!ids.length) return status(all && P.hw.some(h => solid(h.target)) ? 'Это монолит («один предмет»): части не двигаются. В свойствах модуля выберите «Как объединено: Сборка»' : 'Здесь нет фурнитуры с действием');
   const anyClosed = ids.some(id => (hwState.get(id) || { to: 0 }).to < 1);
   setHw(ids, anyClosed ? 1 : 0);
+  peopleAct(ids.map(id => item(P.hw.find(h => h.id === id).target)));
+}
+// ---------------------------------------------------------------- люди и свет (people.js): парень открывает, соседка приходит ругаться
+const people = createPeople({ scene, render: requestRender, room: () => P.room });
+const peopleOn = () => document.getElementById('showPeople').checked;
+function peopleAct(list) {
+  list = list.filter(Boolean); if (!peopleOn() || !list.length) return;
+  const a = list.find(isApp), f = [[0, 1], [1, 0], [0, -1], [-1, 0]][a ? (a.rot | 0) % 4 : 0];   // перед мебели — к нам (+Z), у техники — по повороту
+  people.act(bbox(list), { x: f[0], z: f[1] });
+}
+let lightOn = true;
+function toggleLight() {
+  lightOn = !lightOn;
+  hemi.intensity = lightOn ? 1.9 : 0.16; sun.intensity = lightOn ? 1.5 : 0.04; fill.intensity = lightOn ? 0.5 : 0;
+  scene.background.set(lightOn ? '#e7e3dc' : '#14161b');
+  const b = document.getElementById('lightBtn'); b.classList.toggle('off', !lightOn); b.textContent = lightOn ? '💡 Свет' : '🌑 Свет выкл.';
+  if (!lightOn && peopleOn()) people.lightsOff(orbit.target, camera.position); else if (lightOn) people.lightsOn();
+  status(lightOn ? 'Свет включён' : 'Свет выключен');
+  requestRender();
 }
 function closeAllHw() { for (const st of hwState.values()) { st.t = 0; st.to = 0; } applyPoses(); }
 
@@ -426,6 +446,7 @@ function toggleMotion(hwIds, appIds) {
   const open = [...hws.map(id => hwState.get(id)), ...apps.map(id => appState.get(id))].some(st => !st || st.to < 1);
   if (hws.length) setHw(hws, open ? 1 : 0);
   setApp(apps, open ? 1 : 0);
+  peopleAct([...hws.map(id => item(P.hw.find(h => h.id === id).target)), ...apps.map(item)]);
 }
 
 // ---------------------------------------------------------------- габариты и размеры на экране
@@ -2550,7 +2571,7 @@ const COMMANDS = {
   hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false), boxsel: () => setBoxMode(!boxMode),
   'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleMotion(P.hw.filter(h => ids.includes(h.target)).map(h => h.id), ids.filter(id => isApp(item(id)))); setTimeout(refreshInspector, 50); },
   'hw-toggle-all': () => toggleMotion(P.hw.map(h => h.id), P.items.filter(isApp).map(i => i.id)),
-  appliances: () => appCatalog(),
+  appliances: () => appCatalog(), light: toggleLight,
   'app-toggle': () => { const k = kindOfSelection(); if (k.type === 'item' && isApp(k.it)) { toggleMotion([], [k.it.id]); setTimeout(() => { refreshInspector(); if (!modal.hidden && dlgIsPart) renderPartEditor(); }, 50); } },
   'app-cut': () => { const k = kindOfSelection(); if (k.type === 'item' && isApp(k.it)) hobCut(k.it); },
   'measure-hole': () => startMeasure('hole'), 'measure-cut': () => startMeasure('cut'),
@@ -2581,6 +2602,12 @@ document.addEventListener('keydown', e => {
   else if (k === 'f') fit();
 });
 document.getElementById('showDims').addEventListener('change', updateDims);
+(() => {   // галочка «Люди» запоминается
+  const c = document.getElementById('showPeople');
+  try { c.checked = localStorage.getItem('kcs-people') === '1'; } catch (e) { /* */ }
+  people.setEnabled(c.checked);
+  c.addEventListener('change', () => { people.setEnabled(c.checked); try { localStorage.setItem('kcs-people', c.checked ? '1' : '0'); } catch (e) { /* */ } status(c.checked ? 'Люди включены: откройте дверь или ящик — придут' : 'Без людей'); });
+})();
 document.getElementById('showFast').addEventListener('change', rebuild);
 document.getElementById('showRoom').addEventListener('change', buildRoom);
 document.getElementById('showRoom').addEventListener('change', requestRender);
@@ -2650,4 +2677,4 @@ start();
 window.__kcs = { get P() { return P; }, sel, COMMANDS, setView, get camera() { return camera; }, pivot, renderer, select: ids => { sel.clear(); ids.forEach(i => sel.add(i)); openGroup = 0; selectionChanged(); },
   hwSetT: (ids, t) => { ids.forEach(id => hwState.set(id, { t, to: t })); applyPoses(); }, meshOf: id => itemsGroup.children.find(m => m.userData.id === id), hwGroup, moveSel,
   basePickTo: (hw, part) => { startBasePick(hw); finishBasePick(part); }, status: () => document.getElementById('statusText').textContent,
-  appSetT: (ids, t) => { ids.forEach(id => appState.set(id, { t, to: t })); applyPoses(); }, appModels, addAppliance, APPLIANCES };  // для автотестов
+  appSetT: (ids, t) => { ids.forEach(id => appState.set(id, { t, to: t })); applyPoses(); }, appModels, addAppliance, APPLIANCES, people };  // для автотестов
