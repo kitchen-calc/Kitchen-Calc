@@ -40,9 +40,13 @@ const SHEET = { w: 2800, h: 2070 };
 // Типы модулей: что это за изделие — видно в списке, свойствах и на чертежах
 const KIND_NAMES = { cabinet: 'Шкаф', base: 'Тумба нижняя', wall: 'Шкаф навесной', tall: 'Пенал', drawers: 'Тумба с ящиками', wardrobe: 'Шкаф-купе / гардероб',
   rack: 'Стеллаж', shelf: 'Полка', chest: 'Комод', drawer: 'Ящик', nightstand: 'Тумба прикроватная', tv: 'ТВ-тумба', table: 'Стол', desk: 'Письменный стол',
-  bed: 'Кровать', hall: 'Прихожая', kitchen: 'Кухня (набор)', island: 'Остров', bench: 'Скамья / пуф', other: 'Другое' };
+  bed: 'Кровать', hall: 'Прихожая', kitchen: 'Кухня (набор)', island: 'Остров', bench: 'Скамья / пуф', decor: 'Декор / предмет интерьера', other: 'Другое' };
 const PRESET_KIND = { lower: 'base', drawers: 'drawers', upper: 'wall', tall: 'tall', wardrobe: 'wardrobe', open: 'rack' };  // стандартный лист ЛДСП, мм
 const AUTOSAVE_KEY = 'kcs-autosave-v1';
+const GROUP_MODES = [
+  { id: 'assembly', icon: '🧩', name: 'Сборка', note: 'Клик выбирает целиком, двойной клик — отдельную деталь. Двери, ящики и фурнитура работают каждая сама. Можно разобрать.' },
+  { id: 'solid', icon: '■', name: 'Один предмет', note: 'Монолит: детали не разделяются и не двигаются по отдельности — выбирается и переносится только целиком. Для интерьера: декор, готовая мебель, сантехника. Можно разобрать.' },
+];
 
 // ---------------------------------------------------------------- проект и история
 let P = newProject();
@@ -62,6 +66,8 @@ const item = id => P.items.find(i => i.id === id);
 const group = id => P.groups.find(g => g.id === id);
 const selItems = () => P.items.filter(i => sel.has(i.id));
 const groupItems = g => P.items.filter(i => i.g === g);
+// Модуль-«предмет» (монолит): детали не разделяются — выбирается только целиком, фурнитура внутри не двигается
+const solid = id => { const it = item(id), g = it && it.g && group(it.g); return !!(g && g.mode === 'solid'); };
 
 function snapshot() { return JSON.stringify({ name: P.name, room: P.room, materials: P.materials, items: P.items, groups: P.groups, hw: P.hw, seq: P.seq }); }
 function restore(s) { Object.assign(P, JSON.parse(s)); }
@@ -219,7 +225,7 @@ function buildHardware() {
   hwGroup.clear();
   buildFasteners();
   moverByItem = new Map();
-  for (const hw of P.hw) for (const id of movingIds(hw, P.items)) if (!moverByItem.has(id)) moverByItem.set(id, hw);
+  for (const hw of P.hw) if (!solid(hw.target)) for (const id of movingIds(hw, P.items)) if (!moverByItem.has(id)) moverByItem.set(id, hw);
   for (const hw of P.hw) {
     const it = item(hw.target); if (!it) continue;
     for (const v of hwVisuals(hw, it, P.items, hwOf(it.id))) {
@@ -296,8 +302,9 @@ function setHw(ids, to) {
   if (!animating) { animating = true; requestAnimationFrame(animateHw); }
 }
 function toggleHw(ids) {
-  ids = ids.filter(id => { const h = P.hw.find(x => x.id === id); return h && hasAction(h.type); });
-  if (!ids.length) return status('Здесь нет фурнитуры с действием');
+  const all = ids.length;
+  ids = ids.filter(id => { const h = P.hw.find(x => x.id === id); return h && hasAction(h.type) && !solid(h.target); });
+  if (!ids.length) return status(all && P.hw.some(h => solid(h.target)) ? 'Это монолит («один предмет»): части не двигаются. В свойствах модуля выберите «Как объединено: Сборка»' : 'Здесь нет фурнитуры с действием');
   const anyClosed = ids.some(id => (hwState.get(id) || { to: 0 }).to < 1);
   setHw(ids, anyClosed ? 1 : 0);
 }
@@ -596,6 +603,7 @@ renderer.domElement.addEventListener('pointerup', e => {
     const touch = b.x1 >= R.x0 && b.x0 <= R.x1 && b.y1 >= R.y0 && b.y0 <= R.y1;
     if (lr ? inside : touch) { sel.add(it.id); n++; }
   }
+  for (const it of P.items) if (sel.has(it.id) && solid(it.id)) groupItems(it.g).forEach(x => sel.add(x.id));   // монолит — только целиком
   openGroup = 0;
   selectionChanged();
   status(n ? `Выделено деталей: ${sel.size}. «Объединить в модуль» (Ctrl+G) — сделать из них шкаф, полку и т. д.` : 'В рамку ничего не попало');
@@ -619,7 +627,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   if (!hit) { if (!e.shiftKey) { sel.clear(); openGroup = 0; } }
   else {
     const it = item(hit);
-    const ids = it.g && it.g !== openGroup ? groupItems(it.g).map(i => i.id) : [it.id];
+    const ids = it.g && (it.g !== openGroup || solid(it.id)) ? groupItems(it.g).map(i => i.id) : [it.id];
     if (it.g !== openGroup) openGroup = 0;
     if (e.shiftKey) { const all = ids.every(id => sel.has(id)); ids.forEach(id => all ? sel.delete(id) : sel.add(id)); }
     else { sel.clear(); ids.forEach(id => sel.add(id)); }
@@ -630,6 +638,7 @@ renderer.domElement.addEventListener('dblclick', e => {
   const hit = pick(e);
   if (!hit) return;
   const it = item(hit);
+  if (solid(it.id)) { sel.clear(); groupItems(it.g).forEach(i => sel.add(i.id)); openGroup = 0; selectionChanged(); return status(`«${group(it.g).name}» — один предмет: детали не разделяются. Чтобы менять отдельные детали — в свойствах «Как объединено: Сборка» или «Разобрать»`); }
   openGroup = it.g || 0;
   sel.clear(); sel.add(it.id);
   selectionChanged();
@@ -898,6 +907,7 @@ function groupSel() {
   const b = bbox(list);
   openDialog(`Объединить ${list.length} деталей`, `
     <div class="grid3">${fld('Что это', 'gk', 'cabinet', { options: Object.entries(KIND_NAMES) })}${fld('Название', 'gn', '', { text: true })}</div>
+    <div class="modes">${GROUP_MODES.map((m, k) => `<label class="modecard"><input type="radio" name="gmode" value="${m.id}"${k ? '' : ' checked'}><b>${m.icon} ${m.name}</b><span>${esc(m.note)}</span></label>`).join('')}</div>
     <div class="note">Габарит: ${fmt(b.x1 - b.x0)} × ${fmt(b.y1 - b.y0)} × ${fmt(b.z1 - b.z0)} мм. Детали из других модулей перейдут в новый.
     Тип виден в списке слева, в свойствах и на чертежах — по нему понятно, где шкаф, где полка, а где отдельная деталь.</div>`,
     '<button data-close>Отмена</button><button class="accent" id="grpOk">Объединить</button>');
@@ -909,9 +919,10 @@ function groupSel() {
   body.onchange = () => { q('gn').placeholder = autoName(); };
   document.getElementById('grpOk').onclick = () => {
     const kind = q('gk').value, name = q('gn').value.trim() || autoName();
+    const mode = (body.querySelector('[name="gmode"]:checked') || {}).value === 'solid' ? 'solid' : 'assembly';
     closeDialog();
-    commit(() => { const g = { id: nid(), name, kind }; P.groups.push(g); list.forEach(i => { i.g = g.id; }); openGroup = 0; });
-    status(`Объединено: ${name} (${KIND_NAMES[kind]})`);
+    commit(() => { const g = { id: nid(), name, kind, mode }; P.groups.push(g); list.forEach(i => { i.g = g.id; }); openGroup = 0; });
+    status(`Объединено: ${name} (${KIND_NAMES[kind]}, ${mode === 'solid' ? 'один предмет' : 'сборка'})`);
   };
 }
 function ungroupSel() {
@@ -993,8 +1004,8 @@ function refreshTree() {
   const node = (i, child) => `<div class="node ${child ? 'child' : ''} ${sel.has(i.id) ? 'sel' : ''}" data-item="${i.id}"><span class="sw" style="background:${mat(i.mat).color}"></span>${esc(label(i))}<span class="dim">${fmt(i.w)}×${fmt(i.h)}</span></div>`;
   for (const g of P.groups) {
     const list = groupItems(g.id), all = list.every(i => sel.has(i.id)), b = bbox(list);
-    h += `<div class="node grp ${all ? 'sel' : ''}" data-group="${g.id}"><span>▸ ${esc(g.name)}</span><span class="dim">${fmt(b.x1 - b.x0)}×${fmt(b.y1 - b.y0)}</span>${g.kind ? `<span class="kind">${esc(KIND_NAMES[g.kind] || g.kind)}</span>` : ''}</div>`;
-    if (openGroup === g.id || list.some(i => sel.has(i.id) && !all)) list.forEach(i => { h += node(i, true); });
+    h += `<div class="node grp ${all ? 'sel' : ''}" data-group="${g.id}"><span>${g.mode === 'solid' ? '■' : '▸'} ${esc(g.name)}</span><span class="dim">${fmt(b.x1 - b.x0)}×${fmt(b.y1 - b.y0)}</span>${g.kind ? `<span class="kind">${esc(KIND_NAMES[g.kind] || g.kind)}${g.mode === 'solid' ? ' · один предмет' : ' · сборка'}</span>` : ''}</div>`;
+    if (g.mode !== 'solid' && (openGroup === g.id || list.some(i => sel.has(i.id) && !all))) list.forEach(i => { h += node(i, true); });
   }
   P.items.filter(i => !i.g).forEach(i => { h += node(i, false); });
   el.innerHTML = h;
@@ -1060,7 +1071,9 @@ function refreshInspector() {
   } else {
     const b = bbox(k.list);
     title.textContent = k.type === 'group' ? 'Модуль' : `Выбрано: ${k.list.length}`;
-    if (k.type === 'group') h += `<div class="sec"><b>Модуль</b>${fld('Название', 'gname', k.g.name, { text: true })}${fld('Что это', 'gkind', k.g.kind || 'other', { options: Object.entries(KIND_NAMES) })}</div>`;
+    if (k.type === 'group') h += `<div class="sec"><b>Модуль</b>${fld('Название', 'gname', k.g.name, { text: true })}${fld('Что это', 'gkind', k.g.kind || 'other', { options: Object.entries(KIND_NAMES) })}
+      ${fld('Как объединено', 'gmode', k.g.mode === 'solid' ? 'solid' : 'assembly', { options: GROUP_MODES.map(m => [m.id, m.name]) })}
+      <div class="note">${esc(GROUP_MODES.find(m => m.id === (k.g.mode === 'solid' ? 'solid' : 'assembly')).note)}</div></div>`;
     h += `<div class="sec"><b>Габарит, мм</b><div class="row">${fld('Ширина', '-', b.x1 - b.x0, { ro: true })}${fld('Высота', '-', b.y1 - b.y0, { ro: true })}${fld('Глубина', '-', b.z1 - b.z0, { ro: true })}</div></div>
       <div class="sec"><b>Положение, мм</b><div class="row">${fld('X слева', 'bx', b.x0)}${fld('Y от пола', 'by', b.y0)}${fld('Z от стены', 'bz', b.z0)}</div></div>
       <div class="sec"><b>Материал</b><div class="row2">${fld('Корпус', 'mBody', '', { options: [['', '— не менять —'], ...matOptions()] })}${fld('Фасады', 'mFront', '', { options: [['', '— не менять —'], ...matOptions()] })}</div></div>`;
@@ -1091,7 +1104,7 @@ function refreshInspector() {
       Это не объединение в шкаф (для этого — «Объединить в модуль»). Двери, подъёмники и купе всегда двигают только свой фасад.</div>
       <div class="btns"><button data-cmd="link">🔗 Ездят вместе</button><button data-cmd="unlink">Разъединить</button></div></div>`;
     h += `<div class="sec"><b>Действия</b><div class="btns"><button data-cmd="rot-y">⟲ Повернуть</button><button data-cmd="duplicate">Копия</button>
-      ${k.type === 'group' ? '<button class="accent" data-cmd="drawing-module">📐 Чертёж шкафа</button><button data-cmd="ungroup">Разгруппировать</button>' : '<button class="accent" data-cmd="group">Объединить в модуль…</button>'}
+      ${k.type === 'group' ? '<button class="accent" data-cmd="drawing-module">📐 Чертёж шкафа</button><button data-cmd="ungroup" title="Модуль исчезнет, детали станут отдельными">Разобрать</button>' : '<button class="accent" data-cmd="group">Объединить в модуль…</button>'}
       <button class="danger" data-cmd="delete">Удалить</button></div></div>`;
   }
   insp.innerHTML = h;
@@ -1130,6 +1143,7 @@ insp.addEventListener('change', e => {
   const b = bbox(k.list);
   if (key === 'gname') return commit(() => { k.g.name = raw.trim() || 'Модуль'; });
   if (key === 'gkind') return commit(() => { k.g.kind = raw; });
+  if (key === 'gmode') { commit(() => { k.g.mode = raw === 'solid' ? 'solid' : 'assembly'; openGroup = 0; if (raw === 'solid') for (const h of P.hw) if (k.list.some(i => i.id === h.target)) hwState.delete(h.id); }); return status(raw === 'solid' ? 'Теперь это один предмет: детали не разделяются' : 'Теперь это сборка: детали работают отдельно, клик выбирает целиком'); }
   if (key === 'mBody' && raw) return commit(() => setMaterial(k.list.filter(i => !['door', 'drawerFront', 'back'].includes(i.kind) && i.mat !== 'hdf3'), raw));
   if (key === 'mFront' && raw) return commit(() => setMaterial(k.list.filter(i => ['door', 'drawerFront'].includes(i.kind)), raw));
   if (key === 'bx' && num()) return moveSel(v - b.x0, 0, 0);
