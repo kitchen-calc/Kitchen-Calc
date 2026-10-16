@@ -9,7 +9,7 @@ import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget,
 import { moduleSVG, overviewSVG } from './drawings.js';
 import { DECOR, DECORS, TABS, texture as decorTexture, thumb as decorThumb, surfaceParams, sheetLayout, applySheetUV, onTextureUpdate } from './materials.js';
 import { normRoom, buildRoom3D, roomObstacles, roomSVG, ROOM_PRESETS, OPENING_TYPES, wallsToPts, ptsToWalls, checkPts, checkOpening, tidyPts, wallLen } from './room.js';
-import { panelGeometry, describeOp, drawingSVG, frame, thinAxis, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
+import { panelGeometry, describeOp, drawingSVG, frame, thinAxis, bevelLen, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
 
 // ---------------------------------------------------------------- справочники
 const DEFAULT_MATERIALS = [
@@ -821,8 +821,15 @@ function buildCabinet(p, ox, oy, oz, g) {
     for (let i = 0; i < k; i++) add('door', k > 1 ? `Фасад ${i + 1}` : 'Фасад', r1(ox + 2 + i * (dw + 3)), y0 + 2, fz, r1(dw), H - 4, ft, p.facadeMat);
   }
   if (p.drill !== false) drillCabinet(out, p, ['conf', 'shelf', 'hinge']);
+  // Срез боковин под углом (мансарда, лестница, скошенный угол): угол боковины срезается по линии «длина по глубине + градусы»
+  const sc = p.sideCut;
+  if (sc && sc.where && sc.where !== 'none' && sc.a > 0 && sc.deg > 0 && sc.deg < 89) {
+    const b = r1(sc.a * Math.tan(sc.deg * Math.PI / 180));
+    out.filter(o => o.role === 'sideL' || o.role === 'sideR').forEach(o => { o.ops.push({ type: 'corner', corner: sc.where, shape: 'angle', a: Math.min(sc.a, o.d), deg: sc.deg, b: Math.min(b, o.h), tag: 'sidecut' }); });
+  }
   return out;
 }
+const SIDE_CUTS = [['none', 'без среза'], ['RT', 'спереди сверху'], ['RB', 'спереди снизу'], ['LT', 'сзади сверху (мансарда)'], ['LB', 'сзади снизу']];
 
 // Автоприсадка корпуса: конфирматы (боковины ↔ дно, крыша, царги), полкодержатели, петли с ответными планками.
 // Отверстия помечены tag, чтобы петли можно было заменить, не трогая остальное.
@@ -1182,7 +1189,7 @@ function itemPanel(i) {
       <div class="sec"><b>Положение, мм</b><div class="row">${fld('X слева', 'x', i.x)}${fld('Y от пола', 'y', i.y)}${fld('Z от стены', 'z', i.z)}</div></div>
       <div class="sec"><b>Обработка${(i.ops || []).length ? ` (${i.ops.length})` : ''}</b>
       ${(i.ops || []).map((o, k) => `<div class="op"><span>${k + 1}. ${esc(describeOp(o, i))}</span><button data-op-edit="${k}" title="Изменить">✎</button><button data-op-del="${k}" title="Удалить">✕</button></div>`).join('') || '<div class="note">Отверстий и вырезов нет.</div>'}
-      <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез / скругление угла</button><button data-cmd="op-shape" title="Любая форма: точки, острые или скруглённые углы, плавная кривая">＋ Вырез по точкам</button></div>
+      <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез / скругление угла</button><button data-cmd="op-shape" title="Любая форма: точки, острые или скруглённые углы, плавная кривая">＋ Вырез по точкам</button><button data-cmd="op-bevel" title="Торец под углом через толщину, например 45° «на ус»">＋ Скос кромки под углом</button></div>
       <div class="btns"><button data-cmd="measure-hole" title="Наведите мышь на деталь — видно расстояния до краёв, клик ставит отверстие">📏 Разметить отверстие</button><button data-cmd="measure-cut" title="Клик ставит левый нижний угол выреза">📏 Разметить вырез</button><button class="accent" data-cmd="drawing">Чертёж</button></div></div>
       <div class="sec"><b>Фурнитура${hwOf(i.id).length ? ` (${hwOf(i.id).length})` : ''}</b>
       ${hwOf(i.id).map(h => `<div class="op hwrow"><span>${esc(describeHw(h, i))}${baseNeeded(h.type) ? (h.base && item(h.base) ? `<br><small class="base">🔗 сторона Б — ${esc(who(item(h.base)))}</small>` : '<br><small class="warn">⚠ вторая сторона свободна</small>') : ''}</span>${hasAction(h.type) ? `<button class="accent" data-hw-act="${h.id}">${actionLabels(h.type)[(hwState.get(h.id) || { to: 0 }).to > 0 ? 1 : 0]}</button>` : '<i></i>'}<button data-hw-edit="${h.id}" title="Изменить">✎</button><button data-hw-place="${h.id}" title="Где стоит — окно с видом детали">📍</button><button data-hw-del="${h.id}" title="Удалить">✕</button>${baseNeeded(h.type) ? `<button data-hw-base="${h.id}" title="Присоединить вторую сторону к другой детали (магнит)">🧲</button>` : ''}</div>`).join('') || '<div class="note">Фурнитуры нет.</div>'}
@@ -1224,6 +1231,7 @@ function refreshInspector() {
       h += `<div class="sec"><b>Параметры корпуса</b><div class="row">${fld('Ширина', 'pW', p.W)}${fld('Высота', 'pH', p.H)}${fld('Глубина', 'pD', p.D)}</div>
         <div class="row">${fld('Полки', 'pshelves', p.shelves)}${fld('Двери', 'pdoors', p.doors)}${fld('Ящики', 'pdrawers', p.drawers)}</div>
         <div class="row2">${fld('Цоколь', 'pplinth', p.plinth)}${fld('Верх', 'ptopType', p.topType, { options: [['solid', 'Крыша'], ['rails', 'Царги']] })}</div>
+        <div class="row">${fld('Срез боковин', 'pscw', (p.sideCut || {}).where || 'none', { options: SIDE_CUTS })}${fld('Длина, мм', 'psca', (p.sideCut || {}).a || 200)}${fld('Угол, °', 'pscd', (p.sideCut || {}).deg || 45)}</div>
         <div class="row">${fld('Присадка', 'pdrill', p.drill === false ? '0' : '1', { options: [['1', 'Автоматически'], ['0', 'Без отверстий']] })}${fld('Конфирматов', 'pconfCount', String(p.confCount || 0), { options: [['0', 'авто'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5']] })}${fld('Полкодерж. от края', 'ppinOff', p.pinOff || 37)}</div>
         <div class="btns"><button class="accent" data-cmd="rebuild-group">Перестроить корпус</button></div>
         <div class="note">Корпус соберётся заново по этим параметрам. Ручные правки деталей этого модуля пропадут.</div></div>`;
@@ -1300,6 +1308,7 @@ function rebuildGroupFromInspector() {
   const p = { ...k.g.params };
   for (const f of ['W', 'H', 'D', 'shelves', 'doors', 'drawers', 'plinth', 'confCount', 'pinOff']) { const v = parseFloat(q('p' + f)); if (isFinite(v) && v >= 0) p[f] = v; }
   p.topType = q('ptopType');
+  p.sideCut = { where: q('pscw'), a: parseFloat(q('psca')) || 0, deg: parseFloat(q('pscd')) || 0 };
   p.drill = q('pdrill') !== '0';
   if (p.W < 100 || p.H < 100 || p.D < 100) return status('Слишком маленький корпус');
   const b = bbox(k.list);
@@ -1473,6 +1482,7 @@ function cabinetDialog() {
     <div class="grid4">${fld('Ширина, мм', 'W', p.W)}${fld('Высота корпуса', 'H', p.H)}${fld('Глубина корпуса', 'D', p.D)}${fld('Цоколь / ножки', 'plinth', p.plinth)}</div>
     <div class="grid4">${fld('Полки', 'shelves', p.shelves)}${fld('Двери', 'doors', p.doors)}${fld('Ящики', 'drawers', p.drawers)}${fld('Низ корпуса от пола', 'baseY', p.baseY)}</div>
     <div class="grid3">${fld('Верх', 'topType', p.topType, { options: [['solid', 'Крыша'], ['rails', 'Царги 100 мм']] })}${fld('Задняя стенка', 'back', '1', { options: [['1', 'ХДФ 3 мм'], ['0', 'Без задней стенки']] })}${fld('Материал фасадов', 'fmat', 'acrylb18', { options: matOptions() })}</div>
+    <div class="grid4">${fld('Срез боковин под углом', 'scw', 'none', { options: SIDE_CUTS })}${fld('Длина среза по глубине, мм', 'sca', 200)}${fld('Угол к верху/низу, °', 'scd', 45)}</div>
     <div class="grid4">${fld('Конфирматов на соединение', 'confCount', '0', { options: [['0', 'авто (2–3 по глубине)'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5']] })}${fld('Полкодержатели от края, мм', 'pinOff', 37)}</div>
     <div class="grid4">${fld('Присадка', 'drill', '1', { options: [['1', 'Автоматически'], ['0', 'Без отверстий']] })}${fld('Петли', 'htype', 'blum', { options: HINGES.map(h => [h.id, h.name]) })}${fld('Петли у одной двери', 'hside', 'L', { options: [['L', 'слева'], ['R', 'справа']] })}${fld('Петля от края двери, мм', 'hoff', 100)}</div>
     <div class="note">Корпус собирается из отдельных деталей: боковины, дно, крыша или царги, задняя стенка, полки, фасады, ящики (с боками, стенками и дном).
@@ -1493,7 +1503,7 @@ function cabinetDialog() {
     const n = k => Math.max(0, parseFloat(String(q(k).value).replace(',', '.')) || 0);
     const p2 = { W: n('W'), H: n('H'), D: n('D'), plinth: n('plinth'), shelves: Math.round(n('shelves')), doors: Math.min(6, Math.round(n('doors'))),
       drawers: Math.min(8, Math.round(n('drawers'))), topType: q('topType').value, back: q('back').value === '1', mat: q('cmat').value, facadeMat: q('fmat').value,
-      drill: q('drill').value === '1', confCount: +q('confCount').value || 0, pinOff: n('pinOff') || 37, hinge: { type: q('htype').value, side: q('hside').value, off: n('hoff') || 100, count: 0 } };
+      drill: q('drill').value === '1', confCount: +q('confCount').value || 0, pinOff: n('pinOff') || 37, hinge: { type: q('htype').value, side: q('hside').value, off: n('hoff') || 100, count: 0 }, sideCut: { where: q('scw').value, a: n('sca'), deg: n('scd') } };
     if (p2.W < 100 || p2.H < 100 || p2.D < 100) return alert('Ширина, высота и глубина — не меньше 100 мм');
     const baseY = n('baseY'), totalH = p2.plinth + p2.H;
     closeDialog();
@@ -1560,7 +1570,8 @@ function defaultOp(type, fr) {
   const half = v => Math.round(v / 2);
   if (type === 'hole') return { type, face: 'A', u: half(fr.SU), v: half(fr.SV), s: half(fr.SV), o: r1(fr.T / 2), dia: 8, depth: 12, through: false, count: 1, step: 32, dir: 'u', preset: 'custom' };
   if (type === 'cut') return { type, face: 'A', u: 50, v: 50, cw: 100, ch: 60, r: 0, depth: 8, through: true, angle: 0, preset: 'custom' };
-  return { type: 'corner', corner: 'RT', shape: 'chamfer', a: 100, b: 100 };
+  if (type === 'bevel') return { type, edge: 'U1', side: 'A', deg: 45 };
+  return { type: 'corner', corner: 'RT', shape: 'chamfer', a: 100, b: 100, deg: 30 };
 }
 function opDialog(type, index = -1, init = null) {
   const k0 = kindOfSelection();
@@ -1573,7 +1584,7 @@ function opDialog(type, index = -1, init = null) {
   const op = old ? JSON.parse(JSON.stringify(old)) : Object.assign(defaultOp(type, fr), init || {});
   const others = (it.ops || []).filter((_, j) => j !== index);
   const edge = () => op.type === 'hole' && !['A', 'B'].includes(op.face);
-  const title = { hole: 'Отверстие', cut: 'Вырез / паз', corner: 'Срез угла' }[type];
+  const title = { hole: 'Отверстие', cut: 'Вырез / паз', corner: 'Срез угла', bevel: 'Скос кромки под углом' }[type];
   const chk = (key, text, on) => `<label class="fld chk"><input type="checkbox" data-k="${key}"${on ? ' checked' : ''}><span>${text}</span></label>`;
   function form() {
     let h = '';
@@ -1593,12 +1604,16 @@ function opDialog(type, index = -1, init = null) {
       h += `<div class="grid3">${fld('Тип', 'preset', op.preset, { options: CUT_PRESETS.map(p => [p.id, p.name]) })}${fld('Сторона', 'face', op.face, { options: [['A', N.A], ['B', N.B]] })}${fld('Поворот, °', 'angle', op.angle)}</div>
         <div class="grid4">${fld('X угла — ' + fromName(N.U0), 'u', op.u)}${fld('Y угла — ' + fromName(N.V0), 'v', op.v)}${fld('Ширина (по X)', 'cw', op.cw)}${fld('Высота (по Y)', 'ch', op.ch)}</div>
         <div class="grid4">${fld('Радиус углов, мм', 'r', op.r || 0)}${fld('Глубина, мм', 'depth', op.depth)}${chk('through', 'Насквозь', op.through)}</div>`;
+    } else if (type === 'bevel') {
+      h += `<div class="grid4">${fld('Какой торец', 'edge', op.edge, { options: ['U0', 'U1', 'V0', 'V1'].map(f => [f, N[f]]) })}${fld('Со стороны', 'side', op.side, { options: [['A', N.A], ['B', N.B]] })}${fld('Угол, °', 'deg', op.deg)}</div>
+        <div class="note">Торец срезается наклонно через всю толщину: 45° — для соединения «на ус» (два торца под 45° дают прямой угол). Съём по пласти — ${fmt(bevelLen(op, fr.T))} мм.</div>`;
     } else {
-      const round = op.shape && op.shape !== 'chamfer';
-      h += `<div class="grid4">${fld('Угол', 'corner', op.corner, { options: [['LB', 'Левый нижний'], ['LT', 'Левый верхний'], ['RB', 'Правый нижний'], ['RT', 'Правый верхний']] })}${fld('Форма', 'shape', op.shape || 'chamfer', { options: CORNER_SHAPES })}
-        ${round ? fld('Радиус R, мм', 'a', op.a) : fld('Срез по X, мм', 'a', op.a) + fld('Срез по Y, мм', 'b', op.b)}</div>`;
+      const sh = op.shape || 'chamfer', round = sh === 'round' || sh === 'cove';
+      h += `<div class="grid4">${fld('Угол', 'corner', op.corner, { options: [['LB', 'Левый нижний'], ['LT', 'Левый верхний'], ['RB', 'Правый нижний'], ['RT', 'Правый верхний']] })}${fld('Форма', 'shape', sh, { options: CORNER_SHAPES })}
+        ${round ? fld('Радиус R, мм', 'a', op.a) : sh === 'angle' ? fld('Длина среза по X, мм', 'a', op.a) + fld('Угол к краю по X, °', 'deg', op.deg || 30) : fld('Срез по X, мм', 'a', op.a) + fld('Срез по Y, мм', 'b', op.b)}</div>
+        ${sh === 'angle' ? `<div class="note">По Y срежется ${fmt(Math.round(op.a * Math.tan((op.deg || 30) * Math.PI / 180) * 10) / 10)} мм.</div>` : ''}`;
     }
-    h += `<div class="note">${type === 'corner' ? 'Угол срезается по прямой насквозь (скос).' : 'Кликните по чертежу, чтобы поставить ' + (type === 'cut' ? 'левый нижний угол выреза' : 'отверстие') + '. Координаты — от левого нижнего угла чертежа.'}</div>
+    h += `<div class="note">${type === 'bevel' ? '' : type === 'corner' ? 'Угол срезается по прямой насквозь (скос).' : 'Кликните по чертежу, чтобы поставить ' + (type === 'cut' ? 'левый нижний угол выреза' : 'отверстие') + '. Координаты — от левого нижнего угла чертежа.'}</div>
       <div class="op-preview" id="opPreview"></div>`;
     document.getElementById('dlgBody').innerHTML = h;
     preview();
@@ -1622,7 +1637,7 @@ function opDialog(type, index = -1, init = null) {
   form();
   const body = document.getElementById('dlgBody');
   body.onkeydown = e => e.stopPropagation();
-  body.oninput = () => { read(); preview(); };
+  body.oninput = () => { read(); if (op.type === 'corner' && op.shape === 'angle') op.b = Math.round(op.a * Math.tan((op.deg || 30) * Math.PI / 180) * 10) / 10; preview(); };
   body.onchange = e => {
     const key = e.target.dataset.k;
     if (key === 'preset') {
@@ -1633,11 +1648,11 @@ function opDialog(type, index = -1, init = null) {
       if (pr.edge && !edge()) op.face = 'U0';
       if (!pr.edge && edge()) op.face = 'A';
       form();
-    } else if (key === 'face' || key === 'shape') form();
+    } else if (key === 'face' || key === 'shape' || key === 'deg' || key === 'a') form();
   };
   body.onclick = e => {
     const svgEl = e.target.closest('#opPreview svg');
-    if (!svgEl || !map || type === 'corner') return;
+    if (!svgEl || !map || type === 'corner' || type === 'bevel') return;
     // точка клика в координатах чертежа (учитывает масштаб и поля, если чертёж вписан в окно)
     const pt = svgEl.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
     const sp = pt.matrixTransform(svgEl.getScreenCTM().inverse());
@@ -1651,7 +1666,9 @@ function opDialog(type, index = -1, init = null) {
     if (type === 'hole' && (!(op.dia > 0) || (!op.through && !(op.depth > 0)))) return alert('Укажите диаметр и глубину отверстия');
     if (type === 'cut' && (!(op.cw > 0) || !(op.ch > 0) || (!op.through && !(op.depth > 0)))) return alert('Укажите размеры и глубину выреза');
     if (type === 'corner' && (!(op.a > 0) || (op.shape === 'chamfer' && !(op.b > 0)))) return alert('Укажите размеры среза');
-    if (type === 'corner' && op.shape !== 'chamfer') op.b = op.a;
+    if (type === 'corner' && op.shape === 'angle') { if (!(op.deg > 0 && op.deg < 89)) return alert('Угол — от 1 до 89°'); op.b = Math.round(op.a * Math.tan(op.deg * Math.PI / 180) * 10) / 10; }
+    else if (type === 'corner' && op.shape !== 'chamfer') op.b = op.a;
+    if (type === 'bevel' && !(op.deg >= 1 && op.deg <= 80)) return alert('Угол скоса — от 1 до 80°');
     if (op.type === 'hole' && !edge() && op.through) op.depth = fr.T;
     closeDialog();
     const saved = JSON.parse(JSON.stringify(op));
@@ -2124,7 +2141,7 @@ const COMMANDS = {
   undo, redo, duplicate: duplicateSel, delete: deleteSel, group: groupSel, ungroup: ungroupSel, 'apply-hinges': applyHingesFromInspector,
   'rot-y': () => rotateSel('y'), 'rot-z': () => rotateSel('z'), 'rebuild-group': rebuildGroupFromInspector,
   fit, spec: specDialog, shot: screenshot, drawing: () => drawingDialog(selItems()), drawings: drawingsCommand, 'drawing-module': drawingsCommand,
-  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'), 'part-edit': () => { const k = kindOfSelection(); if (k.type === 'item') partEditor(k.it.id); else status('Выберите одну деталь'); }, 'op-shape': () => shapeDialog(),
+  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'), 'op-bevel': () => opDialog('bevel'), 'part-edit': () => { const k = kindOfSelection(); if (k.type === 'item') partEditor(k.it.id); else status('Выберите одну деталь'); }, 'op-shape': () => shapeDialog(),
   hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false), boxsel: () => setBoxMode(!boxMode),
   'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleHw(P.hw.filter(h => ids.includes(h.target)).map(h => h.id)); },
   'hw-toggle-all': () => toggleHw(P.hw.map(h => h.id)),

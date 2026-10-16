@@ -52,7 +52,7 @@ export const HINGES = [
   { id: 'mini', name: 'Мини-петля — Ø26, C=4', dia: 26, depth: 11, C: 4 },
   { id: 'none', name: 'Без петель' },
 ];
-export const CORNER_SHAPES = [['chamfer', 'Скос (прямой срез)'], ['round', 'Скругление угла'], ['cove', 'Вырез радиусом (внутрь)']];
+export const CORNER_SHAPES = [['chamfer', 'Скос (прямой срез)'], ['angle', 'Скос под углом (длина + градусы)'], ['round', 'Скругление угла'], ['cove', 'Вырез радиусом (внутрь)']];
 
 // Прямоугольник со скруглёнными углами (точки по кругу, от левого нижнего угла)
 function roundedRect(cw, ch, r, n = 8) {
@@ -99,7 +99,7 @@ export const opPts = o => (o.type === 'shape' ? shapePts(o) : cutPts(o));
 // Срез угла в «каноническом» левом нижнем углу: линия от (размер, 0) до (0, размер)
 function cornerCanon(o, n = 12) {
   const shape = o.shape || 'chamfer', R = o.a;
-  if (shape === 'chamfer') return [[o.a, 0], [0, o.b]];
+  if (shape === 'chamfer' || shape === 'angle') return [[o.a, 0], [0, o.b]];   // angle: b уже посчитан из длины и градусов
   const pts = [];
   for (let k = 0; k <= n; k++) {
     const t = k / n;
@@ -187,6 +187,8 @@ function cutters(op, fr) {
       const nc = op.through ? T / 2 : op.face === 'A' ? T - op.depth / 2 + 0.5 : op.depth / 2 - 0.5;
       out.push(new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([p, q]) => new THREE.Vector2(p, q))), { depth: len, bevelEnabled: false }).translate(0, 0, nc - len / 2));
     }
+  } else if (op.type === 'bevel') {
+    out.push(bevelGeo(op, fr));
   } else if (op.type === 'corner') {
     const cp = cornerCanon(op), first = cp[0], last = cp[cp.length - 1];
     const sh = new THREE.Shape([[first[0], -20], ...cp, [-20, last[1]], [-20, -20]].map(([p, q]) => new THREE.Vector2(p, q)));
@@ -201,6 +203,29 @@ function cutters(op, fr) {
   return out;
 }
 
+// Скос кромки под углом через толщину (например, 45° для соединения «на ус»): клин вдоль торца.
+// w — расстояние от торца внутрь детали, n — толщина. Со стороны A пласть укорачивается на L = T·tg(угла).
+export const bevelLen = (op, T) => Math.round(T * Math.tan(THREE.MathUtils.degToRad(Math.min(80, Math.max(1, +op.deg || 45)))) * 10) / 10;
+function bevelGeo(op, fr) {
+  const { SU, SV, T } = fr, L = bevelLen(op, T), k = L / T, A = op.side !== 'B';
+  // со стороны A линия среза идёт от (0, 0) к (L, T), со стороны B — от (0, T) к (L, 0); убираем всё, что ближе к торцу
+  const P = A ? [[-5 * k, -5], [k * (T + 5), T + 5], [-10, T + 5], [-10, -5]] : [[k * (T + 5), -5], [-5 * k, T + 5], [-10, T + 5], [-10, -5]];
+  const len = (op.edge[0] === 'U' ? SV : SU) + 10;
+  const g = new THREE.ExtrudeGeometry(new THREE.Shape(P.map(([w, n]) => new THREE.Vector2(w, n))), { depth: len, bevelEnabled: false });
+  const E = { U0: [[1, 0, 0], [0, 1, 0], [0, -5, 0]], U1: [[-1, 0, 0], [0, 1, 0], [SU, -5, 0]], V0: [[0, 1, 0], [1, 0, 0], [-5, 0, 0]], V1: [[0, -1, 0], [1, 0, 0], [-5, SV, 0]] }[op.edge];
+  const M = new THREE.Matrix4().makeBasis(new THREE.Vector3(...E[0]), new THREE.Vector3(0, 0, 1), new THREE.Vector3(...E[1])).setPosition(...E[2]);
+  const ng = g.index ? g.toNonIndexed() : g;
+  ng.applyMatrix4(M);
+  if (M.determinant() < 0) { const p = ng.getAttribute('position'); for (let i = 0; i < p.count; i += 3) { const a = [p.getX(i + 1), p.getY(i + 1), p.getZ(i + 1)]; p.setXYZ(i + 1, p.getX(i + 2), p.getY(i + 2), p.getZ(i + 2)); p.setXYZ(i + 2, ...a); } }
+  ng.computeVertexNormals();
+  return ng;
+}
+// Линия скоса на пласти (для контура и чертежа): [u0, v0, u1, v1] и сторона n
+export function bevelLine(op, fr) {
+  const { SU, SV, T } = fr, L = bevelLen(op, T);
+  const line = { U0: [L, 0, L, SV], U1: [SU - L, 0, SU - L, SV], V0: [0, L, SU, L], V1: [0, SV - L, SU, SV - L] }[op.edge];
+  return { line, n: op.side === 'B' ? 0 : T, L };
+}
 // Геометрия детали с обработкой (кэш по размерам и операциям); null — если обработки нет
 export function panelGeometry(it) {
   if (!it.ops || !it.ops.length) return null;
@@ -263,6 +288,9 @@ function featureEdges(it, fr) {
           if (o.face === 'V1') circle((a, b) => [p + a, SV, o.o + b], r);
         }
       }
+    } else if (o.type === 'bevel') {
+      const b = bevelLine(o, fr);
+      seg.push([b.line[0], b.line[1], b.n], [b.line[2], b.line[3], b.n]);
     } else if (o.type === 'cut' || o.type === 'shape') {
       const pts = opPts(o);
       const ns = o.through ? [0, T] : [o.face === 'A' ? T : 0];
@@ -298,10 +326,12 @@ export function describeOp(op, it) {
     const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
     return `Вырез по ${P.length} точкам${op.smooth ? ' (плавный)' : P.some(p => p[2] > 0) ? ' (со скруглениями)' : ''} ${depth} — ${n[op.face]}, габарит ${f(Math.max(...xs) - Math.min(...xs))}×${f(Math.max(...ys) - Math.min(...ys))} от (${f(Math.min(...xs))}; ${f(Math.min(...ys))})`;
   }
+  if (op.type === 'bevel') return `Скос кромки под ${f(op.deg || 45)}°: ${n[op.edge]}, со стороны «${n[op.side === 'B' ? 'B' : 'A']}» — съём ${f(bevelLen(op, frame(it).T))} мм`;
   if (op.type === 'corner') {
     const where = { LB: 'левый нижний', LT: 'левый верхний', RB: 'правый нижний', RT: 'правый верхний' }[op.corner];
     if (op.shape === 'round') return `Скругление угла R${f(op.a)}: ${where}`;
     if (op.shape === 'cove') return `Вырез радиусом R${f(op.a)}: ${where} угол`;
+    if (op.shape === 'angle') return `Скос угла ${where} под ${f(op.deg)}°: ${f(op.a)} × ${f(op.b)}`;
     return `Срез угла ${where}: ${f(op.a)} × ${f(op.b)}`;
   }
   return '';
@@ -352,8 +382,14 @@ export function drawingSVG(it, { width = 760, height = 520, ops = it.ops || [], 
       g += `<polygon points="${pts.map(([u, v]) => `${X(u).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')}" fill="${o.through ? '#e8e2d6' : 'rgba(31,95,180,.08)'}" stroke="${color}" stroke-width="1.3"${dash}/>`;
       const top = pts.reduce((a, p) => (p[1] > a[1] || (p[1] === a[1] && p[0] > a[0]) ? p : a), pts[0]);
       mark(k, X(top[0]), Y(top[1]), color);
+    } else if (o.type === 'bevel') {
+      const b = bevelLine(o, fr), [u0, v0, u1, v1] = b.line;
+      g += `<path d="M${X(u0)} ${Y(v0)}L${X(u1)} ${Y(v1)}" stroke="${color}" stroke-width="1.3" stroke-dasharray="${o.side === 'B' ? '4 3' : '8 3'}"/>`;
+      g += `<text x="${(X(u0) + X(u1)) / 2 + 4}" y="${(Y(v0) + Y(v1)) / 2 - 4}" font-size="10.5" fill="${color}">${f(o.deg || 45)}°</text>`;
+      if (o.edge[0] === 'U') us.add(u0); else vs.add(v0);
+      mark(k, (X(u0) + X(u1)) / 2, (Y(v0) + Y(v1)) / 2, color);
     } else if (o.type === 'corner') {
-      const bb = o.shape && o.shape !== 'chamfer' ? o.a : o.b;
+      const bb = o.shape === 'round' || o.shape === 'cove' ? o.a : o.b;
       const cx = o.corner[0] === 'R' ? SU - o.a / 2 : o.a / 2, cy = o.corner[1] === 'T' ? SV - bb / 2 : bb / 2;
       us.add(o.corner[0] === 'R' ? SU - o.a : o.a); vs.add(o.corner[1] === 'T' ? SV - bb : bb);
       mark(k, X(cx) - 12, Y(cy) + 12, color);
