@@ -8,6 +8,7 @@ import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer
 import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween, plateOps, hingeSpots, baseNeeded, baseHint, findBase, snapDelta } from './hardware.js';
 import { moduleSVG, overviewSVG } from './drawings.js';
 import { MILLS, MILL_CATS, millDefaults } from './mill.js';
+import { createRuler } from './ruler.js';
 import { DECOR, DECORS, TABS, texture as decorTexture, thumb as decorThumb, surfaceParams, sheetLayout, applySheetUV, onTextureUpdate } from './materials.js';
 import { normRoom, buildRoom3D, roomObstacles, roomSVG, ROOM_PRESETS, OPENING_TYPES, wallsToPts, ptsToWalls, checkPts, checkOpening, tidyPts, wallLen } from './room.js';
 import { panelGeometry, describeOp, drawingSVG, frame, thinAxis, bevelLen, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
@@ -61,7 +62,7 @@ const undoStack = [], redoStack = [];
 
 function newProject() {
   return { app: 'kitchen-calc-studio', version: 1, name: 'Новый проект', room: normRoom({ w: 3600, d: 3000, h: 2700 }),
-    materials: DEFAULT_MATERIALS.map(m => ({ ...m })), items: [], groups: [], hw: [], seq: 1 };
+    materials: DEFAULT_MATERIALS.map(m => ({ ...m })), items: [], groups: [], hw: [], measures: [], seq: 1 };
 }
 const nid = () => P.seq++;
 const mat = id => P.materials.find(m => m.id === id) || P.materials[0];
@@ -72,7 +73,7 @@ const groupItems = g => P.items.filter(i => i.g === g);
 // Модуль-«предмет» (монолит): детали не разделяются — выбирается только целиком, фурнитура внутри не двигается
 const solid = id => { const it = item(id), g = it && it.g && group(it.g); return !!(g && g.mode === 'solid'); };
 
-function snapshot() { return JSON.stringify({ name: P.name, room: P.room, materials: P.materials, items: P.items, groups: P.groups, hw: P.hw, seq: P.seq }); }
+function snapshot() { return JSON.stringify({ name: P.name, room: P.room, materials: P.materials, items: P.items, groups: P.groups, hw: P.hw, measures: P.measures || [], seq: P.seq }); }
 function restore(s) { Object.assign(P, JSON.parse(s)); }
 function commit(fn) {
   undoStack.push(snapshot()); if (undoStack.length > 200) undoStack.shift();
@@ -525,7 +526,7 @@ function snapAxis(a, min, size) {
 }
 
 function updateGizmo() {
-  if (measure || (bucket.open && bucket.decor)) { tc.detach(); requestRender(); return; }
+  if (measure || (bucket.open && bucket.decor) || ruler.on) { tc.detach(); requestRender(); return; }
   const b = sel.size ? bbox(selItems()) : null;
   if (!b) { tc.detach(); return; }
   if (!drag) pivot.position.set((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.z0 + b.z1) / 2);
@@ -604,6 +605,20 @@ function mmPerPixelAt(p) {
   if (camera === ortho) return (ortho.top - ortho.bottom) / ortho.zoom / h;
   return 2 * camera.position.distanceTo(p) * Math.tan(THREE.MathUtils.degToRad(persp.fov / 2)) / h;
 }
+// ---------------------------------------------------------------- линейка
+const _sv = new THREE.Vector3();
+const ruler = createRuler({
+  scene, vp, P: () => P, item, label: i => label(i), commit: f => commit(f), status: t => status(t), render: requestRender,
+  raycast(e) {
+    const r = renderer.domElement.getBoundingClientRect();
+    ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+    const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+    return ray.intersectObjects([...itemsGroup.children, ...roomGroup.children], true).find(h => h.object.isMesh && shown(h.object) && (h.object.userData.id || h.object.userData.surface)) || null;
+  },
+  toScreen(v) { const r = renderer.domElement.getBoundingClientRect(); _sv.copy(v).project(camera); return new THREE.Vector2((_sv.x + 1) / 2 * r.width, (1 - _sv.y) / 2 * r.height); },
+  viewDir() { return camera.getWorldDirection(new THREE.Vector3()).negate(); },
+});
+renderer.domElement.addEventListener('pointermove', e => { if (ruler.on && !e.buttons) ruler.move(e); });
 renderer.domElement.addEventListener('pointermove', e => {
   if (!measure || e.buttons) return;
   measure.hit = measureAt(e, e.shiftKey);
@@ -634,7 +649,7 @@ function screenBox(it) {
   return { x0, y0, x1, y1 };
 }
 renderer.domElement.addEventListener('pointerdown', e => {
-  if (e.button === 0 && (boxMode || e.ctrlKey) && tc.axis === null && !measure) {
+  if (e.button === 0 && (boxMode || e.ctrlKey) && tc.axis === null && !measure && !ruler.on) {
     rect = { x: e.clientX, y: e.clientY, ex: e.clientX, ey: e.clientY };
     orbit.enabled = false;
     renderer.domElement.setPointerCapture(e.pointerId);
@@ -680,6 +695,7 @@ renderer.domElement.addEventListener('pointerup', e => {
     return;
   }
   const hit = pick(e);
+  if (ruler.on) return ruler.click(e);
   if (basePick) { if (hit) finishBasePick(hit); else { basePick = null; status('Присоединение отменено'); } return; }
   if (bucket.open && bucket.decor) return bucketClick(e);
   if (!hit) { if (!e.shiftKey) { sel.clear(); openGroup = 0; } }
@@ -693,6 +709,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   selectionChanged();
 });
 renderer.domElement.addEventListener('dblclick', e => {
+  if (ruler.on) return ruler.dblclick();
   const hit = pick(e);
   if (!hit) return;
   const it = item(hit);
@@ -2181,7 +2198,7 @@ const COMMANDS = {
   undo, redo, duplicate: duplicateSel, delete: deleteSel, group: groupSel, ungroup: ungroupSel, 'apply-hinges': applyHingesFromInspector,
   'rot-y': () => rotateSel('y'), 'rot-z': () => rotateSel('z'), 'rebuild-group': rebuildGroupFromInspector,
   fit, spec: specDialog, shot: screenshot, drawing: () => drawingDialog(selItems()), drawings: drawingsCommand, 'drawing-module': drawingsCommand,
-  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'), 'op-bevel': () => opDialog('bevel'), 'op-mill': () => millDialog(), 'part-edit': () => { const k = kindOfSelection(); if (k.type === 'item') partEditor(k.it.id); else status('Выберите одну деталь'); }, 'op-shape': () => shapeDialog(),
+  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'), 'op-bevel': () => opDialog('bevel'), ruler: () => { ruler.toggle(); updateGizmo(); }, 'op-mill': () => millDialog(), 'part-edit': () => { const k = kindOfSelection(); if (k.type === 'item') partEditor(k.it.id); else status('Выберите одну деталь'); }, 'op-shape': () => shapeDialog(),
   hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false), boxsel: () => setBoxMode(!boxMode),
   'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleHw(P.hw.filter(h => ids.includes(h.target)).map(h => h.id)); },
   'hw-toggle-all': () => toggleHw(P.hw.map(h => h.id)),
@@ -2194,6 +2211,7 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => {
   if (!modal.hidden) { if (e.key === 'Escape') closeDialog(); return; }
   if (e.target.matches('input, select')) return;
+  if (ruler.key(e)) { e.preventDefault(); return; }
   const ctrl = e.ctrlKey || e.metaKey, k = e.key.toLowerCase(), step = gridStep() * (e.shiftKey ? 10 : 1);
   const map = {
     z: () => (e.shiftKey ? redo() : undo()), y: redo, d: duplicateSel, s: () => saveFile(e.shiftKey), o: openFile, n: newFile,
@@ -2222,7 +2240,7 @@ function status(t) {
   clearTimeout(statusTimer); statusTimer = setTimeout(() => { el.textContent = `Деталей: ${P.items.length}`; }, 6000);
 }
 function refreshUI() {
-  refreshTree(); refreshInspector();
+  refreshTree(); refreshInspector(); ruler.redraw();
   if (!modal.hidden && dlgIsPart) renderPartEditor();
   document.querySelector('[data-cmd="undo"]').disabled = !undoStack.length;
   document.querySelector('[data-cmd="redo"]').disabled = !redoStack.length;
