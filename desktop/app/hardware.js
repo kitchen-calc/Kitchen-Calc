@@ -5,7 +5,7 @@
 // Правила направлений (чтобы фасад никогда не уходил внутрь корпуса): фасад смотрит на +Z (к нам),
 // петли слева — поворот вокруг Y на −угол, справа — на +угол; петли сверху — вокруг X на −угол, снизу — на +угол.
 import * as THREE from 'three';
-import { thinAxis } from './machining.js';
+import { thinAxis, frame } from './machining.js';
 
 const D2R = Math.PI / 180;
 const r1 = v => Math.round(v * 10) / 10;
@@ -161,14 +161,14 @@ export function motionKey(hw) {
   return hw.type;
 }
 const MOTION_NAMES = { swingL: 'дверь на петлях слева', swingR: 'дверь на петлях справа', swingT: 'фасад поднимается вверх', swingB: 'фасад откидывается вниз', slideZ: 'выдвигается на себя', slideXL: 'едет влево', slideXR: 'едет вправо' };
-export function conflict(newHw, existing) {
-  const k = motionKey(newHw);
-  if (!k) return '';
-  for (const h of existing) {
-    const k2 = motionKey(h);
-    if (k2 && k2 !== k) return `На этой детали уже стоит «${T[h.type].name}» (${MOTION_NAMES[k2] || k2}). Деталь не может одновременно двигаться по-разному — удалите старый механизм или выберите совместимый.`;
-  }
-  return '';
+// Несколько механизмов на одной детали можно: деталь двигается ими по очереди (например, выдвинулась и повернулась).
+// Мешает только наложение — это проверяет окно «Где стоит» (по объёму самой фурнитуры).
+export function conflict() { return ''; }
+// Сдвиг фурнитуры по детали (окно «Где стоит»): du — вдоль U, dv — вдоль V, мм
+export function shiftOf(hw, it) {
+  const fr = frame(it), v = new THREE.Vector3();
+  v[fr.U] += +hw.du || 0; v[fr.V] += +hw.dv || 0;
+  return v;
 }
 // Какие детали двигаются вместе с этой фурнитурой: сама деталь и связанные с ней («Двигать вместе»)
 export function movingIds(hw, items) {
@@ -257,7 +257,7 @@ export function poseMatrix(list, t, out = new THREE.Matrix4()) {
 
 // ---------------------------------------------------------------- петли: где стоят и сколько
 const CUPS = { blum: { dia: 35, depth: 13, C: 5 }, hettich: { dia: 35, depth: 13, C: 5 }, gtv: { dia: 35, depth: 12, C: 4 }, boyard: { dia: 35, depth: 11.5, C: 4 }, mini: { dia: 26, depth: 11, C: 4 } };
-function hingeSpots(hw, it) {
+export function hingeSpots(hw, it) {
   const along = hw.side === 'L' || hw.side === 'R' ? it.h : it.w;
   let ps = hw.place === 'manual' ? String(hw.positions || '').split(/[;, ]+/).map(v => parseFloat(v.replace(',', '.'))).filter(v => v > 0 && v < along) : [];
   if (!ps.length) {
@@ -265,13 +265,17 @@ function hingeSpots(hw, it) {
     const off = Math.min(+hw.off || 100, along / 2);
     ps = n === 1 ? [along / 2] : Array.from({ length: n }, (_, k) => off + (along - 2 * off) * k / (n - 1));
   }
-  const c = CUPS[hw.model] || CUPS.blum, cu = c.C + c.dia / 2;
+  const c = CUPS[hw.model] || CUPS.blum, cu = c.C + c.dia / 2, du = +hw.du || 0, dv = +hw.dv || 0;
   return ps.map(p => {
+    const s = spot(p);
+    return { ...s, u: s.u + du, v: s.v + dv };
+  });
+  function spot(p) {
     if (hw.side === 'L') return { u: cu, v: p, c };
     if (hw.side === 'R') return { u: it.w - cu, v: p, c };
     if (hw.side === 'T') return { u: p, v: it.h - cu, c };
     return { u: p, v: cu, c };
-  });
+  }
 }
 // ---------------------------------------------------------------- две стороны фурнитуры
 // Сторона А — на детали, к которой фурнитуру поставили (чашка петли, кронштейн на фасаде, внутренняя шина).
@@ -384,6 +388,11 @@ function handleVertical(hw, it, siblings) {
 
 // ---------------------------------------------------------------- отверстия под фурнитуру (на фасаде: U — по X, V — по Y; пласть A — лицевая)
 export function drillOps(hw, it, siblings) {
+  const ops = drillOps0(hw, it, siblings), du = +hw.du || 0, dv = +hw.dv || 0;
+  if (T[hw.type].cat === 'hinges' || (!du && !dv)) return ops;
+  return ops.map(o => o.face === 'A' || o.face === 'B' ? { ...o, u: r1(o.u + du), v: r1(o.v + dv) } : { ...o, s: r1(o.s + (o.face[0] === 'U' ? dv : du)) });
+}
+function drillOps0(hw, it, siblings) {
   const t = T[hw.type], tag = 'hw' + hw.id, ops = [];
   if (hw.drill === '0') return ops;
   const base = { tag, count: 1, step: 32, dir: 'u' };
@@ -462,6 +471,13 @@ const strutGeo = r => new THREE.CylinderGeometry(r, r, 1, 14);
 // Вид фурнитуры. Каждый объект помечен: attach — едет вместе с деталью; self — едет по своему движению (factor — доля хода);
 // strut — газлифт (пересчитывается каждый кадр между неподвижной точкой и точкой на детали).
 export function visuals(hw, it, items, siblings) {
+  const out = visuals0(hw, it, items, siblings);
+  if (T[hw.type].cat === 'hinges' || (!+hw.du && !+hw.dv)) return out;
+  const v = shiftOf(hw, it);
+  for (const o of out) { o.obj.position.add(v); if (o.fixed) { o.fixed = o.fixed.clone().add(v); o.onPart = o.onPart.clone().add(v); } }
+  return out;
+}
+function visuals0(hw, it, items, siblings) {
   const t = T[hw.type], out = [];
   const add = (obj, mode = 'static', extra = {}) => { out.push({ obj, mode, ...extra }); return obj; };
   const front = it.z + it.d, back = it.z, top = it.y + it.h;
