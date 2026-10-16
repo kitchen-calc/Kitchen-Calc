@@ -335,7 +335,7 @@ export function findBase(hw, it, items, reach = 40, only = null) {
   const t = T[hw.type];
   let best = null;
   const consider = (p, gap) => { if (gap <= reach && gap >= -1 && (!best || gap < best.gap)) best = { part: p, gap: Math.max(0, gap) }; };
-  const cands = (only ? [only] : items).filter(p => p.id !== it.id && !(it.link && p.link === it.link));
+  const cands = (only ? [only] : items).filter(p => p.id !== it.id && p.kind !== 'appliance' && !(it.link && p.link === it.link));   // к технике фурнитура не крепится
   const yOv = p => ovl(p.y, p.y + p.h, it.y, it.y + it.h) > 10;
   if (t.cat === 'hinges' || FRONT_BASED.includes(hw.type)) {
     const side = t.cat === 'hinges' || hw.type === 'foldingDoor' ? hw.side : (hw.type === 'gasLift' && hw.dir === 'down') || hw.type === 'flapStay' || hw.type === 'wallBed' ? 'B*' : 'T*';
@@ -401,7 +401,7 @@ export function hingeSide(hw, it, items) {
   if (hw.base !== undefined && hw.base !== null) return null;
   if (hw.side !== 'L' && hw.side !== 'R') return null;
   const ex = hw.side === 'L' ? [it.x - 5, it.x + 60] : [it.x + it.w - 60, it.x + it.w + 5];
-  return items.find(i => i.id !== it.id && thinAxis(i) === 'x' && Math.abs(i.z + i.d - it.z) <= 4
+  return items.find(i => i.id !== it.id && i.kind !== 'appliance' && thinAxis(i) === 'x' && Math.abs(i.z + i.d - it.z) <= 4
     && i.x + i.w >= ex[0] && i.x <= ex[1] && i.y < it.y + it.h && i.y + i.h > it.y) || null;
 }
 // Отверстия на детали стороны Б (корпус): планка петли, внешняя шина направляющей, кронштейн подъёмника
@@ -426,7 +426,7 @@ export function plateOps(hw, it, items) {
     // направляющие на фасаде ящика из корпуса: шины по обе стороны короба — отверстия на обеих боковинах корпуса
     const b = linkedBox(it, items); if (!b) return [];
     const len = slideLen(hw, it, items), yc = b.y0 + 40, out = [];
-    const sides = items.filter(p => thinAxis(p) === 'x' && p.y < yc && p.y + p.h > yc && ovl(p.z, p.z + p.d, b.z1 - len, b.z1) > 50 &&
+    const sides = items.filter(p => p.kind !== 'appliance' && thinAxis(p) === 'x' && p.y < yc && p.y + p.h > yc && ovl(p.z, p.z + p.d, b.z1 - len, b.z1) > 50 &&
       (Math.abs(p.x + p.w - (b.x0 - 13)) < 3 || Math.abs(p.x - (b.x1 + 13)) < 3));
     for (const sd of sides) {
       const face = sd.x > b.x1 ? 'B' : 'A';

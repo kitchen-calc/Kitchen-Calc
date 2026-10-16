@@ -33,6 +33,7 @@
       <button data-cmd="panel-h" title="Горизонтальная деталь (полка, дно)">▭</button>
       <button data-cmd="panel-v" title="Вертикальная деталь (боковина, перегородка)">▯</button>
       <button data-cmd="panel-f" title="Фронтальная деталь (фасад, задняя стенка)">◻</button>
+      <button data-cmd="appliances" title="Техника: холодильники, плиты, духовки, варочные панели, вытяжки, посудомоечные и стиральные машины, микроволновки, кофемашины, чайники, ТВ, кондиционеры, котлы — встраиваемая и отдельностоящая, с размерами и тем, как открывается">🔌 Техника</button>
     </div>
     <div class="tb-group">
       <button data-cmd="undo" title="Отменить (Ctrl+Z)">↶</button>
@@ -52,12 +53,15 @@
     <div class="tb-group">
       <button data-cmd="paint" title="Материалы: ЛДСП, ЛМДФ, акрил, эмаль RAL, пол, стены — заливка кликом">🪣 Материалы</button>
       <button data-cmd="hw" title="Фурнитура для выбранной детали">Фурнитура</button>
-      <button data-cmd="hw-toggle-all" title="Открыть или закрыть всё: двери, ящики, подъёмники">▶ Действия</button>
+      <button data-cmd="hw-toggle-all" title="Открыть или закрыть всё: двери, ящики, подъёмники, двери техники">▶ Действия</button>
       <button data-cmd="spec" title="Спецификация и раскрой">Спецификация</button>
       <button data-cmd="drawings" title="Без выбора — весь комплект: общий вид, каждый шкаф, каждая деталь. С выбором — выбранный шкаф или детали">Чертежи</button>
       <button data-cmd="shot" title="Сохранить картинку PNG (для ИИ-рендера)">PNG</button>
     </div>
   </header>
+  <div class="tb-track" id="tbTrack"><div class="tb-thumb" id="tbThumb"></div></div>
+  <button class="tb-arrow left" id="tbLeft" title="Прокрутить панель влево" hidden>‹</button>
+  <button class="tb-arrow right" id="tbRight" title="Прокрутить панель вправо" hidden>›</button>
 
   <main class="layout">
     <aside class="side left">
