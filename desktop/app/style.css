@@ -140,3 +140,22 @@ table.rtab button { padding: 1px 7px; }
 @media (max-width: 1250px) { .roomgrid { grid-template-columns: 1fr; } }
 input.rin { background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 5px 7px; user-select: text; }
 input.rin:focus { outline: none; border-color: var(--gold); }
+.palette { position: absolute; top: 10px; right: 10px; bottom: 10px; width: 400px; z-index: 4; background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 16px 40px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 8px; padding: 10px; color: var(--text); user-select: none; }
+.palette[hidden] { display: none; }
+.pal-head { display: flex; align-items: center; gap: 8px; }
+.pal-head .grow { flex: 1; }
+.pal-head button { padding: 0 8px; font-size: 18px; background: none; border: none; }
+.pal-tabs, .pal-subs { display: flex; flex-wrap: wrap; gap: 4px; }
+.pal-tabs button { padding: 4px 8px; font-size: 12px; }
+.pal-subs button { padding: 2px 7px; font-size: 11.5px; border-radius: 12px; }
+.pal-q { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; user-select: text; }
+.pal-cur { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.pal-cur img { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; border: 1px solid var(--line); }
+.pal-cur > div { flex: 1; min-width: 0; }
+.pal-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; align-content: start; padding-right: 2px; }
+.psw { display: grid; gap: 3px; padding: 3px; border-radius: 7px; background: var(--bg); white-space: normal; text-align: center; }
+.psw img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 5px; display: block; }
+.psw span { font-size: 10.5px; line-height: 1.2; color: var(--muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.psw.on { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.viewport.bucket canvas { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Ctext y='20' font-size='20'%3E🪣%3C/text%3E%3C/svg%3E") 4 22, crosshair; }
+.psw img.ph, .pal-cur img.ph { object-view-box: inset(26%); }   /* фото поставщика: середина, без логотипа и подписи */
