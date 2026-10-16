@@ -7,6 +7,7 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween, plateOps, hingeSpots, baseNeeded, baseHint, findBase, snapDelta } from './hardware.js';
 import { moduleSVG, overviewSVG } from './drawings.js';
+import { MILLS, MILL_CATS, millDefaults } from './mill.js';
 import { DECOR, DECORS, TABS, texture as decorTexture, thumb as decorThumb, surfaceParams, sheetLayout, applySheetUV, onTextureUpdate } from './materials.js';
 import { normRoom, buildRoom3D, roomObstacles, roomSVG, ROOM_PRESETS, OPENING_TYPES, wallsToPts, ptsToWalls, checkPts, checkOpening, tidyPts, wallLen } from './room.js';
 import { panelGeometry, describeOp, drawingSVG, frame, thinAxis, bevelLen, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
@@ -1189,7 +1190,7 @@ function itemPanel(i) {
       <div class="sec"><b>Положение, мм</b><div class="row">${fld('X слева', 'x', i.x)}${fld('Y от пола', 'y', i.y)}${fld('Z от стены', 'z', i.z)}</div></div>
       <div class="sec"><b>Обработка${(i.ops || []).length ? ` (${i.ops.length})` : ''}</b>
       ${(i.ops || []).map((o, k) => `<div class="op"><span>${k + 1}. ${esc(describeOp(o, i))}</span><button data-op-edit="${k}" title="Изменить">✎</button><button data-op-del="${k}" title="Удалить">✕</button></div>`).join('') || '<div class="note">Отверстий и вырезов нет.</div>'}
-      <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез / скругление угла</button><button data-cmd="op-shape" title="Любая форма: точки, острые или скруглённые углы, плавная кривая">＋ Вырез по точкам</button><button data-cmd="op-bevel" title="Торец под углом через толщину, например 45° «на ус»">＋ Скос кромки под углом</button></div>
+      <div class="btns"><button data-cmd="op-hole">＋ Отверстие</button><button data-cmd="op-cut">＋ Вырез / паз</button><button data-cmd="op-corner">＋ Срез / скругление угла</button><button data-cmd="op-shape" title="Любая форма: точки, острые или скруглённые углы, плавная кривая">＋ Вырез по точкам</button><button data-cmd="op-bevel" title="Торец под углом через толщину, например 45° «на ус»">＋ Скос кромки под углом</button><button class="accent" data-cmd="op-mill" title="Готовые фрезеровки: ручки, соединения, пазы, декор, вырезы под технику">⚙ Фрезеровка…</button></div>
       <div class="btns"><button data-cmd="measure-hole" title="Наведите мышь на деталь — видно расстояния до краёв, клик ставит отверстие">📏 Разметить отверстие</button><button data-cmd="measure-cut" title="Клик ставит левый нижний угол выреза">📏 Разметить вырез</button><button class="accent" data-cmd="drawing">Чертёж</button></div></div>
       <div class="sec"><b>Фурнитура${hwOf(i.id).length ? ` (${hwOf(i.id).length})` : ''}</b>
       ${hwOf(i.id).map(h => `<div class="op hwrow"><span>${esc(describeHw(h, i))}${baseNeeded(h.type) ? (h.base && item(h.base) ? `<br><small class="base">🔗 сторона Б — ${esc(who(item(h.base)))}</small>` : '<br><small class="warn">⚠ вторая сторона свободна</small>') : ''}</span>${hasAction(h.type) ? `<button class="accent" data-hw-act="${h.id}">${actionLabels(h.type)[(hwState.get(h.id) || { to: 0 }).to > 0 ? 1 : 0]}</button>` : '<i></i>'}<button data-hw-edit="${h.id}" title="Изменить">✎</button><button data-hw-place="${h.id}" title="Где стоит — окно с видом детали">📍</button><button data-hw-del="${h.id}" title="Удалить">✕</button>${baseNeeded(h.type) ? `<button data-hw-base="${h.id}" title="Присоединить вторую сторону к другой детали (магнит)">🧲</button>` : ''}</div>`).join('') || '<div class="note">Фурнитуры нет.</div>'}
@@ -1676,6 +1677,45 @@ function opDialog(type, index = -1, init = null) {
     status(`${title} ${old ? 'изменено' : 'добавлено'}: ${describeOp(op, it)}`);
   };
 }
+// Фрезеровки: выбрать шаблон, задать размеры — на чертеже сразу видно, что получится
+function millDialog(cat = 'handles', id = '') {
+  const k = kindOfSelection();
+  if (k.type !== 'item') return status('Выберите одну деталь: двойной клик по детали внутри модуля');
+  const it = k.it, fr = frame(it), N = fr.names;
+  let m = MILLS.find(x => x.id === id) || MILLS.find(x => x.cat === cat), p = millDefaults(m);
+  openDialog(`Фрезеровка: ${label(it)}`, `<div class="hwtabs" id="mlTabs"></div><div class="millgrid"><div class="mill-list" id="mlList"></div><div><div id="mlForm"></div><div class="op-preview" id="mlPrev"></div></div></div>`,
+    `<button data-close>Отмена</button><button class="accent" id="mlOk">Добавить фрезеровку</button>`, true);
+  const body = document.getElementById('dlgBody');
+  const ops = () => { try { return m.gen(fr, p).map(o => ({ ...o, mill: m.name })); } catch (e) { return []; } };
+  function draw() {
+    document.getElementById('mlTabs').innerHTML = MILL_CATS.map(([c, nm]) => `<button class="${c === m.cat ? 'on' : ''}" data-mcat="${c}">${nm}</button>`).join('');
+    document.getElementById('mlList').innerHTML = MILLS.filter(x => x.cat === m.cat).map(x => `<button class="mill-item${x === m ? ' on' : ''}" data-mill="${x.id}"><b>${esc(x.name)}</b><span>${esc(x.desc)}</span></button>`).join('');
+    document.getElementById('mlForm').innerHTML = `<div class="grid4">${m.params.map(q => q.edge ? fld(q.label, q.k, p[q.k], { options: ['U0', 'U1', 'V0', 'V1'].map(e => [e, N[e]]) }) : q.face ? fld(q.label, q.k, p[q.k], { options: [['A', N.A], ['B', N.B]] }) : fld(q.label, q.k, p[q.k])).join('')}</div>`;
+    preview();
+  }
+  function preview() {
+    const list = ops(), base = it.ops || [];
+    document.getElementById('mlPrev').innerHTML = drawingSVG(it, { ops: [...base, ...list], hl: base.length, width: 700, height: 440 }).svg;
+  }
+  body.onclick = e => {
+    const c = e.target.closest('[data-mcat]'), x = e.target.closest('[data-mill]');
+    if (c) { m = MILLS.find(y => y.cat === c.dataset.mcat); p = millDefaults(m); draw(); }
+    if (x) { m = MILLS.find(y => y.id === x.dataset.mill); p = millDefaults(m); draw(); }
+  };
+  const read = () => body.querySelectorAll('#mlForm [data-k]').forEach(el => { const q = m.params.find(y => y.k === el.dataset.k); p[q.k] = q.edge || q.face ? el.value : (parseFloat(String(el.value).replace(',', '.')) || 0); });
+  body.oninput = () => { read(); preview(); };
+  body.onchange = () => { read(); preview(); };
+  body.onkeydown = e => e.stopPropagation();
+  document.getElementById('mlOk').onclick = () => {
+    read();
+    const list = ops();
+    if (!list.length) return alert('Проверьте размеры: фрезеровка не получилась');
+    closeDialog();
+    commit(() => { it.ops = it.ops || []; it.ops.push(...JSON.parse(JSON.stringify(list))); });
+    status(`Фрезеровка «${m.name}»: добавлено операций — ${list.length}`);
+  };
+  draw();
+}
 // Вырез по точкам: клик по чертежу — новая точка, точки тянутся мышью; у каждой — радиус (0 — острый угол)
 const SHAPE_TEMPLATES = [
   ['', 'Свой (ставьте точки кликами)'], ['tri', 'Треугольник'], ['trap', 'Трапеция'], ['hex', 'Шестиугольник'], ['arch', 'Арка'], ['oval', 'Овал (плавный)'],
@@ -2141,7 +2181,7 @@ const COMMANDS = {
   undo, redo, duplicate: duplicateSel, delete: deleteSel, group: groupSel, ungroup: ungroupSel, 'apply-hinges': applyHingesFromInspector,
   'rot-y': () => rotateSel('y'), 'rot-z': () => rotateSel('z'), 'rebuild-group': rebuildGroupFromInspector,
   fit, spec: specDialog, shot: screenshot, drawing: () => drawingDialog(selItems()), drawings: drawingsCommand, 'drawing-module': drawingsCommand,
-  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'), 'op-bevel': () => opDialog('bevel'), 'part-edit': () => { const k = kindOfSelection(); if (k.type === 'item') partEditor(k.it.id); else status('Выберите одну деталь'); }, 'op-shape': () => shapeDialog(),
+  'op-hole': () => opDialog('hole'), 'op-cut': () => opDialog('cut'), 'op-corner': () => opDialog('corner'), 'op-bevel': () => opDialog('bevel'), 'op-mill': () => millDialog(), 'part-edit': () => { const k = kindOfSelection(); if (k.type === 'item') partEditor(k.it.id); else status('Выберите одну деталь'); }, 'op-shape': () => shapeDialog(),
   hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false), boxsel: () => setBoxMode(!boxMode),
   'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleHw(P.hw.filter(h => ids.includes(h.target)).map(h => h.id)); },
   'hw-toggle-all': () => toggleHw(P.hw.map(h => h.id)),
