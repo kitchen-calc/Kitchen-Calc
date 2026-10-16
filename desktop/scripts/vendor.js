@@ -24,4 +24,7 @@ for (const pkg of ['three-mesh-bvh', 'three-bvh-csg']) {
   fs.copyFileSync(path.join(dir, 'build', 'index.module.js'), path.join(out, pkg + '.module.js'));
   fs.copyFileSync(path.join(dir, 'LICENSE'), path.join(out, 'LICENSE-' + pkg + '.txt'));
 }
+// Фото декоров ЛДСП поставщика (тот же каталог, что на сайте) — для текстур корпуса
+const cat = path.join(root, '..', 'static', 'catalog');
+if (fs.existsSync(cat)) fs.cpSync(cat, path.join(out, 'decors'), { recursive: true });
 console.log('vendor: three.js скопирован в app/vendor');

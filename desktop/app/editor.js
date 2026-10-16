@@ -7,8 +7,9 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { HW_TYPES, HW_CATEGORIES, FIELDS as HW_FIELDS, newHardware, checkTarget, conflict, movingIds, steps as hwSteps, poseMatrix, visuals as hwVisuals, drillOps as hwDrillOps, describeHw, hardwareCount, hasAction, actionLabels, placeBetween, plateOps, baseNeeded, baseHint, findBase, snapDelta } from './hardware.js';
 import { moduleSVG, overviewSVG } from './drawings.js';
+import { DECOR, DECORS, TABS, texture as decorTexture, thumb as decorThumb, surfaceParams, sheetLayout, applySheetUV, onTextureUpdate } from './materials.js';
 import { normRoom, buildRoom3D, roomObstacles, roomSVG, ROOM_PRESETS, OPENING_TYPES, wallsToPts, ptsToWalls, checkPts, checkOpening, tidyPts, wallLen } from './room.js';
-import { panelGeometry, describeOp, drawingSVG, frame, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
+import { panelGeometry, describeOp, drawingSVG, frame, thinAxis, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
 
 // ---------------------------------------------------------------- справочники
 const DEFAULT_MATERIALS = [
@@ -124,6 +125,28 @@ const edgeGeo = new THREE.EdgesGeometry(boxGeo);
 const edgeMat = new THREE.LineBasicMaterial({ color: 0x3a342b });
 const edgeSelMat = new THREE.LineBasicMaterial({ color: 0xd9850f });
 const matCache = new Map();
+// Декор с текстурой листа: один материал на декор (выделение — свой, с подсветкой)
+function decorSurface(d, selected) {
+  const k = 'd:' + d.id + (selected ? '*' : '');
+  if (!matCache.has(k)) {
+    const m = new THREE.MeshStandardMaterial({ map: decorTexture(d.id, 'sheet'), ...surfaceParams(d), polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
+    if (selected) { m.emissive = new THREE.Color(0xd9850f); m.emissiveIntensity = 0.28; }
+    matCache.set(k, m);
+  }
+  return matCache.get(k);
+}
+const decorOfItem = it => { const m = mat(it.mat); return m.decor && DECOR[m.decor] ? DECOR[m.decor] : null; };
+onTextureUpdate(() => requestRender());
+// Геометрия детали с UV по месту на листе раскроя (кэш: размеры, обработка, место)
+const uvGeoCache = new Map();
+function sheetGeometry(it, machined, place) {
+  const key = `${it.w}|${it.h}|${it.d}|${machined ? JSON.stringify(it.ops) : ''}|${place.k},${place.x},${place.y},${place.along}`;
+  if (!uvGeoCache.has(key)) {
+    if (uvGeoCache.size > 1500) uvGeoCache.clear();
+    uvGeoCache.set(key, applySheetUV(machined ? machined.geo.clone() : new THREE.BoxGeometry(Math.max(it.w, 0.5), Math.max(it.h, 0.5), Math.max(it.d, 0.5)), it, place));
+  }
+  return uvGeoCache.get(key);
+}
 function surface(color, selected) {
   const k = color + (selected ? '*' : '');
   if (!matCache.has(k)) {
@@ -154,10 +177,22 @@ function buildRoom() {
   roomGroup.clear();
   P.room = normRoom(P.room);
   roomKey = JSON.stringify(P.room);
-  const g = buildRoom3D(P.room);
+  const R = P.room;
+  const g = buildRoom3D(R, { floorMat: R.floor && DECOR[R.floor] ? roomSurface(R.floor, 'floor', 0) : null,
+    wallMatOf: i => { const id = i === 'col' ? R.wall : (R.wallMats[i] || R.wall); return id && DECOR[id] ? (i === 'col' ? surface(DECOR[id].hex, false) : roomSurface(id, 'wall', i)) : null; } });
   roomWalls = g.getObjectByName('walls');
   roomGroup.add(g);
   requestRender();
+}
+// Покрытие пола или стены: текстура на 6 м, у каждой стены — свой участок рисунка
+function roomSurface(id, purpose, i) {
+  const k = `r:${id}:${purpose}:${i}`;
+  if (!matCache.has(k)) {
+    const d = DECOR[id], base = decorTexture(id, purpose), t = base.clone();
+    t.offset.set((i * 0.37) % 1, (i * 0.21) % 1);
+    matCache.set(k, new THREE.MeshStandardMaterial({ map: t, ...surfaceParams(d), side: THREE.FrontSide }));
+  }
+  return matCache.get(k);
 }
 // Стены между камерой и комнатой прячутся — видно, что внутри (как в разрезе)
 const _cv = new THREE.Vector3();
@@ -181,14 +216,19 @@ const solidsAll = () => P.items.concat(obstacles());
 function rebuild() {
   if (JSON.stringify(P.room) !== roomKey) buildRoom();
   itemsGroup.clear();
+  const layout = sheetLayout(P.items, thinAxis, it => { const d = decorOfItem(it); return d && d.id; });   // где деталь на листе — тот кусок рисунка и берёт
   for (const it of P.items) {
     const selected = sel.has(it.id);
     const machined = panelGeometry(it);  // деталь с отверстиями и вырезами — своя геометрия, иначе единичный бокс
-    const mesh = new THREE.Mesh(machined ? machined.geo : boxGeo, surface(mat(it.mat).color, selected));
-    if (!machined) mesh.scale.set(Math.max(it.w, 0.5), Math.max(it.h, 0.5), Math.max(it.d, 0.5));
+    const d = decorOfItem(it), place = d && layout.get(it.id);
+    const mesh = place ? new THREE.Mesh(sheetGeometry(it, machined, place), decorSurface(d, selected))
+      : new THREE.Mesh(machined ? machined.geo : boxGeo, surface(mat(it.mat).color, selected));
+    if (!machined && !place) mesh.scale.set(Math.max(it.w, 0.5), Math.max(it.h, 0.5), Math.max(it.d, 0.5));
     mesh.position.set(it.x + it.w / 2, it.y + it.h / 2, it.z + it.d / 2);
     mesh.userData.id = it.id;
-    mesh.add(new THREE.LineSegments(machined ? machined.edges : edgeGeo, selected ? edgeSelMat : edgeMat));
+    const edges = new THREE.LineSegments(machined ? machined.edges : edgeGeo, selected ? edgeSelMat : edgeMat);
+    if (!machined && place) edges.scale.set(Math.max(it.w, 0.5), Math.max(it.h, 0.5), Math.max(it.d, 0.5));
+    mesh.add(edges);
     itemsGroup.add(mesh);
   }
   buildHardware();
@@ -482,7 +522,7 @@ function snapAxis(a, min, size) {
 }
 
 function updateGizmo() {
-  if (measure) { tc.detach(); return; }
+  if (measure || (bucket.open && bucket.decor)) { tc.detach(); requestRender(); return; }
   const b = sel.size ? bbox(selItems()) : null;
   if (!b) { tc.detach(); return; }
   if (!drag) pivot.position.set((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.z0 + b.z1) / 2);
@@ -622,7 +662,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   selectionChanged();
   status(n ? `Выделено деталей: ${sel.size}. «Объединить в модуль» (Ctrl+G) — сделать из них шкаф, полку и т. д.` : 'В рамку ничего не попало');
 });
-renderer.domElement.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, gizmo: tc.axis !== null, btn: e.button }; });
+renderer.domElement.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, gizmo: !!tc.object && tc.axis !== null, btn: e.button }; });
 renderer.domElement.addEventListener('pointerup', e => {
   if (!down || down.gizmo || down.btn !== 0 || drag) { down = null; return; }
   const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4;
@@ -638,6 +678,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   }
   const hit = pick(e);
   if (basePick) { if (hit) finishBasePick(hit); else { basePick = null; status('Присоединение отменено'); } return; }
+  if (bucket.open && bucket.decor) return bucketClick(e);
   if (!hit) { if (!e.shiftKey) { sel.clear(); openGroup = 0; } }
   else {
     const it = item(hit);
@@ -1004,6 +1045,84 @@ function setMaterial(list, id) {
   });
 }
 
+// ---------------------------------------------------------------- заливка (как в Paint): выбрать декор и кликать детали, пол, стены
+const bucket = { open: false, decor: null, tab: 'ldsp', sub: '', q: '' };
+const palEl = document.createElement('div'); palEl.className = 'palette'; palEl.hidden = true; vp.appendChild(palEl);
+const tabOf = id => DECOR[id] && (DECOR[id].tab === 'floor' || DECOR[id].tab === 'wall' ? DECOR[id].tab : 'body');
+function openPalette(tab) {
+  bucket.open = true; if (tab) { bucket.tab = tab; bucket.sub = ''; }
+  palEl.hidden = false; vp.classList.toggle('bucket', !!bucket.decor); drawPalette();
+}
+function closePalette() { bucket.open = false; palEl.hidden = true; vp.classList.remove('bucket'); updateGizmo(); }
+function drawPalette() {
+  const list = DECORS.filter(d => bucket.q ? (d.name + ' ' + d.sub + ' ' + (d.mat || '')).toLowerCase().includes(bucket.q) : d.tab === bucket.tab && (!bucket.sub || d.sub === bucket.sub));
+  const subs = [...new Set(DECORS.filter(d => d.tab === bucket.tab).map(d => d.sub))];
+  const cur = bucket.decor && DECOR[bucket.decor], where = cur && tabOf(cur.id);
+  const hint = !cur ? 'Выберите цвет или покрытие, потом кликайте по деталям, полу или стенам.'
+    : where === 'floor' ? 'Кликните по полу — покрытие ляжет на весь пол.'
+    : where === 'wall' ? 'Кликните по стене — покрасится только она. <kbd>Shift</kbd> + клик — все стены.'
+    : 'Кликните деталь — она окрасится. <kbd>Shift</kbd> + клик — все детали модуля того же цвета (заливка).';
+  palEl.innerHTML = `<div class="pal-head"><b>🪣 Материалы и заливка</b><span class="grow"></span><span class="note">${DECORS.length} шт.</span><button data-pclose title="Закрыть (Esc)">×</button></div>
+    <div class="pal-tabs">${TABS.map(([id, n]) => `<button class="${id === bucket.tab && !bucket.q ? 'on' : ''}" data-ptab="${id}">${n}</button>`).join('')}</div>
+    ${bucket.q ? '' : `<div class="pal-subs">${subs.length > 1 ? ['', ...subs].map(sb => `<button class="${sb === bucket.sub ? 'on' : ''}" data-psub="${esc(sb)}">${esc(sb || 'Все')}</button>`).join('') : ''}</div>`}
+    <input class="pal-q" type="search" placeholder="Поиск: дуб, RAL 7016, мрамор…" value="${esc(bucket.q)}">
+    <div class="pal-cur">${cur ? `<img class="${cur.img ? 'ph' : ''}" src="${decorThumb(cur.id)}" alt=""><div><b>${esc(cur.name)}</b><div class="note">${esc(cur.mat || (cur.tab === 'floor' ? 'Пол' : 'Стены'))} · ${esc(cur.sub)}</div></div>${where === 'body' ? '<button class="accent" data-papply>К выбранным</button>' : ''}` : '<div class="note">Цвет не выбран</div>'}</div>
+    <div class="note">${hint}</div>
+    <div class="pal-grid">${list.map(d => `<button class="psw${d.id === bucket.decor ? ' on' : ''}" data-decor="${d.id}" title="${esc(d.name)}"><img loading="lazy" class="${d.img ? 'ph' : ''}" src="${decorThumb(d.id)}" alt=""><span>${esc(d.name)}</span></button>`).join('') || '<div class="note">Ничего не найдено</div>'}</div>`;
+  vp.classList.toggle('bucket', !!cur);
+  updateGizmo();
+}
+palEl.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  const d = t.dataset;
+  if ('pclose' in d) return closePalette();
+  if (d.ptab) { bucket.tab = d.ptab; bucket.sub = ''; bucket.q = ''; }
+  else if (d.psub !== undefined) bucket.sub = d.psub;
+  else if (d.decor) bucket.decor = d.decor;
+  else if ('papply' in d) { const list = selItems(); if (!list.length) return status('Сначала выберите детали'); paintItems(list, bucket.decor); }
+  drawPalette();
+});
+palEl.addEventListener('input', e => { if (!e.target.classList.contains('pal-q')) return; bucket.q = e.target.value.trim().toLowerCase(); const pos = e.target.selectionStart; drawPalette(); const q = palEl.querySelector('.pal-q'); q.focus(); q.setSelectionRange(pos, pos); });
+palEl.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') closePalette(); });
+palEl.addEventListener('pointerdown', e => e.stopPropagation());
+// Материал проекта для декора той же толщины, что у детали (толщина детали не меняется)
+function decorMaterial(id, t) {
+  let m = P.materials.find(x => x.decor === id && x.t === t);
+  if (!m) { const d = DECOR[id]; m = { id: `d_${id}_${t}`, name: `${d.mat || ''} ${d.name}`.trim(), color: d.hex, t, decor: id }; P.materials.push(m); }
+  return m.id;
+}
+function paintItems(list, id) {
+  commit(() => list.forEach(i => { i.mat = decorMaterial(id, mat(i.mat).t); }));
+  status(`${DECOR[id].name}: ${list.length === 1 ? label(list[0]) : list.length + ' дет.'}`);
+}
+// Клик кистью: что под мышкой — деталь, пол, стена (видимые)
+function bucketClick(e) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+  const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+  const hit = ray.intersectObjects([...itemsGroup.children, ...roomGroup.children], true).find(h => shown(h.object) && (h.object.userData.id || h.object.userData.surface));
+  if (!hit) return status('Мимо: кликните по детали, полу или стене');
+  const o = hit.object.userData, id = bucket.decor, where = tabOf(id), d = DECOR[id];
+  if (o.id) {
+    if (where !== 'body') return status(`«${d.name}» — покрытие для ${where === 'floor' ? 'пола' : 'стен'}. Для деталей выберите вкладку ЛДСП, ЛМДФ, акрил…`);
+    const it = item(o.id);
+    let list = [it];
+    if (e.shiftKey && it.g) list = groupItems(it.g).filter(x => x.mat === it.mat);   // заливка: весь модуль того же цвета
+    if (solid(it.id) && !e.shiftKey) list = groupItems(it.g).filter(x => x.mat === it.mat);
+    return paintItems(list, id);
+  }
+  if (o.surface === 'floor') {
+    if (where !== 'floor') return status('Это пол: выберите покрытие на вкладке «Пол»');
+    commit(() => { P.room.floor = id; });
+    return status('Пол: ' + d.name);
+  }
+  if (o.surface === 'wall' || o.surface === 'column') {
+    if (where !== 'wall') return status('Это стена: выберите покрытие на вкладке «Стены»');
+    commit(() => { if (e.shiftKey || o.surface === 'column') { P.room.wall = id; P.room.wallMats = {}; } else P.room.wallMats = { ...P.room.wallMats, [o.wall]: id }; });
+    return status(e.shiftKey || o.surface === 'column' ? 'Все стены: ' + d.name : `Стена ${o.wall + 1}: ${d.name}`);
+  }
+}
+
 // ---------------------------------------------------------------- левая панель: список модулей и деталей
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const label = i => i.name || KINDS[i.kind] || 'Деталь';
@@ -1070,7 +1189,8 @@ function refreshInspector() {
     const i = k.it;
     title.textContent = 'Деталь';
     h += `<div class="sec"><b>Деталь</b>${fld('Название', 'name', label(i), { text: true })}
-      <div class="row2">${fld('Тип', 'kind', i.kind, { options: Object.entries(KINDS) })}${fld('Материал', 'mat', i.mat, { options: matOptions() })}</div></div>
+      <div class="row2">${fld('Тип', 'kind', i.kind, { options: Object.entries(KINDS) })}${fld('Материал', 'mat', i.mat, { options: matOptions() })}</div>
+      <div class="btns"><button data-cmd="paint" title="Каталог декоров: кликните цвет, потом деталь">🪣 Цвет из каталога (${DECORS.length})</button></div></div>
       <div class="sec"><b>Размеры, мм</b><div class="row">${fld('Ширина (X)', 'w', i.w)}${fld('Высота (Y)', 'h', i.h)}${fld('Глубина (Z)', 'd', i.d)}</div></div>
       <div class="sec"><b>Положение, мм</b><div class="row">${fld('X слева', 'x', i.x)}${fld('Y от пола', 'y', i.y)}${fld('Z от стены', 'z', i.z)}</div></div>
       <div class="sec"><b>Обработка${(i.ops || []).length ? ` (${i.ops.length})` : ''}</b>
@@ -1776,7 +1896,7 @@ function autosave() {
 
 // ---------------------------------------------------------------- кнопки и клавиши
 const COMMANDS = {
-  new: newFile, open: openFile, room: () => roomDialog(false), save: () => saveFile(false), cabinet: cabinetDialog,
+  new: newFile, open: openFile, room: () => roomDialog(false), paint: () => (bucket.open ? closePalette() : openPalette()), save: () => saveFile(false), cabinet: cabinetDialog,
   'panel-h': () => addPanel('panel-h'), 'panel-v': () => addPanel('panel-v'), 'panel-f': () => addPanel('panel-f'),
   undo, redo, duplicate: duplicateSel, delete: deleteSel, group: groupSel, ungroup: ungroupSel, 'apply-hinges': applyHingesFromInspector,
   'rot-y': () => rotateSel('y'), 'rot-z': () => rotateSel('z'), 'rebuild-group': rebuildGroupFromInspector,
@@ -1801,7 +1921,7 @@ document.addEventListener('keydown', e => {
   };
   if (ctrl && map[k]) { e.preventDefault(); map[k](); return; }
   if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSel(); }
-  else if (e.key === 'Escape') { if (basePick) { basePick = null; status('Присоединение отменено'); } else if (measure) stopMeasure(); else { sel.clear(); openGroup = 0; selectionChanged(); } }
+  else if (e.key === 'Escape') { if (bucket.open) closePalette(); else if (basePick) { basePick = null; status('Присоединение отменено'); } else if (measure) stopMeasure(); else { sel.clear(); openGroup = 0; selectionChanged(); } }
   else if (e.key === 'ArrowLeft') { e.preventDefault(); moveSel(-step, 0, 0); }
   else if (e.key === 'ArrowRight') { e.preventDefault(); moveSel(step, 0, 0); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); moveSel(0, step, 0); }

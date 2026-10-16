@@ -34,6 +34,7 @@ export function normRoom(r) {
   r.t = +r.t || 120;
   r.openings = Array.isArray(r.openings) ? r.openings.filter(o => o.wall < r.pts.length) : [];
   r.columns = Array.isArray(r.columns) ? r.columns : [];
+  r.floor = r.floor || null; r.wall = r.wall || null; r.wallMats = r.wallMats || {};   // покрытия: декоры из materials.js
   r.w = Math.max(...r.pts.map(p => p[0])); r.d = Math.max(...r.pts.map(p => p[1]));
   return r;
 }
@@ -121,11 +122,11 @@ function boxAt(x0, y0, z0, w, h, d, m) { const b = new THREE.Mesh(new THREE.BoxG
 
 // Пол (по контуру), сетка 100 мм внутри комнаты, стены с проёмами, колонны. Стены — отдельные группы с нормалью наружу:
 // в 3D те, что между камерой и комнатой, прячутся (вид «в разрезе»).
-export function buildRoom3D(r, { floorMat, wallMat } = {}) {
+export function buildRoom3D(r, { floorMat, wallMatOf = () => null } = {}) {
   const g = new THREE.Group(), n = r.pts.length, t = r.t;
   const shape = new THREE.Shape(r.pts.map(p => new THREE.Vector2(p[0], -p[1])));
   const floor = new THREE.Mesh(new THREE.ShapeGeometry(shape), floorMat || M.floor);
-  floor.rotation.x = -Math.PI / 2; floor.position.y = -0.5; floor.name = 'floor'; g.add(floor);
+  floor.rotation.x = -Math.PI / 2; floor.position.y = -0.5; floor.name = 'floor'; floor.userData.surface = 'floor'; g.add(floor);
   // сетка: каждая линия обрезается по контуру (чётно-нечётное правило)
   const lines = [], cut = (axis, c) => {
     const xs = [];
@@ -151,8 +152,8 @@ export function buildRoom3D(r, { floorMat, wallMat } = {}) {
     const ops = r.openings.filter(o => o.wall === i);
     for (const o of ops) s.holes.push(new THREE.Path([new THREE.Vector2(o.off, o.sill), new THREE.Vector2(o.off, o.sill + o.h), new THREE.Vector2(o.off + o.w, o.sill + o.h), new THREE.Vector2(o.off + o.w, o.sill)]));
     const wg = new THREE.Group();
-    const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: t, bevelEnabled: false }), wallMat || M.wall);
-    mesh.name = 'wall'; wg.add(mesh);
+    const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: t, bevelEnabled: false }), wallMatOf(i) || M.wall);
+    mesh.name = 'wall'; mesh.userData.surface = 'wall'; mesh.userData.wall = i; wg.add(mesh);
     for (const o of ops) {   // окна — стекло, подоконник, рама; двери — коробка и полотно
       if (o.type === 'window' || o.type === 'balcony') {
         wg.add(boxAt(o.off, o.sill, t * 0.45, o.w, o.h, 6, M.glass));
@@ -174,7 +175,7 @@ export function buildRoom3D(r, { floorMat, wallMat } = {}) {
     wg.userData = { normal: out, mid: new THREE.Vector3((a[0] + b[0]) / 2, r.h / 2, (a[1] + b[1]) / 2) };
     walls.add(wg);
   }
-  for (const c of r.columns) { const col = boxAt(c.x, 0, c.z, c.w, c.h > 0 ? c.h : r.h, c.d, wallMat || M.wall); col.name = 'column'; walls.add(col); }
+  r.columns.forEach((c, k) => { const col = boxAt(c.x, 0, c.z, c.w, c.h > 0 ? c.h : r.h, c.d, wallMatOf('col') || M.wall); col.name = 'column'; col.userData = { surface: 'column', col: k }; walls.add(col); });
   return g;
 }
 

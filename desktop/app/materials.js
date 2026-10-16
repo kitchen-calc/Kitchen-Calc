@@ -1,0 +1,399 @@
+// Материалы: каталог декоров корпуса (ЛДСП поставщика с фото, ЛМДФ, акрил, эмаль RAL, плёнка, шпон, столешницы, стекло),
+// покрытия пола и стен — и текстуры к ним. Текстура корпуса рисуется на целый лист 2800×2070: каждая деталь берёт
+// свой кусок по месту на раскрое, поэтому рисунок у соседних деталей разный и продолжается, как на настоящем листе.
+// Пол и стены — текстура на 6 м без повторов (плитка и доски — каждая со своим оттенком и рисунком).
+import * as THREE from 'three';
+
+export const SHEET = { w: 2800, h: 2070 };
+// ЛДСП поставщика — тот же каталог, что на сайте (фото в /static/catalog, в программе — vendor/decors)
+const CATALOG = [{"key":"econom","title":"Эконом","items":["Азия","Антик Светлый","Астана","Белая Корона","Белый Уз","Белый","Вермонт Синий","Виктория","Дуб Ватан","Дуб Каньон Крофт","Дуб Каньон Светлый","Дуб Каньон Темный","Дуб Светлый","Дуб Сонома","Дуб Юконь Светлый","Дуб Юконь Темный","Жемчуг","Каспий Светлый","Каспий Темный","Кашмир Уз","Крем","Линия Коричневая","Лиственница Сибиу","Морской Мрамор","Ноче Комо","Одесса","Орех Лион","Орех Шоколад","Орех Шпон","Пикард","Рига Шпон","Серый Светлый Уз","Серый Темный Уз","Сосна Атлас","София","Уд","Флоренция","Черный Уз"],"hex":"57352fa68e7cdcd6dee0dbe1f2f4eae4e2e8656672c0a18cbf8b67c2b5b1a98c7f92604adad0d1d1b8aab6a8a5452d2acac6c0aeabaf515156b3aba8ccc7bb38312fe0dce4ddd5d0643b34e0dada7a4e3d482c2a5f3e35d5cdcd6d4231b7b6bd0d131fdad1d1cdbcb38e5f3bbbadac0a0a10","tone":"ddwwwwgdddddwdddggggwkwwdwdddwdgkwdddk"},{"key":"silver","title":"Сильвер","items":["Дуб Каньон Золотой","Кенигсберг Светлый","Орех Магнолия","Тадж Махал","Турин Темный"],"hex":"a58567c7bda8433428ada9ad4f4339","tone":"dddgd"},{"key":"premium","title":"Премиум","items":["Акация","Антик Светлый","Антик Темный","Бадега Серая","Балтийский Дуб","Бежевый","Белый (Филвуд)","Белый","Береза Темная","Благородный Тик","Бук 220","Венге Серебро","Венге Цаво","Виски Плотник","Вишня Оксфорд","Вишня Хамельтон","Вяз Сигма","Глазурь Светлая","Глазурь Темная","Дуб Белый","Дуб Бордо","Дуб Гарден","Дуб Графит","Дуб Дунин","Дуб Дюна","Дуб Карамельный","Дуб Ланселлот","Дуб Латтэ","Дуб Лефкас Темный","Дуб Мельница","Дуб Миллениум","Дуб Нельсон","Дуб Парис","Дуб Песчаный","Дуб Пьемонт Мокка","Дуб Рустикаль","Дуб Седан","Дуб Темный","Дуб Флоренция","Инокс Бежевый","Инокс Коричневый","Инокс Медь","Какао","Калахари","Клен Джерсей","Клен Крупный","Коралл","Легно Светлый","Легно Табак","Липа","Омега Светлая","Омега Темная","Орех Верона Светлый","Орех Верона Светлый","Орех Итальянский","Орех Калифорния","Орех Манифест","Помпей","Серый Светлый","Сибиу Темный","Скаггерак","Скандинавская Пихта","Слива Валис","Сонома Трюфель","Сосна Карелия","Сосна Осло","Сосна Светлая","Сосна Фано Белая","Сосна Фрост","Тавалато Темный","Трасто","Турин Коричневый","Турин Светлый","Черный","Шанхай Светлый","Шанхай Темный","Шафран Светлый","Шафран Темный","Шервуд Светлый","Шервуд Темный","Эвкалипт","Ясень Престиж","Ясень Эко"],"hex":"e0c9b3ae937a6e472a85787b90816feee3c5fafafaf7f7f585655b5c4835ca935b9d938f3d21178e714e955622cd9e7eb6a896d7d4d17b7a7cbdb5a5b69f7bc6b39f3c352e54463da6885e9b7c58b3895d9082777c5a3754483d9d8f81988c8066352e9887694c3528653e2dbb9973513c2c644d3d968770674e378e694cb4a2849f968bdbd1d0a18164a16e58ceab94654d46e6d5c4d0c2ad6d533b815b423b3131775c4bc2af956c564e655350d9dad38e623d124764b19e8071442e72645acdbfb23a302ecec3c5c5bcb0d4d6d282453351443f96775ad4bfa32c3239a8876952443e7c6451987554c5bbb14535358f8a6c42403cd7cdc9","tone":"dddddwwwdddddddddwdddddddddddddddddddddgggddwdcdddddddddddwdcdddddddwddddkddddddddw"},{"key":"color","title":"Цветной (монотонный)","items":["Альпийский Шифер","Артель","Голубой","Желтый Яичный","Индиго","Капучино","Красный","Лофт Светлый","Лофт Темный","Луанда","Мускат","Оранжевый","Паладина","Песок","Серебряный","Серый Темный","Синий","Сиреневый","Слива (Уни)","Сталь Закалённая","Твист","Трюфель (Уни)","Фантом","Фиолетовый","Чокко"],"hex":"36393e8cba618093aff8b9002c3f82a5947ca9392fceccc462615b3d3e40d8c6b7c1763d3333398d83807f82935a5a56015cb7d7cdd0917b844943403d39348c7e756d645b9982a858484b","tone":"kccccccggkcckgggccgkkggcg"},{"key":"platinum","title":"Платинум","items":["Агреппина","Алегре","Беларус","Бледная Синева","Бьанко","Графит Металик","Грифф","Древесина","Дуб Американский","Дуб Викинг","Дуб Гайя","Дуб Серый","Дуб Термо","Дуб Тернер","Инокс Серый","Камень","Карлсбад","Каролайн","Кашемир-Беж","Кашемир-Серый","Кашемир-Серый","Лаос Тик","Лембрук","Лес","Линия","Линн","Лорель","Лумумба","Малинска","Маркиз","Миднайт","Мята","Нео","Риббек","Ромео","Себастьян","Слоновая Кость","Тадао","Элегантный Дуб","Элегантный Орех","Эштон"],"hex":"c8c9c2d6d4d0b092675e758fe1e2dd423f424a564e333236b196696f5b45c4af886e64534e4348e4e1df97989361574e586465b8afb2ccc7bbc8c4c36c563e826f60505553404f45866342dec7a75a554f75695f745b3f1914111e262cbcd6c2806a51d1ccc4d4d6d9333734fbf4e4645545bea9895140315c3926","tone":"gwdcwkgddddddwgggggggdgkdddddkkcddwkwgddd"}];
+const DECOR_BASE = typeof location !== 'undefined' && location.pathname.startsWith('/studio') ? '/static/catalog/' : 'vendor/decors/';
+
+// ---------------------------------------------------------------- каталог
+export const DECORS = [], DECOR = {};
+// tabs: корпус — ЛДСП…Стекло; пол и стены — отдельные вкладки
+export const TABS = [
+  ['ldsp', 'ЛДСП'], ['lmdf', 'ЛМДФ'], ['acryl', 'Акрил'], ['ral', 'Эмаль RAL'], ['film', 'Плёнка ПВХ'], ['veneer', 'Шпон'], ['top', 'Столешницы'], ['glass', 'Стекло, зеркало'],
+  ['floor', 'Пол'], ['wall', 'Стены'],
+];
+export const PURPOSE = { floor: 'floor', wall: 'wall' };   // остальные вкладки — корпус
+const add = (tab, sub, id, name, hex, kind, extra = {}) => { const d = { id, tab, sub, name, hex, kind, ...extra }; DECORS.push(d); DECOR[id] = d; return d; };
+
+const WOOD = /дуб|орех|вишн|бук|сосн|ясен|клен|клён|берез|берёз|венге|тик|акаци|листвен|вяз|ноче|шпон|груш|ольх|эвкалипт|пихт|сибиу|легно|липа|слива валис|шервуд|древесин|сонома|каньон|юконь|атлас|лион|плотник|оксфорд|хамельтон|сигма|бадега|магнол|кенигсберг|турин|трюфель$|карели|осло|фано|фрост|верона|калифорн|манифест|итальян|миллениум|рустик/i;
+const STONE = /мрамор|камен|гранит|оникс|травертин|тадж|сланец|шифер|пикард/i;
+const METAL = /инокс|металл|металик|медь|сталь/i;
+const CONCRETE = /бетон|цемент|лофт/i;
+const TEXTILE = /кашмир|кашемир|лён|лен |текстил/i;
+const PFX = { econom: 'ec', silver: 'si', premium: 'pr', color: 'co', platinum: 'pl' };
+for (const sec of CATALOG) sec.items.forEach((name, i) => {
+  const tone = sec.tone[i], hex = '#' + sec.hex.substr(i * 6, 6);
+  const kind = METAL.test(name) ? 'metal' : STONE.test(name) ? 'stone' : CONCRETE.test(name) ? 'concrete' : TEXTILE.test(name) ? 'textile' : WOOD.test(name) ? 'wood' : tone === 'd' ? 'photo' : 'uni';
+  add('ldsp', sec.title, PFX[sec.key] + (i + 1), name, hex, kind, { img: DECOR_BASE + sec.key + '/' + String(i + 1).padStart(2, '0') + '.webp', mat: 'ЛДСП' });
+});
+[['Кашемир', '#d8c9b4'], ['Олива', '#8c8a6a'], ['Капучино', '#b49a82'], ['Шалфей', '#9aa58c'], ['Пудра', '#e3c9c0'], ['Графит софт', '#4a4d50'], ['Антрацит', '#383b3e'], ['Белый софт', '#f2f0ea'],
+  ['Ваниль', '#efe3c6'], ['Сизый', '#8d9aa3'], ['Индиго', '#2f3d5a'], ['Терракота', '#b5643f'], ['Мокко', '#6f5242'], ['Латте', '#c8b39a'], ['Песок', '#d9c8a6'], ['Туман', '#c9cbc8'],
+  ['Бирюза', '#5f9a96'], ['Горчица', '#c99a3c'], ['Бордо', '#6b2532'], ['Серо-голубой', '#a7b4bd'], ['Хаки', '#7b7a5a'], ['Шоколад', '#4a3328'], ['Светло-серый', '#d2d2cf'], ['Чёрный софт', '#222326'],
+  ['Мята', '#b6d3c5'], ['Розовый кварц', '#e8c4c4'], ['Дуб натуральный (ЛМДФ)', '#c49a6c', 'wood'], ['Орех (ЛМДФ)', '#6e4a32', 'wood'], ['Бетон (ЛМДФ)', '#a9a7a1', 'concrete'], ['Мрамор (ЛМДФ)', '#e9e6e0', 'stone']]
+  .forEach(([n, h, k], i) => add('lmdf', 'Матовые и софт-тач', 'md' + (i + 1), n, h, k || 'uni', { mat: 'ЛМДФ', rough: 0.85 }));
+[['Белый глянец', '#f6f6f3'], ['Слоновая кость', '#eee5d0'], ['Светло-бежевый', '#dccbb0'], ['Капучино', '#b49a82'], ['Мокко', '#7a5c49'], ['Светло-серый', '#cfd2d4'], ['Серый', '#9aa0a6'], ['Графит', '#4a4f55'],
+  ['Чёрный глянец', '#15171a'], ['Синий navy', '#1f3b57'], ['Изумрудный', '#2f5d4e'], ['Оливковый', '#6b7254'], ['Бордо', '#6b1f2a'], ['Терракота', '#b2563a'], ['Пудровый розовый', '#e2bfb6'], ['Голубой', '#9bbad0'],
+  ['Белый матовый', '#f1f0ec', 0.6], ['Кашемир матовый', '#d6c6b0', 0.6], ['Серый шёлк матовый', '#b9b9b4', 0.6], ['Антрацит матовый', '#3d4044', 0.6], ['Шалфей матовый', '#a3ad95', 0.6], ['Песочный матовый', '#cdb894', 0.6],
+  ['Красный глянец', '#a0161f'], ['Жёлтый глянец', '#e0b22a'], ['Бирюзовый глянец', '#3f8f8c'], ['Серебро металлик', '#b9bcc0', 0.3, 'metal'], ['Шампань металлик', '#cbb48f', 0.3, 'metal'], ['Бронза металлик', '#8a6a4a', 0.3, 'metal']]
+  .forEach(([n, h, r, k], i) => add('acryl', r ? 'Матовый и металлик' : 'Глянец', 'ac' + (i + 1), n, h, k || 'uni', { mat: 'Акрил', rough: r || 0.12 }));
+// Эмаль (крашеный МДФ) — стандартные цвета RAL Classic
+const RAL = `1000 Зелёно-бежевый BEBD7F|1001 Бежевый C2B078|1002 Песочно-жёлтый C6A664|1003 Сигнальный жёлтый E5BE01|1004 Золотисто-жёлтый CDA434|1005 Медово-жёлтый A98307|1006 Кукурузно-жёлтый E4A010|1007 Нарциссово-жёлтый DC9D00|1011 Коричнево-бежевый 8A6642|1012 Лимонно-жёлтый C7B446|1013 Жемчужно-белый EAE6CA|1014 Слоновая кость E1CC4F|1015 Светлая слоновая кость E6D690|1017 Шафраново-жёлтый F5D033|1018 Цинково-жёлтый F8F32B|1019 Серо-бежевый 9E9764|1020 Оливково-жёлтый 999950|1021 Рапсово-жёлтый F3DA0B|1023 Транспортный жёлтый FAD201|1024 Охра жёлтая AEA04B|1027 Карри 9D9101|1028 Дынно-жёлтый F4A900|1032 Жёлтый ракитник D6AE01|1033 Георгиново-жёлтый F3A505|1034 Пастельно-жёлтый EFA94A|2000 Жёлто-оранжевый ED760E|2001 Красно-оранжевый C93C20|2002 Алый CB2821|2003 Пастельно-оранжевый FF7514|2004 Чистый оранжевый F44611|2008 Ярко-красно-оранжевый F75E25|2009 Транспортный оранжевый F54021|2010 Сигнальный оранжевый D84B20|2011 Насыщенный оранжевый EC7C26|2012 Лососево-оранжевый E55137|3000 Огненно-красный AF2B1E|3001 Сигнальный красный A52019|3002 Карминно-красный A2231D|3003 Рубиново-красный 9B111E|3004 Пурпурно-красный 75151E|3005 Винно-красный 5E2129|3007 Чёрно-красный 412227|3009 Оксидно-красный 642424|3011 Коричнево-красный 781F19|3012 Бежево-красный C1876B|3013 Томатно-красный A12312|3014 Розовый антик D36E70|3015 Светло-розовый EA899A|3016 Кораллово-красный B32821|3017 Розовый E63244|3018 Клубнично-красный D53032|3020 Транспортный красный CC0605|3022 Лососево-красный D95030|3031 Восточный красный B32428|4001 Красно-сиреневый 6D3F5B|4002 Красно-фиолетовый 922B3E|4003 Вересково-фиолетовый DE4C8A|4004 Бордово-фиолетовый 641C34|4005 Сине-сиреневый 6C4675|4006 Транспортный пурпурный A03472|4007 Пурпурно-фиолетовый 4A192C|4008 Сигнальный фиолетовый 924E7D|4009 Пастельно-фиолетовый A18594|4010 Телемагента CF3476|5000 Фиолетово-синий 354D73|5001 Зелёно-синий 1F3438|5002 Ультрамарин 20214F|5003 Сапфирово-синий 1D1E33|5004 Чёрно-синий 18171C|5005 Сигнальный синий 1E2460|5007 Бриллиантово-синий 3E5F8A|5008 Серо-синий 26252D|5009 Лазурно-синий 025669|5010 Горечавково-синий 0E294B|5011 Стальной синий 231A24|5012 Голубой 3B83BD|5013 Кобальтово-синий 1E213D|5014 Голубино-синий 606E8C|5015 Небесно-синий 2271B3|5017 Транспортный синий 063971|5018 Бирюзово-синий 3F888F|5020 Океанская синь 1D334A|5021 Водная синь 256D7B|5022 Ночной синий 252850|5023 Отдалённо-синий 49678D|5024 Пастельно-синий 5D9B9B|6000 Патиново-зелёный 316650|6001 Изумрудно-зелёный 287233|6002 Лиственно-зелёный 2D572C|6003 Оливково-зелёный 424632|6004 Сине-зелёный 1F3A3D|6005 Зелёный мох 2F4538|6007 Бутылочно-зелёный 343B29|6009 Пихтовый зелёный 31372B|6011 Резедово-зелёный 587246|6013 Тростниково-зелёный 6C7156|6017 Майский зелёный 4C9141|6018 Жёлто-зелёный 57A639|6019 Пастельно-зелёный BDECB6|6021 Бледно-зелёный 89AC76|6024 Транспортный зелёный 308446|6027 Светло-зелёный 84C3BE|6028 Сосново-зелёный 2C5545|6029 Мятно-зелёный 20603D|6033 Мятно-бирюзовый 497E76|6034 Пастельно-бирюзовый 7FB5B5|7000 Серая белка 78858B|7001 Серебристо-серый 8A9597|7004 Сигнальный серый 969992|7005 Мышино-серый 646B63|7006 Бежево-серый 6D6552|7011 Железно-серый 434B4D|7012 Базальтово-серый 4E5754|7015 Шиферно-серый 434750|7016 Антрацит 293133|7021 Чёрно-серый 23282B|7022 Серая умбра 332F2C|7023 Серый бетон 686C5E|7024 Графит 474A51|7026 Гранитовый серый 2F353B|7030 Каменно-серый 8B8C7A|7032 Галечный серый B8B799|7035 Светло-серый D7D7D7|7036 Платиново-серый 7F7679|7037 Пыльно-серый 7D7F7D|7038 Агатовый серый B5B8B1|7039 Кварцевый серый 6C6960|7040 Серое окно 9DA1AA|7042 Транспортный серый 8D948D|7044 Серый шёлк CAC4B0|7045 Телегрей 1 909090|7046 Телегрей 2 82898F|7047 Телегрей 4 D0D0D0|8001 Охра коричневая 955F20|8002 Сигнальный коричневый 6C3B2A|8003 Глиняный коричневый 734222|8004 Медно-коричневый 8E402A|8007 Палево-коричневый 59351F|8008 Оливково-коричневый 6F4F28|8011 Орехово-коричневый 5B3A29|8012 Красно-коричневый 592321|8014 Сепия 382C1E|8015 Каштаново-коричневый 633A34|8016 Махагон 4C2F27|8017 Шоколадный 45322E|8019 Серо-коричневый 403A3A|8022 Чёрно-коричневый 212121|8023 Оранжево-коричневый A65E2E|8024 Бежево-коричневый 79553D|8025 Бледно-коричневый 755C48|8028 Терра 4E3B31|9001 Кремово-белый FDF4E3|9002 Серо-белый E7EBDA|9003 Сигнальный белый F4F4F4|9004 Сигнальный чёрный 282828|9005 Чёрный янтарь 0A0A0A|9006 Бело-алюминиевый A5A5A5|9007 Серый алюминий 8F8F8F|9010 Белый F7F5EE|9011 Графитно-чёрный 1C1C1C|9016 Транспортный белый F6F6F6|9017 Транспортный чёрный 1E1E1E|9018 Папирусно-белый D7D7D7`;
+const RAL_GROUP = { 1: 'Жёлтые и бежевые', 2: 'Оранжевые', 3: 'Красные и розовые', 4: 'Фиолетовые', 5: 'Синие', 6: 'Зелёные', 7: 'Серые', 8: 'Коричневые', 9: 'Белые и чёрные' };
+for (const s of RAL.split('|')) {
+  const m = s.match(/^(\d+) (.+) ([0-9A-F]{6})$/);
+  const metal = m[1] === '9006' || m[1] === '9007';
+  add('ral', RAL_GROUP[m[1][0]], 'ral' + m[1], `RAL ${m[1]} ${m[2]}`, '#' + m[3].toLowerCase(), metal ? 'metal' : 'uni', { mat: 'Эмаль', rough: 0.45 });
+}
+[['Дуб беленый', '#d9cbb3', 'wood'], ['Ясень шимо светлый', '#d6c5a8', 'wood'], ['Венге', '#4a3628', 'wood'], ['Дуб молочный', '#e3d7c0', 'wood'], ['Орех пекан', '#9a6a43', 'wood'], ['Дуб крафт золотой', '#b98a52', 'wood'],
+  ['Сосна винтаж', '#c4a77d', 'wood'], ['Дуб серый', '#a39a8c', 'wood'], ['Белый глянец', '#f5f5f2', 'uni', 0.15], ['Ваниль глянец', '#efe2c4', 'uni', 0.15], ['Бордо металлик', '#5c1a24', 'metal'], ['Серебро металлик', '#b4b7ba', 'metal'],
+  ['Бетон', '#a8a6a0', 'concrete'], ['Мрамор белый', '#ebe8e2', 'stone'], ['Белый матовый', '#efeeea', 'uni'], ['Кашемир матовый', '#d3c3ad', 'uni'], ['Капучино', '#b79f87', 'uni'], ['Графит матовый', '#4d5054', 'uni'],
+  ['Лён бежевый', '#d4c6ae', 'textile'], ['Шёлк серый', '#bdbbb6', 'textile']]
+  .forEach(([n, h, k, r], i) => add('film', 'МДФ в плёнке', 'pvc' + (i + 1), n, h, k, { mat: 'Плёнка ПВХ', rough: r || 0.6 }));
+[['Дуб натуральный', '#c49a6c'], ['Дуб мореный', '#4b3a2c'], ['Орех американский', '#6b4a33'], ['Ясень', '#d3bf9c'], ['Анегри', '#c8a47c'], ['Зебрано', '#b89462'], ['Тик', '#8f6a42'], ['Бук', '#d3a679'], ['Вишня', '#9c5a3a'], ['Эвкалипт', '#a7856a'], ['Дуб беленый', '#ddd0bb'], ['Дуб копчёный', '#6d5643']]
+  .forEach(([n, h], i) => add('veneer', 'Натуральный шпон', 'vn' + (i + 1), n, h, 'wood', { mat: 'Шпон', rough: 0.55, contrast: 1.15 }));
+[['Мрамор Каррара', '#ece9e4', 'stone'], ['Калакатта', '#f0ece4', 'stone', { vein: '#b39a6e' }], ['Неро Маркина', '#24232a', 'stone', { vein: '#e8e6e2' }], ['Гранит серый', '#8c8a88', 'granite'], ['Гранит чёрный', '#2a2a2c', 'granite'],
+  ['Травертин', '#d5c3a2', 'stone', { vein: '#b29a73' }], ['Бетон светлый', '#bdbab3', 'concrete'], ['Бетон тёмный', '#6a6a68', 'concrete'], ['Сланец', '#3d3f42', 'concrete'], ['Терраццо', '#e2ddd3', 'terrazzo'],
+  ['Дуб Вотан', '#9a7a55', 'wood'], ['Дуб Галифакс', '#b3895b', 'wood'], ['Орех Ла-Плата', '#6a4a35', 'wood'], ['Кварц белый', '#f2f1ee', 'granite'], ['Кварц серый', '#a6a5a2', 'granite'], ['Оникс медовый', '#d8b27b', 'stone', { vein: '#f3e2c0' }],
+  ['Нержавеющая сталь', '#b8babc', 'metal'], ['Белый глянец HPL', '#f5f5f3', 'uni'], ['Чёрный матовый HPL', '#232325', 'uni'], ['Бетон Чикаго', '#9d9a94', 'concrete']]
+  .forEach(([n, h, k, x], i) => add('top', 'Столешницы и стеновые панели', 'tp' + (i + 1), n, h, k, { mat: 'Столешница', rough: 0.4, ...(x || {}) }));
+[['Зеркало серебро', '#d9dde0', 'mirror'], ['Зеркало графит', '#6d7277', 'mirror'], ['Зеркало бронза', '#9c8166', 'mirror'], ['Стекло прозрачное', '#cfe3e8', 'glass'], ['Стекло матовое', '#e3ecee', 'glass', 0.7], ['Стекло тонированное', '#7d7466', 'glass', 0.55],
+  ['Лакобель белый', '#f2f2ef', 'uni'], ['Лакобель чёрный', '#18181a', 'uni']]
+  .forEach(([n, h, k, o], i) => add('glass', 'Стекло и зеркало', 'gl' + (i + 1), n, h, k, { mat: 'Стекло', rough: 0.05, opacity: o }));
+
+// Пол
+const FLOOR = [
+  ['Ламинат', { kind: 'planks', len: 1380, wid: 193 }, [['Дуб натуральный светлый', '#caa477'], ['Дуб беленый', '#ddd2bf'], ['Дуб серый', '#a7a096'], ['Дуб медовый', '#c18e55'], ['Дуб коньячный', '#93613a'],
+    ['Дуб тёмный', '#5e4632'], ['Орех', '#70503a'], ['Ясень белый', '#e3d9c6'], ['Сосна', '#d2ae7c'], ['Бук', '#d2a374'], ['Венге', '#46342a'], ['Дуб дымчатый', '#8d7f6d'], ['Дуб песочный', '#d8c09a'], ['Дуб скандинавский', '#e2d3b8'],
+    ['Дуб рустик', '#b0875c'], ['Вишня', '#9a5d3d'], ['Тик', '#8c6643'], ['Дуб графит', '#5b5753'], ['Дуб карамель', '#b8834e'], ['Акация', '#a8774a'], ['Клён', '#e1c7a0'], ['Махагон', '#6a3528']]],
+  ['Паркет и инженерная доска', { kind: 'planks', len: 2200, wid: 220 }, [['Доска дуб натур', '#bf9468'], ['Доска дуб браш', '#a98b6a'], ['Доска дуб белёный', '#d8ccb6'], ['Доска орех', '#6e4c35'], ['Доска ясень', '#d7c4a3']]],
+  ['Паркет и инженерная доска', { kind: 'planks', len: 600, wid: 90 }, [['Паркет дуб', '#c49a6c'], ['Паркет мербау', '#7a4a32'], ['Паркет бук', '#d1a376'], ['Паркет ясень', '#d9c7a6'], ['Паркет венге', '#4a382c']]],
+  ['Кварцвинил', { kind: 'planks', len: 1220, wid: 180 }, [['Кварцвинил дуб светлый', '#d3b88f'], ['Кварцвинил дуб серый', '#a59d93'], ['Кварцвинил орех', '#7a5940'], ['Кварцвинил сосна', '#d4b183'], ['Кварцвинил дуб натур', '#bc9468']]],
+  ['Кварцвинил', { kind: 'tiles', tw: 610, th: 305, grout: 1.5, base: 'concrete' }, [['Кварцвинил бетон', '#b2afa8'], ['Кварцвинил камень', '#c9bfae'], ['Кварцвинил сланец', '#55575a']]],
+  ['Керамогранит', { kind: 'tiles', tw: 600, th: 600, grout: 2, base: 'stone' }, [['Мрамор белый 60×60', '#ebe8e3'], ['Мрамор серый 60×60', '#b9b8b5'], ['Калакатта 60×60', '#f0ece3'], ['Оникс 60×60', '#e1c9a3'], ['Травертин 60×60', '#d7c6a6']]],
+  ['Керамогранит', { kind: 'tiles', tw: 1200, th: 600, grout: 2, base: 'concrete' }, [['Бетон светлый 60×120', '#c3c0b9'], ['Бетон серый 60×120', '#9a9893'], ['Бетон антрацит 60×120', '#57585a'], ['Цемент беж 60×120', '#c8bca8'], ['Песчаник 60×120', '#cdbb98']]],
+  ['Керамогранит', { kind: 'tiles', tw: 600, th: 600, grout: 2, base: 'terrazzo' }, [['Терраццо светлое', '#e4ded2'], ['Терраццо серое', '#a9a6a0']]],
+  ['Керамогранит', { kind: 'tiles', tw: 600, th: 600, grout: 2, base: 'concrete' }, [['Сланец чёрный', '#3b3c3f'], ['Камень бежевый', '#cbbb9f']]],
+  ['Плитка', { kind: 'tiles', tw: 300, th: 300, grout: 3, base: 'uni' }, [['Плитка белая 30×30', '#efede8'], ['Плитка бежевая 30×30', '#d8c8ac'], ['Плитка серая 30×30', '#a7a7a4'], ['Терракота 30×30', '#b0603e']]],
+  ['Плитка', { kind: 'checker', tw: 300, th: 300, grout: 2 }, [['Шахматка чёрно-белая', '#f0eeea', { alt: '#232325' }], ['Шахматка беж-коричневая', '#e3d5bc', { alt: '#7a5a42' }]]],
+  ['Ковролин', { kind: 'carpet' }, [['Ковролин серый', '#8d8e8f'], ['Ковролин бежевый', '#c7b79d'], ['Ковролин графит', '#4a4b4e'], ['Ковролин синий', '#3d4f6b'], ['Ковролин зелёный', '#5c6b52']]],
+  ['Наливной пол и бетон', { kind: 'concrete', big: true }, [['Микроцемент светлый', '#cfcbc4'], ['Микроцемент серый', '#9c9a95'], ['Наливной белый', '#e9e8e4'], ['Бетон шлифованный', '#8f8d88']]],
+];
+let fi = 0;
+for (const [sub, opt, list] of FLOOR) for (const [n, h, x] of list) add('floor', sub, 'fl' + (++fi), n, h, opt.kind, { ...opt, ...(x || {}), rough: opt.kind === 'carpet' ? 1 : 0.6 });
+
+// Стены
+const WALL = [
+  ['Покраска', { kind: 'paint' }, [['Белый тёплый', '#f3f0ea'], ['Белый холодный', '#f1f3f4'], ['Молочный', '#efe8da'], ['Слоновая кость', '#ece3cf'], ['Грейдж', '#cfc6b8'], ['Тёплый серый', '#b9b3aa'], ['Светло-серый', '#d6d6d3'],
+    ['Серый графит', '#5d6064'], ['Антрацит', '#3a3d41'], ['Шалфей', '#a8b29c'], ['Оливка', '#8a8a66'], ['Мята', '#bcd6c8'], ['Эвкалипт', '#87a397'], ['Изумруд', '#2f5e50'], ['Голубой', '#b8cbd8'], ['Серо-голубой', '#94a5b1'],
+    ['Синий navy', '#253a56'], ['Индиго', '#3a4a72'], ['Пудровый', '#e3c8be'], ['Персик', '#efc6a6'], ['Терракота', '#b8684a'], ['Охра', '#c9993f'], ['Горчица', '#c2a04a'], ['Бордо', '#6b2c34'],
+    ['Лаванда', '#bdb5cf'], ['Капучино', '#b8a08a'], ['Песочный', '#dccbab'], ['Мокко', '#7b6151'], ['Чёрный', '#252528'], ['Жёлтый лимон', '#efdb8c']]],
+  ['Обои', { kind: 'stripes', sw: 60 }, [['Полоска бежевая', '#e8dcc6', { alt: '#d9c8aa' }], ['Полоска серо-голубая', '#dde3e7', { alt: '#b8c4cc' }], ['Полоска зелёная', '#e1e6da', { alt: '#a9b89d' }]]],
+  ['Обои', { kind: 'stripes', sw: 12 }, [['Тонкая полоса серая', '#e6e6e2', { alt: '#c9c9c4' }], ['Тонкая полоса синяя', '#eef0f3', { alt: '#4f6889' }]]],
+  ['Обои', { kind: 'damask' }, [['Дамаск золото на беже', '#e9dfc9', { alt: '#c3a46a' }], ['Дамаск серебро на сером', '#c9cacb', { alt: '#e8e9ea' }], ['Дамаск тёмный', '#2f3237', { alt: '#4d535b' }], ['Дамаск бордо', '#5a1f28', { alt: '#7c3640' }]]],
+  ['Обои', { kind: 'diamond' }, [['Ромбы бежевые', '#ece3d2', { alt: '#cbb894' }], ['Ромбы серые', '#e2e2df', { alt: '#a7a7a3' }]]],
+  ['Обои', { kind: 'hex' }, [['Соты белые', '#f2f1ed', { alt: '#cfcdc6' }], ['Соты графит', '#45484c', { alt: '#6c7075' }]]],
+  ['Обои', { kind: 'flowers' }, [['Цветы мелкие на белом', '#f3f0ea', { alt: '#c98f8f' }], ['Цветы на голубом', '#dbe6ec', { alt: '#f4f4f2' }], ['Цветы на зелёном', '#4c6656', { alt: '#d8c79b' }]]],
+  ['Обои', { kind: 'dots' }, [['Горошек серый', '#f0efeb', { alt: '#a6a6a2' }]]],
+  ['Обои', { kind: 'textile' }, [['Лён натуральный', '#d8ccb6'], ['Лён серый', '#bdbab3'], ['Рогожка бежевая', '#d4c5a8'], ['Шёлк жемчуг', '#e7e2d8']]],
+  ['Обои', { kind: 'fans' }, [['Арт-деко веер', '#1f3a3a', { alt: '#c2a464' }]]],
+  ['Штукатурка', { kind: 'plaster' }, [['Венецианская белая', '#efede7'], ['Венецианская бежевая', '#dccdb3'], ['Венецианская серая', '#a9a8a4'], ['Шёлк перламутр', '#e4e0d8']]],
+  ['Штукатурка', { kind: 'concrete', big: true }, [['Микроцемент', '#bcb8b0'], ['Бетон лофт', '#9a9893'], ['Травертин', '#d4c3a3']]],
+  ['Кирпич', { kind: 'brick' }, [['Кирпич красный', '#9c4a34', { alt: '#c9c1b3' }], ['Кирпич белый', '#ebe8e2', { alt: '#d9d5cd' }], ['Кирпич старый', '#a8603e', { alt: '#b8ad9c' }], ['Кирпич серый', '#7c7b78', { alt: '#b1aea8' }], ['Клинкер тёмный', '#3f3330', { alt: '#6e6863' }]]],
+  ['Плитка', { kind: 'tiles', tw: 200, th: 100, grout: 2, base: 'uni', gloss: true }, [['Кабанчик белый', '#f1f1ee'], ['Кабанчик серый', '#b6b8b9'], ['Кабанчик зелёный', '#5f7f6c'], ['Кабанчик синий', '#3e5677']]],
+  ['Плитка', { kind: 'tiles', tw: 600, th: 300, grout: 2, base: 'stone' }, [['Мрамор 30×60', '#ebe8e3']]],
+  ['Плитка', { kind: 'tiles', tw: 25, th: 25, grout: 2, base: 'uni' }, [['Мозаика бирюза', '#5fa3a4']]],
+  ['Панели', { kind: 'slats', sw: 40 }, [['Рейки дуб', '#b98e60'], ['Рейки орех', '#6c4a33'], ['Рейки чёрные', '#2b2b2d']]],
+  ['Панели', { kind: 'slats', sw: 96 }, [['Вагонка белая', '#ecebe5'], ['Панели МДФ серые', '#a7a8a6']]],
+];
+let wi = 0;
+for (const [sub, opt, list] of WALL) for (const [n, h, x] of list) add('wall', sub, 'wl' + (++wi), n, h, opt.kind, { ...opt, ...(x || {}), rough: opt.gloss ? 0.2 : 0.9 });
+
+// ---------------------------------------------------------------- шум и цвет
+function hash(i, j, s) { let h = (i * 374761393 + j * 668265263 + s * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function noise(x, y, s = 0) {
+  const i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+  const a = hash(i, j, s), b = hash(i + 1, j, s), c = hash(i, j + 1, s), d = hash(i + 1, j + 1, s);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function fbm(x, y, s = 0, oct = 4) { let v = 0, a = 0.5, f = 1; for (let o = 0; o < oct; o++) { v += a * noise(x * f, y * f, s + o * 17); f *= 2.03; a *= 0.5; } return v / (1 - Math.pow(0.5, oct)); }
+const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+const mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const lum = c => (c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11) / 255;
+function palette(d) {
+  if (d.pal) return d.pal;
+  const c = rgb(d.hex), L = lum(c);
+  return { mid: c, light: mix(c, [255, 255, 255], L > 0.7 ? 0.08 : 0.16), dark: mix(c, [0, 0, 0], L > 0.7 ? 0.22 : L > 0.35 ? 0.38 : 0.45) };
+}
+
+// ---------------------------------------------------------------- рисунки (координаты в мм, волокна вдоль X)
+function woodAt(x, y, P, s, contrast = 1) {
+  const warp = fbm(x * 0.0016, y * 0.007, s, 3);
+  const r = y * 0.042 + warp * 7 + fbm(x * 0.00045, y * 0.0016, s + 5, 2) * 4;
+  const f = r - Math.floor(r);
+  const late = smooth(0.5, 0.92, f) * (1 - smooth(0.93, 1, f));
+  const fiber = noise(x * 0.025, y * 0.85, s + 9) * 0.6 + noise(x * 0.06, y * 2.1, s + 13) * 0.4;
+  const macro = fbm(x * 0.0007, y * 0.0025, s + 21, 2);
+  const t = Math.min(1, Math.max(0, (0.55 * late + 0.3 * fiber + 0.35 * macro - 0.08) * contrast));
+  return t < 0.42 ? mix(P.light, P.mid, t / 0.42) : mix(P.mid, P.dark, (t - 0.42) / 0.58);   // в среднем — цвет декора
+}
+function stoneAt(x, y, P, s, vein) {
+  const cloud = fbm(x * 0.003, y * 0.003, s, 4);
+  const w1 = Math.abs(Math.sin((x * 0.0021 + y * 0.0013) * 6.283 + fbm(x * 0.0011, y * 0.0011, s + 3, 5) * 10));
+  const w2 = Math.abs(Math.sin((x * 0.0009 - y * 0.0017) * 6.283 + fbm(x * 0.0019, y * 0.0019, s + 7, 4) * 8));
+  const v = Math.pow(1 - w1, 26) * 0.9 + Math.pow(1 - w2, 50) * 0.5;
+  const base = mix(P.light, P.mid, cloud * 0.6);
+  return mix(base, vein, Math.min(1, v));
+}
+function concreteAt(x, y, P, s, big) {
+  const k = big ? 0.5 : 1;
+  const n = fbm(x * 0.004 * k, y * 0.004 * k, s, 5) * 0.6 + noise(x * 0.12, y * 0.12, s + 4) * 0.25 + noise(x * 0.6, y * 0.6, s + 8) * 0.15;
+  let c = mix(P.light, P.dark, Math.max(0, (n - 0.25) * 0.9));
+  if (noise(x * 0.35, y * 0.35, s + 30) > 0.86) c = mul(c, 0.86);   // поры
+  return c;
+}
+function granite(x, y, P, s) {
+  const n = noise(x * 0.9, y * 0.9, s), m = noise(x * 0.35, y * 0.35, s + 2);
+  const c = mix(P.mid, n > 0.75 ? P.dark : n < 0.2 ? P.light : P.mid, 0.8);
+  return mix(c, P.light, m > 0.85 ? 0.6 : 0);
+}
+function terrazzo(x, y, P, s) {
+  let c = mix(P.mid, P.light, fbm(x * 0.01, y * 0.01, s, 3) * 0.4);
+  const cell = 9, i = Math.floor(x / cell), j = Math.floor(y / cell), h = hash(i, j, s + 1);
+  if (h > 0.82) {
+    const cx = (i + hash(i, j, s + 2)) * cell, cy = (j + hash(i, j, s + 3)) * cell, r = 1.5 + hash(i, j, s + 4) * 3.5;
+    if ((x - cx) ** 2 + (y - cy) ** 2 < r * r) c = [[96, 92, 88], [178, 136, 104], [212, 206, 196], [64, 70, 76], [150, 150, 146]][Math.floor(hash(i, j, s + 5) * 5)];
+  }
+  return c;
+}
+function textile(x, y, P, s) {
+  const a = noise(x * 0.9, y * 0.06, s) * 0.5 + noise(x * 0.06, y * 0.9, s + 3) * 0.5, w = (Math.sin(x * 3.2) * Math.sin(y * 3.2)) * 0.5 + 0.5;
+  return mix(P.light, P.dark, a * 0.35 + w * 0.12 + fbm(x * 0.004, y * 0.004, s + 6, 2) * 0.15);
+}
+function metal(x, y, P, s) { return mix(P.light, P.dark, noise(x * 0.004, y * 1.6, s) * 0.35 + noise(x * 0.02, y * 4, s + 2) * 0.25 + fbm(x * 0.001, y * 0.001, s + 3, 2) * 0.2); }
+function uni(x, y, P, s, k = 0.025) { return mul(P.mid, 1 + (fbm(x * 0.01, y * 0.01, s, 3) - 0.5) * k); }
+
+// Основа для плитки/кровли: функция цвета по виду материала
+function baseFn(kind, d, P, s) {
+  const vein = d.vein ? rgb(d.vein) : lum(P.mid) > 0.5 ? mix(P.mid, [70, 70, 75], 0.55) : mix(P.mid, [235, 235, 232], 0.7);
+  switch (kind) {
+    case 'wood': return (x, y) => woodAt(x, y, P, s, d.contrast || 1);
+    case 'stone': return (x, y) => stoneAt(x, y, P, s, vein);
+    case 'concrete': return (x, y) => concreteAt(x, y, P, s, d.big);
+    case 'granite': return (x, y) => granite(x, y, P, s);
+    case 'terrazzo': return (x, y) => terrazzo(x, y, P, s);
+    case 'textile': return (x, y) => textile(x, y, P, s);
+    case 'metal': case 'mirror': return (x, y) => metal(x, y, P, s);
+    case 'carpet': return (x, y) => mix(P.light, P.dark, noise(x * 0.8, y * 0.8, s) * 0.45 + fbm(x * 0.01, y * 0.01, s + 2, 3) * 0.3);
+    case 'plaster': return (x, y) => mix(P.light, P.dark, fbm(x * 0.0025, y * 0.0025, s, 5) * 0.55 + Math.pow(Math.abs(Math.sin(x * 0.004 + fbm(x * 0.003, y * 0.003, s + 4, 4) * 6)), 8) * 0.25);
+    case 'paint': return (x, y) => uni(x, y, P, s, 0.03);
+    default: return (x, y) => uni(x, y, P, s);
+  }
+}
+// Узоры поверх основы: доски, плитка, кирпич, обои
+function patternFn(d, P, s) {
+  const alt = d.alt ? { mid: rgb(d.alt), light: mix(rgb(d.alt), [255, 255, 255], 0.1), dark: mix(rgb(d.alt), [0, 0, 0], 0.25) } : P;
+  const gapC = mix(P.dark, [0, 0, 0], 0.35);
+  switch (d.kind) {
+    case 'planks': {
+      const L = d.len, W = d.wid;
+      return (x, y) => {
+        const j = Math.floor(y / W), off = hash(j, 7, s) * L, i = Math.floor((x + off) / L), h = hash(i, j, s + 1);
+        const lx = x + off - i * L, ly = y - j * W;
+        if (lx < 0.9 || ly < 0.9) return gapC;
+        const c = woodAt(x + h * 9000, y + h * 5000, P, s + Math.floor(h * 50), 1.1);
+        const edge = Math.min(lx, L - lx, ly, W - ly) < 3 ? 0.93 : 1;   // фаска
+        return mul(c, (0.93 + hash(i, j, s + 2) * 0.14) * edge);
+      };
+    }
+    case 'tiles': case 'checker': {
+      const b = baseFn(d.base || 'uni', d, P, s), b2 = d.kind === 'checker' ? baseFn('uni', d, alt, s) : null, g = d.grout || 2;
+      const grout = lum(P.mid) > 0.5 ? mix(P.mid, [120, 118, 112], 0.35) : mix(P.mid, [200, 198, 192], 0.25);
+      return (x, y) => {
+        const i = Math.floor(x / d.tw), j = Math.floor(y / d.th), lx = x - i * d.tw, ly = y - j * d.th;
+        if (lx < g || ly < g) return grout;
+        const c = b2 && (i + j) % 2 ? b2(x, y) : b(x, y);
+        return mul(c, 0.97 + hash(i, j, s + 3) * 0.06);
+      };
+    }
+    case 'brick': {
+      const bw = 250, bh = 65, m = 10, mortar = alt.mid;
+      return (x, y) => {
+        const j = Math.floor(y / (bh + m)), off = j % 2 ? (bw + m) / 2 : 0, i = Math.floor((x + off) / (bw + m));
+        const lx = x + off - i * (bw + m), ly = y - j * (bh + m);
+        if (lx < m || ly < m) return mul(mortar, 0.95 + noise(x * 0.3, y * 0.3, s) * 0.1);
+        const h = hash(i, j, s);
+        return mul(concreteAt(x, y, P, s + Math.floor(h * 20), false), 0.85 + h * 0.3);
+      };
+    }
+    case 'slats': {
+      const sw = d.sw, gap = sw > 60 ? 2 : 10;
+      return (x, y) => {
+        const i = Math.floor(x / (sw + gap)), lx = x - i * (sw + gap);
+        if (lx >= sw) return mix(P.dark, [0, 0, 0], 0.55);
+        return mul(woodAt(y + i * 777, x * 0.3 + i * 300, P, s, d.mid && lum(P.mid) > 0.85 ? 0.3 : 0.9), 0.95 + hash(i, 0, s) * 0.1);
+      };
+    }
+    case 'stripes': return (x, y) => (Math.floor(x / d.sw) % 2 ? uni(x, y, alt, s, 0.02) : textile(x, y, { ...P, light: P.mid, dark: mix(P.mid, [0, 0, 0], 0.12) }, s));
+    case 'damask': return (x, y) => {   // орнамент-розетка в ромбической сетке
+      const cw = 260, ch = 360, j = Math.floor(y / ch), ox = j % 2 ? cw / 2 : 0, u = ((x + ox) % cw + cw) % cw - cw / 2, v = (y % ch + ch) % ch - ch / 2;
+      const r = Math.hypot(u / cw * 2, v / ch * 2), a = Math.atan2(v, u);
+      const m = Math.abs(Math.cos(a * 4) * 0.55 + Math.cos(r * 9)) > 0.95 - r * 0.45 && r < 0.85 && Math.abs(Math.sin(a * 2 + r * 6)) > 0.3;
+      return m ? alt.mid : uni(x, y, P, s, 0.02);
+    };
+    case 'diamond': return (x, y) => { const u = (x + y) / 140, v = (x - y) / 140, du = Math.abs(u - Math.round(u)), dv = Math.abs(v - Math.round(v)); return Math.min(du, dv) < 0.035 ? alt.mid : uni(x, y, P, s, 0.02); };
+    case 'hex': return (x, y) => {
+      const R = 70, q = (x * Math.sqrt(3) / 3 - y / 3) / R, r = y * 2 / 3 / R;   // гексагональные координаты
+      let rx = Math.round(q), ry = Math.round(-q - r), rz = Math.round(r); const dx = Math.abs(rx - q), dy = Math.abs(ry + q + r), dz = Math.abs(rz - r);
+      if (dx > dy && dx > dz) rx = -ry - rz; else if (dy > dz) ry = -rx - rz; else rz = -rx - ry;
+      const e = Math.max(Math.abs(q - rx), Math.abs(-q - r - ry), Math.abs(r - rz));
+      return e > 0.44 ? alt.mid : uni(x, y, P, s, 0.02);
+    };
+    case 'flowers': return (x, y) => {
+      const c = 120, i = Math.floor(x / c), j = Math.floor(y / c), cx = (i + 0.25 + hash(i, j, s) * 0.5) * c, cy = (j + 0.25 + hash(i, j, s + 1) * 0.5) * c;
+      const u = x - cx, v = y - cy, rr = Math.hypot(u, v), a = Math.atan2(v, u) + hash(i, j, s + 2) * 6;
+      const petal = rr < 22 * (0.55 + 0.45 * Math.abs(Math.cos(a * 2.5)));
+      return rr < 5 ? mix(alt.mid, [200, 160, 60], 0.6) : petal ? alt.mid : uni(x, y, P, s, 0.02);
+    };
+    case 'dots': return (x, y) => { const c = 50, j = Math.floor(y / c), u = ((x + (j % 2) * c / 2) % c + c) % c - c / 2, v = (y % c + c) % c - c / 2; return u * u + v * v < 36 ? alt.mid : uni(x, y, P, s, 0.02); };
+    case 'fans': return (x, y) => {
+      const R = 120, j = Math.floor(y / (R * 0.5)), ox = j % 2 ? R : 0, i = Math.floor((x + ox) / (2 * R)), cx = i * 2 * R + R - ox, cy = (j + 1) * R * 0.5;
+      const u = x - cx, v = cy - y, r = Math.hypot(u, v), a = Math.atan2(v, u);
+      const line = v > -1 && r < R && (Math.abs((r / 18) - Math.round(r / 18)) < 0.07 || Math.abs((a / 0.2) - Math.round(a / 0.2)) < 0.06);
+      return line ? alt.mid : uni(x, y, P, s, 0.02);
+    };
+    default: return baseFn(d.kind, d, P, s);
+  }
+}
+
+// ---------------------------------------------------------------- текстуры
+// purpose: 'sheet' — лист корпуса (UV 0…1 по листу), 'floor'/'wall' — UV в мм, текстура на 6 м
+const SIZES = { sheet: [1400, 1035, SHEET.w, SHEET.h], floor: [1536, 1536, 6144, 6144], wall: [1536, 768, 6144, 3072] };
+const texCache = new Map(), photoCache = new Map();
+let onUpdate = () => {};
+export function onTextureUpdate(fn) { onUpdate = fn; }
+
+function loadPhoto(d, cb) {
+  let e = photoCache.get(d.img);
+  if (!e) {
+    e = { ok: false, img: new Image(), cbs: [] }; photoCache.set(d.img, e);
+    e.img.crossOrigin = 'anonymous';
+    e.img.onload = () => { e.ok = true; e.cbs.forEach(f => f(e.img)); e.cbs = []; };
+    e.img.onerror = () => { e.cbs = []; };
+    e.img.src = d.img;
+  }
+  if (e.ok) cb(e.img); else e.cbs.push(cb);
+}
+// цвета с фото: светлые, средние и тёмные места рисунка
+function samplePalette(img) {
+  const c = document.createElement('canvas'); c.width = c.height = 48;
+  const sz = Math.min(img.width, img.height) * 0.5;
+  c.getContext('2d').drawImage(img, (img.width - sz) / 2, (img.height - sz) / 2, sz, sz, 0, 0, 48, 48);
+  const px = c.getContext('2d').getImageData(0, 0, 48, 48).data, list = [];
+  for (let i = 0; i < px.length; i += 4) list.push([px[i], px[i + 1], px[i + 2]]);
+  list.sort((a, b) => lum(a) - lum(b));
+  const at = q => { const k = Math.floor(q * (list.length - 1)), n = Math.max(1, Math.floor(list.length * 0.06)); let r = [0, 0, 0]; for (let i = Math.max(0, k - n); i <= Math.min(list.length - 1, k + n); i++) r = [r[0] + list[i][0], r[1] + list[i][1], r[2] + list[i][2]]; const m = Math.min(list.length - 1, k + n) - Math.max(0, k - n) + 1; return mul(r, 1 / m); };
+  return { dark: at(0.1), mid: at(0.5), light: at(0.9) };
+}
+function render(canvas, d, purpose) {
+  const [W, H, wmm, hmm] = purpose === 'thumb' ? [canvas.width, canvas.height, d.tab === 'floor' ? 1600 : d.tab === 'wall' ? 1200 : 700, d.tab === 'floor' ? 1600 : d.tab === 'wall' ? 1200 : 700] : SIZES[purpose];
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  if (d.kind === 'photo') {   // рисунок без явных волокон — плитками фото поставщика с поворотами (стыков почти не видно)
+    const e = d.img && photoCache.get(d.img);
+    if (e && e.ok) {
+      const img = e.img, sz = Math.min(img.width, img.height) * 0.5, sx = (img.width - sz) / 2, sy = (img.height - sz) / 2, tile = 400 * W / wmm;
+      for (let ty = 0, j = 0; ty < H; ty += tile, j++) for (let tx = 0, i = 0; tx < W; tx += tile, i++) {
+        const h = hash(i, j, 3);
+        ctx.save(); ctx.translate(tx + tile / 2, ty + tile / 2); ctx.scale(h > 0.5 ? -1 : 1, hash(i, j, 4) > 0.5 ? -1 : 1);
+        ctx.drawImage(img, sx, sy, sz, sz, -tile / 2 - 0.5, -tile / 2 - 0.5, tile + 1, tile + 1); ctx.restore();
+      }
+      const id = ctx.getImageData(0, 0, W, H), p = id.data;   // крупные пятна — чтобы плитки не читались
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const k = (y * W + x) * 4, f = 1 + (fbm(x * wmm / W * 0.0015, y * hmm / H * 0.0015, 11, 3) - 0.5) * 0.1; p[k] *= f; p[k + 1] *= f; p[k + 2] *= f; }
+      ctx.putImageData(id, 0, 0);
+      return;
+    }
+  }
+  const P = palette(d), s = (d.id.length * 131 + d.id.charCodeAt(d.id.length - 1) * 7) % 997;
+  const fn = d.tab === 'floor' || d.tab === 'wall' ? patternFn(d, P, s) : baseFn(d.kind === 'photo' ? 'uni' : d.kind, d, P, s);
+  const id = ctx.createImageData(W, H), p = id.data, kx = wmm / W, ky = hmm / H;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const c = fn((x + 0.5) * kx, (y + 0.5) * ky), k = (y * W + x) * 4;
+    p[k] = c[0]; p[k + 1] = c[1]; p[k + 2] = c[2]; p[k + 3] = 255;
+  }
+  ctx.putImageData(id, 0, 0);
+}
+export function texture(id, purpose) {
+  const d = DECOR[id]; if (!d) return null;
+  const key = id + '|' + purpose;
+  if (texCache.has(key)) return texCache.get(key);
+  const canvas = document.createElement('canvas');
+  render(canvas, d, purpose);
+  const t = new THREE.CanvasTexture(canvas);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  if (purpose !== 'sheet') t.repeat.set(1 / SIZES[purpose][2], 1 / SIZES[purpose][3]);
+  texCache.set(key, t);
+  // у декоров поставщика цвета (или сам рисунок) берём с фото, когда оно загрузится
+  if (d.img && !d.pal) loadPhoto(d, img => {
+    if (d.kind !== 'photo') d.pal = samplePalette(img);
+    for (const [k, tx] of texCache) if (k.startsWith(id + '|')) { render(tx.image, d, k.split('|')[1]); tx.needsUpdate = true; }
+    onUpdate();
+  });
+  return t;
+}
+// Маленький образец для палитры (data URL)
+const thumbCache = new Map();
+export function thumb(id) {
+  const d = DECOR[id];
+  if (d.img) return d.img;
+  if (!thumbCache.has(id)) { const c = document.createElement('canvas'); c.width = c.height = 64; render(c, d, 'thumb'); thumbCache.set(id, c.toDataURL()); }
+  return thumbCache.get(id);
+}
+// Настройки материала three.js для декора
+export function surfaceParams(d) {
+  const p = { roughness: d.rough ?? 0.7, metalness: 0 };
+  if (d.kind === 'metal') { p.metalness = 0.45; p.roughness = 0.38; }
+  if (d.kind === 'mirror') { p.metalness = 0.85; p.roughness = 0.06; }
+  if (d.kind === 'glass') { p.transparent = true; p.opacity = d.opacity || 0.35; p.roughness = 0.05; p.depthWrite = false; }
+  return p;
+}
+
+// ---------------------------------------------------------------- раскрой для текстуры: где каждая деталь на листе
+// Волокна листа идут вдоль длинной стороны. Вертикальные детали (боковины, фасады) — волокна по высоте,
+// горизонтальные (полки, дно) — по ширине. Укладка полосами, пропил 4 мм, обзол 10 мм.
+export function sheetLayout(items, thinAxis, decorOf) {
+  const out = new Map(), byMat = new Map();
+  for (const it of items) { const d = decorOf(it); if (!d) continue; if (!byMat.has(d)) byMat.set(d, []); byMat.get(d).push(it); }
+  for (const list of byMat.values()) {
+    const parts = list.map(it => {
+      const n = thinAxis(it), along = n === 'y' ? (it.w >= it.d ? 'x' : 'z') : 'y';
+      const across = ['x', 'y', 'z'].find(a => a !== n && a !== along), S = { x: it.w, y: it.h, z: it.d };
+      return { it, along, across, L: S[along], W: S[across] };
+    }).sort((a, b) => b.W - a.W || b.L - a.L);
+    let k = 0, x = 10, y = 10, rowH = 0;
+    for (const p of parts) {
+      if (x + p.L > SHEET.w - 10 && x > 10) { x = 10; y += rowH + 4; rowH = 0; }
+      if (y + p.W > SHEET.h - 10 && y > 10) { k++; x = 10; y = 10; rowH = 0; }
+      out.set(p.it.id, { k, x, y, along: p.along, across: p.across });
+      x += p.L + 4; rowH = Math.max(rowH, p.W);
+    }
+  }
+  return out;
+}
+// UV вершин детали по её месту на листе (геометрия — с центром в центре детали, размеры в мм)
+export function applySheetUV(geo, it, place) {
+  const pos = geo.attributes.position, uv = new Float32Array(pos.count * 2), S = { x: it.w, y: it.h, z: it.d };
+  const ia = { x: 0, y: 1, z: 2 }[place.along], ic = { x: 0, y: 1, z: 2 }[place.across];
+  const du = place.k * 0.37 % 1, dv = place.k * 0.53 % 1;   // следующие листы — другой участок рисунка
+  for (let i = 0; i < pos.count; i++) {
+    const a = pos.array[i * 3 + ia] + S[place.along] / 2, c = pos.array[i * 3 + ic] + S[place.across] / 2;
+    uv[i * 2] = (place.x + a) / SHEET.w + du; uv[i * 2 + 1] = 1 - (place.y + c) / SHEET.h - dv;
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  return geo;
+}
