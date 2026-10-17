@@ -761,3 +761,28 @@ export function frontReach(e) {
   const op = opening(e), d = e.d;
   return Math.round(Math.max(0, ...op.plan.flatMap(a => a.path.map(p => p[1] - d)), ...op.side.flatMap(a => a.path.map(p => p[0] - d)), ...op.slide.map(pt => pt.b.max.z + (pt.m.move[2] || 0) - d)));
 }
+
+// Где человек берётся за технику: главная подвижная часть (самая большая), точка ручки в осях этой части и звук
+const SOUND = { fridge: 'fridge', wine: 'fridge', chest: 'lid', stove: 'oven', minioven: 'oven', ovenbi: 'oven', warmer: 'drawer', hood: 'drawer', micro: 'micro', microbi: 'micro',
+  dish: 'oven', washer: 'washer', topload: 'lid', twintub: 'lid', kettle: 'lid', mixer: 'lid', cooker: 'lid', airfryer: 'drawer', breadmaker: 'lid', grill: 'lid', ac: 'lid', custom: 'door' };
+export function grabPoint(model, e) {
+  let best = null;
+  model.traverse(o => {
+    const m = o.userData.motion; if (!m) return;
+    const b = new THREE.Box3();
+    for (const ch of o.children) if (ch.geometry) { ch.updateMatrix(); ch.geometry.computeBoundingBox(); b.union(ch.geometry.boundingBox.clone().applyMatrix4(ch.matrix)); }
+    if (b.isEmpty()) return;
+    const area = (b.max.x - b.min.x) * (b.max.y - b.min.y);
+    if (!best || area > best.area) best = { part: o, b, m, area };
+  });
+  if (!best) return null;
+  const { b, m } = best, cx = (b.min.x + b.max.x) / 2, h = b.max.y - b.min.y;
+  let p;
+  if (m.move) p = new THREE.Vector3(cx, b.max.y - 40, b.max.z + 15);                     // ящик — сверху посередине
+  else if (m.rot === 'y') {                                                                 // дверь — у края напротив петель
+    const far = Math.abs(b.min.x - m.p[0]) > Math.abs(b.max.x - m.p[0]) ? b.min.x + 45 : b.max.x - 45;
+    p = new THREE.Vector3(far, h > 900 ? Math.min(b.max.y - 150, Math.max(b.min.y + 250, 1050)) : (b.min.y + b.max.y) / 2, b.max.z + 15);
+  } else if (m.a > 0) p = new THREE.Vector3(cx, b.max.y - 40, b.max.z + 15);               // дверца вниз — за верх
+  else p = new THREE.Vector3(cx, b.max.y, b.max.z - 20);                                    // крышка — за передний край
+  return { part: best.part, point: p, sound: SOUND[e.shape] || 'door' };
+}

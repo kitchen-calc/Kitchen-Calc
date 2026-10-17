@@ -231,7 +231,16 @@ table.rtab tr.cur td { background: rgba(217,119,15,.15); }
 .tb-chk { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; white-space: nowrap; font-size: 13px; user-select: none; }
 .tb-chk input { margin: 0; }
 #lightBtn.off { background: #23262e; color: #9fb0c8; border-color: #3a4150; }
-.speech { position: relative; background: #fff; color: #b3141c; border: 2px solid #b3141c; border-radius: 16px; padding: 6px 14px; font: 800 18px/1.2 "Segoe UI", Arial, sans-serif; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 18px rgba(0,0,0,.25); margin-bottom: 12px; }
-.speech::after { content: ""; position: absolute; left: 50%; bottom: -12px; margin-left: -9px; border: 9px solid transparent; border-top-color: #b3141c; border-bottom: 0; }
-.speech.loud { font-size: 24px; background: #fff3c4; animation: shout .25s ease-in-out infinite alternate; }
-@keyframes shout { from { transform: scale(1); } to { transform: scale(1.08); } }
+.speech { position: relative; background: #fff; color: #b3141c; border: 3px solid #b3141c; border-radius: 18px; padding: 7px 15px; font: 800 19px/1.25 "Segoe UI", Arial, sans-serif; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 18px rgba(0,0,0,.25); margin-bottom: 14px; }
+.speech::after { content: ""; position: absolute; left: 50%; bottom: -13px; margin-left: -10px; border: 10px solid transparent; border-top-color: inherit; border-bottom: 0; }
+.speech .emo { margin-right: 8px; font-size: 1.15em; }
+/* у каждой реплики своя эмоция */
+.speech.mood-shush { color: #1f5fb4; border-color: #1f5fb4; font-style: italic; letter-spacing: .06em; }
+.speech.mood-annoyed { color: #b3500a; border-color: #d0670f; }
+.speech.mood-angry { color: #b3141c; border-color: #b3141c; animation: shake .12s linear infinite; }
+.speech.mood-sleepy { color: #5b4b8a; border-color: #7a68ad; font-style: italic; animation: drowse 1.6s ease-in-out infinite alternate; }
+.speech.mood-scream { color: #d0101a; border-color: #d0101a; background: #fff3c4; font-size: 23px; animation: shake .09s linear infinite; }
+.speech.mood-smirk { color: #6d2f96; border-color: #8a45b8; }
+.speech.loud { font-size: 27px; }
+@keyframes shake { 0% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(-2px, 1px) rotate(-1.5deg); } 50% { transform: translate(2px, -1px) rotate(1deg); } 75% { transform: translate(-1px, -1px) rotate(1.5deg); } 100% { transform: translate(1px, 1px) rotate(-1deg); } }
+@keyframes drowse { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-5px) rotate(2deg); } }

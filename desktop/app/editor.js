@@ -10,7 +10,7 @@ import { moduleSVG, overviewSVG, isoModuleSVG } from './drawings.js';
 import { MILLS, MILL_CATS, millDefaults } from './mill.js';
 import { createRuler } from './ruler.js';
 import { createPeople } from './people.js';
-import { APP_CATS, MOUNTS, APPLIANCES, appBox, appInfo, FINISHES, finishColor, CUSTOM_OPEN, buildAppliance, hasMotion, poseAppliance, appIcon, appSheetSVG, frontReach } from './appliances.js';
+import { APP_CATS, MOUNTS, APPLIANCES, appBox, appInfo, FINISHES, finishColor, CUSTOM_OPEN, buildAppliance, hasMotion, poseAppliance, appIcon, appSheetSVG, frontReach, grabPoint } from './appliances.js';
 import { DECOR, DECORS, TABS, texture as decorTexture, thumb as decorThumb, surfaceParams, sheetLayout, applySheetUV, onTextureUpdate } from './materials.js';
 import { normRoom, buildRoom3D, roomObstacles, roomSVG, ROOM_PRESETS, OPENING_TYPES, wallsToPts, ptsToWalls, checkPts, checkOpening, tidyPts, wallLen } from './room.js';
 import { panelGeometry, describeOp, drawingSVG, frame, thinAxis, bevelLen, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
@@ -373,25 +373,68 @@ function toggleHw(ids) {
   const all = ids.length;
   ids = ids.filter(id => { const h = P.hw.find(x => x.id === id); return h && hasAction(h.type) && !solid(h.target); });
   if (!ids.length) return status(all && P.hw.some(h => solid(h.target)) ? 'Это монолит («один предмет»): части не двигаются. В свойствах модуля выберите «Как объединено: Сборка»' : 'Здесь нет фурнитуры с действием');
-  const anyClosed = ids.some(id => (hwState.get(id) || { to: 0 }).to < 1);
-  setHw(ids, anyClosed ? 1 : 0);
-  peopleAct(ids.map(id => item(P.hw.find(h => h.id === id).target)));
+  const to = ids.some(id => (hwState.get(id) || { to: 0 }).to < 1) ? 1 : 0;
+  if (peopleOn()) return people.operate(hwOps(ids, to));   // открывает человек: подходит, берётся за ручку, тянет
+  setHw(ids, to);
 }
-// ---------------------------------------------------------------- люди и свет (people.js): парень открывает, соседка приходит ругаться
-const people = createPeople({ scene, render: requestRender, room: () => P.room });
+// ---------------------------------------------------------------- люди и свет (people.js, sounds.js): человек открывает руками, соседка ругается
+const people = createPeople({ scene, render: requestRender, room: () => P.room, camera: () => camera, target: () => orbit.target });
 const peopleOn = () => document.getElementById('showPeople').checked;
-function peopleAct(list) {
-  list = list.filter(Boolean); if (!peopleOn() || !list.length) return;
-  const a = list.find(isApp), f = [[0, 1], [1, 0], [0, -1], [-1, 0]][a ? (a.rot | 0) % 4 : 0];   // перед мебели — к нам (+Z), у техники — по повороту
-  people.act(bbox(list), { x: f[0], z: f[1] });
+// Где ручка у детали, которую двигает фурнитура (в закрытом положении): у двери — край напротив петель,
+// у ящика — посередине сверху, у подъёмника — снизу; по высоте — где удобно взяться
+function handleOf(h, it) {
+  const t = HW_TYPES[h.type], z = it.z + it.d + 15, side = h.side || 'L';
+  const hy = it.y + it.h <= 1000 ? it.y + it.h - 70 : it.y >= 1300 ? it.y + 70 : Math.min(Math.max(1050, it.y + 120), it.y + it.h - 120);
+  const at = (x, y) => new THREE.Vector3(x, y, z);
+  if (t.cat === 'slides' || t.motion === 'self' || h.type === 'tableSlide') return at(it.x + it.w / 2, it.y + it.h - 45);
+  if (t.cat === 'lifts') return h.type === 'flapStay' || h.dir === 'down' ? at(it.x + it.w / 2, it.y + it.h - 50) : at(it.x + it.w / 2, it.y + 50);
+  if (t.cat === 'sliding' && h.type !== 'foldingDoor') return at(h.slideDir === 'R' ? it.x + 60 : it.x + it.w - 60, hy);
+  if (side === 'T' || h.type === 'wallBed') return at(it.x + it.w / 2, side === 'T' ? it.y + 50 : it.y + it.h - 50);
+  if (side === 'B') return at(it.x + it.w / 2, it.y + it.h - 50);
+  return at(side === 'L' ? it.x + it.w - 45 : it.x + 45, hy);
 }
+const soundOf = h => { const t = HW_TYPES[h.type]; return t.motion === 'light' ? 'switch' : t.cat === 'slides' || t.motion === 'self' || h.type === 'tableSlide' ? 'drawer' : t.cat === 'lifts' ? 'lift' : t.cat === 'sliding' && h.type !== 'foldingDoor' ? 'slideDoor' : 'door'; };
+// Что делает человек: по одной операции на деталь (пара петель или направляющих — одна), за самую переднюю деталь (фасад ящика)
+function hwOps(ids, to) {
+  const groups = new Map();
+  for (const id of ids) {
+    const h = P.hw.find(x => x.id === id), it = h && item(h.target); if (!it) continue;
+    const front = [it, ...movingIds(h, P.items).map(item).filter(Boolean)].reduce((a, b) => (b.z + b.d > a.z + a.d ? b : a));
+    if (!groups.has(front.id)) groups.set(front.id, { h, front, ids: [] });
+    groups.get(front.id).ids.push(id);
+  }
+  return [...groups.values()].map(({ h, front, ids: gi }) => {
+    const p0 = handleOf(h, front);
+    return {
+      at: () => p0.clone().applyMatrix4(poseOf(front.id)),
+      front: () => new THREE.Vector3(0, 0, 1).transformDirection(poseOf(front.id)),
+      start: () => { setHw(gi, to); refreshSoon(); },
+      done: () => gi.every(id => { const st = hwState.get(id); return !st || st.t === to; }),
+      sound: { kind: soundOf(h), seed: front.id, closing: to === 0 },
+    };
+  });
+}
+function appOp(id, to) {
+  const c = appModels.get(id), it = item(id), g = c && grabPoint(c.model, it.spec);
+  if (!g) return { at: () => new THREE.Vector3(it.x + it.w / 2, it.y + it.h * 0.6, it.z + it.d), front: () => null, start: () => setApp([id], to), done: () => true, sound: { kind: 'door', seed: id, closing: to === 0 } };
+  const world = () => { g.part.updateWorldMatrix(true, false); return g.part.matrixWorld; };
+  return {
+    at: () => g.point.clone().applyMatrix4(world()),
+    front: () => new THREE.Vector3(0, 0, 1).transformDirection(world()),
+    start: () => { setApp([id], to); refreshSoon(); },
+    done: () => { const st = appState.get(id); return !st || st.t === to; },
+    sound: { kind: g.sound, seed: id, closing: to === 0 },
+  };
+}
+// кнопки «Открыть / Закрыть» в свойствах — по новому состоянию, когда человек потянул
+const refreshSoon = () => setTimeout(() => { refreshInspector(); if (!modal.hidden && dlgIsPart) renderPartEditor(); }, 60);
 let lightOn = true;
 function toggleLight() {
   lightOn = !lightOn;
   hemi.intensity = lightOn ? 1.9 : 0.16; sun.intensity = lightOn ? 1.5 : 0.04; fill.intensity = lightOn ? 0.5 : 0;
   scene.background.set(lightOn ? '#e7e3dc' : '#14161b');
   const b = document.getElementById('lightBtn'); b.classList.toggle('off', !lightOn); b.textContent = lightOn ? '💡 Свет' : '🌑 Свет выкл.';
-  if (!lightOn && peopleOn()) people.lightsOff(orbit.target, camera.position); else if (lightOn) people.lightsOn();
+  people.light(lightOn);
   status(lightOn ? 'Свет включён' : 'Свет выключен');
   requestRender();
 }
@@ -443,10 +486,10 @@ function toggleMotion(hwIds, appIds) {
   const apps = appIds.filter(id => appModels.get(id)?.motion && !solid(id));
   if (!apps.length) return toggleHw(hwIds);
   const hws = hwIds.filter(id => { const h = P.hw.find(x => x.id === id); return h && hasAction(h.type) && !solid(h.target); });
-  const open = [...hws.map(id => hwState.get(id)), ...apps.map(id => appState.get(id))].some(st => !st || st.to < 1);
-  if (hws.length) setHw(hws, open ? 1 : 0);
-  setApp(apps, open ? 1 : 0);
-  peopleAct([...hws.map(id => item(P.hw.find(h => h.id === id).target)), ...apps.map(item)]);
+  const to = [...hws.map(id => hwState.get(id)), ...apps.map(id => appState.get(id))].some(st => !st || st.to < 1) ? 1 : 0;
+  if (peopleOn()) return people.operate([...hwOps(hws, to), ...apps.map(id => appOp(id, to)).filter(Boolean)]);
+  if (hws.length) setHw(hws, to);
+  setApp(apps, to);
 }
 
 // ---------------------------------------------------------------- габариты и размеры на экране
@@ -2606,7 +2649,7 @@ document.getElementById('showDims').addEventListener('change', updateDims);
   const c = document.getElementById('showPeople');
   try { c.checked = localStorage.getItem('kcs-people') === '1'; } catch (e) { /* */ }
   people.setEnabled(c.checked);
-  c.addEventListener('change', () => { people.setEnabled(c.checked); try { localStorage.setItem('kcs-people', c.checked ? '1' : '0'); } catch (e) { /* */ } status(c.checked ? 'Люди включены: откройте дверь или ящик — придут' : 'Без людей'); });
+  c.addEventListener('change', () => { people.setEnabled(c.checked); try { localStorage.setItem('kcs-people', c.checked ? '1' : '0'); } catch (e) { /* */ } status(c.checked ? 'Люди включены: откройте дверь или ящик — он подойдёт и откроет сам, со звуком' : 'Без людей: двери и ящики открываются сами, без звука'); });
 })();
 document.getElementById('showFast').addEventListener('change', rebuild);
 document.getElementById('showRoom').addEventListener('change', buildRoom);
