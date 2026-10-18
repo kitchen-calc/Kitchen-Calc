@@ -854,6 +854,80 @@ function pick(e) {
 }
 function selectionChanged() { if (measure && !sel.has(measure.id)) stopMeasure(); rebuild(); refreshUI(); }
 
+// ---------------------------------------------------------------- колонна, дверь, окно: тянем мышью прямо в 3D
+// Колонна едет по полу (шаг 10 мм, в пределах комнаты). Дверь и окно едут вдоль стены и переходят на ту стену, что под мышью;
+// высота от пола не меняется. Точные цифры — в окне «Комната».
+let roomDrag = null;
+const cmR = v => String(Math.round(v) / 10).replace('.', ',');   // мм → «12,5» см
+const _floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), _fp = new THREE.Vector3();
+function floorPoint(e) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+  return ray.ray.intersectPlane(_floor, _fp) ? [_fp.x, _fp.z] : null;
+}
+// ближайшая к точке пола стена: номер, расстояние вдоль стены от её начала
+function nearWall(R, x, z) {
+  let best = null;
+  R.pts.forEach((a, i) => {
+    const b = R.pts[(i + 1) % R.pts.length], L = wallLen(R.pts, i), ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L;
+    const s = Math.max(0, Math.min(L, (x - a[0]) * ux + (z - a[1]) * uz)), d = Math.hypot(a[0] + ux * s - x, a[1] + uz * s - z);
+    if (!best || d < best.d) best = { wall: i, s, d, L };
+  });
+  return best;
+}
+// стена под мышью (среди видимых — передние стены в разрезе спрятаны): номер и расстояние вдоль стены; вызывать после floorPoint (луч уже задан)
+function wallUnder(R) {
+  let best = null; const o = ray.ray.origin, d = ray.ray.direction;
+  R.pts.forEach((a, i) => {
+    const wg = roomWalls && roomWalls.children[i]; if (wg && !wg.visible) return;
+    const b = R.pts[(i + 1) % R.pts.length], L = wallLen(R.pts, i), ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L, den = d.x * -uz + d.z * ux;
+    if (Math.abs(den) < 1e-6) return;
+    const t = ((a[0] - o.x) * -uz + (a[1] - o.z) * ux) / den, y = o.y + d.y * t; if (t <= 0 || y < 0 || y > R.h) return;
+    const s = (o.x + d.x * t - a[0]) * ux + (o.z + d.z * t - a[1]) * uz; if (s < -50 || s > L + 50) return;
+    if (!best || t < best.t) best = { t, wall: i, s: Math.max(0, Math.min(L, s)), L };
+  });
+  return best;
+}
+renderer.domElement.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || e.ctrlKey || e.shiftKey || boxMode || measure || ruler.on || basePick || bucket.open || tc.axis !== null) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+  const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+  const hit = ray.intersectObjects([...itemsGroup.children, ...roomGroup.children], true).find(h => h.object.isMesh && shown(h.object) && (h.object.userData.id || h.object.userData.surface));
+  const u = hit && hit.object.userData, R = P.room, p = floorPoint(e);
+  if (!u || !p || !(u.surface === 'column' || u.surface === 'opening')) return;   // мебель впереди, стена, пол — как обычно
+  if (u.surface === 'column') { const c = R.columns[u.col]; roomDrag = { col: u.col, dx: p[0] - c.x, dz: p[1] - c.z }; }
+  else { const o = R.openings[u.op], w = wallUnder(R) || nearWall(R, hit.point.x, hit.point.z); roomDrag = { op: u.op, grab: w && w.wall === o.wall ? w.s - o.off : o.w / 2 }; }
+  roomDrag.snap = snapshot(); roomDrag.moved = false;
+  orbit.enabled = false; renderer.domElement.setPointerCapture(e.pointerId);
+  status(u.surface === 'column' ? 'Колонна: тяните по полу. Точные размеры — «Комната».' : `${OPENING_TYPES[R.openings[u.op].type].name}: тяните вдоль стены, можно на другую стену. Точные размеры — «Комната».`);
+});
+renderer.domElement.addEventListener('pointermove', e => {
+  if (!roomDrag) return;
+  const p = floorPoint(e), R = P.room; if (!p) return;
+  const snap = v => Math.round(v / 10) * 10;
+  if (roomDrag.col != null) {
+    const c = R.columns[roomDrag.col], xs = R.pts.map(q => q[0]), zs = R.pts.map(q => q[1]);
+    c.x = Math.max(Math.min(...xs), Math.min(Math.max(...xs) - c.w, snap(p[0] - roomDrag.dx)));
+    c.z = Math.max(Math.min(...zs), Math.min(Math.max(...zs) - c.d, snap(p[1] - roomDrag.dz)));
+    status(`Колонна: X ${cmR(c.x)} см, Z ${cmR(c.z)} см от левого заднего угла`);
+  } else {
+    const o = R.openings[roomDrag.op], w = wallUnder(R) || nearWall(R, p[0], p[1]); if (!w || w.L < o.w) return;
+    const off = snap(Math.max(0, Math.min(w.L - o.w, w.s - roomDrag.grab)));
+    const clash = R.openings.some((q, k) => k !== roomDrag.op && q.wall === w.wall && off < q.off + q.w && q.off < off + o.w);   // не налезать на соседний проём
+    if (clash) return status('Здесь уже есть другой проём');
+    if (o.wall !== w.wall && roomDrag.grab > o.w) roomDrag.grab = o.w / 2;
+    o.wall = w.wall; o.off = off;
+    status(`${OPENING_TYPES[o.type].name}: стена ${w.wall + 1}, ${cmR(o.off)} см от начала стены`);
+  }
+  roomDrag.moved = true; buildRoom();
+});
+renderer.domElement.addEventListener('pointerup', () => {
+  if (!roomDrag) return;
+  const d = roomDrag; roomDrag = null; orbit.enabled = true;
+  if (d.moved) { undoStack.push(d.snap); if (undoStack.length > 200) undoStack.shift(); redoStack.length = 0; afterChange(); }
+});
+
 // ---------------------------------------------------------------- команды
 // ---------------------------------------------------------------- пересечения: деталь не может войти в другую
 // Касаться можно (зазор до 0,5 мм не считается). Пересечения, которые уже были до действия, не мешают — чтобы не «заклинить» проект.
@@ -1358,7 +1432,7 @@ function refreshInspector() {
       Тяните цветные стрелки или вводите размеры справа.<br>
       <kbd>←</kbd><kbd>→</kbd> X, <kbd>↑</kbd><kbd>↓</kbd> высота, <kbd>PgUp</kbd><kbd>PgDn</kbd> глубина (с <kbd>Shift</kbd> — ×10)<br>
       <kbd>Ctrl+D</kbd> копия, <kbd>Del</kbd> удалить, <kbd>Ctrl+G</kbd> в модуль, <kbd>Ctrl+Z</kbd> отменить, <kbd>F</kbd> показать<br>
-      Мышь: левая — вращать, правая — сдвигать вид, колесо — приблизить.</div></div>`;
+      Мышь: левая — вращать, правая — сдвигать вид, колесо — приблизить.<br>Колонну, дверь, окно — зажмите и тяните мышью: колонна по полу, дверь и окно по стенам.</div></div>`;
   } else if (k.type === 'item' && isApp(k.it)) {
     title.textContent = 'Техника';
     h += `<div class="btns"><button class="accent" data-cmd="part-edit" title="Всё о технике в одном окне: чертёж, ниша, как открывается (или двойной клик, Enter)">✎ Окно техники</button></div>${appPanel(k.it)}${appActions(k.it, false)}`;
