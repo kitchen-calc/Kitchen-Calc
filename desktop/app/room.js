@@ -155,6 +155,7 @@ export function buildRoom3D(r, { floorMat, wallMatOf = () => null } = {}) {
     const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: t, bevelEnabled: false }), wallMatOf(i) || M.wall);
     mesh.name = 'wall'; mesh.userData.surface = 'wall'; mesh.userData.wall = i; wg.add(mesh);
     for (const o of ops) {   // окна — стекло, подоконник, рама; двери — коробка и полотно
+      const c0 = wg.children.length;
       if (o.type === 'window' || o.type === 'balcony') {
         wg.add(boxAt(o.off, o.sill, t * 0.45, o.w, o.h, 6, M.glass));
         for (const [x, w] of [[o.off, 50], [o.off + o.w - 50, 50], [o.off + o.w / 2 - 25, 50]]) wg.add(boxAt(x, o.sill, t * 0.35, w, o.h, 60, M.frame));
@@ -165,6 +166,7 @@ export function buildRoom3D(r, { floorMat, wallMatOf = () => null } = {}) {
         wg.add(boxAt(o.off - 70, o.h, -10, o.w + 140, 70, 10, M.frame));
         wg.add(boxAt(o.off, 0, t * 0.3, o.w, o.h, 40, M.door));
       }
+      for (let j = c0; j < wg.children.length; j++) wg.children[j].userData = { surface: 'opening', op: r.openings.indexOf(o) };   // за эти детали проём тянут мышью в 3D
     }
     // локальные оси: X — вдоль стены, Y — вверх, Z — наружу из комнаты
     // (базис зеркальный — three.js сам разворачивает грани при отрицательном определителе)
