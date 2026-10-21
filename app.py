@@ -378,7 +378,7 @@ STUDIO_IMPORTS = {
     "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.16/build/index.module.js",
     "three-bvh-csg": "https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.18/build/index.module.js",
 }
-STUDIO_TYPES = {"editor.js": "application/javascript", "machining.js": "application/javascript", "hardware.js": "application/javascript", "drawings.js": "application/javascript", "room.js": "application/javascript", "materials.js": "application/javascript", "mill.js": "application/javascript", "ruler.js": "application/javascript", "appliances.js": "application/javascript", "people.js": "application/javascript", "sounds.js": "application/javascript", "objects.js": "application/javascript", "style.css": "text/css"}
+STUDIO_TYPES = {"editor.js": "application/javascript", "machining.js": "application/javascript", "hardware.js": "application/javascript", "drawings.js": "application/javascript", "room.js": "application/javascript", "materials.js": "application/javascript", "mill.js": "application/javascript", "ruler.js": "application/javascript", "appliances.js": "application/javascript", "people.js": "application/javascript", "sounds.js": "application/javascript", "objects.js": "application/javascript", "samples.js": "application/javascript", "style.css": "text/css"}
 
 
 @app.get("/studio", response_class=HTMLResponse)

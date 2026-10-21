@@ -12,6 +12,7 @@ import { createRuler } from './ruler.js';
 import { createPeople } from './people.js';
 import { APP_CATS, MOUNTS, APPLIANCES, appBox, appInfo, FINISHES, finishColor, CUSTOM_OPEN, buildAppliance, hasMotion, poseAppliance, appIcon, appSheetSVG, frontReach, grabPoint } from './appliances.js';
 import { OBJ_CATS, OBJ_MOUNTS, OBJECTS, buildObject, objInfo, objIcon, objFinishes, objFinishColor } from './objects.js';
+import { SAMPLES } from './samples.js';
 import { DECOR, DECORS, TABS, texture as decorTexture, thumb as decorThumb, surfaceParams, sheetLayout, applySheetUV, onTextureUpdate } from './materials.js';
 import { normRoom, buildRoom3D, roomObstacles, roomSVG, ROOM_PRESETS, OPENING_TYPES, wallsToPts, ptsToWalls, checkPts, checkOpening, tidyPts, wallLen } from './room.js';
 import { panelGeometry, describeOp, drawingSVG, frame, thinAxis, bevelLen, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
@@ -2679,6 +2680,22 @@ function updateTitle() {
   const t = `${dirty ? '• ' : ''}${P.name}${filePath ? ' — ' + filePath.split(/[\\/]/).pop() : ''} — Kitchen Calc Studio`;
   document.title = t; if (desktop) window.kc.setTitle(t);
 }
+// Примеры проектов (samples.js): собираются заново из деталей, корпусов и предметов — дальше их можно менять как свои
+function samplesDialog() {
+  openDialog('📂 Примеры проектов', `<div class="note">Пример откроется вместо текущего проекта${dirty ? ' — несохранённые изменения пропадут, сначала сохраните' : ''}. Дальше всё меняется как обычно.</div>
+    <div class="applist">${SAMPLES.map(s => `<div class="appcard"><div class="appmain"><b>${esc(s.name)}</b><div class="note">${esc(s.note)}</div></div><button class="accent" data-sample="${s.id}">Открыть</button></div>`).join('')}</div>`, '<button data-close>Закрыть</button>', true);
+  document.getElementById('dlgBody').onclick = e => { const b = e.target.closest('[data-sample]'); if (!b) return; closeDialog(); loadSample(b.dataset.sample); };
+}
+function loadSample(id) {
+  const s = SAMPLES.find(x => x.id === id); if (!s) return;
+  P = newProject();
+  s.build({ P, nid, buildCabinet, attachCabinetHardware, HINGES, OBJECTS });
+  P.room = normRoom(P.room);
+  hwState.clear(); appState.clear(); filePath = null;
+  sel.clear(); openGroup = 0; undoStack.length = 0; redoStack.length = 0;
+  buildRoom(); rebuild(); refreshUI(); setDirty(true); fit();
+  status(`Пример «${s.name}» открыт: ${P.items.length} элементов. 💡 Свет — вечерний вид с подсветкой. Сохраните под своим именем.`);
+}
 function loadProject(text, path) {
   let d;
   try { d = JSON.parse(text); } catch (e) { return alert('Файл повреждён или это не проект Kitchen Calc'); }
@@ -2754,7 +2771,7 @@ const COMMANDS = {
   hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false), boxsel: () => setBoxMode(!boxMode),
   'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleMotion(P.hw.filter(h => ids.includes(h.target)).map(h => h.id), ids.filter(id => isApp(item(id)))); setTimeout(refreshInspector, 50); },
   'hw-toggle-all': () => toggleMotion(P.hw.map(h => h.id), P.items.filter(isApp).map(i => i.id)),
-  appliances: () => appCatalog(), objects: () => objCatalog(), light: toggleLight,
+  appliances: () => appCatalog(), objects: () => objCatalog(), samples: () => samplesDialog(), light: toggleLight,
   'app-toggle': () => { const k = kindOfSelection(); if (k.type === 'item' && isApp(k.it)) { toggleMotion([], [k.it.id]); setTimeout(() => { refreshInspector(); if (!modal.hidden && dlgIsPart) renderPartEditor(); }, 50); } },
   'app-cut': () => { const k = kindOfSelection(); if (k.type === 'item' && isApp(k.it)) hobCut(k.it); },
   'measure-hole': () => startMeasure('hole'), 'measure-cut': () => startMeasure('cut'),
@@ -2798,7 +2815,7 @@ document.getElementById('showRoom').addEventListener('change', requestRender);
 let statusTimer = 0;
 function status(t) {
   const el = document.getElementById('statusText'); el.textContent = t;
-  clearTimeout(statusTimer); statusTimer = setTimeout(() => { const n = P.items.filter(isApp).length; el.textContent = `Деталей: ${P.items.length - n}${n ? ` · техники: ${n}` : ''}`; }, 6000);
+  clearTimeout(statusTimer); statusTimer = setTimeout(() => { const n = P.items.filter(isApp).length, no = P.items.filter(i => isApp(i) && i.spec.obj).length; el.textContent = `Деталей: ${P.items.length - n}${n - no ? ` · техники: ${n - no}` : ''}${no ? ` · предметов: ${no}` : ''}`; }, 6000);
 }
 function refreshUI() {
   refreshTree(); refreshInspector(); ruler.redraw();
@@ -2860,4 +2877,4 @@ start();
 window.__kcs = { get P() { return P; }, sel, COMMANDS, setView, get camera() { return camera; }, pivot, renderer, select: ids => { sel.clear(); ids.forEach(i => sel.add(i)); openGroup = 0; selectionChanged(); },
   hwSetT: (ids, t) => { ids.forEach(id => hwState.set(id, { t, to: t })); applyPoses(); }, meshOf: id => itemsGroup.children.find(m => m.userData.id === id), hwGroup, moveSel,
   basePickTo: (hw, part) => { startBasePick(hw); finishBasePick(part); }, status: () => document.getElementById('statusText').textContent,
-  appSetT: (ids, t) => { ids.forEach(id => appState.set(id, { t, to: t })); applyPoses(); }, appModels, addAppliance, APPLIANCES, OBJECTS, people, get orbit() { return orbit; }, requestRender };  // для автотестов
+  appSetT: (ids, t) => { ids.forEach(id => appState.set(id, { t, to: t })); applyPoses(); }, appModels, addAppliance, APPLIANCES, OBJECTS, loadSample, people, get orbit() { return orbit; }, requestRender };  // для автотестов
