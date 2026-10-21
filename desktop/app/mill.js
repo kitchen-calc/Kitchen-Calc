@@ -23,7 +23,7 @@ const EDGE = { k: 'E', label: 'Торец', edge: true, def: 'V1' };
 const FACE = { k: 'face', label: 'Сторона', face: true, def: 'A' };
 const n = (k, label, def) => ({ k, label, def });
 
-export const MILL_CATS = [['handles', 'Ручки'], ['joints', 'Соединения'], ['grooves', 'Пазы и четверти'], ['decor', 'Декор фасада'], ['other', 'Вырезы под технику и прочее']];
+export const MILL_CATS = [['handles', 'Ручки'], ['joints', 'Соединения'], ['grooves', 'Пазы и четверти'], ['decor', 'Декор фасада'], ['wall', 'Стеновые панели'], ['other', 'Вырезы под технику и прочее']];
 export const MILLS = [
   // ---- ручки
   { id: 'notch', cat: 'handles', name: 'Полукруглая выборка на торце', desc: 'Сквозной полукруглый вырез по краю фасада — ручка без фурнитуры.',
@@ -97,6 +97,49 @@ export const MILLS = [
   { id: 'vgroovesV', cat: 'decor', name: 'V-образные канавки (скос)', desc: 'Узкие канавки с наклонными стенками — имитация досок.',
     params: [n('step', 'Шаг, мм', 100), n('w', 'Ширина, мм', 8), n('dp', 'Глубина, мм', 4)],
     gen: (fr, p) => { const out = []; for (let u = p.step; u < fr.SU - p.w / 2; u += p.step) out.push(cut('A', { u: r1(u - p.w / 2), v: -1, cw: p.w, ch: fr.SV + 2 }, p.dp, false, p.w / 2)); return out; } },
+  { id: 'shaker', cat: 'decor', name: 'Шейкер (широкая рамка, плоская середина)', desc: 'Середина фасада утоплена на 3–5 мм, рамка 60–80 мм — классический «шейкер».',
+    params: [n('off', 'Ширина рамки, мм', 70), n('dp', 'Глубина середины, мм', 4)],
+    gen: (fr, p) => [cut('A', { u: p.off, v: p.off, cw: r1(fr.SU - 2 * p.off), ch: r1(fr.SV - 2 * p.off) }, p.dp, false, 0)] },
+  { id: 'frame2', cat: 'decor', name: 'Двойная рамка', desc: 'Две канавки по контуру — внешняя и внутренняя.',
+    params: [n('off', 'Отступ внешней, мм', 40), n('gap', 'Между рамками, мм', 30), n('w', 'Ширина канавки, мм', 5), n('dp', 'Глубина, мм', 3)],
+    gen: (fr, p) => [0, 1].flatMap(k => { const a = p.off + k * (p.gap + p.w), U = fr.SU, V = fr.SV; if (U - 2 * a < 20 || V - 2 * a < 20) return [];
+      return [cut('A', { u: a, v: a, cw: r1(U - 2 * a), ch: p.w }, p.dp, false), cut('A', { u: a, v: r1(V - a - p.w), cw: r1(U - 2 * a), ch: p.w }, p.dp, false), cut('A', { u: a, v: a, cw: p.w, ch: r1(V - 2 * a) }, p.dp, false), cut('A', { u: r1(U - a - p.w), v: a, cw: p.w, ch: r1(V - 2 * a) }, p.dp, false)]; }) },
+  { id: 'flutes', cat: 'decor', name: 'Рифление (полукруглые канавки)', desc: 'Частые вертикальные канавки со скруглённым дном — «флютинг».',
+    params: [n('step', 'Шаг, мм', 20), n('w', 'Ширина, мм', 12), n('dp', 'Глубина, мм', 4)],
+    gen: (fr, p) => { const out = []; for (let u = p.step / 2; u < fr.SU - p.w / 2; u += p.step) out.push(cut('A', { u: r1(u - p.w / 2), v: -1, cw: p.w, ch: fr.SV + 2 }, p.dp, false, p.w / 2)); return out; } },
+  { id: 'grid', cat: 'decor', name: 'Сетка (квадраты)', desc: 'Горизонтальные и вертикальные канавки — фасад в клетку.',
+    params: [n('step', 'Размер клетки, мм', 150), n('w', 'Ширина канавки, мм', 5), n('dp', 'Глубина, мм', 3)],
+    gen: (fr, p) => { const out = []; for (let u = p.step; u < fr.SU - p.w; u += p.step) out.push(cut('A', { u: r1(u - p.w / 2), v: -1, cw: p.w, ch: fr.SV + 2 }, p.dp, false)); for (let v = p.step; v < fr.SV - p.w; v += p.step) out.push(cut('A', { u: -1, v: r1(v - p.w / 2), cw: fr.SU + 2, ch: p.w }, p.dp, false)); return out; } },
+  { id: 'cassettes', cat: 'decor', name: 'Кассеты (несколько филёнок)', desc: 'Фасад делится на одинаковые утопленные прямоугольники.',
+    params: [n('nx', 'По ширине, шт', 1), n('ny', 'По высоте, шт', 3), n('frm', 'Рамка / перемычка, мм', 50), n('dp', 'Глубина, мм', 3), n('r', 'Скругление, мм', 6)],
+    gen: (fr, p) => { const nx = Math.max(1, p.nx | 0), ny = Math.max(1, p.ny | 0), cw = (fr.SU - p.frm * (nx + 1)) / nx, ch = (fr.SV - p.frm * (ny + 1)) / ny, out = []; if (cw < 20 || ch < 20) return out;
+      for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) out.push(cut('A', { u: r1(p.frm + i * (cw + p.frm)), v: r1(p.frm + j * (ch + p.frm)), cw: r1(cw), ch: r1(ch) }, p.dp, false, p.r)); return out; } },
+  { id: 'border', cat: 'decor', name: 'Ступенька по всему контуру', desc: 'Кромка фасада обнижена по периметру — фасад кажется тоньше.',
+    params: [n('w', 'Ширина ступеньки, мм', 12), n('dp', 'Глубина, мм', 6)],
+    gen: (fr, p) => { const U = fr.SU, V = fr.SV; return [cut('A', { u: -1, v: -1, cw: U + 2, ch: p.w + 1 }, p.dp, false), cut('A', { u: -1, v: r1(V - p.w), cw: U + 2, ch: p.w + 1 }, p.dp, false), cut('A', { u: -1, v: -1, cw: p.w + 1, ch: V + 2 }, p.dp, false), cut('A', { u: r1(U - p.w), v: -1, cw: p.w + 1, ch: V + 2 }, p.dp, false)]; } },
+  { id: 'lattice', cat: 'decor', name: 'Решётка (сквозные прорези)', desc: 'Ряд сквозных вертикальных прорезей — для экрана радиатора, обувницы, вентиляции.',
+    params: [n('step', 'Шаг, мм', 30), n('w', 'Ширина прорези, мм', 12), n('off', 'Поле по краю, мм', 60)],
+    gen: (fr, p) => { const out = []; for (let u = p.off; u + p.w <= fr.SU - p.off; u += p.step) out.push(cut('A', { u: r1(u), v: p.off, cw: p.w, ch: r1(fr.SV - 2 * p.off) }, 0, true, p.w / 2)); return out; } },
+  { id: 'arch', cat: 'decor', name: 'Арка (скруглённый верх филёнки)', desc: 'Утопленная середина с большим скруглением углов — мягкий «арочный» вид.',
+    params: [n('off', 'Ширина рамки, мм', 60), n('dp', 'Глубина, мм', 3)],
+    gen: (fr, p) => { const cw = r1(fr.SU - 2 * p.off), ch = r1(fr.SV - 2 * p.off); return [cut('A', { u: p.off, v: p.off, cw, ch }, p.dp, false, Math.min(cw, ch) / 2)]; } },
+  // ---- стеновые панели (большая деталь-панель на стену: рисунок фрезеруется по плите)
+  { id: 'wallSlats', cat: 'wall', name: 'Под рейку (глубокие вертикальные пазы)', desc: 'Широкие глубокие пазы с шагом — плита выглядит как рейки на стене.',
+    params: [n('step', 'Шаг, мм', 45), n('w', 'Ширина паза, мм', 15), n('dp', 'Глубина, мм', 8)],
+    gen: (fr, p) => { const out = []; for (let u = p.step - p.w / 2; u < fr.SU - p.w; u += p.step) out.push(cut('A', { u: r1(u), v: -1, cw: p.w, ch: fr.SV + 2 }, p.dp, false)); return out; } },
+  { id: 'wallBoards', cat: 'wall', name: 'Горизонтальные доски (вагонка)', desc: 'V-образные швы поперёк панели — имитация досок.',
+    params: [n('step', 'Ширина доски, мм', 120), n('w', 'Ширина шва, мм', 6), n('dp', 'Глубина, мм', 3)],
+    gen: (fr, p) => { const out = []; for (let v = p.step; v < fr.SV - p.w; v += p.step) out.push(cut('A', { u: -1, v: r1(v - p.w / 2), cw: fr.SU + 2, ch: p.w }, p.dp, false, p.w / 2)); return out; } },
+  { id: 'wallBoiserie', cat: 'wall', name: 'Буазери (рамки на стене)', desc: 'Канавки-рамки по низу и верху стеновой панели — классическая отделка стены.',
+    params: [n('nx', 'Рамок по ширине', 2), n('split', 'Низ рамки до, мм', 900), n('off', 'Поля, мм', 80), n('w', 'Ширина канавки, мм', 6), n('dp', 'Глубина, мм', 3)],
+    gen: (fr, p) => { const out = [], nx = Math.max(1, p.nx | 0), cw = (fr.SU - p.off * (nx + 1)) / nx; if (cw < 40) return out;
+      const rects = [[p.off, Math.min(p.split, fr.SV) - p.off], [Math.min(p.split, fr.SV) + p.off, fr.SV - p.off]].filter(([a, b]) => b - a > 60);
+      for (let i = 0; i < nx; i++) for (const [v0, v1] of rects) { const u0 = p.off + i * (cw + p.off), u1 = u0 + cw;
+        out.push(cut('A', { u: r1(u0), v: r1(v0), cw: r1(cw), ch: p.w }, p.dp, false), cut('A', { u: r1(u0), v: r1(v1 - p.w), cw: r1(cw), ch: p.w }, p.dp, false), cut('A', { u: r1(u0), v: r1(v0), cw: p.w, ch: r1(v1 - v0) }, p.dp, false), cut('A', { u: r1(u1 - p.w), v: r1(v0), cw: p.w, ch: r1(v1 - v0) }, p.dp, false)); }
+      return out; } },
+  { id: 'wallTiles', cat: 'wall', name: 'Под плитку / кирпич (швы)', desc: 'Сетка швов со смещением рядов — панель «под кирпич» или крупную плитку.',
+    params: [n('tw', 'Длина плитки, мм', 250), n('th', 'Высота плитки, мм', 65), n('w', 'Шов, мм', 5), n('dp', 'Глубина, мм', 3)],
+    gen: (fr, p) => { const out = []; let row = 0; for (let v = p.th; v < fr.SV; v += p.th + p.w, row++) { out.push(cut('A', { u: -1, v: r1(v), cw: fr.SU + 2, ch: p.w }, p.dp, false)); const y0 = v - p.th; for (let u = row % 2 ? p.tw / 2 : p.tw; u < fr.SU; u += p.tw + p.w) out.push(cut('A', { u: r1(u), v: r1(Math.max(0, y0)), cw: p.w, ch: r1(Math.min(p.th, v - Math.max(0, y0))) }, p.dp, false)); } return out; } },
   // ---- прочее
   { id: 'vent', cat: 'other', name: 'Вентиляционные прорези', desc: 'Ряд сквозных прорезей — для техники и цоколя.',
     params: [EDGE, n('cnt', 'Количество', 6), n('w', 'Длина, мм', 200), n('h', 'Ширина, мм', 10), n('step', 'Шаг, мм', 25), n('off', 'От торца, мм', 50)],
