@@ -11,6 +11,8 @@ import { MILLS, MILL_CATS, millDefaults } from './mill.js';
 import { createRuler } from './ruler.js';
 import { createPeople } from './people.js';
 import { APP_CATS, MOUNTS, APPLIANCES, appBox, appInfo, FINISHES, finishColor, CUSTOM_OPEN, buildAppliance, hasMotion, poseAppliance, appIcon, appSheetSVG, frontReach, grabPoint } from './appliances.js';
+import { OBJ_CATS, OBJ_MOUNTS, OBJECTS, buildObject, objInfo, objIcon, objFinishes, objFinishColor } from './objects.js';
+import { SAMPLES } from './samples.js';
 import { DECOR, DECORS, TABS, texture as decorTexture, thumb as decorThumb, surfaceParams, sheetLayout, applySheetUV, onTextureUpdate } from './materials.js';
 import { normRoom, buildRoom3D, roomObstacles, roomSVG, ROOM_PRESETS, OPENING_TYPES, wallsToPts, ptsToWalls, checkPts, checkOpening, tidyPts, wallLen } from './room.js';
 import { panelGeometry, describeOp, drawingSVG, frame, thinAxis, bevelLen, fromName, HOLE_PRESETS, CUT_PRESETS, HINGES, CORNER_SHAPES } from './machining.js';
@@ -429,8 +431,11 @@ function appOp(id, to) {
 // кнопки «Открыть / Закрыть» в свойствах — по новому состоянию, когда человек потянул
 const refreshSoon = () => setTimeout(() => { refreshInspector(); if (!modal.hidden && dlgIsPart) renderPartEditor(); }, 60);
 let lightOn = true;
+// светильники и LED из раздела «Интерьер»: при выключенном общем свете горят (userData.lamp — относительная мощность)
+function setLamps(model) { model.traverse(o => { if (o.isLight && o.userData.lamp) o.intensity = lightOn ? 0 : o.userData.lamp * 900; }); }
 function toggleLight() {
   lightOn = !lightOn;
+  for (const c of appModels.values()) setLamps(c.model);
   hemi.intensity = lightOn ? 1.9 : 0.16; sun.intensity = lightOn ? 1.5 : 0.04; fill.intensity = lightOn ? 0.5 : 0;
   scene.background.set(lightOn ? '#e7e3dc' : '#14161b');
   const b = document.getElementById('lightBtn'); b.classList.toggle('off', !lightOn); b.textContent = lightOn ? '💡 Свет' : '🌑 Свет выкл.';
@@ -452,7 +457,8 @@ const appModels = new Map();         // id → { key, model, motion }: 3D-мод
 const hitMat = new THREE.MeshBasicMaterial({ visible: false });
 const appSelMat = new THREE.LineBasicMaterial({ color: 0xd9850f });
 const hitGeos = new Map();
-const catName = c => (APP_CATS.find(x => x[0] === c) || [0, 'Своя техника'])[1];
+const catName = c => (APP_CATS.find(x => x[0] === c) || OBJ_CATS.find(x => x[0] === c) || [0, 'Своя техника'])[1];
+const finCol = i => i.spec && i.spec.obj ? objFinishColor(i.finish) : finishColor(i.finish);
 // Коробка после поворота: размеры по осям и где в ней начало модели
 function appGeom(spec, rot) {
   const b = appBox(spec), r = (((rot | 0) % 4) + 4) % 4, c = [1, 0, -1, 0][r], s = [0, 1, 0, -1][r];
@@ -469,7 +475,7 @@ function appMesh(it, selected) {
   mesh.userData.id = it.id;
   const key = JSON.stringify([it.spec, it.finish || '']);
   let c = appModels.get(it.id);
-  if (!c || c.key !== key) { const model = buildAppliance(it.spec, it.finish); c = { key, model, motion: hasMotion(model) }; appModels.set(it.id, c); }
+  if (!c || c.key !== key) { const model = it.spec.obj ? buildObject(it.spec, it.finish) : buildAppliance(it.spec, it.finish); setLamps(model); c = { key, model, motion: hasMotion(model) }; appModels.set(it.id, c); }
   c.model.rotation.set(0, G.r * Math.PI / 2, 0);
   c.model.position.set(-it.w / 2 - G.ax0, -it.h / 2 - G.oy, -it.d / 2 - G.az0);
   mesh.add(c.model);
@@ -1366,7 +1372,7 @@ function refreshTree() {
     return;
   }
   let h = '';
-  const node = (i, child) => `<div class="node ${child ? 'child' : ''} ${sel.has(i.id) ? 'sel' : ''}" data-item="${i.id}"><span class="sw" style="background:${isApp(i) ? finishColor(i.finish) : mat(i.mat).color}"></span>${isApp(i) ? '🔌 ' : ''}${esc(label(i))}<span class="dim">${fmt(i.w)}×${fmt(i.h)}</span></div>`;
+  const node = (i, child) => `<div class="node ${child ? 'child' : ''} ${sel.has(i.id) ? 'sel' : ''}" data-item="${i.id}"><span class="sw" style="background:${isApp(i) ? finCol(i) : mat(i.mat).color}"></span>${isApp(i) ? (i.spec.obj ? '✨ ' : '🔌 ') : ''}${esc(label(i))}<span class="dim">${fmt(i.w)}×${fmt(i.h)}</span></div>`;
   for (const g of P.groups) {
     const list = groupItems(g.id), all = list.every(i => sel.has(i.id)), b = bbox(list);
     h += `<div class="node grp ${all ? 'sel' : ''}" data-group="${g.id}"><span>${g.mode === 'solid' ? '■' : '▸'} ${esc(g.name)}</span><span class="dim">${fmt(b.x1 - b.x0)}×${fmt(b.y1 - b.y0)}</span>${g.kind ? `<span class="kind">${esc(KIND_NAMES[g.kind] || g.kind)}${g.mode === 'solid' ? ' · один предмет' : ' · сборка'}</span>` : ''}</div>`;
@@ -1434,8 +1440,8 @@ function refreshInspector() {
       <kbd>Ctrl+D</kbd> копия, <kbd>Del</kbd> удалить, <kbd>Ctrl+G</kbd> в модуль, <kbd>Ctrl+Z</kbd> отменить, <kbd>F</kbd> показать<br>
       Мышь: левая — вращать, правая — сдвигать вид, колесо — приблизить.<br>Колонну, дверь, окно — зажмите и тяните мышью: колонна по полу, дверь и окно по стенам.</div></div>`;
   } else if (k.type === 'item' && isApp(k.it)) {
-    title.textContent = 'Техника';
-    h += `<div class="btns"><button class="accent" data-cmd="part-edit" title="Всё о технике в одном окне: чертёж, ниша, как открывается (или двойной клик, Enter)">✎ Окно техники</button></div>${appPanel(k.it)}${appActions(k.it, false)}`;
+    title.textContent = k.it.spec.obj ? 'Интерьер' : 'Техника';
+    if (k.it.spec.obj) h += `${appPanel(k.it)}${appActions(k.it, false)}`; else h += `<div class="btns"><button class="accent" data-cmd="part-edit" title="Всё о технике в одном окне: чертёж, ниша, как открывается (или двойной клик, Enter)">✎ Окно техники</button></div>${appPanel(k.it)}${appActions(k.it, false)}`;
   } else if (k.type === 'item') {
     const i = k.it;
     title.textContent = 'Деталь';
@@ -2286,6 +2292,13 @@ const FACING = ['к нам', 'вправо', 'к стене', 'влево'];
 function appPanel(i) {
   const e = i.spec, c = appModels.get(i.id), open = (appState.get(i.id) || { to: 0 }).to > 0;
   const boxNote = ['ovenbi', 'microbi'].includes(e.shape) && e.niche ? ' — это корпус, который уходит в нишу (лицевая рамка шире, она снаружи)' : e.shape === 'hob' ? ' — это стекло на столешнице (корпус под ним уходит в вырез)' : '';
+  if (e.obj) return `<div class="sec"><b>✨ Предмет интерьера</b>${fld('Название', 'name', label(i), { text: true })}
+      <div class="note">${esc(catName(e.cat))} · ${esc(OBJ_MOUNTS[e.mount] || '')}</div>
+      ${fld(e.cat === 'led' ? 'Свет' : 'Цвет', 'finish', i.finish || e.finish, { options: objFinishes(e) })}</div>
+    <div class="sec"><b>Размеры, мм</b><div class="row">${fld('Ширина', 'aw', e.w)}${fld('Высота', 'ah', e.h)}${fld('Глубина', 'ad', e.d)}</div>
+      <div class="note">${objInfo(e).map(esc).join('<br>')}</div></div>
+    <div class="sec"><b>Положение, мм</b><div class="row">${fld('X слева', 'x', i.x)}${fld('Y от пола', 'y', i.y)}${fld('Z от стены', 'z', i.z)}</div>
+      <div class="note">Стоит лицом ${FACING[(i.rot | 0) % 4]}.</div></div>`;
   return `<div class="sec"><b>🔌 Техника</b>${fld('Название', 'name', label(i), { text: true })}
       <div class="note">${esc(catName(e.cat))} · ${esc(MOUNTS[e.mount] || '')}${e.brand ? ' · ' + esc(e.brand) : ''}</div>
       ${fld('Цвет корпуса', 'finish', i.finish || 'white', { options: FINISHES })}
@@ -2306,7 +2319,7 @@ function appChange(i, key, raw, v) {
   if (key === 'y') return moveSel(0, v - i.y, 0);
   if (key === 'z') return moveSel(0, 0, v - i.z);
   const k = { aw: 'w', ah: 'h', ad: 'd' }[key]; if (!k) return;
-  if (!(v >= 10 && v <= 5000)) { status('Размер техники — от 10 до 5000 мм'); return refreshInspector(); }
+  if (!(v >= (i.spec.obj ? 1 : 10) && v <= 6000)) { status(i.spec.obj ? 'Размер — от 1 до 6000 мм' : 'Размер техники — от 10 до 6000 мм'); return refreshInspector(); }
   const spec = { ...i.spec, [k]: r1(v) }, G = appGeom(spec, i.rot);
   const hit = noClash() && clash([{ ...i, w: G.w, h: G.h, d: G.d }], clashedBefore([i]));
   if (hit) { status(`Не помещается: мешает ${who(hit)}`); return refreshInspector(); }
@@ -2324,6 +2337,7 @@ function appSpot(spec, G) {
   const all = selItems(), parts = all.filter(i => !isApp(i)), sb = all.length ? bbox(all) : null, g0 = all[0] && all[0].g && group(all[0].g);
   const where = !all.length ? '' : all.length === 1 ? `«${label(all[0])}»` : g0 && all.every(i => i.g === g0.id) ? `«${g0.name}»` : '«выбранное»';
   const RH = P.room.h || 2700, s = spec.shape, m = spec.mount;
+  if (spec.obj) return objSpot(spec, G, all, sb, where, fits, RH);
   const near = (p, why) => {
     if (fits(p)) return { ...p, why };
     for (let t = 10; t <= 6000; t += 10) for (const x of [p.x + t, p.x - t]) if (fits({ ...p, x })) return { ...p, x: r1(x), why };
@@ -2383,12 +2397,30 @@ function appSpot(spec, G) {
   const tip = miss || (m === 'table' || s === 'hob' ? ' (выберите столешницу или тумбу — встанет сверху)' : '');
   return near({ x: r1(freeX(0, G.h)), y: 0, z: 0 }, `у стены справа от мебели${tip}`) || { x: r1(freeX(0, G.h)), y: 0, z: 0, why: 'свободного места нет — стоит с наложением, подвиньте' };
 }
+function objSpot(spec, G, all, sb, where, fits, RH) {
+  const m = spec.mount, near = (p, why) => { if (fits(p)) return { ...p, why }; for (let t = 10; t <= 6000; t += 10) for (const x of [p.x + t, p.x - t]) if (fits({ ...p, x })) return { ...p, x: r1(x), why }; return { ...p, why: why + ' (с наложением — подвиньте)' }; };
+  const cx = sb ? (sb.x0 + sb.x1 - G.w) / 2 : Math.max(0, (P.room.w - G.w) / 2), cz = sb ? (sb.z0 + sb.z1 - G.d) / 2 : Math.max(0, (P.room.d - G.d) / 2);
+  if (m === 'ceil') return near({ x: r1(cx), y: r1(RH - G.h), z: r1(cz) }, sb ? `на потолке над ${where}` : 'на потолке по центру комнаты');
+  if (m === 'led') {
+    if (sb) { const vert = G.h > G.w; return { x: r1(vert ? sb.x0 : sb.x0), y: r1(vert ? sb.y0 : Math.max(0, sb.y0 - G.h)), z: r1(Math.max(0, sb.z1 - G.d - 20)), w: vert ? G.w : r1(sb.x1 - sb.x0), h: vert ? r1(sb.y1 - sb.y0) : G.h, why: vert ? `вдоль ${where}` : `под ${where}, по всей ширине` }; }
+    return near({ x: 0, y: 1400, z: 0 }, 'на стене — выберите полку или шкаф, лента встанет под него');
+  }
+  if (m === 'wall') { const y = r1(Math.max(0, Math.min(RH - G.h, spec.y0 ?? 1300))); return near({ x: r1(sb ? sb.x1 + 20 : freeX(y, G.h)), y, z: 0 }, `на стене, низ на ${fmt(y)} мм от пола`); }
+  if (m === 'table') {
+    if (sb) { const p = { x: r1(cx), y: r1(sb.y1), z: r1(Math.max(sb.z0, sb.z1 - G.d - 40)) }; return near(p, `на ${where}`); }
+    const t = panels().filter(i => thinAxis(i) === 'y').sort((a, b) => (b.y + b.h) - (a.y + a.h) || b.w * b.d - a.w * a.d)[0];
+    if (t) return near({ x: r1(t.x + (t.w - G.w) / 2), y: r1(t.y + t.h), z: r1(t.z + Math.max(0, (t.d - G.d) / 2)) }, `на «${label(t)}»`);
+  }
+  return near({ x: r1(sb ? sb.x1 + 20 : freeX(0, G.h)), y: 0, z: r1(sb ? Math.max(0, sb.z1 - G.d) : 0) }, sb ? `рядом с ${where}` : 'на полу');
+}
 function addAppliance(e0) {
   const spec = JSON.parse(JSON.stringify(e0)); delete spec.id;
   const G = appGeom(spec, 0), at = appSpot(spec, G);
+  if (at.w && at.w !== G.w) { spec.w = at.w; G.w = at.w; }   // LED-лента — по ширине полки
+  if (at.h && at.h !== G.h) { spec.h = at.h; G.h = at.h; }
   const it = { id: nid(), kind: 'appliance', name: '', spec, finish: spec.finish || 'white', rot: 0, x: r1(at.x), y: r1(at.y), z: r1(at.z), w: G.w, h: G.h, d: G.d, g: 0 };
   commit(() => { P.items.push(it); sel.clear(); sel.add(it.id); openGroup = 0; });
-  status(`🔌 ${spec.name} — ${at.why}. Стрелки — подвинуть, ⟲ — повернуть${appModels.get(it.id)?.motion ? ', ▶ Открыть — как открывается' : ''}`);
+  status(`${spec.obj ? '✨' : '🔌'} ${spec.name} — ${at.why}. Стрелки — подвинуть, ⟲ — повернуть${appModels.get(it.id)?.motion ? ', ▶ Открыть — как открывается' : ''}${spec.lm || spec.cat === 'led' ? '. Светится при выключенном свете (💡)' : ''}`);
   return it;
 }
 // Каталог техники: разделы от холодильников до чайников, фильтр (отдельностоящая, встраиваемая, настольная, настенная), поиск;
@@ -2446,6 +2478,38 @@ function appCatalog() {
   body.onkeydown = e => e.stopPropagation();
   draw();
 }
+// Каталог «Интерьер»: электрика, свет, LED, стеновые панели, декор, стулья, жалюзи — по разделам, с поиском (objects.js)
+const objUI = { cat: 'elec', q: '' };
+function objCatalog() {
+  openDialog('✨ Интерьер: электрика, свет, декор', '<div id="objUI" class="appui"></div>', '<button data-close>Закрыть</button>', true);
+  modal.querySelector('.dialog').classList.add('xwide');
+  const ui = document.getElementById('objUI'), body = document.getElementById('dlgBody');
+  const k = kindOfSelection(), target = k.type === 'none' ? '' : k.type === 'group' ? k.g.name : k.type === 'item' ? label(k.it) : 'выбранного';
+  const match = e => objUI.q ? `${e.name} ${catName(e.cat)} ${OBJ_MOUNTS[e.mount]}`.toLowerCase().includes(objUI.q) : e.cat === objUI.cat;
+  const card = e => `<div class="appcard"><div class="appico">${objIcon(e, 64)}</div><div class="appmain"><b>${esc(e.name)}</b>
+      <div class="apptags"><span class="tag">${esc(OBJ_MOUNTS[e.mount])}</span>${e.lm || e.cat === 'led' ? '<span class="tag shop">светится</span>' : ''}</div>
+      <div class="appdims">${fmt(e.w)} × ${fmt(e.h)} × ${fmt(e.d)} мм · цвета: ${esc(objFinishes(e).map(f => f[1]).join(', '))}</div>
+      <div class="note">${esc(e.note || '')}</div></div><button class="accent" data-objadd="${e.id}">Поставить</button></div>`;
+  function drawList() {
+    const list = OBJECTS.filter(match);
+    ui.querySelector('.applist').innerHTML = list.map(card).join('') || '<div class="note">Ничего не найдено</div>';
+    ui.querySelector('.appcount').textContent = `${list.length} шт.`;
+    ui.querySelectorAll('[data-objcat]').forEach(b => b.classList.toggle('on', !objUI.q && b.dataset.objcat === objUI.cat));
+  }
+  ui.innerHTML = `<div class="note">${target ? `Куда встанет — относительно «${esc(target)}»: декор и лампа — сверху, LED-лента — под него по всей ширине, светильник — на потолок над ним, розетка — на стену рядом.` : 'Выберите полку или шкаф, чтобы поставить на него или под него. Розетки и выключатели встают на стену на стандартную высоту, светильники — на потолок.'} Размеры и цвет потом меняются справа.</div>
+    <div class="hwtabs">${OBJ_CATS.map(([id, n]) => `<button data-objcat="${id}">${esc(n)}</button>`).join('')}</div>
+    <div class="appbar"><input class="app-q" type="search" placeholder="Поиск: розетка, спот, рейки, ваза, стул…" value="${esc(objUI.q)}"><span class="appcount note"></span></div>
+    <div class="applist"></div>
+    <div class="note">Фрезеровки фасадов и стеновых панелей (рамка, филёнка, шейкер, рейка, сетка, волна…) — у детали: «Обработка → Фрезеровки».</div>`;
+  drawList();
+  body.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.objcat) { objUI.cat = b.dataset.objcat; objUI.q = ''; ui.querySelector('.app-q').value = ''; return drawList(); }
+    if (b.dataset.objadd) { const e0 = OBJECTS.find(x => x.id === b.dataset.objadd); if (e0) { closeDialog(); addAppliance(e0); } }
+  };
+  body.oninput = e => { if (!e.target.classList.contains('app-q')) return; objUI.q = e.target.value.trim().toLowerCase(); drawList(); };
+  body.onkeydown = e => e.stopPropagation();
+}
 // Вырез в столешнице под варочную панель: в детали прямо под стеклом, размер — из паспорта, насквозь.
 // Помечен tag 'app<id>': нажали ещё раз — старый вырез заменится новым; удалили панель — вырез пропадёт.
 function hobCut(it) {
@@ -2471,12 +2535,15 @@ function appRows() {
   return [...rows.values()];
 }
 function appSpecTable() {
-  const rows = appRows(); if (!rows.length) return '';
-  return `<table class="spec"><tr><th>Техника</th><th>Раздел</th><th class="n">Ш × В × Г, мм</th><th>Ниша / вырез, мм</th><th>Цвет</th><th class="n">Кол-во</th></tr>${rows.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(catName(r.e.cat))}, ${esc(MOUNTS[r.e.mount] || '')}</td><td class="n">${fmt(r.e.w)} × ${fmt(r.e.h)} × ${fmt(r.e.d)}</td><td>${appNiche(r.e)}</td><td>${esc((FINISHES.find(f => f[0] === r.fin) || [0, ''])[1])}</td><td class="n">${r.n}</td></tr>`).join('')}</table>`;
+  const all = appRows(), rows = all.filter(r => !r.e.obj), objs = all.filter(r => r.e.obj);
+  const ot = objs.length ? `<table class="spec"><tr><th>Электрика, свет, декор</th><th>Раздел</th><th class="n">Ш × В × Г, мм</th><th>Цвет / свет</th><th class="n">Кол-во</th></tr>${objs.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(catName(r.e.cat))}</td><td class="n">${fmt(r.e.w)} × ${fmt(r.e.h)} × ${fmt(r.e.d)}</td><td>${esc((objFinishes(r.e).find(f => f[0] === r.fin) || [0, ''])[1])}</td><td class="n">${r.n}</td></tr>`).join('')}</table>` : '';
+  if (!rows.length) return ot;
+  return `<table class="spec"><tr><th>Техника</th><th>Раздел</th><th class="n">Ш × В × Г, мм</th><th>Ниша / вырез, мм</th><th>Цвет</th><th class="n">Кол-во</th></tr>${rows.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(catName(r.e.cat))}, ${esc(MOUNTS[r.e.mount] || '')}</td><td class="n">${fmt(r.e.w)} × ${fmt(r.e.h)} × ${fmt(r.e.d)}</td><td>${appNiche(r.e)}</td><td>${esc((FINISHES.find(f => f[0] === r.fin) || [0, ''])[1])}</td><td class="n">${r.n}</td></tr>`).join('')}</table>` + ot;
 }
 // ---------------------------------------------------------------- окно детали
 function partEditor(id) {
   const it = item(id); if (!it) return;
+  if (isApp(it) && it.spec.obj) { sel.clear(); sel.add(id); selectionChanged(); return status(`✨ ${label(it)}: размеры, цвет и положение — справа`); }   // у предмета интерьера своего окна нет
   if (!(sel.size === 1 && sel.has(id))) { sel.clear(); sel.add(id); openGroup = it.g || 0; selectionChanged(); }
   openDialog('', '', `<button class="danger" data-pe="delete">${isApp(it) ? 'Удалить технику' : 'Удалить деталь'}</button><span class="grow"></span><button data-cmd="drawing">📐 Чертёж на печать</button><button class="accent" data-close>Готово</button>`, true);
   dlgIsPart = true; partEditorId = id;
@@ -2574,17 +2641,17 @@ function drawingDialog(list, scope) {
     if (!P.items.length) return status('В проекте пока нет деталей');
     const ov = overviewSVG(P.items, P.groups, {}).order;
     sheets.push(overviewSheet());
-    ov.forEach((id, k) => { sheets.push(moduleSheet(group(id), k + 1)); hwParts(id).forEach(([i, n]) => sheets.push(partSheet(i, `${k + 1}.${n}`))); groupItems(id).filter(isApp).forEach(a => sheets.push(appSheet(a))); });   // детали шкафа — только с фурнитурой и своей обработкой
-    P.items.filter(i => !i.g).forEach(i => sheets.push(isApp(i) ? appSheet(i) : partSheet(i)));
+    ov.forEach((id, k) => { sheets.push(moduleSheet(group(id), k + 1)); hwParts(id).forEach(([i, n]) => sheets.push(partSheet(i, `${k + 1}.${n}`))); groupItems(id).filter(i => isApp(i) && !i.spec.obj).forEach(a => sheets.push(appSheet(a))); });   // детали шкафа — только с фурнитурой и своей обработкой
+    P.items.filter(i => !i.g && !(isApp(i) && i.spec.obj)).forEach(i => sheets.push(isApp(i) ? appSheet(i) : partSheet(i)));
     title = `Чертежи проекта (${sheets.length} листов)`;
   } else if (scope && scope.group) {
     sheets.push(moduleSheet(scope.group, 0));
     hwParts(scope.group.id).forEach(([i, n]) => sheets.push(partSheet(i, n)));
-    groupItems(scope.group.id).filter(isApp).forEach(a => sheets.push(appSheet(a)));
+    groupItems(scope.group.id).filter(i => isApp(i) && !i.spec.obj).forEach(a => sheets.push(appSheet(a)));
     title = `Чертёж шкафа: ${scope.group.name}`;
   } else {
     if (!list.length) return status('Выберите деталь или модуль');
-    [...list].sort((a, b) => (b.ops || []).length - (a.ops || []).length).forEach(i => sheets.push(isApp(i) ? appSheet(i) : partSheet(i)));
+    [...list].filter(i => !(isApp(i) && i.spec.obj)).sort((a, b) => (b.ops || []).length - (a.ops || []).length).forEach(i => sheets.push(isApp(i) ? appSheet(i) : partSheet(i)));
     title = list.length > 1 ? `Чертежи деталей (${list.length})` : `Чертёж: ${label(list[0])}`;
   }
   const one = !scope && list.length === 1;
@@ -2612,6 +2679,22 @@ function setDirty(v) { dirty = v; if (desktop) window.kc.setDirty(v); updateTitl
 function updateTitle() {
   const t = `${dirty ? '• ' : ''}${P.name}${filePath ? ' — ' + filePath.split(/[\\/]/).pop() : ''} — Kitchen Calc Studio`;
   document.title = t; if (desktop) window.kc.setTitle(t);
+}
+// Примеры проектов (samples.js): собираются заново из деталей, корпусов и предметов — дальше их можно менять как свои
+function samplesDialog() {
+  openDialog('📂 Примеры проектов', `<div class="note">Пример откроется вместо текущего проекта${dirty ? ' — несохранённые изменения пропадут, сначала сохраните' : ''}. Дальше всё меняется как обычно.</div>
+    <div class="applist">${SAMPLES.map(s => `<div class="appcard"><div class="appmain"><b>${esc(s.name)}</b><div class="note">${esc(s.note)}</div></div><button class="accent" data-sample="${s.id}">Открыть</button></div>`).join('')}</div>`, '<button data-close>Закрыть</button>', true);
+  document.getElementById('dlgBody').onclick = e => { const b = e.target.closest('[data-sample]'); if (!b) return; closeDialog(); loadSample(b.dataset.sample); };
+}
+function loadSample(id) {
+  const s = SAMPLES.find(x => x.id === id); if (!s) return;
+  P = newProject();
+  s.build({ P, nid, buildCabinet, attachCabinetHardware, HINGES, OBJECTS });
+  P.room = normRoom(P.room);
+  hwState.clear(); appState.clear(); filePath = null;
+  sel.clear(); openGroup = 0; undoStack.length = 0; redoStack.length = 0;
+  buildRoom(); rebuild(); refreshUI(); setDirty(true); fit();
+  status(`Пример «${s.name}» открыт: ${P.items.length} элементов. 💡 Свет — вечерний вид с подсветкой. Сохраните под своим именем.`);
 }
 function loadProject(text, path) {
   let d;
@@ -2688,7 +2771,7 @@ const COMMANDS = {
   hw: () => hwCatalog(), link: () => linkSel(true), unlink: () => linkSel(false), boxsel: () => setBoxMode(!boxMode),
   'hw-toggle-sel': () => { const ids = selItems().map(i => i.id); toggleMotion(P.hw.filter(h => ids.includes(h.target)).map(h => h.id), ids.filter(id => isApp(item(id)))); setTimeout(refreshInspector, 50); },
   'hw-toggle-all': () => toggleMotion(P.hw.map(h => h.id), P.items.filter(isApp).map(i => i.id)),
-  appliances: () => appCatalog(), light: toggleLight,
+  appliances: () => appCatalog(), objects: () => objCatalog(), samples: () => samplesDialog(), light: toggleLight,
   'app-toggle': () => { const k = kindOfSelection(); if (k.type === 'item' && isApp(k.it)) { toggleMotion([], [k.it.id]); setTimeout(() => { refreshInspector(); if (!modal.hidden && dlgIsPart) renderPartEditor(); }, 50); } },
   'app-cut': () => { const k = kindOfSelection(); if (k.type === 'item' && isApp(k.it)) hobCut(k.it); },
   'measure-hole': () => startMeasure('hole'), 'measure-cut': () => startMeasure('cut'),
@@ -2732,7 +2815,7 @@ document.getElementById('showRoom').addEventListener('change', requestRender);
 let statusTimer = 0;
 function status(t) {
   const el = document.getElementById('statusText'); el.textContent = t;
-  clearTimeout(statusTimer); statusTimer = setTimeout(() => { const n = P.items.filter(isApp).length; el.textContent = `Деталей: ${P.items.length - n}${n ? ` · техники: ${n}` : ''}`; }, 6000);
+  clearTimeout(statusTimer); statusTimer = setTimeout(() => { const n = P.items.filter(isApp).length, no = P.items.filter(i => isApp(i) && i.spec.obj).length; el.textContent = `Деталей: ${P.items.length - n}${n - no ? ` · техники: ${n - no}` : ''}${no ? ` · предметов: ${no}` : ''}`; }, 6000);
 }
 function refreshUI() {
   refreshTree(); refreshInspector(); ruler.redraw();
@@ -2794,4 +2877,4 @@ start();
 window.__kcs = { get P() { return P; }, sel, COMMANDS, setView, get camera() { return camera; }, pivot, renderer, select: ids => { sel.clear(); ids.forEach(i => sel.add(i)); openGroup = 0; selectionChanged(); },
   hwSetT: (ids, t) => { ids.forEach(id => hwState.set(id, { t, to: t })); applyPoses(); }, meshOf: id => itemsGroup.children.find(m => m.userData.id === id), hwGroup, moveSel,
   basePickTo: (hw, part) => { startBasePick(hw); finishBasePick(part); }, status: () => document.getElementById('statusText').textContent,
-  appSetT: (ids, t) => { ids.forEach(id => appState.set(id, { t, to: t })); applyPoses(); }, appModels, addAppliance, APPLIANCES, people };  // для автотестов
+  appSetT: (ids, t) => { ids.forEach(id => appState.set(id, { t, to: t })); applyPoses(); }, appModels, addAppliance, APPLIANCES, OBJECTS, loadSample, people, get orbit() { return orbit; }, requestRender };  // для автотестов

@@ -118,6 +118,7 @@ const M = {
   door: new THREE.MeshStandardMaterial({ color: 0x9b7a55, roughness: 0.7 }),
 };
 export const roomMaterials = M;
+const doorMats = new Map(), doorMat = c => { if (!doorMats.has(c)) doorMats.set(c, new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 })); return doorMats.get(c); };
 function boxAt(x0, y0, z0, w, h, d, m) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x0 + w / 2, y0 + h / 2, z0 + d / 2); return b; }
 
 // Пол (по контуру), сетка 100 мм внутри комнаты, стены с проёмами, колонны. Стены — отдельные группы с нормалью наружу:
@@ -164,7 +165,7 @@ export function buildRoom3D(r, { floorMat, wallMatOf = () => null } = {}) {
       } else if (o.type === 'door') {
         for (const [x, w] of [[o.off - 70, 70], [o.off + o.w, 70]]) wg.add(boxAt(x, 0, -10, w, o.h + 70, 10, M.frame));
         wg.add(boxAt(o.off - 70, o.h, -10, o.w + 140, 70, 10, M.frame));
-        wg.add(boxAt(o.off, 0, t * 0.3, o.w, o.h, 40, M.door));
+        wg.add(boxAt(o.off, 0, t * 0.3, o.w, o.h, 40, o.color ? doorMat(o.color) : M.door));   // color — свой цвет полотна
       }
       for (let j = c0; j < wg.children.length; j++) wg.children[j].userData = { surface: 'opening', op: r.openings.indexOf(o) };   // за эти детали проём тянут мышью в 3D
     }
