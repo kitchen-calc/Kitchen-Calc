@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=35';
-import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=35';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=36';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=36';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -113,9 +113,9 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       const rw = r.x1 - r.x0, H = r.H, D = r.D, bd = D - z0;
       const ri = runInfo(S, g, r);
       if (!ri.noL) box(t, H - ph - t, bd, M.body, r.x0, ph + t, z0, selK); if (!ri.noR) box(t, H - ph - t, bd, M.body, r.x1 - t, ph + t, z0, selK);
-      box(rw - 2 * t, t, bd, M.body, r.x0 + t, H - t, z0, selK); box(rw, t, bd, M.body, r.x0, ph, z0, selK);
+      box(rw - 2 * t, t, bd, M.body, r.x0 + t, H - t, z0, selK); const bsg = bottomSegs(S, g, r); bsg.forEach(sg => box(sg[1] - sg[0], t, bd, M.body, sg[0], ph, z0, selK));
       ri.segs.forEach(sg => box(sg[1] - sg[0], H - ph - 2 * t, .3, M.back, sg[0], ph + t, 0));
-      box(rw - 2 * t, ph - .2, t, M.plinth, r.x0 + t, 0, D - 6);
+      bsg.forEach(sg => { const a = sg[0] + (sg[0] <= r.x0 + .1 ? t : 0), b = sg[1] - (sg[1] >= r.x1 - .1 ? t : 0); if (b - a > 1) box(b - a, ph - .2, t, M.plinth, a, 0, D - 6); });
     }));
     g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === n) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap || R.split || (S.cols[k] && S.cols[k].nl)) return; box(t, L.y1 - g.y0, L.D - z0, M.body, b.x, g.y0, z0, { k: 'col', i: k - 1 }); });
     g.cols.forEach((c, i) => inCol(i, () => {
@@ -177,7 +177,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         else if (it.type === 'led') { box(c.w - 1, .6, 1.4, M.led, c.xa + .5, it.y, D - 6, meta); box(c.w - 1, 7, D - 14, M.glowMat, c.xa + .5, it.y - 6.6, 7); }
         })({ xa: c.xa + ss.x0, xb: c.xa + ss.x0 + ss.w, w: ss.w }));
         else if (it.type === 'idoor') {
-          const key = 'i' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, iw = idoorSpan(col, c.w, t, it).w, ih = it.y1 - it.y, x0 = c.xa + it.x, z = D - 1.2;
+          const key = 'i' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, iw = idoorSpan(col, c.w, t, it).w, ih = it.y1 - it.y, x0 = c.xa + it.x, z = D - 1.2 - (it.dz || 0);   // dz — дверца утоплена от переда
           const pv = new THREE.Group(); wg.add(pv);
           if (it.dir === 'R') { pv.position.set(x0 + iw, it.y, z); box(iw - .2, ih - .2, 1.6, CB, -iw + .1, .1, 0, dm, pv); if (it.fill === 'mirror') box(iw - 1.2, ih - 1.2, .4, M.mirror, -iw + .1 + .5, .1 + .5, 1.6, dm, pv); if (!it.push) box(.9, Math.min(20, ih * .3), 1.6, M.chrome, -iw + 3, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = 105 * DEG * f; } }); }
           else if (it.dir === 'U') { pv.position.set(x0, it.y + ih, z); box(iw - .2, ih - .2, 1.6, CB, .1, -ih + .1, 0, dm, pv); if (it.fill === 'mirror') box(iw - 1.2, ih - 1.2, .4, M.mirror, .1 + .5, -ih + .1 + .5, 1.6, dm, pv); if (!it.push) box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, -ih + 3, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = -100 * DEG * f; } }); }
