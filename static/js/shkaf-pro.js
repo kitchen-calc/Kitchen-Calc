@@ -891,7 +891,19 @@ window.PRO = {
 const FRESH = (() => { if (VIEW) return false; if (/^#p=/.test(location.hash)) return false; try { return !localStorage.getItem('kc_pro'); } catch (e) { return false; } })();
 S = load();
 if (VIEW) document.body.classList.add('view');
-init3D().catch(e => { console.warn(e); const l = $('p3dLoad'); if (l) l.textContent = '3D недоступно в этом браузере'; });
+// 3D: если модуль не загрузился (сайт как раз обновлялся, пропала сеть, CDN three.js) — ещё 2 попытки, потом понятное сообщение и кнопка
+function start3D(tries) {
+  const l = $('p3dLoad');
+  init3D().then(() => { if (l) l.style.display = 'none'; }).catch(e => {
+    console.warn(e);
+    let gl = false; try { gl = !!document.createElement('canvas').getContext('webgl2'); } catch (er) {}
+    if (gl && tries > 0) { if (l) l.textContent = 'Загрузка 3D… (ещё попытка)'; setTimeout(() => start3D(tries - 1), 2500); return; }
+    if (!l) return;
+    l.innerHTML = gl ? '<div style="text-align:center;padding:16px">3D не загрузилось: ' + esc(String((e && e.message) || e).slice(0, 140)) + '<br>Возможно, сайт как раз обновлялся. <button type="button" style="margin-top:8px;padding:8px 14px;border-radius:9px;border:1px solid #b07d12;background:#b07d12;color:#fff;cursor:pointer;font:inherit" onclick="location.reload()">↻ Обновить страницу</button></div>'
+      : '3D недоступно в этом браузере (нет WebGL 2)';
+  });
+}
+start3D(2);
 refresh(false);
 ownerBoot();
 if (FRESH && !S.room.set) setTimeout(() => {   // в начале — размер комнаты, как на кухне
