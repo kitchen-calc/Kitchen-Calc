@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=34';
-import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=34';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=35';
+import { runInfo, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=35';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -179,10 +179,10 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         else if (it.type === 'idoor') {
           const key = 'i' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, iw = idoorSpan(col, c.w, t, it).w, ih = it.y1 - it.y, x0 = c.xa + it.x, z = D - 1.2;
           const pv = new THREE.Group(); wg.add(pv);
-          if (it.dir === 'R') { pv.position.set(x0 + iw, it.y, z); box(iw - .2, ih - .2, 1.6, CB, -iw + .1, .1, 0, dm, pv); box(.9, Math.min(20, ih * .3), 1.6, M.chrome, -iw + 3, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = 105 * DEG * f; } }); }
-          else if (it.dir === 'U') { pv.position.set(x0, it.y + ih, z); box(iw - .2, ih - .2, 1.6, CB, .1, -ih + .1, 0, dm, pv); box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, -ih + 3, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = -100 * DEG * f; } }); }
-          else if (it.dir === 'D') { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, CB, .1, .1, 0, dm, pv); box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, ih - 4, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = 95 * DEG * f; } }); }
-          else { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, CB, .1, .1, 0, dm, pv); box(.9, Math.min(20, ih * .3), 1.6, M.chrome, iw - 3.5, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = -105 * DEG * f; } }); }
+          if (it.dir === 'R') { pv.position.set(x0 + iw, it.y, z); box(iw - .2, ih - .2, 1.6, CB, -iw + .1, .1, 0, dm, pv); if (it.fill === 'mirror') box(iw - 1.2, ih - 1.2, .4, M.mirror, -iw + .1 + .5, .1 + .5, 1.6, dm, pv); if (!it.push) box(.9, Math.min(20, ih * .3), 1.6, M.chrome, -iw + 3, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = 105 * DEG * f; } }); }
+          else if (it.dir === 'U') { pv.position.set(x0, it.y + ih, z); box(iw - .2, ih - .2, 1.6, CB, .1, -ih + .1, 0, dm, pv); if (it.fill === 'mirror') box(iw - 1.2, ih - 1.2, .4, M.mirror, .1 + .5, -ih + .1 + .5, 1.6, dm, pv); if (!it.push) box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, -ih + 3, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = -100 * DEG * f; } }); }
+          else if (it.dir === 'D') { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, CB, .1, .1, 0, dm, pv); if (it.fill === 'mirror') box(iw - 1.2, ih - 1.2, .4, M.mirror, .1 + .5, .1 + .5, 1.6, dm, pv); if (!it.push) box(Math.min(20, iw * .4), .9, 1.6, M.chrome, iw / 2 - Math.min(20, iw * .4) / 2, ih - 4, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.x = 95 * DEG * f; } }); }
+          else { pv.position.set(x0, it.y, z); box(iw - .2, ih - .2, 1.6, CB, .1, .1, 0, dm, pv); if (it.fill === 'mirror') box(iw - 1.2, ih - 1.2, .4, M.mirror, .1 + .5, .1 + .5, 1.6, dm, pv); if (!it.push) box(.9, Math.min(20, ih * .3), 1.6, M.chrome, iw - 3.5, ih / 2 - 10, 1.6, dm, pv); doorsAnim.push({ key, apply: f => { pv.rotation.y = -105 * DEG * f; } }); }
         }
         else if (it.type === 'vpanel') { const x = Math.max(c.xa + 1, Math.min(c.xb - t - 1, c.xa + it.x)); box(t, it.y1 - it.y, D - 2.5, CB, x, it.y, z0, meta); }
       });

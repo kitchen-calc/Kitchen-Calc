@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=34';
-import { TPL } from '/static/js/shkaf-tpl.js?v=2';
+import * as C from '/static/js/shkaf-pro-core.js?v=35';
+import { TPL } from '/static/js/shkaf-tpl.js?v=3';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=12';
@@ -272,7 +272,7 @@ function sideItem() {
   if (it.type === 'shoe') h += stepper('Полок', 'item.n', it.n, 1, 'шт');
   if (it.type === 'basket') h += stepper('Высота корзины', 'item.h', it.h, 1);
   if (it.type === 'vpanel') h += betweenHtml(f.col, it) + stepper('Низ панели', 'item.y', it.y, 1) + stepper('Верх панели', 'item.y1', it.y1, 1) + stepper('От левого края отсека', 'item.x', it.x, 1) + `<div class="r">${btn(0, 'PRO.vpCenter()', 'По центру отсека')}</div><div class="note">Панель делит отсек на две части. Рядом с ней можно поставить «Дверцу в отсеке».</div>`;
-  if (it.type === 'idoor') h += betweenHtml(f.col, it) + stepper('Верх дверцы', 'item.y1', it.y1, 1) + stepper('От левого края отсека', 'item.x', it.x, 1) + stepper('Ширина дверцы (0 — до края)', 'item.w', it.w || 0, 1) + `<div class="r"><span>Открывание</span>${[['L', '◀ влево'], ['R', 'вправо ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => btn(it.dir === k, `PRO.idoorDir('${k}')`, t)).join('')}</div>`;
+  if (it.type === 'idoor') h += betweenHtml(f.col, it) + stepper('Верх дверцы', 'item.y1', it.y1, 1) + stepper('От левого края отсека', 'item.x', it.x, 1) + stepper('Ширина дверцы (0 — до края)', 'item.w', it.w || 0, 1) + `<div class="r"><span>Открывание</span>${[['L', '◀ влево'], ['R', 'вправо ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => btn(it.dir === k, `PRO.idoorDir('${k}')`, t)).join('')}</div><div class="r">${btn(it.fill === 'mirror', 'PRO.idoorFill()', it.fill === 'mirror' ? '✔ Зеркало на дверце' : 'Зеркало на дверце')}${btn(!!it.push, 'PRO.idoorPush()', it.push ? '✔ Открывание нажатием (push)' : 'Без ручки, нажатием (push)')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.moveItemCol(-1)', '◀ в левый отсек')}${btn(0, 'PRO.moveItemCol(1)', 'в правый ▶')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.dupItem()', 'Копия')}${btn(0, 'PRO.delItem()', 'Удалить')}${btn(0, `PRO.selCol(${f.ci})`, '✕ К отсеку')}</div>`;
   return h;
@@ -488,7 +488,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=39');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=40');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -632,7 +632,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=41');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=42');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -876,6 +876,8 @@ window.PRO = {
   light: () => { if (!K) return; const on = !K.isLight(); K.setLight(on); $('lightBtn').textContent = on ? '💡 Свет: вкл' : '🌙 Свет: выкл'; },
   leds: () => { if (!K) return; const on = !K.isLeds(); K.setLeds(on); $('ledBtn').textContent = on ? '✨ Подсветка: вкл' : '▫ Подсветка: выкл'; },
   rot: on => { if (K) K.setRotate(on); }, sideToggle, drawerAbove: () => drawerNear(1), drawerBelow: () => drawerNear(-1), between, vpCenter: () => mutate(() => { const f = findItem(sel.id); if (f) f.it.x = r1(f.col.w / 2 - S.t / 2); }), idoorDir: v => mutate(() => { const f = findItem(sel.id); if (f) f.it.dir = v; }),
+  idoorFill: () => mutate(() => { const f = findItem(sel.id); if (f) { if (f.it.fill === 'mirror') delete f.it.fill; else f.it.fill = 'mirror'; } }),
+  idoorPush: () => mutate(() => { const f = findItem(sel.id); if (f) { if (f.it.push) delete f.it.push; else f.it.push = true; } }),
   addDiv: () => mutate(() => { const m = S.mezzes[sel.mi]; m.div = m.div || []; const w = m.w - 2 * S.t, pts = [0].concat(m.div.slice().sort((a, b) => a - b).map(v => v + S.t), [w]); let bi = 0, bw = -1; for (let i = 0; i < pts.length - 1; i++) if (pts[i + 1] - pts[i] > bw) { bw = pts[i + 1] - pts[i]; bi = i; } m.div.push(r1(pts[bi] + (pts[bi + 1] - pts[bi] - S.t) / 2)); m.div.sort((a, b) => a - b); m.cd = []; }),
   delDiv: i => mutate(() => { const m = S.mezzes[sel.mi]; m.div.splice(i, 1); m.cd = []; m.dir = []; }),
   eqDiv: n => mutate(() => { const m = S.mezzes[sel.mi], w = m.w - 2 * S.t, cw = (w - (n - 1) * S.t) / n; m.div = []; for (let k = 1; k < n; k++) m.div.push(r1(k * cw + (k - 1) * S.t)); m.cd = []; m.dir = []; }),
