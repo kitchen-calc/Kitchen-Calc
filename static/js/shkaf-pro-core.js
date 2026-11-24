@@ -698,7 +698,7 @@ export function buildParts(S) {
           if (it.type === 'rod') { rods++; add('Наполнение', 'Штанга ⌀25' + lbl + sl, 1, cw - .6, 2.5, 2.5, 'Хром, труба 25×15', 0, 'длина ' + mm(cw - .6) + ' мм', 'metal'); }
           else if (it.type === 'drawer') {
             const bw = cw - .4;
-            add('Ящики', 'Фасад ящика' + lbl + sl, 1, bw, it.fh - .3, t, body, (2 * (bw + it.fh)) / 100);
+            if (c.rcat) curCat = c.rcat; add('Ящики', 'Фасад ящика' + lbl + sl, 1, bw, it.fh - .3, t, body, (2 * (bw + it.fh)) / 100); curCat = c.cat || '';   // 2-й цвет ящиков отсека
             if (it.sys === 'tier') { add('Ящики', 'Боковина ящика' + lbl + sl, 2, D - 8, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Задняя ящика' + lbl + sl, 1, bw - 5.4, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Дно ящика' + lbl + sl, 1, bw - 3.6, D - 9, .3, 'ХДФ 3 мм', 0, '', 'hdf'); }
             drw[it.sys] = (drw[it.sys] || 0) + 1;
           }
@@ -813,7 +813,7 @@ export function sanitize(S) {
     if (c && c.nl) col.nl = true;
     if (c && c.det && isFinite(c.det.x) && isFinite(c.det.z)) col.det = { x: r1(n(c.det.x, -1500, 3000, 0)), z: r1(n(c.det.z, -1500, 3000, 0)), rot: [0, 90, 180, 270].includes(c.det.rot) ? c.det.rot : 0 };
     if (c && FILLS[c.df] && c.df !== 'dsp') col.df = c.df;
-    if (c && catId(c.cat)) col.cat = c.cat; if (c && catId(c.dcat)) col.dcat = c.dcat;
+    if (c && catId(c.cat)) col.cat = c.cat; if (c && catId(c.dcat)) col.dcat = c.dcat; if (c && catId(c.rcat)) col.rcat = c.rcat;
     if (c && Array.isArray(c.dfs) && c.dfs.some(f => FILLS[f])) col.dfs = c.dfs.slice(0, 6).map(f => FILLS[f] ? f : '');
     if (c && Array.isArray(c.dw) && c.dw.some(v => Number(v) > 0)) col.dw = c.dw.slice(0, 6).map(v => { v = Number(v); return v > 0 ? r1(n(v, 8, 250, 0)) : 0; });   // ширина каждой двери, см (0 — авто)
     if (c && Array.isArray(c.dh) && c.dh.some(v => ['L', 'R', 'U', 'D'].includes(v))) col.dh = c.dh.slice(0, 6).map(v => ['L', 'R', 'U', 'D'].includes(v) ? v : '');   // сторона открывания каждой двери отсека
