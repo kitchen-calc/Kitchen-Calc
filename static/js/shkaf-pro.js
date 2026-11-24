@@ -6,7 +6,6 @@ const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=12';
 import { openRoomStart, openRoomEditor } from '/static/js/shkaf-room.js?v=2';
 const VIEW = /^\/shkaf\/view\/?$/.test(location.pathname);
-const VIEW_PRICE = VIEW ? +((location.hash.match(/[#&]sp=(\d{4,12})\b/) || [])[1] || 0) : 0;   // цена из калькулятора /shkaf (ссылка клиенту из его режима мастера), сум
 if (VIEW) { ["p3Box"].forEach(i => { const sb = document.getElementById(i); if (sb) sb.remove(); }); }
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -19,6 +18,7 @@ function load() {
   const m = location.hash.match(/^#p=([A-Za-z0-9_-]+)/);
   if (m) { const s = decodeState(m[1]); if (s) return s; }
   const tn = new URLSearchParams(location.search).get('t');   // короткая ссылка на готовый проект
+  if (tn && !TPL[tn]) setTimeout(() => toast('Проект «' + tn + '» не найден — показан шкаф по умолчанию'), 900);
   if (tn && TPL[tn]) { const s = decodeState(TPL[tn]); if (s) { try { history.replaceState(null, '', location.pathname); } catch (e) {} return s; } }
   if (!VIEW) { try { const j = localStorage.getItem('kc_pro'); if (j) { const s = sanitize(JSON.parse(j)); if (s) return s; } } catch (e) {} }
   return defState();
@@ -449,7 +449,7 @@ function renderSide() {
   box.innerHTML = sel.k === 'item' ? sideItem() : (sel.k === 'col' ? sideCol() : (sel.k === 'mezz' ? sideMezz() : (sel.k === 'panel' ? sidePanel() + freeBlock() : (sel.k === 'unit' ? sideUnit() + freeBlock() : (sel.k === 'bed' ? sideBed() + freeBlock() : (sel.k === 'obj' ? sideObj() : (sel.k === 'open' ? sideOpen() : sideGlobal()))))))) + catRow();
 }
 function sideView() {
-  const pr = pricing(S), g = geom(S);
+  const g = geom(S);
   return `<div class="sh">${esc(S.name)}</div><div class="note">Вращайте камеру. Нажмите на двери, чтобы открыть.</div>
     <div class="r">${btn(0, 'PRO.openAll(true)', '↔ Открыть всё')}${btn(0, 'PRO.openAll(false)', 'Закрыть')}</div>
     <div class="sub">Параметры</div>
@@ -458,7 +458,7 @@ function sideView() {
     <div class="r"><span>Цвет</span><b>${esc(S.cat && window.KCCAT ? window.KCCAT.name(S.cat) : (S.custom || PALETTE[S.color][0]))}</b></div>
     <div class="r"><span>Шкафов и отсеков</span><b>${S.cols.filter(c => !c.gap).length}${S.mezzes.length ? ' + антресолей: ' + S.mezzes.length : ''}</b></div>
     ${(S.beds.length + S.units.length + (S.objs || []).length) ? `<div class="r"><span>Другая мебель</span><b>${S.beds.length ? 'кроватей: ' + S.beds.length + ' ' : ''}${S.units.length ? 'тумб: ' + S.units.length + ' ' : ''}${(S.objs || []).length ? 'изделий: ' + S.objs.length : ''}</b></div>` : ''}
-    <div class="sub">Стоимость</div><div class="vp">$${fmt((VIEW_PRICE || pr.total) / USD)}</div><div class="note">Ориентировочно. Точный проект и цена — после замера.</div>
+    <div class="note" style="margin-top:12px">Стоимость рассчитает мастер после замера.</div>
     <div class="r" style="margin-top:12px"><a class="cta" href="tel:+998920934510">📞 Позвонить</a><a class="cta" href="https://t.me/Kitchencalc" target="_blank" rel="noopener">✈ Telegram</a></div>`;
 }
 function renderPrice() {
@@ -480,7 +480,7 @@ function renderWarn() {
 }
 let odT = null;
 function refresh(full) {
-  if (full !== false) { recalcW(S); save(); try { history.replaceState(null, '', location.pathname + '#p=' + encodeState(S) + (VIEW_PRICE ? '&sp=' + VIEW_PRICE : '')); } catch (e) {} }
+  if (full !== false) { recalcW(S); save(); try { history.replaceState(null, '', location.pathname + '#p=' + encodeState(S)); } catch (e) {} }
   if (K) { if (full !== false) K.update(S); K.select(selMeta()); }   // выбор не пересобирает сцену: двойной щелчок по двери всегда срабатывает
   renderSide(); renderPrice(); renderWarn(); renderAdded();
   if (OWNER && full !== false) { clearTimeout(odT); odT = setTimeout(renderOwner, 350); }
