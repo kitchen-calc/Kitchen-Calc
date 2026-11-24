@@ -22,8 +22,8 @@ export const PALETTE = [['Белый', '#f2f1ee'], ['Светлый дуб', '#d
 export const LACO = [['Графит', '#2a2d31'], ['Серо-зелёный', '#6f7d73'], ['Шампань', '#d6c3a1'], ['Белый', '#f0efe9'], ['Синий', '#33476a'], ['Бордо', '#6b2a35']];
 export const FILLS = { dsp: 'ЛДСП', mdf: 'Фрезерованный МДФ', glass: 'Стекло в алюминиевой раме', mirror: 'Зеркало', laco: 'Лакобель (цветное стекло)', film: 'Зеркало с плёнкой', sand: 'Зеркало с рисунком' };
 /* рисунок фрезеровки МДФ-фасадов (как «рейка» на фото): общий для дверей шкафа */
-export const MILLS = { frame: 'филёнка (рамка)', vgroove: 'рейка вертикальная 30 мм', vfine: 'рейка вертикальная мелкая 15 мм', hgroove: 'рейка горизонтальная 30 мм', grid: 'квадраты (решётка)' };
-export const MILL_PITCH = { frame: 10, vgroove: 3, vfine: 1.5, hgroove: 3, grid: 10 };
+export const MILLS = { frame: 'филёнка (рамка)', vgroove: 'рейка вертикальная 30 мм', vfine: 'рейка вертикальная мелкая 15 мм', hgroove: 'рейка горизонтальная 30 мм', grid: 'квадраты (решётка)', flat: 'гладкий (без фрезеровки)' };
+export const MILL_PITCH = { frame: 10, vgroove: 3, vfine: 1.5, hgroove: 3, grid: 10, flat: 10 };
 export const millName = S => { const m = S && S.doors && S.doors.mp; return m && MILLS[m] && m !== 'frame' ? ' · ' + MILLS[m] : ''; };
 export const PANEL_KINDS = { mirror: 'Зеркало', film: 'Зеркало с плёнкой', sand: 'Зеркало с рисунком', glass: 'Стекло в алюминиевой раме', laco: 'Лакобель', dsp: 'ЛДСП', mdf: 'Фрезерованный МДФ', slats: 'Перегородка из клеёного МДФ (рейки)', soft: 'Мягкие панели (обивка тканью)' };
 export const BED_STYLES = { foam: { ru: 'Беспружинный (пенный)', price: 900000 }, spring: { ru: 'Независимые пружины', price: 1600000 }, ortho: { ru: 'Ортопедический (кокос + латекс)', price: 2200000 }, combi: { ru: 'Комби (пружины + кокос)', price: 2600000 } };
