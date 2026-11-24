@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=33';
-import { TPL } from '/static/js/shkaf-tpl.js?v=1';
+import * as C from '/static/js/shkaf-pro-core.js?v=34';
+import { TPL } from '/static/js/shkaf-tpl.js?v=2';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=12';
@@ -18,6 +18,7 @@ function load() {
   const m = location.hash.match(/^#p=([A-Za-z0-9_-]+)/);
   if (m) { const s = decodeState(m[1]); if (s) return s; }
   const tn = new URLSearchParams(location.search).get('t');   // короткая ссылка на готовый проект
+  if (tn && !TPL[tn]) setTimeout(() => toast('Проект «' + tn + '» не найден — показан шкаф по умолчанию'), 900);
   if (tn && TPL[tn]) { const s = decodeState(TPL[tn]); if (s) { try { history.replaceState(null, '', location.pathname); } catch (e) {} return s; } }
   if (!VIEW) { try { const j = localStorage.getItem('kc_pro'); if (j) { const s = sanitize(JSON.parse(j)); if (s) return s; } } catch (e) {} }
   return defState();
@@ -232,17 +233,25 @@ function sideCol() {
   } else h += `<div class="r">${btn(0, "PRO.doors('swing')", '🚪 Включить двери по отсекам')}</div>`;
   h += `<div class="sub">Добавить в отсек</div>` + addButtons();
   h += `<div class="r"><span>Полки поровну</span><input type="number" min="0" max="12" value="${c.items.filter(x => x.type === 'shelf').length}" onchange="PRO.even(this.value)" style="width:56px"><small>шт</small></div>`;
-  h += catBtn('col', c.cat, 'Цвет отсека (внутри)') + (S.doors.kind === 'swing' ? catBtn('cold', c.dcat, 'Цвет дверей отсека') : '');
+  h += paintHtml(i);
   h += colSyncHtml(i);
   h += `<div class="sub">Содержимое (сверху вниз)</div><div class="ilist">${items.map(it => `<button type="button" class="iit" onclick="PRO.selItem('${it.id}')">${ITEM_ICON[it.type]} ${ITEM_TYPES[it.type]}<b>${Math.round(ext(it, S)[0] * 10)} мм</b></button>`).join('') || '<div class="note">Пусто — добавьте полки, штангу, ящики…</div>'}</div>`;
   return h;
 }
+/* покраска отсека (как «Покраска этого шкафа» в кухне): корпус и полки, двери, 2-й цвет ящиков; «этот цвет — выбранным / всем» */
+function paintHtml(i) {
+  const c = S.cols[i], hasDr = c.items.some(x => x.type === 'drawer'), any = c.cat || c.dcat || c.rcat;
+  const cnt = S.cols.filter((x, ci) => ci !== i && !x.gap && colSync.sel[x.id]).length;
+  return `<div class="sub">🎨 Покраска этого отсека</div>` + catBtn('col', c.cat, 'Корпус и полки') + (S.doors.kind === 'swing' && (c.dn == null || c.dn > 0) ? catBtn('cold', c.dcat, 'Фасад (двери)') : '') + (hasDr ? catBtn('colr', c.rcat, 'Ящики — 2-й цвет') : '') +
+    `<div class="note">Если у фасада два цвета: двери — основной, ящики — второй. Без цвета отсек берёт общий цвет шкафа. Цена — по классу материала.</div>` +
+    (any ? `<div class="r">${btn(0, "PRO.paintTo('sel')", 'Этот цвет — выбранным (' + cnt + ')')}${btn(0, "PRO.paintTo('all')", 'Этот цвет — всем отсекам')}${btn(0, "PRO.paintTo('reset')", 'Сбросить')}</div><div class="note">Отсеки выбираются ниже, в «Сделать как этот отсек».</div>` : '');
+}
 /* «Сделать как этот отсек»: высота/глубина, двери и наполнение — выбранным отсекам или всем сразу (как в кухне) */
-const colSync = { sel: {}, what: { size: true, doors: true, items: false } };
+const colSync = { sel: {}, what: { size: true, doors: true, items: false, color: false } };
 function colSyncHtml(i) {
   const others = S.cols.map((c, ci) => ({ c, ci })).filter(x => x.ci !== i && !x.c.gap); if (!others.length) return '';
   const chips = others.map(x => `<button type="button" class="${colSync.sel[x.c.id] ? 'on' : ''}" onclick="PRO.csTog('${x.c.id}')">Отсек ${x.ci + 1} · ${mm(x.c.w)}</button>`).join(''), W = colSync.what, tg = (f, t) => btn(W[f], `PRO.csWhat('${f}')`, (W[f] ? '✔ ' : '') + t), cnt = others.filter(x => colSync.sel[x.c.id]).length;
-  return `<div class="sub">Сделать как этот отсек</div><div class="note">Отметьте отсеки, которые должны стать такими же, и что повторить.</div><div class="r">${chips}</div><div class="r">${btn(0, "PRO.csPick('all')", 'Все')}${btn(0, "PRO.csPick('none')", 'Снять выбор')}</div><div class="r">${tg('size', 'Высота и глубина')}${tg('doors', 'Двери')}${tg('items', 'Наполнение (полки, штанги, ящики)')}</div><div class="r">${btn(0, 'PRO.csApply(false)', '▶ Применить к выбранным (' + cnt + ')')}${btn(0, 'PRO.csApply(true)', 'Применить ко всем')}</div>`;
+  return `<div class="sub">Сделать как этот отсек</div><div class="note">Отметьте отсеки, которые должны стать такими же, и что повторить.</div><div class="r">${chips}</div><div class="r">${btn(0, "PRO.csPick('all')", 'Все')}${btn(0, "PRO.csPick('none')", 'Снять выбор')}</div><div class="r">${tg('size', 'Высота и глубина')}${tg('doors', 'Двери')}${tg('items', 'Наполнение (полки, штанги, ящики)')}${tg('color', 'Цвет')}</div><div class="r">${btn(0, 'PRO.csApply(false)', '▶ Применить к выбранным (' + cnt + ')')}${btn(0, 'PRO.csApply(true)', 'Применить ко всем')}</div>`;
 }
 /* каталог фурнитуры (kis.uz): петли, ручки/TIP-ON, ящики, подъёмники, купе, брючницы, штанги — цена и список деталей меняются */
 function hwCatalogHtml() {
@@ -440,16 +449,16 @@ function renderSide() {
   box.innerHTML = sel.k === 'item' ? sideItem() : (sel.k === 'col' ? sideCol() : (sel.k === 'mezz' ? sideMezz() : (sel.k === 'panel' ? sidePanel() + freeBlock() : (sel.k === 'unit' ? sideUnit() + freeBlock() : (sel.k === 'bed' ? sideBed() + freeBlock() : (sel.k === 'obj' ? sideObj() : (sel.k === 'open' ? sideOpen() : sideGlobal()))))))) + catRow();
 }
 function sideView() {
-  const pr = pricing(S), g = geom(S);
+  const g = geom(S);
   return `<div class="sh">${esc(S.name)}</div><div class="note">Вращайте камеру. Нажмите на двери, чтобы открыть.</div>
     <div class="r">${btn(0, 'PRO.openAll(true)', '↔ Открыть всё')}${btn(0, 'PRO.openAll(false)', 'Закрыть')}</div>
     <div class="sub">Параметры</div>
-    ${S.cols.some(c => !c.gap && !c.det) ? `<div class="r"><span>Размер</span><b>${mm(g.W)} × ${mm(S.H)} × ${mm(S.D)} мм</b></div>` : ''}
+    ${S.cols.some(c => !c.gap && !c.det) ? `<div class="r"><span>Размер</span><b>${mm(g.W)} × ${mm(g.totalH)} × ${mm(S.D)} мм</b></div>` : ''}
     <div class="r"><span>Комната</span><b>${(() => { const P = roomPoly(S); return mm(Math.max(...P.map(p => p[0])) - Math.min(...P.map(p => p[0]))) + ' × ' + mm(Math.max(...P.map(p => p[1])) - Math.min(...P.map(p => p[1]))) + ' мм'; })()}</b></div>
     <div class="r"><span>Цвет</span><b>${esc(S.cat && window.KCCAT ? window.KCCAT.name(S.cat) : (S.custom || PALETTE[S.color][0]))}</b></div>
     <div class="r"><span>Шкафов и отсеков</span><b>${S.cols.filter(c => !c.gap).length}${S.mezzes.length ? ' + антресолей: ' + S.mezzes.length : ''}</b></div>
     ${(S.beds.length + S.units.length + (S.objs || []).length) ? `<div class="r"><span>Другая мебель</span><b>${S.beds.length ? 'кроватей: ' + S.beds.length + ' ' : ''}${S.units.length ? 'тумб: ' + S.units.length + ' ' : ''}${(S.objs || []).length ? 'изделий: ' + S.objs.length : ''}</b></div>` : ''}
-    <div class="sub">Стоимость</div><div class="vp">$${fmt(pr.total / USD)}</div><div class="note">Ориентировочно. Точный проект и цена — после замера.</div>
+    <div class="note" style="margin-top:12px">Стоимость рассчитает мастер после замера.</div>
     <div class="r" style="margin-top:12px"><a class="cta" href="tel:+998920934510">📞 Позвонить</a><a class="cta" href="https://t.me/Kitchencalc" target="_blank" rel="noopener">✈ Telegram</a></div>`;
 }
 function renderPrice() {
@@ -479,7 +488,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=38');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=39');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -623,7 +632,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=40');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=41');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -751,13 +760,22 @@ window.PRO = {
   csPick: how => { colSync.sel = {}; if (how === 'all') S.cols.forEach((c, ci) => { if (ci !== sel.i && !c.gap) colSync.sel[c.id] = 1; }); refresh(); },
   csApply: all => {
     const src = S.cols[sel.i]; if (!src) return; const W = colSync.what, ts = S.cols.filter((c, ci) => ci !== sel.i && !c.gap && (all || colSync.sel[c.id]));
-    if (!ts.length) { alert('Сначала отметьте отсеки'); return; } if (!W.size && !W.doors && !W.items) { alert('Отметьте, что повторить'); return; }
+    if (!ts.length) { alert('Сначала отметьте отсеки'); return; } if (!W.size && !W.doors && !W.items && !W.color) { alert('Отметьте, что повторить'); return; }
     mutate(() => ts.forEach(t => {
       const put = f => { if (src[f] == null) delete t[f]; else t[f] = JSON.parse(JSON.stringify(src[f])); };
       if (W.size) { put('H'); put('D'); }
       if (W.doors) { put('dn'); put('df'); put('dd'); put('dp'); }
       if (W.items) { t.items = JSON.parse(JSON.stringify(src.items || [])).map(it => Object.assign(it, { id: uid() })); }
+      if (W.color) { put('cat'); put('dcat'); put('rcat'); }
     }));
+  },
+  paintTo: mode => {
+    const src = S.cols[sel.i]; if (!src) return;
+    if (mode === 'reset') { mutate(() => { delete src.cat; delete src.dcat; delete src.rcat; }); return; }
+    const ts = S.cols.filter((c, ci) => ci !== sel.i && !c.gap && (mode === 'all' || colSync.sel[c.id]));
+    if (!ts.length) { alert('Сначала отметьте отсеки в «Сделать как этот отсек»'); return; }
+    mutate(() => ts.forEach(t => ['cat', 'dcat', 'rcat'].forEach(f => { if (src[f]) t[f] = src[f]; else delete t[f]; })));
+    toast('Цвет отсека ' + (sel.i + 1) + ' — ' + ts.length + ' отсек.');
   },
   hwSet: (f, v) => mutate(() => { S.hw = Object.assign({}, S.hw, { [f]: v }); }),
   mill: v => mutate(() => { S.doors.mp = v; }),
@@ -839,13 +857,13 @@ window.PRO = {
   flag: f => mutate(() => { S[f] = !S[f]; }),
   colFlag: f => mutate(() => { const c = S.cols[sel.i]; if (c) { if (c[f]) delete c[f]; else c[f] = true; } }),
   pickCat: t => {
-    const cur = t === 'col' ? (S.cols[sel.i] || {}).cat : t === 'cold' ? (S.cols[sel.i] || {}).dcat : t === 's' ? S.cat : t === 'doors' ? S.doors.cat : t === 'unit' ? (S.units[sel.ui] || {}).cat : t === 'bed' ? (S.beds[sel.bi] || {}).cat : t === 'obj' ? (S.objs[sel.oi] || {}).cat : (S.panels[sel.pi] || {}).cat;
+    const cur = t === 'col' ? (S.cols[sel.i] || {}).cat : t === 'cold' ? (S.cols[sel.i] || {}).dcat : t === 'colr' ? (S.cols[sel.i] || {}).rcat : t === 's' ? S.cat : t === 'doors' ? S.doors.cat : t === 'unit' ? (S.units[sel.ui] || {}).cat : t === 'bed' ? (S.beds[sel.bi] || {}).cat : t === 'obj' ? (S.objs[sel.oi] || {}).cat : (S.panels[sel.pi] || {}).cat;
     if (!window.KCCAT) { toast('Каталог цветов не загрузился'); return; }
     window.KCCAT.pick(cur || '', id => window.PRO.setCat(t, id));
   },
   setCat: (t, id) => mutate(() => {
     const v = id || undefined;
-    if (t === 'col' || t === 'cold') { const c = S.cols[sel.i]; if (c) { if (t === 'col') c.cat = v; else c.dcat = v; if (!v) delete c[t === 'col' ? 'cat' : 'dcat']; } } else if (t === 's') S.cat = v; else if (t === 'doors') S.doors.cat = v; else { const it = t === 'unit' ? S.units[sel.ui] : t === 'bed' ? S.beds[sel.bi] : t === 'obj' ? S.objs[sel.oi] : S.panels[sel.pi]; if (it) it.cat = v; }
+    if (t === 'col' || t === 'cold' || t === 'colr') { const c = S.cols[sel.i], f = t === 'col' ? 'cat' : (t === 'cold' ? 'dcat' : 'rcat'); if (c) { if (v) c[f] = v; else delete c[f]; } } else if (t === 's') S.cat = v; else if (t === 'doors') S.doors.cat = v; else { const it = t === 'unit' ? S.units[sel.ui] : t === 'bed' ? S.beds[sel.bi] : t === 'obj' ? S.objs[sel.oi] : S.panels[sel.pi]; if (it) it.cat = v; }
   }),
   dbg: () => K && K.debug && K.debug(),
   colDp: () => mutate(() => { const c = S.cols[sel.i]; if (c) { if (c.dp === false) delete c.dp; else c.dp = false; } }),

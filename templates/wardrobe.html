@@ -135,6 +135,21 @@
     .master .mr { display:flex; justify-content:space-between; gap:12px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,.1); }
     .master .mr b { color:#fff; }
     .master input { width:90px; padding:5px 7px; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:6px; }
+    .master .msub { margin:12px 0 6px; font-size:.68rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:#fbbf24; }
+    .master .mtools { display:flex; flex-wrap:wrap; gap:6px; }
+    .master button { background:rgba(255,255,255,.08); color:#f9fafb; border:1px solid rgba(251,191,36,.35); border-radius:8px; padding:7px 10px; font:600 .8rem var(--sans); cursor:pointer; }
+    .master button:hover, .master button.on { background:#b45309; border-color:#fbbf24; }
+    .master button:disabled { opacity:.4; cursor:default; }
+    .master .mchips { display:flex; flex-wrap:wrap; gap:5px; max-height:110px; overflow:auto; }
+    .master .mnote { color:#9ca3af; font-size:.76rem; margin:4px 0; line-height:1.4; }
+    .od-card { margin-top:16px; }
+    .od-head { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+    .od-head h3 { margin:0; font-size:1.05rem; }
+    .od-head span.d { color:#6b7280; font-size:.82rem; flex:1; min-width:200px; }
+    .od-head button { border:1px solid #cbd2d9; background:#fff; border-radius:8px; padding:6px 10px; cursor:pointer; font-size:.8rem; }
+    .od-head button.on { background:#b45309; color:#fff; border-color:#b45309; }
+    .od-sheet { margin:0 0 14px; border:1px solid #cfd4d8; border-radius:6px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.08); background:#fff; }
+    .od-sheet svg { display:block; width:100%; height:auto; }
     .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(30px); background:#111827; color:#fff; padding:12px 18px; border-radius:10px; font-size:.9rem; opacity:0; pointer-events:none; transition:.3s; z-index:60; max-width:92vw; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%); }
     .hide { display:none !important; }
@@ -213,6 +228,13 @@
     </div>
   </div>
 </main>
+<div class="wrap"><div class="card od-card" id="ownerBox" style="display:none">
+  <div class="od-head"><h3>📐 Чертежи и раскрой — режим мастера</h3><span class="d">Видно только вам. Листы A4: общий вид, двери, разрезы, каждый отсек, узлы, раскрой деталей с кромкой и фурнитура.</span>
+    <span>ЛДСП: <button type="button" id="cutT16" onclick="ownerSetT(1.6)">16 мм</button><button type="button" id="cutT18" onclick="ownerSetT(1.8)">18 мм</button></span>
+    <button type="button" onclick="ownerPrint()">🖨 Печать (A4)</button><button type="button" onclick="ownerExport('pdf')">📄 В PDF</button><button type="button" onclick="ownerExport('docx')">📝 В Word</button><button type="button" onclick="ownerUnlock()">🔒 Выйти</button></div>
+  <div id="ownerBody"><div class="hint">Чертежи строятся…</div></div>
+</div></div>
+<input type="file" id="ownerFile" accept=".json,application/json" style="display:none">
 <div class="cmodal" id="cmodal"><div class="cbox"><button type="button" class="cclose" id="cclose" aria-label="Закрыть">✕</button><iframe id="cframe" title="Каталог цветов ЛДСП / ЛМДФ"></iframe></div></div>
 <div class="modal-overlay" id="specModal">
   <div class="modal-content" id="specCapture">
@@ -258,6 +280,9 @@
 <script src="/static/js/kis-ui.js?v=5"></script>
 <!--LANGSCRIPT-->
 <script src="/static/js/contract-data.js?v=2"></script>
+<script src="/static/js/sheet-fit.js?v=1"></script>
+<script src="/static/js/sheet-export.js?v=1"></script>
+<script src="/static/js/shkaf-topro.js?v=1"></script>
 <script>
 /* =====================================================================
    ЦЕНЫ. Всё, что влияет на стоимость, — в этом блоке; меняйте цифры здесь.
@@ -1140,13 +1165,14 @@ function refresh() {
   try { history.replaceState(null, '', '#s=' + btoa(unescape(encodeURIComponent(JSON.stringify(M))))); } catch (e) {}
 }
 
-/* --- режим мастера: себестоимость и прибыль (5 нажатий на логотип) --- */
-let masterOn = false;
+/* --- режим мастера (вход по ключу, см. «РЕЖИМ МАСТЕРА» ниже): инструменты, секции, себестоимость и прибыль --- */
+let OWNER_ON = false;
 function renderMaster(r) {
   const box = $('master');
-  box.classList.toggle('on', masterOn);
-  if (!masterOn) return;
-  box.innerHTML = `<h3>Режим мастера (клиент этого не видит)</h3>
+  box.classList.toggle('on', OWNER_ON);
+  if (!OWNER_ON || !r) return;
+  box.innerHTML = `<h3>🔑 Режим мастера (клиент этого не видит)</h3>${ownerToolsHtml()}
+    <div class="msub">Себестоимость и прибыль</div>
     <div class="mr"><span>Материалы и фурнитура (себестоимость)</span><b>${fmt(r.mat)}</b></div>
     <div class="mr"><span>Работа (себестоимость)</span><b>${fmt(r.labor)}</b></div>
     <div class="mr"><span>Доставка (расход)</span><b>${fmt(P.delivery * .6)}</b></div>
@@ -1221,8 +1247,6 @@ window.addEventListener('message', e => {
   if (e.data.kc === 'color' && /^#[0-9a-fA-F]{6}$/.test(e.data.hex || '')) { M.customColor = { hex: e.data.hex, name: String(e.data.name || '').slice(0, 60), label: String(e.data.label || e.data.name || '').slice(0, 80), img: /^\/static\/catalog\/[\w\/.-]+(\?v=\d+)?$/.test(e.data.img || '') ? e.data.img : '' }; activePreset = -1; closeCatalog(); renderForm(); refresh(); presetCards(); toast('Цвет: ' + M.customColor.label); }
   else if (e.data.kc === 'close') closeCatalog();
 });
-let taps = 0, tapT;
-$('brand').addEventListener('click', () => { taps++; clearTimeout(tapT); tapT = setTimeout(() => { taps = 0; }, 2500); if (taps >= 5) { taps = 0; masterOn = !masterOn; renderMaster(LAST); } });
 $('copy').addEventListener('click', () => { navigator.clipboard.writeText(location.href).then(() => toast('Ссылка скопирована'), () => toast('Скопируйте адрес из строки браузера')); });
 $('send').addEventListener('click', () => {
   const phone = $('cPhone').value.trim();
@@ -1318,10 +1342,153 @@ function renderW3Edit() {
   h += `<div class="k3e-r"><span>Ширина</span><button type="button" onclick="w3Act('width',-1)">− 5 см</button><button type="button" onclick="w3Act('width',1)">+ 5 см</button>${secsValid(M) ? '<button type="button" onclick="w3Act(\'reset\')">Сбросить секции</button>' : ''}</div>`;
   h += cnt('rods', 'Штанги') + cnt('pant', 'Пантограф') + cnt('shelves', 'Полки') + cnt('drawers', 'Ящики') + cnt('shoes', 'Обувь');
   for (let i = 0; i < (c.drawers | 0); i++) { const cur = (c.dsys && c.dsys[i]) || 'tier'; h += `<div class="k3e-r"><span>Ящик ${i + 1}</span><select onchange="w3Dsys(${i}, this.value)">${Object.keys(KIS.drawerSys).map(k => `<option value="${k}" ${k === cur ? 'selected' : ''}>${esc(KIS.drawerSys[k].ru)}</option>`).join('')}</select></div>`; }
+  h += ownerSyncHtml(sel.i);
   h += `<div class="k3e-r">${openBtn}</div>`;
   box.innerHTML = h;
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('w3dBox') && $('w3dBox').classList.contains('k3d-full')) w3Act('full'); });
+
+/* ======================== РЕЖИМ МАСТЕРА (как в калькуляторе кухни) ========================
+   Вход: 3 быстрых нажатия на логотип, Ctrl+Shift+K (или Alt+Shift+M) либо ссылка с ?master → ключ мастера (/api/owner).
+   Ключ запоминается на этом устройстве (общий с кухней). Чертежи и раскрой строит модуль конструктора PRO
+   (shkaf-pro-draw.js) по проекту, переведённому в его формат (static/js/shkaf-topro.js). */
+let mHist = [], mRedo = [], mLast = null, mBusy = false, CUT_T = 1.6, ownerSheets = [], ownerT = null, proMods = null;
+try { if (localStorage.getItem('kcw_cutT') === '1.8') CUT_T = 1.8; } catch (e) {}
+const TYPE_RU = { kupe: 'Шкаф-купе', wardrobe: 'Гардеробная', hall: 'Прихожая' };
+const secTotal = () => secCounts(M).reduce((a, b) => a + b, 0);
+function proState() {
+  const ctx = { walls: M.type === 'hall' ? [] : wallsOf(M), widths: wi => secWidths(M, wi), plan: (gi, n) => sectionPlan(n, gi, M) };
+  const S = shkafToPro(M, ctx); S.t = CUT_T; return S;
+}
+const proUrl = path => location.origin + path + '#p=' + shkafProEncode(proState());
+function ownerToolsHtml() {
+  const b = (call, txt, off) => `<button type="button" onclick="${call}"${off ? ' disabled' : ''}>${txt}</button>`;
+  let chips = '';
+  if (M.type !== 'hall') { const cn = secCounts(M); let gi = 0; cn.forEach((n, wi) => { const ws = secWidths(M, wi); for (let k = 0; k < n; k++, gi++) chips += `<button type="button" class="${w3Sel && w3Sel.kind === 'sec' && w3Sel.i === gi ? 'on' : ''}" onclick="ownerSelSec(${gi})">С-${gi + 1}${cn.length > 1 ? ' · ' + 'АБВ'[wi] : ''} · ${Math.round(ws[k] * 10)} мм</button>`; }); }
+  return `<div class="mtools">${b('ownerUndo()', '↶ Отменить' + (mHist.length ? ' (' + mHist.length + ')' : ''), !mHist.length)}${b('ownerRedo()', '↷ Вернуть', !mRedo.length)}${b('ownerSaveFile()', '💾 Сохранить')}${b('ownerOpenFile()', '📂 Открыть')}${b('ownerToPro()', '🛠 Открыть в PRO')}${b('ownerUnlock()', '🔒 Выйти')}</div>
+    <div class="mnote">Ctrl+Z — отменить, Ctrl+Y — вернуть. «Сохранить» — проект файлом на компьютер, потом его можно открыть и править.</div>
+    <div class="msub">👁 Показать клиенту</div><div class="mnote">Ссылка откроет только 3D: крутить и открывать двери можно, редактировать — нельзя.</div>
+    <div class="mtools">${b('ownerClient()', '🔗 Копировать ссылку')}${b("ownerClient('tg')", '✈ Telegram')}</div>
+    ${chips ? `<div class="msub">🧾 Секции в проекте: ${secTotal()}</div><div class="mnote">Нажмите — выбрать в 3D. Там же «Сделать как эту секцию».</div><div class="mchips">${chips}</div>` : ''}
+    <div class="msub">📐 Чертежи и раскрой</div><div class="mtools">${b("document.getElementById('ownerBox').scrollIntoView({behavior:'smooth'})", '↓ К чертежам (ЛДСП ' + Math.round(CUT_T * 10) + ' мм)')}${b('ownerPrint()', '🖨 Печать')}${b("ownerExport('pdf')", '📄 PDF')}${b("ownerExport('docx')", '📝 Word')}</div>`;
+}
+function ownerSelSec(gi) {
+  if (w3Mode !== '3d') setW3Mode('3d');
+  w3Sel = { kind: 'sec', i: gi }; if (W3) W3.select(w3Sel); renderW3Edit(); renderMaster(LAST);
+  const bx = $('w3dBox'); if (bx && !bx.classList.contains('k3d-full')) bx.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+/* «Сделать как эту секцию»: наполнение и система ящиков — выбранным секциям или всем (как «Сделать как этот» в кухне) */
+const wSync = { sel: {}, what: { fill: true, dsys: true } };
+function ownerSyncHtml(i) {
+  if (!OWNER_ON || M.type === 'hall') return '';
+  const tot = secTotal(); if (tot < 2) return '';
+  let chips = ''; for (let k = 0; k < tot; k++) if (k !== i) chips += `<button type="button" class="${wSync.sel[k] ? 'on' : ''}" onclick="wSyncTog(${k})">С-${k + 1}</button>`;
+  const cnt = Object.keys(wSync.sel).filter(k => +k !== i && +k < tot && wSync.sel[k]).length, W = wSync.what, tg = (f, t) => `<button type="button" class="${W[f] ? 'on' : ''}" onclick="wSyncWhat('${f}')">${W[f] ? '✓ ' : ''}${t}</button>`;
+  return `<div class="k3e-t" style="margin-top:8px">Сделать как эту секцию (мастер)</div><div class="k3e-r">${chips}</div>
+    <div class="k3e-r"><button type="button" onclick="wSyncPick(1)">Все</button><button type="button" onclick="wSyncPick(0)">Снять выбор</button></div>
+    <div class="k3e-r">${tg('fill', 'Наполнение')}${tg('dsys', 'Система ящиков')}</div>
+    <div class="k3e-r"><button type="button" onclick="wSyncApply(false)">▶ Выбранным (${cnt})</button><button type="button" onclick="wSyncApply(true)">Всем секциям</button></div>`;
+}
+function wSyncTog(k) { if (wSync.sel[k]) delete wSync.sel[k]; else wSync.sel[k] = 1; renderW3Edit(); }
+function wSyncPick(all) { wSync.sel = {}; if (all) for (let k = 0; k < secTotal(); k++) wSync.sel[k] = 1; renderW3Edit(); }
+function wSyncWhat(f) { wSync.what[f] = !wSync.what[f]; renderW3Edit(); }
+function wSyncApply(all) {
+  if (!w3Sel || w3Sel.kind !== 'sec') return;
+  w3Ensure(); const src = M.secs[w3Sel.i], W = wSync.what; if (!src) return;
+  const tg = M.secs.filter((s, k) => k !== w3Sel.i && (all || wSync.sel[k]));
+  if (!tg.length) { toast('Отметьте секции, которые должны стать такими же'); return; }
+  if (!W.fill && !W.dsys) { toast('Выберите, что повторить: наполнение или систему ящиков'); return; }
+  tg.forEach(t => { if (W.fill) ['rods', 'pant', 'shelves', 'drawers', 'shoes'].forEach(f => { t[f] = src[f] | 0; }); if (W.dsys) t.dsys = (src.dsys || []).slice(); });
+  w3AfterEdit(); toast('Готово: ' + tg.length + ' секц. стали как С-' + (w3Sel.i + 1));
+}
+/* история: каждое изменение проекта — шаг отмены */
+function ownerTrack() {
+  const s = JSON.stringify(M);
+  if (!mBusy && mLast !== null && s !== mLast) { mHist.push(mLast); if (mHist.length > 80) mHist.shift(); mRedo = []; }
+  mLast = s;
+}
+function ownerLoad(m) {
+  M = merge(DEF(), m); activePreset = -1; w3Sel = null;
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.type === M.type));
+  norm(); renderForm(); refresh(); presetCards();
+}
+function ownerHistGo(from, to) {
+  if (!from.length) return;
+  to.push(JSON.stringify(M)); mBusy = true;
+  try { ownerLoad(JSON.parse(from.pop())); } finally { mBusy = false; }
+  mLast = JSON.stringify(M); renderMaster(LAST);
+}
+const ownerUndo = () => ownerHistGo(mHist, mRedo), ownerRedo = () => ownerHistGo(mRedo, mHist);
+{ const _ref0 = refresh; refresh = function () { const r = _ref0.apply(this, arguments); ownerTrack(); if (OWNER_ON) { renderMaster(LAST); clearTimeout(ownerT); ownerT = setTimeout(ownerDraw, 400); } return r; }; }
+document.addEventListener('keydown', e => {
+  if (!OWNER_ON || !(e.ctrlKey || e.metaKey) || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
+  const k = (e.key || '').toLowerCase();
+  if ((k === 'z' || e.code === 'KeyZ') && !e.shiftKey) { e.preventDefault(); ownerUndo(); }
+  else if (k === 'y' || e.code === 'KeyY' || ((k === 'z' || e.code === 'KeyZ') && e.shiftKey)) { e.preventDefault(); ownerRedo(); }
+});
+/* проект файлом: сохранить на компьютер и открыть позже */
+function ownerSaveFile() {
+  const d = new Date(), p2 = n => String(n).padStart(2, '0'), stamp = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + '_' + p2(d.getHours()) + '-' + p2(d.getMinutes());
+  const name = TYPE_RU[M.type] + ' ' + stamp + '.kcshkaf.json', a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ app: 'kitchen-calc-shkaf', v: 1, saved: d.toISOString(), m: M }, null, 1)], { type: 'application/json' })); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); toast('Проект сохранён файлом: ' + name);
+}
+function ownerOpenFile() { const f = $('ownerFile'); f.value = ''; f.click(); }
+$('ownerFile').addEventListener('change', async e => {
+  const file = e.target.files && e.target.files[0]; if (!file) return;
+  try { const j = JSON.parse(await file.text()); if (!j || j.app !== 'kitchen-calc-shkaf' || !j.m || !['kupe', 'wardrobe', 'hall'].includes(j.m.type)) throw new Error('bad'); ownerLoad(j.m); toast('Проект открыт: ' + file.name); }
+  catch (er) { toast('Это не файл проекта шкафа (.kcshkaf.json)'); }
+});
+function ownerClient(mode) {
+  const url = proUrl('/shkaf/view');   // клиенту — только 3D, без цены
+  if (mode === 'tg') { window.open('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent('Ваш шкаф в 3D — можно крутить и открывать двери:'), '_blank', 'noopener'); return; }
+  navigator.clipboard.writeText(url).then(() => toast('Ссылка для клиента скопирована'), () => prompt('Скопируйте ссылку для клиента', url));
+}
+function ownerToPro() {
+  if (!confirm('Проект откроется в конструкторе шкафа PRO: там всё можно двигать мышью, красить отсеки и т. д.\nТекущий проект PRO на этом устройстве будет заменён — если он нужен, сначала сохраните его там файлом.\nОткрыть?')) return;
+  window.open(proUrl('/shkaf/pro'), '_blank');
+}
+/* чертежи A4 и раскрой — тем же модулем, что в конструкторе PRO и в кухне */
+async function ownerDraw() {
+  if (!OWNER_ON) return;
+  const body = $('ownerBody');
+  if (!proMods) proMods = Promise.all([import('/static/js/shkaf-pro-core.js?v=34'), import('/static/js/shkaf-pro-draw.js?v=41')]);
+  let core, draw; try { [core, draw] = await proMods; } catch (e) { proMods = null; body.innerHTML = '<div class="hint">Не удалось загрузить модуль чертежей. Обновите страницу.</div>'; return; }
+  if (!OWNER_ON) return;
+  let r; try { r = draw.buildSheets(core.sanitize(proState())); } catch (e) { console.error(e); body.innerHTML = '<div class="hint" style="color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '</div>'; ownerSheets = []; return; }
+  body.innerHTML = r.sheets.map(x => `<div class="od-sheet">${x}</div>`).join('');
+  if (window.fitSheetsIn) window.fitSheetsIn(body);
+  ownerSheets = Array.from(body.querySelectorAll('.od-sheet')).map(d => d.innerHTML);
+  [['cutT16', 1.6], ['cutT18', 1.8]].forEach(([id, v]) => { const b = $(id); if (b) b.classList.toggle('on', CUT_T === v); });
+}
+function ownerSetT(v) { CUT_T = v === 1.8 ? 1.8 : 1.6; try { localStorage.setItem('kcw_cutT', String(CUT_T)); } catch (e) {} renderMaster(LAST); ownerDraw(); }
+function ownerExport(kind) {
+  if (!ownerSheets.length) { toast('Чертежи ещё строятся — подождите секунду'); return; }
+  window.exportSheets(ownerSheets, kind, TYPE_RU[M.type], m => toast(m));
+}
+function ownerPrint() {
+  if (!ownerSheets.length) { toast('Чертежи ещё строятся — подождите секунду'); return; }
+  const w = window.open('', '_blank'); if (!w) return;
+  w.document.write('<!doctype html><meta charset="utf-8"><title>Чертежи — ' + esc(TYPE_RU[M.type]) + '</title><style>@page{size:A4 landscape;margin:0}body{margin:0}svg{width:100%;height:auto;page-break-after:always;display:block}</style>' + ownerSheets.join(''));
+  w.document.close(); setTimeout(() => { try { w.print(); } catch (e) {} }, 400);
+}
+/* вход и выход */
+async function ownerVerify(key) { try { const r = await fetch('/api/owner', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) }); return r.ok; } catch (e) { return false; } }
+async function ownerUnlock() {
+  if (OWNER_ON) { if (confirm('Выйти из режима мастера?')) { try { localStorage.removeItem('kc_owner'); } catch (e) {} fetch('/api/owner/logout', { method: 'POST' }).catch(() => {}); ownerApply(false); } return; }
+  const key = prompt('Ключ мастера'); if (!key) return;
+  if (await ownerVerify(key)) { try { localStorage.setItem('kc_owner', key); } catch (e) {} ownerApply(true); toast('Режим мастера включён'); }
+  else toast('Неверный ключ');
+}
+function ownerApply(on) {
+  OWNER_ON = !!on; $('ownerBox').style.display = OWNER_ON ? '' : 'none';
+  if (!OWNER_ON) { $('ownerBody').innerHTML = ''; ownerSheets = []; }
+  renderMaster(LAST); renderW3Edit(); if (OWNER_ON) ownerDraw();
+}
+(async function ownerBoot() { let key = null; try { key = localStorage.getItem('kc_owner'); } catch (e) {} if (!key) return; if (await ownerVerify(key)) ownerApply(true); else { try { localStorage.removeItem('kc_owner'); } catch (e) {} } })();
+(function () { let n = 0, tm = null; document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('.brand')) return; n++; clearTimeout(tm); tm = setTimeout(() => { n = 0; }, 900); if (n >= 3) { n = 0; e.preventDefault(); ownerUnlock(); } }, true); })();
+document.addEventListener('keydown', e => { if ((e.ctrlKey && e.shiftKey && (e.code === 'KeyK' || e.key === 'K' || e.key === 'k')) || (e.altKey && e.shiftKey && e.code === 'KeyM')) { e.preventDefault(); ownerUnlock(); } });
+if (/[?&]master\b/.test(location.search)) setTimeout(() => { if (!OWNER_ON) ownerUnlock(); }, 600);
 
 /* ======================== ЗАПУСК ======================== */
 (function init() {
@@ -1795,21 +1962,6 @@ function openContractPage() {
 }
 
 </script>
-<script>
-/* секретный вход мастера: три быстрых нажатия на логотип (или Ctrl+Shift+K) → ключ → конструктор шкафа PRO */
-(function () {
-  async function go() {
-    var key = prompt('Ключ мастера'); if (!key) return;
-    try {
-      var r = await fetch('/api/owner', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: key }) });
-      if (r.ok) { location.href = '/shkaf/pro'; return; }
-    } catch (e) {}
-    alert('Неверный ключ');
-  }
-  var n = 0, tm = null;
-  document.addEventListener('click', function (e) { if (!e.target.closest || !e.target.closest('.brand')) return; n++; clearTimeout(tm); tm = setTimeout(function () { n = 0; }, 900); if (n >= 3) { n = 0; e.preventDefault(); go(); } }, true);
-  document.addEventListener('keydown', function (e) { if ((e.ctrlKey && e.shiftKey && (e.code === 'KeyK')) || (e.altKey && e.shiftKey && e.code === 'KeyM')) { e.preventDefault(); go(); } });
-})();
-</script>
+
 </body>
 </html>
