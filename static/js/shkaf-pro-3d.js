@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=38';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=38';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=39';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=39';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -54,6 +54,8 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     if (c.img) window.KCCAT.tex(c.img, cv => { const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.MirroredRepeatWrapping; tex.anisotropy = 8; m.map = tex; m.color.set('#ffffff'); m.needsUpdate = true; invalidate(); });
     catCache.set(id, m); return m;
   }
+  // ручки рисуем, если они включены и выбрана не система TIP-ON (открывание нажатием)
+  const hOn = S => S.doors.handles !== false && !(typeof KIS !== 'undefined' && S.hw && S.hw.open && KIS.open && KIS.open[S.hw.open] && KIS.open[S.hw.open].tipon);
   function bodyHex(S) { return S.custom || (PALETTE[S.color] || PALETTE[0])[1]; }
 
   function build(S) {
@@ -152,7 +154,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
           box(c.w - .4, fh - .3, t, (col.rcat && catM(col.rcat)) || CB, c.xa + .2, y + .15, D - t, dm, grp);   // фасад ящика: 2-й цвет отсека
           box(1.2, fh - 4, D - 12, M.steel, c.xa + 1.2, y + 1.5, 6, dm, grp); box(1.2, fh - 4, D - 12, M.steel, c.xb - 2.4, y + 1.5, 6, dm, grp);
           box(c.w - 4.8, fh - 4, 1.2, M.inner, c.xa + 2.4, y + 1.5, 6, dm, grp); box(c.w - 4.8, 1, D - 12, M.inner, c.xa + 2.4, y + 1.2, 6, dm, grp);
-          if (S.doors.handles !== false) box(Math.min(14, c.w * .5), .8, 1.4, M.chrome, c.xa + c.w / 2 - Math.min(14, c.w * .5) / 2, y + fh - 4, D, dm, grp);
+          if (hOn(S)) box(Math.min(14, c.w * .5), .8, 1.4, M.chrome, c.xa + c.w / 2 - Math.min(14, c.w * .5) / 2, y + fh - 4, D, dm, grp);
           doorsAnim.push({ key, apply: f => { grp.position.z = f * (D - 14) * .8; } });
         }
         else if (it.type === 'shoe') {
@@ -242,12 +244,12 @@ export function createPro3D(container, hooks = {}, opts = {}) {
           box(w - 2 * t, .8, d - 4, uB, x0 + t, y + hh * .35, zf + 2, base).rotation.x = -.26;
           const pv = new THREE.Group(); pv.position.set(x0 + .2, y, zf + d); wg.add(pv);
           box(w - .4, hh, 1.8, fmat, 0, 0, 0, meta, pv); if (fill === 'mdf') grooves(0, 0, w - .4, hh, 1.8, (S.doors.mp || 'frame'), (MILL_PITCH[S.doors.mp || 'frame'] || 10), meta, pv);
-          if (S.doors.handles !== false) box(Math.min(20, w * .4), .9, 1.6, M.chrome, (w - .4) / 2 - Math.min(20, w * .4) / 2, hh - 4, 1.8, meta, pv);
+          if (hOn(S)) box(Math.min(20, w * .4), .9, 1.6, M.chrome, (w - .4) / 2 - Math.min(20, w * .4) / 2, hh - 4, 1.8, meta, pv);
           doorsAnim.push({ key, apply: f => { pv.rotation.x = 72 * DEG * f; } });
         } else if (u.kind === 'drawers') {
           const grp = new THREE.Group(); wg.add(grp);
           box(w - .4, hh, 1.8, fmat, x0 + .2, y, zf + d - 1.8, meta, grp); box(w - 2 * t - 2, hh - 4, d - 8, M.inner, x0 + t + 1, y + 1.5, zf + 2, meta, grp);
-          if (S.doors.handles !== false) box(Math.min(20, w * .4), .8, 1.4, M.chrome, x0 + w / 2 - Math.min(20, w * .4) / 2, y + hh - 4, zf + d, meta, grp);
+          if (hOn(S)) box(Math.min(20, w * .4), .8, 1.4, M.chrome, x0 + w / 2 - Math.min(20, w * .4) / 2, y + hh - 4, zf + d, meta, grp);
           doorsAnim.push({ key, apply: f => { grp.position.z = f * (d - 8) * .8; } });
         } else {
           if (k < fn - 1) box(w - 2 * t - .2, t, d - 3, uB, x0 + t + .1, y + hh + .15 - t / 2, zf + 1, base);
@@ -258,7 +260,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         for (let k = 0; k < dn; k++) {
           const key = 'u' + u.id + '.d' + k, meta = Object.assign({ key }, base), left = k < dn / 2, pv = new THREE.Group(); pv.position.set(x0 + (left ? k * dw + .2 : (k + 1) * dw - .2), ph2 + .2, zf + d); wg.add(pv);
           const dx = left ? 0 : -(dw - .4); box(dw - .4, hb - .4, 1.8, fmat, dx, 0, 0, meta, pv); if (fill === 'mdf') grooves(dx, 0, dw - .4, hb - .4, 1.8, (S.doors.mp || 'frame'), (MILL_PITCH[S.doors.mp || 'frame'] || 10), meta, pv);
-          if (S.doors.handles !== false) box(.9, Math.min(24, hb * .3), 1.6, M.chrome, left ? dx + dw - 4 : dx + 3, hb / 2 - 12, 1.8, meta, pv);
+          if (hOn(S)) box(.9, Math.min(24, hb * .3), 1.6, M.chrome, left ? dx + dw - 4 : dx + 3, hb / 2 - 12, 1.8, meta, pv);
           doorsAnim.push({ key, apply: f => { pv.rotation.y = (left ? -1 : 1) * 105 * DEG * f; } });
         }
       }
@@ -289,7 +291,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       for (let k = 0; k < (b.drw | 0); k++) {
         const dn = b.drw | 0, fl = (L - 2 * t) / dn - .3, z = t + k * (L - 2 * t) / dn + .15, key = 'b' + b.id + '.dr' + k, dm = Object.assign({ key }, base), grp = new THREE.Group(); bg.add(grp);
         box(1.8, b.sh - 4, fl, bB, W, b.lg + 2, z, dm, grp); box(36, Math.max(4, b.sh - 10), fl - 4, M.inner, W - 36, b.lg + 4, z + 2, dm, grp);
-        if (S.doors.handles !== false) box(1.2, .9, Math.min(16, fl * .5), M.chrome, W + 1.8, b.lg + b.sh - 6, z + fl / 2 - Math.min(16, fl * .5) / 2, dm, grp);
+        if (hOn(S)) box(1.2, .9, Math.min(16, fl * .5), M.chrome, W + 1.8, b.lg + b.sh - 6, z + fl / 2 - Math.min(16, fl * .5) / 2, dm, grp);
         doorsAnim.push({ key, apply: f => { grp.position.x = f * 36; } });
       }
       if (b.kind === 'bunk') {
@@ -327,15 +329,15 @@ export function createPro3D(container, hooks = {}, opts = {}) {
           const left = hg === 'L'; pv.position.set(left ? d.x : d.x + d.w, d.y, D + .3);
           const dx = left ? 0 : -d.w;
           face(pv, dx, 0);
-          if (S.doors.handles !== false) box(.9, Math.min(24, d.h * .3), 1.6, M.chrome, left ? dx + d.w - 4 : dx + 3, mz ? Math.min(6, d.h / 3) : d.h / 2 - 12, th, meta, pv);
+          if (hOn(S)) box(.9, Math.min(24, d.h * .3), 1.6, M.chrome, left ? dx + d.w - 4 : dx + 3, mz ? Math.min(6, d.h / 3) : d.h / 2 - 12, th, meta, pv);
           doorsAnim.push({ key, apply: f => { pv.rotation.y = (left ? -1 : 1) * 105 * DEG * f; } });
         } else if (hg === 'U') {
           pv.position.set(d.x, d.y + d.h, D + .3); face(pv, 0, -d.h);
-          if (S.doors.handles !== false) box(Math.min(24, d.w * .4), .9, 1.6, M.chrome, d.w / 2 - Math.min(24, d.w * .4) / 2, -d.h + 3, th, meta, pv);
+          if (hOn(S)) box(Math.min(24, d.w * .4), .9, 1.6, M.chrome, d.w / 2 - Math.min(24, d.w * .4) / 2, -d.h + 3, th, meta, pv);
           doorsAnim.push({ key, apply: f => { pv.rotation.x = -105 * DEG * f; } });
         } else {
           pv.position.set(d.x, d.y, D + .3); face(pv, 0, 0);
-          if (S.doors.handles !== false) box(Math.min(24, d.w * .4), .9, 1.6, M.chrome, d.w / 2 - Math.min(24, d.w * .4) / 2, d.h - 4, th, meta, pv);
+          if (hOn(S)) box(Math.min(24, d.w * .4), .9, 1.6, M.chrome, d.w / 2 - Math.min(24, d.w * .4) / 2, d.h - 4, th, meta, pv);
           doorsAnim.push({ key, apply: f => { pv.rotation.x = 95 * DEG * f; } });
         }
       }
