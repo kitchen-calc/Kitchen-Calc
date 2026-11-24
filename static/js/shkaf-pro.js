@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
 import * as C from '/static/js/shkaf-pro-core.js?v=34';
-import { TPL } from '/static/js/shkaf-tpl.js?v=1';
+import { TPL } from '/static/js/shkaf-tpl.js?v=2';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=12';
@@ -453,7 +453,7 @@ function sideView() {
   return `<div class="sh">${esc(S.name)}</div><div class="note">Вращайте камеру. Нажмите на двери, чтобы открыть.</div>
     <div class="r">${btn(0, 'PRO.openAll(true)', '↔ Открыть всё')}${btn(0, 'PRO.openAll(false)', 'Закрыть')}</div>
     <div class="sub">Параметры</div>
-    ${S.cols.some(c => !c.gap && !c.det) ? `<div class="r"><span>Размер</span><b>${mm(g.W)} × ${mm(S.H)} × ${mm(S.D)} мм</b></div>` : ''}
+    ${S.cols.some(c => !c.gap && !c.det) ? `<div class="r"><span>Размер</span><b>${mm(g.W)} × ${mm(g.totalH)} × ${mm(S.D)} мм</b></div>` : ''}
     <div class="r"><span>Комната</span><b>${(() => { const P = roomPoly(S); return mm(Math.max(...P.map(p => p[0])) - Math.min(...P.map(p => p[0]))) + ' × ' + mm(Math.max(...P.map(p => p[1])) - Math.min(...P.map(p => p[1]))) + ' мм'; })()}</b></div>
     <div class="r"><span>Цвет</span><b>${esc(S.cat && window.KCCAT ? window.KCCAT.name(S.cat) : (S.custom || PALETTE[S.color][0]))}</b></div>
     <div class="r"><span>Шкафов и отсеков</span><b>${S.cols.filter(c => !c.gap).length}${S.mezzes.length ? ' + антресолей: ' + S.mezzes.length : ''}</b></div>
