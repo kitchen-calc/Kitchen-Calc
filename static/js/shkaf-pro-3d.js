@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=40';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=40';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=41';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=41';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -133,6 +133,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       box(m.w - 2 * t, m.h - 2 * t, .3, M.back, m.x0 + t, m.yb + t, 0, meta);
       m.dv.forEach(off => box(t, m.h - 2 * t, mbd, M.body, m.ix0 + off, m.iy0, z0, meta));
       m.comp.forEach(c => { for (let k = 1; k <= (m.shelves | 0); k++) box(c.x1 - c.x0 - .2, t, D - 2.5, M.body, c.x0 + .1, m.iy0 + (m.iy1 - m.iy0) * k / ((m.shelves | 0) + 1), z0, meta); });
+      if (S.mezzes[m.mi] && S.mezzes[m.mi].led) m.comp.forEach(c => { const cw = c.x1 - c.x0, ns = m.shelves | 0; for (let k = 0; k <= ns; k++) { const yy = k === ns ? m.iy1 - .7 : m.iy0 + (m.iy1 - m.iy0) * (k + 1) / (ns + 1) - .7; box(cw - 1, .6, 1.4, M.led, c.x0 + .5, yy, D - 6, meta); box(cw - 1, 7, D - 14, M.glowMat, c.x0 + .5, yy - 6.6, 7); } });   // подсветка: под каждой полкой и под верхом
     });
     // наполнение
     S.cols.forEach((col, ci) => inCol(ci, () => {

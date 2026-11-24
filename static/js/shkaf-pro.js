@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=40';
-import { TPL } from '/static/js/shkaf-tpl.js?v=9';
+import * as C from '/static/js/shkaf-pro-core.js?v=41';
+import { TPL } from '/static/js/shkaf-tpl.js?v=10';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=12';
@@ -299,6 +299,7 @@ function sideMezz() {
   (m.div || []).forEach((v, i) => { h += stepper('Перегородка ' + (i + 1) + ' (от левой стенки)', 'mzd.' + i, v, 1) + `<div class="r">${btn(0, `PRO.delDiv(${i})`, 'Удалить эту перегородку')}</div>`; });
   h += `<div class="sub">Двери по отсекам антресоли</div>`;
   gz.comp.forEach((c, ci) => { const mode = (m.dir && m.dir[ci]) || 'swing'; h += `<div class="r"><span>Отсек ${ci + 1} · ${mm(c.x1 - c.x0)} мм</span></div>` + stepper('Дверей (0 — открытый)', 'mzc.' + ci, getVal('mzc.' + ci), 1, 'шт') + `<div class="r"><span>Открывание</span>${[['swing', 'в бока'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => btn(mode === k, `PRO.mdir(${ci},'${k}')`, t)).join('')}</div>`; });
+  h += `<div class="r">${btn(!!m.led, 'PRO.mezzLed()', m.led ? '💡 Подсветка под полками: вкл' : '💡 Подсветка под полками')}</div>`;
   h += `<div class="sub">Быстро поставить</div><div class="r">${btn(0, 'PRO.mezzFull()', '↔ На всю ширину')}${g.cols.map((c, i) => btn(0, `PRO.mezzOver(${i})`, (c.gap ? 'над проёмом ' : 'над отсеком ') + (i + 1))).join('')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.dupMezz()', 'Копия')}${btn(0, 'PRO.delMezz()', 'Удалить')}${btn(0, 'PRO.global()', '✕ Весь шкаф')}</div>`;
   return h;
@@ -489,7 +490,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=46');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=47');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -633,7 +634,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=47');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=48');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -877,6 +878,7 @@ window.PRO = {
   light: () => { if (!K) return; const on = !K.isLight(); K.setLight(on); $('lightBtn').textContent = on ? '💡 Свет: вкл' : '🌙 Свет: выкл'; },
   leds: () => { if (!K) return; const on = !K.isLeds(); K.setLeds(on); $('ledBtn').textContent = on ? '✨ Подсветка: вкл' : '▫ Подсветка: выкл'; },
   rot: on => { if (K) K.setRotate(on); }, sideToggle, drawerAbove: () => drawerNear(1), drawerBelow: () => drawerNear(-1), between, vpCenter: () => mutate(() => { const f = findItem(sel.id); if (f) f.it.x = r1(f.col.w / 2 - S.t / 2); }), idoorDir: v => mutate(() => { const f = findItem(sel.id); if (f) f.it.dir = v; }),
+  mezzLed: () => mutate(() => { const m = S.mezzes[sel.mi]; if (m) { if (m.led) delete m.led; else m.led = true; } }),
   unHang: () => mutate(() => { const u = S.units[sel.ui]; if (u) { if (u.hang) delete u.hang; else u.hang = true; } }),
   idoorFill: () => mutate(() => { const f = findItem(sel.id); if (f) { if (f.it.fill === 'mirror') delete f.it.fill; else f.it.fill = 'mirror'; } }),
   idoorPush: () => mutate(() => { const f = findItem(sel.id); if (f) { if (f.it.push) delete f.it.push; else f.it.push = true; } }),
