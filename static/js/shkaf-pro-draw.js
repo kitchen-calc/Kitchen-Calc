@@ -1,7 +1,7 @@
 /* Чертежи конструктора шкафа PRO в стиле AutoCAD, лист A4 (альбомный). Размеры на чертежах — в мм. Только для режима мастера. */
 import { OPEN_KINDS, openVariantName, roomEdges, openCenter } from '/static/js/room-open-core.js?v=12';
 import { modelLocal, placeLocal, wardrobeSolids, detSolid, unitSolid, bedSolid, panelSolid, objSolid } from '/static/js/draw-solids.js?v=4';
-import { runInfo, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1, objsParts } from '/static/js/shkaf-pro-core.js?v=35';
+import { runInfo, bottomSegs, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1, objsParts } from '/static/js/shkaf-pro-core.js?v=36';
 
 const F = 1.4;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -43,8 +43,11 @@ function drawFront(S, g, x0, y0, sc, o) {
     out.push(rect(X(r.x0), Y(RH), rw * k10, (RH - S.plinth) * k10, 'o'));
     const ri = runInfo(S, g, r);
     if (!ri.noL) out.push(rect(X(r.x0), Y(RH), t * k10, (RH - S.plinth) * k10, 'o', 'url(#h1)')); if (!ri.noR) out.push(rect(X(r.x1 - t), Y(RH), t * k10, (RH - S.plinth) * k10, 'o', 'url(#h1)'));
-    out.push(rect(X(r.x0 + t), Y(RH), (rw - 2 * t) * k10, t * k10, 'o', 'url(#h1)'), rect(X(r.x0 + t), Y(S.plinth + t), (rw - 2 * t) * k10, t * k10, 'o', 'url(#h1)'));
-    out.push(rect(X(r.x0 + t), Y(S.plinth), (rw - 2 * t) * k10, S.plinth * k10, 't', '#efefef'), text(X((r.x0 + r.x1) / 2), Y(S.plinth / 2) + 3, 'цоколь ' + mm(S.plinth), 7));
+    out.push(rect(X(r.x0 + t), Y(RH), (rw - 2 * t) * k10, t * k10, 'o', 'url(#h1)'));
+    bottomSegs(S, g, r).forEach(sg => {   // дно и цоколь — только там, где у отсека есть дно
+      const a = sg[0] + (sg[0] <= r.x0 + .1 ? t : 0), b = sg[1] - (sg[1] >= r.x1 - .1 ? t : 0); if (b - a < 1) return;
+      out.push(rect(X(a), Y(S.plinth + t), (b - a) * k10, t * k10, 'o', 'url(#h1)'), rect(X(a), Y(S.plinth), (b - a) * k10, S.plinth * k10, 't', '#efefef'), text(X((a + b) / 2), Y(S.plinth / 2) + 3, 'цоколь ' + mm(S.plinth), 7));
+    });
   });
   g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === g.cols.length) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap || R.split || (S.cols[k] && S.cols[k].nl)) return; out.push(rect(X(b.x), Y(L.y1), t * k10, (L.y1 - g.y0) * k10, 'o', 'url(#h1)')); });
   g.cols.forEach(c => { if (c.gap) out.push(text(X((c.xa + c.xb) / 2), Y(S.H / 2), 'проём ' + mm(c.w), 8, 'middle', 'fill="#555"'), line(X(c.xa), Y(S.H / 2) + 6, X(c.xb), Y(S.H / 2) + 6, 'c')); });
@@ -193,7 +196,7 @@ function sheetColumn(S, bp, ci, no, total) {
   let o = '';
   const T = S.t;
   o += rect(X(c.xa - T), Y(c.H), T * 10 * sc, (c.H - S.plinth) * 10 * sc, 'o', 'url(#h1)') + rect(X(c.xb), Y(c.H), T * 10 * sc, (c.H - S.plinth) * 10 * sc, 'o', 'url(#h1)');
-  o += rect(X(c.xa - T), Y(c.H), (c.w + 2 * T) * 10 * sc, T * 10 * sc, 'o', 'url(#h1)') + rect(X(c.xa - T), Y(S.plinth + T), (c.w + 2 * T) * 10 * sc, T * 10 * sc, 'o', 'url(#h1)');
+  o += rect(X(c.xa - T), Y(c.H), (c.w + 2 * T) * 10 * sc, T * 10 * sc, 'o', 'url(#h1)') + (col && col.nbot ? '' : rect(X(c.xa - T), Y(S.plinth + T), (c.w + 2 * T) * 10 * sc, T * 10 * sc, 'o', 'url(#h1)'));
   const sub = { xa: c.xa, xb: c.xb, w: c.w };
   const fake = Object.assign({}, S, { cols: [col] }), gg = Object.assign({}, g, { cols: [sub] });
   // наполнение отсека

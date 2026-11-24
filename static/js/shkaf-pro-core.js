@@ -401,6 +401,16 @@ export function warnings(S) {
 }
 
 /* ---- двери ---- */
+export function bottomSegs(S, g, r) {   // куски дна секции: у отсеков «без дна» (col.nbot) дна и цоколя нет — внизу пусто до пола
+  const segs = []; let cur = [r.x0, r.x0];
+  for (let i = r.a; i <= r.b; i++) {
+    const c = g.cols[i], col = S.cols[i]; if (!c || !(col && col.nbot)) continue;
+    const a = i === r.a ? r.x0 : c.xa, b = i === r.b ? r.x1 : c.xb;
+    if (a - cur[0] > .5) segs.push([cur[0], a]); cur = [b, b];
+  }
+  if (r.x1 - cur[0] > .5) segs.push([cur[0], r.x1]);
+  return segs;
+}
 export function runInfo(S, g, r) {   // что убрано у секции: левый / правый бок, спинка по отсекам, перегородки
   const main = g.runs.filter(x => !x.det), noL = !!S.nsl && main[0] === r, noR = !!S.nsr && main[main.length - 1] === r, segs = [];
   let cur = null;
@@ -511,13 +521,14 @@ export function buildParts(S) {
   let joints = hasMain0 ? 8 : 0, feet = 0, hinges0 = 0, handles0 = 0, push0 = 0, joints_u = 0;
   g.runs.forEach((r, ri) => {
     const rw = r.x1 - r.x0, k = r.b - r.a + 1, D = r.D, hs = r.H - ph, lbl = g.runs.length > 1 ? ' (секция ' + (ri + 1) + ')' : '';
-    add('Корпус', 'Дно' + lbl, 1, rw, D, t, body, (rw + 2 * D) / 100, 'на всю ширину: боковины и спинка стоят на дне; кромка перед + 2 торца');
+    const bsg = bottomSegs(S, g, r);
+    bsg.forEach((sg, si) => add('Корпус', 'Дно' + lbl + (bsg.length > 1 || sg[1] - sg[0] < rw - .5 ? ' (часть ' + (si + 1) + ')' : ''), 1, sg[1] - sg[0], D, t, body, (sg[1] - sg[0] + 2 * D) / 100, sg[1] - sg[0] < rw - .5 ? 'у отсека без дна дна нет; кромка перед + торцы' : 'на всю ширину: боковины и спинка стоят на дне; кромка перед + 2 торца'));
     const ri2 = runInfo(S, g, r), nSides = 2 - (ri2.noL ? 1 : 0) - (ri2.noR ? 1 : 0), nPart = k - 1 - ri2.rmPart;
     if (nSides > 0) add('Корпус', 'Боковина' + lbl, nSides, hs - t, D, t, body, (hs - t) / 100, 'стоит на дне; кромка по переднему торцу');
     add('Корпус', 'Крышка (верх)' + lbl, 1, rw - 2 * t, D, t, body, (rw - 2 * t) / 100, 'между боковинами');
     if (nPart > 0) add('Корпус', 'Перегородка отсека' + lbl, nPart, hs - 2 * t, D, t, body, (hs - 2 * t) / 100, 'стоит на дне, под крышкой');
     ri2.segs.forEach((sg, si) => add('Корпус', 'Задняя стенка' + lbl + (ri2.segs.length > 1 ? ' (часть ' + (si + 1) + ')' : ''), 1, sg[1] - sg[0], hs - 2 * t, .3, 'ХДФ 3 мм', 0, 'ставится на дно между боковин', 'hdf'));
-    add('Корпус', 'Цоколь' + lbl, 1, rw - 2 * t, ph, t, body, (rw - 2 * t) / 100, 'кромка по верхней длинной стороне');
+    bsg.forEach(sg => { const L = (sg[1] - sg[0]) - (sg[0] <= r.x0 + .1 ? t : 0) - (sg[1] >= r.x1 - .1 ? t : 0); if (L > 1) add('Корпус', 'Цоколь' + lbl, 1, L, ph, t, body, L / 100, 'кромка по верхней длинной стороне'); });
     joints += k * 8 + 8; feet += Math.max(2, Math.ceil(rw / 60) * 2);
   });
   g.mz.forEach((m, mi) => {
@@ -711,7 +722,7 @@ export function buildParts(S) {
       }
       else if (it.type === 'idoor') {
         const iw = idoorSpan(c, c.w, t, it).w, ih = it.y1 - it.y;
-        add('Двери', 'Дверца в отсеке' + lbl, 1, ih - .4, iw - .4, t, body, (2 * (ih + iw)) / 100, 'открывание: ' + ({ L: 'влево', R: 'вправо', U: 'вверх', D: 'вниз' }[it.dir] || 'влево') + (it.push ? ', нажатием (push), без ручки' : '') + (iw < (it.w || (c.w - it.x)) - .5 ? '; до вертикальной панели' : ''));
+        add('Двери', 'Дверца в отсеке' + lbl, 1, ih - .4, iw - .4, t, body, (2 * (ih + iw)) / 100, 'открывание: ' + ({ L: 'влево', R: 'вправо', U: 'вверх', D: 'вниз' }[it.dir] || 'влево') + (it.push ? ', нажатием (push), без ручки' : '') + (it.dz > 0 ? '; утоплена на ' + mm(it.dz) + ' мм от переда' : '') + (iw < (it.w || (c.w - it.x)) - .5 ? '; до вертикальной панели' : ''));
         if (it.fill === 'mirror') add('Двери', 'Зеркало на дверцу' + lbl, 1, ih - 1.2, iw - 1.2, .4, FILLS.mirror + ' 4 мм', (2 * (ih + iw)) / 100, 'клеится на дверцу, полировка кромки', 'mirror');
         if (it.dir === 'U') lifts += 2; else if (it.dir === 'D') lowers += 2; else hinges0 += ih <= 90 ? 2 : ih <= 160 ? 3 : 4;
         if (it.push) push0++; else handles0++;
@@ -813,6 +824,7 @@ export function sanitize(S) {
     if (c && c.dp === false) col.dp = false;
     if (c && c.nk) col.nk = true;
     if (c && c.nl) col.nl = true;
+    if (c && c.nbot) col.nbot = true;
     if (c && c.det && isFinite(c.det.x) && isFinite(c.det.z)) col.det = { x: r1(n(c.det.x, -1500, 3000, 0)), z: r1(n(c.det.z, -1500, 3000, 0)), rot: [0, 90, 180, 270].includes(c.det.rot) ? c.det.rot : 0 };
     if (c && FILLS[c.df] && c.df !== 'dsp') col.df = c.df;
     if (c && catId(c.cat)) col.cat = c.cat; if (c && catId(c.dcat)) col.dcat = c.dcat; if (c && catId(c.rcat)) col.rcat = c.rcat;
@@ -827,7 +839,7 @@ export function sanitize(S) {
       if (it.type === 'shelf') b.d = it.d ? n(it.d, 15, 85, 57.5) : null;
       if ((it.type === 'shelf' || SPLITTABLE.includes(it.type)) && (it.sd === 'L' || it.sd === 'R')) b.sd = it.sd;
       if (it.type === 'drawer') { b.fh = n(it.fh, 8, 40, 18); b.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; }
-      if (it.type === 'idoor') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 250, 0); b.w = it.w ? n(it.w, 8, 250, 40) : null; b.dir = ['L', 'R', 'U', 'D'].includes(it.dir) ? it.dir : 'L'; if (it.fill === 'mirror') b.fill = 'mirror'; if (it.push) b.push = true; }
+      if (it.type === 'idoor') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 250, 0); b.w = it.w ? n(it.w, 8, 250, 40) : null; b.dir = ['L', 'R', 'U', 'D'].includes(it.dir) ? it.dir : 'L'; if (it.fill === 'mirror') b.fill = 'mirror'; if (it.push) b.push = true; if (Number(it.dz) > 0) b.dz = r1(n(it.dz, 0, 80, 0)); }
       if (it.type === 'shoe') b.n = n(it.n, 1, 6, 3) | 0;
       if (it.type === 'basket') b.h = n(it.h, 10, 40, 18);
       if (it.type === 'vpanel') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 200, 0); b.sh = it.sh === 'R' ? 'R' : 'L'; }
