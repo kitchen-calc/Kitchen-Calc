@@ -508,7 +508,7 @@ export function buildParts(S) {
   const addHw = (grp, name, qty, unit, price, note) => { qty = Math.round(qty * 100) / 100; if (qty > 0) hw.push({ grp, name, qty, unit: unit || 'шт.', price: Math.round(price || 0), note: note || '' }); };
   const bd = D - .3, ph = S.plinth, hs = H - ph;
   const hasMain0 = (S.cols || []).some(c => !c.gap);
-  let joints = hasMain0 ? 8 : 0, feet = 0, hinges0 = 0, handles0 = 0, joints_u = 0;
+  let joints = hasMain0 ? 8 : 0, feet = 0, hinges0 = 0, handles0 = 0, push0 = 0, joints_u = 0;
   g.runs.forEach((r, ri) => {
     const rw = r.x1 - r.x0, k = r.b - r.a + 1, D = r.D, hs = r.H - ph, lbl = g.runs.length > 1 ? ' (секция ' + (ri + 1) + ')' : '';
     add('Корпус', 'Дно' + lbl, 1, rw, D, t, body, (rw + 2 * D) / 100, 'на всю ширину: боковины и спинка стоят на дне; кромка перед + 2 торца');
@@ -711,9 +711,10 @@ export function buildParts(S) {
       }
       else if (it.type === 'idoor') {
         const iw = idoorSpan(c, c.w, t, it).w, ih = it.y1 - it.y;
-        add('Двери', 'Дверца в отсеке' + lbl, 1, ih - .4, iw - .4, t, body, (2 * (ih + iw)) / 100, 'открывание: ' + ({ L: 'влево', R: 'вправо', U: 'вверх', D: 'вниз' }[it.dir] || 'влево') + (iw < (it.w || (c.w - it.x)) - .5 ? '; до вертикальной панели' : ''));
+        add('Двери', 'Дверца в отсеке' + lbl, 1, ih - .4, iw - .4, t, body, (2 * (ih + iw)) / 100, 'открывание: ' + ({ L: 'влево', R: 'вправо', U: 'вверх', D: 'вниз' }[it.dir] || 'влево') + (it.push ? ', нажатием (push), без ручки' : '') + (iw < (it.w || (c.w - it.x)) - .5 ? '; до вертикальной панели' : ''));
+        if (it.fill === 'mirror') add('Двери', 'Зеркало на дверцу' + lbl, 1, ih - 1.2, iw - 1.2, .4, FILLS.mirror + ' 4 мм', (2 * (ih + iw)) / 100, 'клеится на дверцу, полировка кромки', 'mirror');
         if (it.dir === 'U') lifts += 2; else if (it.dir === 'D') lowers += 2; else hinges0 += ih <= 90 ? 2 : ih <= 160 ? 3 : 4;
-        handles0++;
+        if (it.push) push0++; else handles0++;
       }
       else if (it.type === 'vpanel') add('Наполнение', 'Вертикальная панель' + lbl, 1, it.y1 - it.y, D - 2.5, t, body, (it.y1 - it.y) / 100);
     });
@@ -743,6 +744,7 @@ export function buildParts(S) {
   addHw('Двери', lSel ? lSel.ru + ' (на дверь)' : 'Подъёмник (газлифт) для дверей вверх', lifts, 'шт.', lSel ? Math.round(lSel.price / 2) : 85000);
   addHw('Двери', 'Откидной механизм (ограничители) для дверей вниз', lowers, 'шт.', 45000);
   addHw('Двери', HDN, handles + handles0, 'шт.', HDP);
+  { const tp = typeof KIS !== 'undefined' && KIS.open && KIS.open.tipon_s; addHw('Двери', tp ? tp.ru : 'Толкатель push-to-open (без ручки)', push0, 'шт.', tp ? tp.price : 40000); }
   if (slidingN) {
     let kit = T.doorKit * Math.pow(slidingN / 3, .9); const rw = g.runs[0].x1 - g.runs[0].x0;
     if (sSel) kit = slidingN <= 2 ? sSel.p2 : (slidingN === 3 ? sSel.p3 : sSel.p3 * slidingN / 3); else if (rw > 270) kit += (rw / 100 - 2.7) * 2 * T.rail;
@@ -825,7 +827,7 @@ export function sanitize(S) {
       if (it.type === 'shelf') b.d = it.d ? n(it.d, 15, 85, 57.5) : null;
       if ((it.type === 'shelf' || SPLITTABLE.includes(it.type)) && (it.sd === 'L' || it.sd === 'R')) b.sd = it.sd;
       if (it.type === 'drawer') { b.fh = n(it.fh, 8, 40, 18); b.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; }
-      if (it.type === 'idoor') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 250, 0); b.w = it.w ? n(it.w, 8, 250, 40) : null; b.dir = ['L', 'R', 'U', 'D'].includes(it.dir) ? it.dir : 'L'; }
+      if (it.type === 'idoor') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 250, 0); b.w = it.w ? n(it.w, 8, 250, 40) : null; b.dir = ['L', 'R', 'U', 'D'].includes(it.dir) ? it.dir : 'L'; if (it.fill === 'mirror') b.fill = 'mirror'; if (it.push) b.push = true; }
       if (it.type === 'shoe') b.n = n(it.n, 1, 6, 3) | 0;
       if (it.type === 'basket') b.h = n(it.h, 10, 40, 18);
       if (it.type === 'vpanel') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 200, 0); b.sh = it.sh === 'R' ? 'R' : 'L'; }
