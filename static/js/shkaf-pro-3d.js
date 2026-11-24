@@ -77,10 +77,10 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     const KP = { panel: 'p:', unit: 'u:', bed: 'b:' };
     const freeWrap = (kind, it0, fn) => {   // предмет с собственным положением в комнате (fp) строится в своей группе: двигается и крутится независимо от шкафа
       if (!it0.fp) { fn(it0); return; }
-      const f = itemFoot(S, kind, it0), grp = new THREE.Group();
+      const f = itemFoot(S, kind, it0), grp = new THREE.Group();   // у панели pz — отступ от стены внутри её габарита (не сбрасываем)
       grp.position.set(it0.fp.x - f.mx, 0, it0.fp.z - f.mz); grp.rotation.y = (it0.fp.rot || 0) * DEG; root.add(grp); keyGroups.set(KP[kind] + it0.id, grp);
       const sv = wg; wg = grp;
-      try { fn(Object.assign({}, it0, { x: 0, pz: 0, mount: it0.mount === 'front' ? 'wall' : it0.mount })); } finally { wg = sv; }
+      try { fn(Object.assign({}, it0, { x: 0, pz: kind === 'panel' ? it0.pz : 0, mount: it0.mount === 'front' ? 'wall' : it0.mount })); } finally { wg = sv; }
     };
     const detGroups = new Map();
     const inCol = (ci, fn) => {   // отделённый шкаф строится в своей группе и стоит в комнате где угодно
