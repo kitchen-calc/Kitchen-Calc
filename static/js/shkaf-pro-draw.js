@@ -1,7 +1,7 @@
 /* Чертежи конструктора шкафа PRO в стиле AutoCAD, лист A4 (альбомный). Размеры на чертежах — в мм. Только для режима мастера. */
 import { OPEN_KINDS, openVariantName, roomEdges, openCenter } from '/static/js/room-open-core.js?v=12';
 import { modelLocal, placeLocal, wardrobeSolids, detSolid, unitSolid, bedSolid, panelSolid, objSolid } from '/static/js/draw-solids.js?v=4';
-import { runInfo, bottomSegs, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1, objsParts } from '/static/js/shkaf-pro-core.js?v=36';
+import { runInfo, bottomSegs, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colFoot, colRect, wfoot, roomPoly, itemRect, itemBase, freeItem, objFoot, objPoly, objRect, OBJ_KINDS, BED_STYLES, bedDims, PANEL_KINDS, geom, ext, doorList, buildParts, pricing, edgeTotals, ITEM_TYPES, PALETTE, FILLS, r1, objsParts } from '/static/js/shkaf-pro-core.js?v=38';
 
 const F = 1.4;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -88,7 +88,7 @@ function drawFront(S, g, x0, y0, sc, o) {
   });
   (S.panels || []).forEach((p, i) => {
     const lbl = 'П' + (i + 1) + ' ' + (PANEL_KINDS[p.kind] || '').split(' ')[0];
-    if (p.kind === 'slats') { const sw = (p.sw || 100) / 10, sg = (p.sg || 20) / 10, vert = p.so !== 'h', span = vert ? p.w : p.h, cnt = Math.max(1, Math.floor((span + sg) / (sw + sg))); for (let k = 0; k < cnt; k++) { const o = k * (sw + sg); out.push(vert ? rect(X(p.x + o), Y(p.y + p.h), sw * k10, p.h * k10, 'o', 'url(#h2)') : rect(X(p.x), Y(p.y + o + sw), p.w * k10, sw * k10, 'o', 'url(#h2)')); } out.push(text(X(p.x + p.w / 2), Y(p.y + p.h / 2), lbl + ' ' + cnt + ' реек', 7)); }
+    if (p.kind === 'slats' || p.kind === 'soft') { const sw = (p.sw || 100) / 10, sg = (p.sg || 20) / 10, vert = p.so !== 'h', span = vert ? p.w : p.h, cnt = Math.max(1, Math.floor((span + sg) / (sw + sg))); for (let k = 0; k < cnt; k++) { const o = k * (sw + sg); out.push(vert ? rect(X(p.x + o), Y(p.y + p.h), sw * k10, p.h * k10, 'o', 'url(#h2)') : rect(X(p.x), Y(p.y + o + sw), p.w * k10, sw * k10, 'o', 'url(#h2)')); } out.push(text(X(p.x + p.w / 2), Y(p.y + p.h / 2), lbl + ' ' + cnt + ' реек', 7)); }
     else if (p.shape === 'round' || p.shape === 'oval') out.push(`<ellipse cx="${N(X(p.x + p.w / 2))}" cy="${N(Y(p.y + p.h / 2))}" rx="${N(p.w * k10 / 2)}" ry="${N(p.h * k10 / 2)}" ${ST.o} fill="url(#h2)"/>`, text(X(p.x + p.w / 2), Y(p.y + p.h / 2), lbl + (p.bl ? ' ✨' : ''), 7));
     else out.push(rect(X(p.x), Y(p.y + p.h), p.w * k10, p.h * k10, 'o', 'url(#h2)'), text(X(p.x + p.w / 2), Y(p.y + p.h / 2), lbl + (p.bl ? ' ✨' : ''), 7));
     out.push(text(X(p.x + p.w / 2), Y(p.y + p.h / 2) + 14, mm(p.w) + '×' + mm(p.h), 7, 'middle', 'fill="#0b6e8f"'));
