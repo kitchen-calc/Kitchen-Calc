@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=42';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=42';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=43';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=43';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -152,7 +152,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         }
         else if (it.type === 'drawer') {
           const y = it.y, fh = it.fh, key = 'w' + it.id, dm = { k: 'item', id: it.id, col: ci, key }, grp = new THREE.Group(); wg.add(grp);
-          box(c.w - .4, fh - .3, t, (col.rcat && catM(col.rcat)) || CB, c.xa + .2, y + .15, D - t, dm, grp);   // фасад ящика: 2-й цвет отсека
+          box(c.w - .4, fh - .3, t, (col.rcat && catM(col.rcat)) || (col.cat ? CB : ((S.doors.cat && catM(S.doors.cat)) || CB)), c.xa + .2, y + .15, D - t, dm, grp);   // фасад ящика: 2-й цвет отсека
           box(1.2, fh - 4, D - 12, M.steel, c.xa + 1.2, y + 1.5, 6, dm, grp); box(1.2, fh - 4, D - 12, M.steel, c.xb - 2.4, y + 1.5, 6, dm, grp);
           box(c.w - 4.8, fh - 4, 1.2, M.inner, c.xa + 2.4, y + 1.5, 6, dm, grp); box(c.w - 4.8, 1, D - 12, M.inner, c.xa + 2.4, y + 1.2, 6, dm, grp);
           if (hOn(S)) box(Math.min(14, c.w * .5), .8, 1.4, M.chrome, c.xa + c.w / 2 - Math.min(14, c.w * .5) / 2, y + fh - 4, D, dm, grp);
@@ -232,7 +232,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     (S.units || []).forEach((u0, ui) => freeWrap('unit', u0, u => {
       const uB = (u.cat && catM(u.cat)) || M.body;
       const base = { k: 'unit', i: ui }, ph2 = u.legs || 0, hb = u.h - ph2, w = u.w, d = u.d, x0 = u.x, zf = (u.pz || 0), fn = Math.max(1, u.n | 0), fill = u.fill || 'dsp';
-      const fmat = fill === 'dsp' || fill === 'mdf' ? uB : (fill === 'glass' ? M.glassClear : M.mirror);
+      const fmat = fill === 'dsp' || fill === 'mdf' ? (u.cat ? uB : ((S.doors.cat && catM(S.doors.cat)) || uB)) : (fill === 'glass' ? M.glassClear : M.mirror);   // фасады тумбы — цвет фасадов, если у тумбы нет своего
       box(w, t, d, uB, x0, ph2, zf, base); box(t, hb - t, d, uB, x0, ph2 + t, zf, base); box(t, hb - t, d, uB, x0 + w - t, ph2 + t, zf, base);
       if (u.seat) { box(w + 1, t, d + 1.5, uB, x0 - .5, u.h - t, zf, base); box(w + 1, 6, d + 1.5, M.cushion, x0 - .5, u.h, zf, base); } else box(w - 2 * t, t, d, uB, x0 + t, u.h - t, zf, base);
       box(w - 2 * t, hb - 2 * t, .3, M.back, x0 + t, ph2 + t, zf, base);
@@ -348,7 +348,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     (S.objs || []).forEach((q, qi) => {
       const t = q.mat === 'ply' ? 1.2 : S.t, BM = (q.cat && catM(q.cat)) || (q.color ? stdMat(q.color, { roughness: .55 }) : (q.mat === 'ply' ? stdMat('#d8bd8a', { roughness: .6 }) : M.body)), og = new THREE.Group(), f = objFoot(q), base = { k: 'obj', i: qi, id: q.id }, w = q.w, d = q.d, h = q.h;
       og.position.set(q.x - f.mx, q.y || 0, q.z - f.mz); og.rotation.y = (q.rot || 0) * DEG; root.add(og); objGroups.set(q.id, og); keyGroups.set('o:' + q.id, og);
-      const fmat = q.fill === 'dsp' || q.fill === 'mdf' ? BM : (q.fill === 'glass' ? M.glassClear : M.mirror), hnd = q.handles !== false;
+      const fmat = q.fill === 'dsp' || q.fill === 'mdf' ? ((q.cat || q.color || q.mat === 'ply') ? BM : ((S.doors.cat && catM(S.doors.cat)) || BM)) : (q.fill === 'glass' ? M.glassClear : M.mirror), hnd = q.handles !== false;   // двери шкафчика — цвет фасадов
       const bx = (bw, bh, bd, mat, x, y, z, meta, par) => box(bw, bh, bd, mat, x, y, z, meta || base, par || og);
       ledStrips(q).forEach(sx => { const lm = new THREE.Mesh(new THREE.BoxGeometry(sx.w, sx.h, sx.d), M.led); lm.position.set(sx.x + sx.w / 2, sx.y + sx.h / 2, sx.z + sx.d / 2); og.add(lm); });   // подсветка изделия
       const slab = (poly, y, th, mat) => {   // плита по контуру (дно, крышка, полка)

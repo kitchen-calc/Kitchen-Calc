@@ -718,7 +718,7 @@ export function buildParts(S) {
           if (it.type === 'rod') { rods++; add('Наполнение', 'Штанга ⌀25' + lbl + sl, 1, cw - .6, 2.5, 2.5, 'Хром, труба 25×15', 0, 'длина ' + mm(cw - .6) + ' мм', 'metal'); }
           else if (it.type === 'drawer') {
             const bw = cw - .4;
-            if (c.rcat) curCat = c.rcat; add('Ящики', 'Фасад ящика' + lbl + sl, 1, bw, it.fh - .3, t, body, (2 * (bw + it.fh)) / 100); curCat = c.cat || '';   // 2-й цвет ящиков отсека
+            { const fc = c.rcat || (c.cat ? '' : catId(S.doors.cat)); if (fc) curCat = fc; } add('Ящики', 'Фасад ящика' + lbl + sl, 1, bw, it.fh - .3, t, body, (2 * (bw + it.fh)) / 100); curCat = c.cat || '';   // 2-й цвет ящиков отсека
             if (it.sys === 'tier') { add('Ящики', 'Боковина ящика' + lbl + sl, 2, D - 8, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Задняя ящика' + lbl + sl, 1, bw - 5.4, Math.max(8, it.fh - 6), t, body, 0); add('Ящики', 'Дно ящика' + lbl + sl, 1, bw - 3.6, D - 9, .3, 'ХДФ 3 мм', 0, '', 'hdf'); }
             drw[it.sys] = (drw[it.sys] || 0) + 1;
           }
@@ -751,7 +751,7 @@ export function buildParts(S) {
   Object.keys(drw).forEach(k => addHw('Ящики', 'Направляющие / система: ' + (DS(k) ? DS(k).ru : k), drw[k], 'комплект', (DS(k) && DS(k).price) || DRP));
   const doors = doorList(S); let hinges = 0, handles = 0, slidingN = 0;
   doors.forEach(d => {
-    curCat = (d.ci != null && S.cols[d.ci] && S.cols[d.ci].dcat) || '';
+    curCat = (d.ci != null && S.cols[d.ci] && S.cols[d.ci].dcat) || catId(S.doors.cat) || '';   // двери — цвет фасадов
     d.gf = S.doors.gf || 4; const lbl = d.zone === 'mezz' ? ' антресоли ' + (d.mi + 1) + '.' : (d.ci != null ? ' отсека ' + (d.ci + 1) + '.' : ' '), nm = d.zone === 'mezz' ? d.i + 1 : (d.ci != null ? d.ri + 1 : d.i + 1);
     const mat = d.fill === 'dsp' ? body : FILLS[d.fill] + (d.fill === 'mdf' ? millName(S) : '');
     if (d.fill === 'glass') { const gf = d.gf || 4; add('Двери', 'Стекло' + lbl + nm, 1, d.h - 2 * gf, d.w - 2 * gf, .4, 'Стекло 4 мм, полировка кромки', (2 * (d.h + d.w - 4 * gf)) / 100, 'размер стекла ' + mm(d.w - 2 * gf) + '×' + mm(d.h - 2 * gf), 'glass'); add('Двери', 'Рамка алюминиевая' + lbl + nm, 1, d.h, d.w, gf, 'Алюминий, профиль ' + mm(gf) + ' мм', (2 * (d.h + d.w)) / 100, 'периметр', 'frame'); }
