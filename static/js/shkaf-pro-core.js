@@ -851,7 +851,7 @@ export function sanitize(S) {
       const b = mkItem(it.type, n(it.y, 0, 330, 50));
       if (it.type === 'shelf') b.d = it.d ? n(it.d, 15, 85, 57.5) : null;
       if ((it.type === 'shelf' || SPLITTABLE.includes(it.type)) && (it.sd === 'L' || it.sd === 'R')) b.sd = it.sd;
-      if (it.type === 'drawer') { b.fh = n(it.fh, 8, 40, 18); b.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; }
+      if (it.type === 'drawer') { b.fh = n(it.fh, 6, 40, 18); b.sys = DRAWER_SYS[it.sys] ? it.sys : 'tier'; }
       if (it.type === 'idoor') { b.y1 = n(it.y1, 0, 330, b.y + 60); b.x = n(it.x, 0, 250, 0); b.w = it.w ? n(it.w, 8, 250, 40) : null; b.dir = ['L', 'R', 'U', 'D'].includes(it.dir) ? it.dir : 'L'; if (it.fill === 'mirror') b.fill = 'mirror'; if (it.push) b.push = true; if (Number(it.dz) > 0) b.dz = r1(n(it.dz, 0, 80, 0)); }
       if (it.type === 'shoe') b.n = n(it.n, 1, 6, 3) | 0;
       if (it.type === 'basket') b.h = n(it.h, 10, 40, 18);
