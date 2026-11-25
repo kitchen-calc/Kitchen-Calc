@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=43';
-import { TPL } from '/static/js/shkaf-tpl.js?v=12';
+import * as C from '/static/js/shkaf-pro-core.js?v=44';
+import { TPL } from '/static/js/shkaf-tpl.js?v=13';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=12';
@@ -44,7 +44,7 @@ function findItem(id) { for (let ci = 0; ci < S.cols.length; ci++) { const it = 
 const toast = (t) => { const e = $('toast'); if (!e) return; e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2600); };
 
 /* ---------- ввод чисел ---------- */
-const RANGE = { 'op.off': [0, 3000], 'op.w': [2, 600], 'op.h': [2, 400], 'op.y': [0, 400], 'op.d': [0, 200], 'dt.x': [-800, 2500], 'dt.z': [-800, 2500], 'dt.rot': [-90, 450], 'fp.x': [-800, 2500], 'fp.z': [-800, 2500], 'fp.rot': [-90, 450], 'ob.x': [-800, 2500], 'ob.z': [-800, 2500], 'ob.y': [0, 300], 'ob.w': [.5, 600], 'ob.d': [5, 120], 'ob.h': [1, 320], 'ob.n': [0, 12], 'ob.dn': [0, 4], 'ob.dh': [0, 320], 'ob.rot': [-90, 450], W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [8, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.dz': [0, 80], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [8, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 6], 'col.H': [60, 320], 'col.D': [25, 90], 'room.W': [100, 1500], 'room.D': [100, 1500], 'room.H': [180, 400], 'room.oz': [-500, 1500], 'room.rot': [-90, 450], 'room.ox': [-500, 1500], 'pn.sw': [10, 400], 'pn.sd': [6, 100], 'pn.sg': [0, 200], 'pn.pz': [0, 400], 'pn.gp': [3, 60], 'bd.x': [-800, 1800], 'bd.pz': [0, 500], 'bd.mw': [50, 220], 'bd.ml': [100, 240], 'bd.mt': [5, 40], 'bd.sh': [10, 60], 'bd.hh': [20, 220], 'bd.fh': [10, 220], 'bd.lg': [0, 40], 'bd.drw': [0, 4], 'bd.lv2': [80, 200], 'bd.rail': [10, 60], 'bd.steps': [3, 9], 'un.x': [-600, 1600], 'un.pz': [0, 400], 'un.w': [25, 300], 'un.h': [30, 200], 'un.d': [15, 80], 'un.n': [1, 8], 'un.legs': [0, 20] };
+const RANGE = { 'op.off': [0, 3000], 'op.w': [2, 600], 'op.h': [2, 400], 'op.y': [0, 400], 'op.d': [0, 200], 'dt.x': [-800, 2500], 'dt.z': [-800, 2500], 'dt.rot': [-90, 450], 'fp.x': [-800, 2500], 'fp.z': [-800, 2500], 'fp.rot': [-90, 450], 'ob.x': [-800, 2500], 'ob.z': [-800, 2500], 'ob.y': [0, 300], 'ob.w': [.5, 600], 'ob.d': [5, 120], 'ob.h': [1, 320], 'ob.n': [0, 12], 'ob.dn': [0, 4], 'ob.dh': [0, 320], 'ob.rot': [-90, 450], W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [8, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [8, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.dz': [0, 80], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [8, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 6], 'col.H': [60, 320], 'col.D': [25, 90], 'room.W': [100, 1500], 'room.D': [100, 1500], 'room.H': [180, 400], 'room.oz': [-500, 1500], 'room.rot': [-90, 450], 'room.ox': [-500, 1500], 'pn.sw': [10, 400], 'pn.sd': [6, 100], 'pn.sg': [0, 200], 'pn.pz': [0, 400], 'pn.gp': [3, 60], 'bd.x': [-800, 1800], 'bd.pz': [0, 500], 'bd.mw': [50, 220], 'bd.ml': [100, 240], 'bd.mt': [5, 40], 'bd.sh': [10, 60], 'bd.hh': [20, 220], 'bd.fh': [10, 220], 'bd.lg': [0, 40], 'bd.drw': [0, 4], 'bd.lv2': [80, 200], 'bd.rail': [10, 60], 'bd.steps': [3, 9], 'un.x': [-600, 1600], 'un.pz': [0, 400], 'un.w': [25, 300], 'un.h': [30, 200], 'un.d': [15, 80], 'un.n': [1, 8], 'un.legs': [0, 200] };
 function stepper(label, path, val, step, unit) {
   return `<div class="r"><span>${esc(label)}</span><span class="stp"><button type="button" onpointerdown="PRO.hold(event,'${path}',${-step})">−</button><input type="number" step="any" value="${r1(val)}" onfocus="this.select()" onchange="PRO.set('${path}',this.value)"><button type="button" onpointerdown="PRO.hold(event,'${path}',${step})">+</button><small>${esc(unit || 'см')}</small></span></div>`;
 }
@@ -312,7 +312,7 @@ function sidePanel() {
   h += `<div class="r"><span>Где</span>${btn(p.mount !== 'front' && p.mount !== 'free', "PRO.pMount('wall')", 'На стене')}${btn(p.mount === 'front', "PRO.pMount('front')", 'На фасаде')}${btn(p.mount === 'free', "PRO.pMount('free')", 'Отдельно (перегородка)')}</div>`;
   if (p.mount === 'free') h += stepper('От стены (вперёд)', 'pn.pz', p.pz || 30, 1);
   if (isM) {
-    h += `<div class="r"><span>Форма</span>${[['rect', '▭ Прямоугольное'], ['round', '◯ Круглое'], ['oval', '⬭ Овальное'], ['arch', '⌓ Арка']].map(([k, t]) => btn((p.shape || 'rect') === k, `PRO.pShape('${k}')`, t)).join('')}</div>`;
+    h += `<div class="r"><span>Форма</span>${[['rect', '▭ Прямоугольное'], ['round', '◯ Круглое'], ['oval', '⬭ Овальное'], ['arch', '⌓ Арка'], ['harchL', '◜ Полуарка (дуга слева)'], ['harchR', '◝ Полуарка (дуга справа)']].map(([k, t]) => btn((p.shape || 'rect') === k, `PRO.pShape('${k}')`, t)).join('')}</div>`;
     h += `<div class="r"><span>Размер (быстро)</span>${MIRROR_SIZES.map(([w, hh, sh]) => btn(0, `PRO.pSize(${w},${hh},'${sh}')`, sh === 'round' ? 'Ø' + w : (sh === 'oval' ? 'овал ' + w + '×' + hh : (sh === 'arch' ? 'арка ' + w + '×' + hh : w + '×' + hh)))).join('')}</div>`;
     h += `<div class="r">${btn(!!p.bl, 'PRO.pBl()', '✨ Подсветка по контуру')}</div>`;
   }
@@ -352,7 +352,7 @@ function sideUnit() {
   let h = `<div class="sh">Тумба-обувница ${sel.ui + 1}</div><div class="note">${UNIT_KINDS[u.kind]} · ${mm(u.w)}×${mm(u.h)}×${mm(u.d)} мм. Двойной щелчок по створке — открыть.</div>`;
   h += `<div class="r"><span>Тип</span>${Object.keys(UNIT_KINDS).map(k => btn(u.kind === k, `PRO.uKind('${k}')`, UNIT_KINDS[k])).join('')}</div>`;
   h += stepper(u.kind === 'drawers' ? 'Ящиков' : (u.kind === 'flap' ? 'Откидных створок' : 'Полок'), 'un.n', u.n, 1, 'шт');
-  h += stepper('Ширина', 'un.w', u.w, 1) + stepper('Высота', 'un.h', u.h, 1) + stepper('Глубина', 'un.d', u.d, 1) + stepper(u.hang ? 'Высота от пола (подвесная)' : 'Ножки (высота)', 'un.legs', u.legs, 1) + `<div class="r">${btn(!!u.hang, 'PRO.unHang()', u.hang ? '✔ Подвесная, без ножек' : 'Подвесная (без ножек)')}</div>`;
+  h += stepper('Ширина', 'un.w', u.w, 1) + stepper('Высота', 'un.h', u.h, 1) + stepper('Глубина', 'un.d', u.d, 1) + stepper(u.hang ? 'Высота от пола (подвесная)' : 'Ножки (высота)', 'un.legs', u.legs, 1) + `<div class="r">${btn(!!u.hang, 'PRO.unHang()', u.hang ? '✔ Подвесная, без ножек' : 'Подвесная (без ножек)')}${u.hang ? btn(!!u.led, 'PRO.unLed()', u.led ? '✔ Подсветка снизу' : 'Подсветка снизу') : ''}</div>`;
   h += stepper('От левого края шкафа', 'un.x', u.x, 1) + stepper('От стены (вперёд)', 'un.pz', u.pz || 0, 1);
   h += `<div class="r"><span>Фасад</span><select onchange="PRO.uFill(this.value)">${['dsp', 'mdf', 'glass', 'mirror'].map(k => `<option value="${k}" ${(u.fill || 'dsp') === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select></div>`;
   h += `<div class="r">${btn(!!u.seat, 'PRO.uSeat()', '🪑 Мягкое сиденье сверху')}</div>`;
@@ -490,7 +490,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=49');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=51');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -634,7 +634,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=50');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=52');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -879,6 +879,7 @@ window.PRO = {
   leds: () => { if (!K) return; const on = !K.isLeds(); K.setLeds(on); $('ledBtn').textContent = on ? '✨ Подсветка: вкл' : '▫ Подсветка: выкл'; },
   rot: on => { if (K) K.setRotate(on); }, sideToggle, drawerAbove: () => drawerNear(1), drawerBelow: () => drawerNear(-1), between, vpCenter: () => mutate(() => { const f = findItem(sel.id); if (f) f.it.x = r1(f.col.w / 2 - S.t / 2); }), idoorDir: v => mutate(() => { const f = findItem(sel.id); if (f) f.it.dir = v; }),
   mezzLed: () => mutate(() => { const m = S.mezzes[sel.mi]; if (m) { if (m.led) delete m.led; else m.led = true; } }),
+  unLed: () => mutate(() => { const u = S.units[sel.ui]; if (u) { if (u.led) delete u.led; else u.led = true; } }),
   unHang: () => mutate(() => { const u = S.units[sel.ui]; if (u) { if (u.hang) delete u.hang; else u.hang = true; } }),
   idoorFill: () => mutate(() => { const f = findItem(sel.id); if (f) { if (f.it.fill === 'mirror') delete f.it.fill; else f.it.fill = 'mirror'; } }),
   idoorPush: () => mutate(() => { const f = findItem(sel.id); if (f) { if (f.it.push) delete f.it.push; else f.it.push = true; } }),
