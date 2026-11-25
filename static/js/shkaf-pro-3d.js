@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=43';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=43';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=44';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=44';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -214,7 +214,14 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       const mat = (p.kind === 'dsp' || p.kind === 'mdf') ? pB : (p.kind === 'glass' ? M.glassClear : (p.kind === 'laco' ? M.glass(S.doors.laco) : M.mirror));
       const shape = MIRROR_KINDS.includes(p.kind) ? (p.shape || 'rect') : 'rect', cx = p.x + p.w / 2, cy = p.y + p.h / 2;
       const ell = (w, h, mt, zz, tt) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, tt, 56), mt); m.rotation.x = Math.PI / 2; m.scale.set(w, 1, h); m.position.set(cx, cy, zz + tt / 2); m.castShadow = true; m.userData.sel = meta; picks.push(m); wg.add(m); return m; };
-      if (shape === 'round' || shape === 'oval') {
+      if (shape === 'harchL' || shape === 'harchR') {   // полуарка: один край прямой, с другой стороны дуга от низа к верхнему углу
+        const w = p.w, h = p.h, ry = Math.min(h * .55, w * 1.2), sh = new THREE.Shape();   // нижние углы прямые
+        sh.moveTo(0, 0); sh.lineTo(w, 0); sh.lineTo(w, h); sh.absellipse(w, h - ry, w, ry, Math.PI / 2, Math.PI, false); sh.lineTo(0, 0);
+        const geo = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false, curveSegments: 48 });
+        if (shape === 'harchR') { geo.scale(-1, 1, 1); geo.translate(w, 0, 0); }
+        const isMir = p.kind === 'mirror' || p.kind === 'film', mt = isMir ? new THREE.MeshBasicMaterial({ color: '#dfe7ec', combine: THREE.MixOperation, reflectivity: .82, side: THREE.DoubleSide }) : mat;
+        const m = new THREE.Mesh(geo, mt); m.position.set(p.x, p.y, z); m.userData.sel = meta; picks.push(m); wg.add(m); if (isMir) mirrorCaps.push(m);
+      } else if (shape === 'round' || shape === 'oval') {
         ell(p.w, p.h, mat, z, th);
         if (p.bl) { ell(p.w + 3, p.h + 3, M.led, z - .5, .4); const gl = new THREE.Mesh(new THREE.PlaneGeometry(p.w + 40, p.h + 40), M.glowR); gl.position.set(cx, cy, z - .6); wg.add(gl); }
       } else if (shape === 'arch') {
@@ -237,7 +244,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       if (u.seat) { box(w + 1, t, d + 1.5, uB, x0 - .5, u.h - t, zf, base); box(w + 1, 6, d + 1.5, M.cushion, x0 - .5, u.h, zf, base); } else box(w - 2 * t, t, d, uB, x0 + t, u.h - t, zf, base);
       box(w - 2 * t, hb - 2 * t, .3, M.back, x0 + t, ph2 + t, zf, base);
       if (ph2 > 0 && !u.hang) [[2, 2], [w - 3, 2], [2, d - 3], [w - 3, d - 3]].forEach(([lx, lz]) => cyl(1.2, ph2, M.plinth, x0 + lx, ph2 / 2, zf + lz, null));
-      if (ph2 > 0 && u.hang) box(w - 4, .6, 1.2, M.led, x0 + 2, ph2 - .7, zf + d - 6);   // подвесная: без ножек, снизу подсветка
+      if (ph2 > 0 && u.hang && u.led) box(w - 4, .6, 1.2, M.led, x0 + 2, ph2 - .7, zf + d - 6);   // подвесная: без ножек, снизу подсветка
       const fh = (hb - t - .3) / fn;
       for (let k = 0; k < fn; k++) {
         const key = 'u' + u.id + '.' + k, meta = Object.assign({ key }, base), y = ph2 + t + k * fh + .15, hh = fh - .3;
@@ -433,7 +440,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     mirrorCaps.forEach(m => {
       m.updateMatrixWorld(true);
       const rt = new THREE.WebGLCubeRenderTarget(1024), cc = new THREE.CubeCamera(1, 5000, rt), pos = new THREE.Vector3(), n = new THREE.Vector3(0, 0, 1).transformDirection(m.matrixWorld);
-      m.getWorldPosition(pos); cc.position.copy(pos).addScaledVector(n, 3);
+      m.geometry.computeBoundingBox(); m.geometry.boundingBox.getCenter(pos); m.localToWorld(pos); cc.position.copy(pos).addScaledVector(n, 3);
       m.visible = false; scene.add(cc); cc.update(renderer, scene); scene.remove(cc); m.visible = true;
       m.material.envMap = rt.texture; m.material.needsUpdate = true; m.userData.rt = rt;
     });
