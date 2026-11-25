@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=44';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=44';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=45';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=45';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -215,8 +215,8 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       const shape = MIRROR_KINDS.includes(p.kind) ? (p.shape || 'rect') : 'rect', cx = p.x + p.w / 2, cy = p.y + p.h / 2;
       const ell = (w, h, mt, zz, tt) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, tt, 56), mt); m.rotation.x = Math.PI / 2; m.scale.set(w, 1, h); m.position.set(cx, cy, zz + tt / 2); m.castShadow = true; m.userData.sel = meta; picks.push(m); wg.add(m); return m; };
       if (shape === 'harchL' || shape === 'harchR') {   // полуарка: один край прямой, с другой стороны дуга от низа к верхнему углу
-        const w = p.w, h = p.h, ry = Math.min(h * .55, w * 1.2), sh = new THREE.Shape();   // нижние углы прямые
-        sh.moveTo(0, 0); sh.lineTo(w, 0); sh.lineTo(w, h); sh.absellipse(w, h - ry, w, ry, Math.PI / 2, Math.PI, false); sh.lineTo(0, 0);
+        const w = p.w, h = p.h, ry = Math.min(h * .55, w * 1.2), bx = w * .4, by = Math.min(h * .25, h - ry), sh = new THREE.Shape();   // «капля»: сверху дуга к углу, снизу плавно заворачивает большой дугой
+        sh.moveTo(bx, 0); sh.lineTo(w, 0); sh.lineTo(w, h); sh.absellipse(w, h - ry, w, ry, Math.PI / 2, Math.PI, false); sh.lineTo(0, by); sh.absellipse(bx, by, bx, by, Math.PI, Math.PI * 1.5, false);
         const geo = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false, curveSegments: 48 });
         if (shape === 'harchR') { geo.scale(-1, 1, 1); geo.translate(w, 0, 0); }
         const isMir = p.kind === 'mirror' || p.kind === 'film', mt = isMir ? new THREE.MeshBasicMaterial({ color: '#dfe7ec', combine: THREE.MixOperation, reflectivity: .82, side: THREE.DoubleSide }) : mat;

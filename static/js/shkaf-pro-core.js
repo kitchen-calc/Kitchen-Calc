@@ -558,7 +558,7 @@ export function buildParts(S) {
       return;
     }
     const isMirror = MIRROR_KINDS.includes(p.kind), th = (p.kind === 'dsp' || p.kind === 'mdf') ? t : .6, mat = p.kind === 'dsp' ? body : (p.kind === 'mdf' ? 'Фрезерованный МДФ ' + mm(t) + ' мм' : FILLS[p.kind] + ', 6 мм');
-    const shapeName = { rect: '', round: ', круглое', oval: ', овальное', arch: ', арка', harchL: ', полуарка (дуга слева)', harchR: ', полуарка (дуга справа)' }[p.shape || 'rect'];
+    const shapeName = { rect: '', round: ', круглое', oval: ', овальное', arch: ', арка', harchL: ', «капля» (дуга слева, правый край прямой)', harchR: ', «капля» (дуга справа, левый край прямой)' }[p.shape || 'rect'];
     add('Панели', 'Панель ' + (i + 1) + ' (' + where + ')' + (isMirror ? shapeName : ''), 1, p.h, p.w, th, mat, per, 'размер ' + mm(p.w) + '×' + mm(p.h) + (p.kind === 'mdf' ? ', фрезеровка: ' + (PANEL_PATTERNS[p.pat] || '') + ', шаг ' + mm(p.gp || 12) + ' мм' : ''), p.kind);
     if (isMirror && p.shape && p.shape !== 'rect') parts[parts.length - 1].mult = P.shapeK;
     if (p.frame && p.kind !== 'mdf') add('Панели', 'Рамка панели ' + (i + 1), 1, p.h, p.w, p.fw || 3, 'Алюминий, профиль ' + mm(p.fw || 3) + ' мм', per, 'периметр', 'frame');
