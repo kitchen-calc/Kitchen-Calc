@@ -467,13 +467,14 @@ export function colSplits(S, g, ci) {   // перегородки «у кажд�
   const bb = doorBounds(col, n, cw); for (let k = 1; k < n; k++) out.push(L + bb[k]);
   return out;
 }
+export const SLIDE_PLANK = 6;   // купе: верхняя планка 60 мм закрывает верхний рельс, двери ниже на её высоту
 export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, left, hinge:'L'|'R'|'U'|'D', n, sliding}]
   const g = geom(S), d = S.doors, out = [], t = S.t;
   if (d.kind !== 'none' && g.runs.length) {
     const hh = (g.runs[0] ? g.runs[0].H : S.H) - S.plinth - .4, tot = g.runs.reduce((a, r) => a + (r.x1 - r.x0), 0), sliding = d.kind === 'sliding' && g.runs.length === 1; let idx = 0;
     g.runs.forEach(r => {
       const rw = r.x1 - r.x0, n = sliding ? d.n : Math.max(1, Math.round(d.n * rw / tot));
-      if (sliding) { const w = (rw + (n - 1) * 2.5) / n; for (let i = 0; i < n; i++) { out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + i * (w - 2.5), w, h: hh, y: S.plinth + .2, fill: d.fills[idx] || 'dsp', sliding: true, left: i < n / 2, hinge: 'L', gf: d.gf || 4 }); idx++; } }
+      if (sliding) { const w = (rw + (n - 1) * 2.5) / n; for (let i = 0; i < n; i++) { out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + i * (w - 2.5), w, h: hh - SLIDE_PLANK, y: S.plinth + .2, runX: r.x0, runW: rw, runH: r.H, fill: d.fills[idx] || 'dsp', sliding: true, left: i < n / 2, hinge: 'L', gf: d.gf || 4 }); idx++; } }
       else void 0;
     });
     if (!sliding) {   // распашные: у каждого отсека свои двери (0, 1 или 2), своё заполнение и открывание
@@ -767,6 +768,7 @@ export function buildParts(S) {
   addHw('Двери', HDN, handles + handles0, 'шт.', HDP);
   { const tp = typeof KIS !== 'undefined' && KIS.open && KIS.open.tipon_s; addHw('Двери', tp ? tp.ru : 'Толкатель push-to-open (без ручки)', push0, 'шт.', tp ? tp.price : 40000); }
   if (slidingN) {
+    { const sd = doors.find(d => d.sliding); curCat = catId(S.doors.cat) || ''; add('Двери', 'Планка верхняя купе (закрывает рельс)', 1, sd.runW, SLIDE_PLANK, t, body, (sd.runW + 2 * SLIDE_PLANK) / 100, 'крепится к крышке спереди, в цвет фасадов'); curCat = ''; }
     let kit = T.doorKit * Math.pow(slidingN / 3, .9); const rw = g.runs[0].x1 - g.runs[0].x0;
     if (sSel) kit = slidingN <= 2 ? sSel.p2 : (slidingN === 3 ? sSel.p3 : sSel.p3 * slidingN / 3); else if (rw > 270) kit += (rw / 100 - 2.7) * 2 * T.rail;
     addHw('Двери', (sSel ? sSel.ru : 'Система купе (направляющие, ролики, профили)') + ' на ' + slidingN + ' двери', 1, 'комплект', kit);

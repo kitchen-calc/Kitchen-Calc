@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=46';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS } from '/static/js/shkaf-pro-core.js?v=46';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=47';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK } from '/static/js/shkaf-pro-core.js?v=47';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -329,6 +329,12 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       if (d.sliding) {
         const layer = d.ri % 2, z = D + .4 + layer * 3.4, grp = new THREE.Group(); grp.position.set(d.x, 0, z); wg.add(grp);
         face(grp, 0, d.y);
+        if (d.ri === 0 && d.runW) {   // рельсы купе: нижний у пола перед цоколем, верхний под планкой; планка в цвет фасадов
+          const zr = D + .2, dr = 7.4, PL = SLIDE_PLANK;
+          box(d.runW, .8, dr, M.alu, d.runX, Math.max(0, d.y - 1), zr, null, wg);
+          box(d.runW, PL - .4, dr, M.alu, d.runX, d.runH - PL, zr, null, wg);
+          box(d.runW, PL, 1.6, (S.doors.cat && catM(S.doors.cat)) || M.body, d.runX, d.runH - PL, zr + dr, meta, wg);
+        }
         if (d.fill !== 'dsp' && !gl) { box(d.w, 2.2, th + .4, M.steel, 0, d.y, -.2, null, grp); box(d.w, 2.2, th + .4, M.steel, 0, d.y + d.h - 2.2, -.2, null, grp); }
         const sdir = d.ri === d.n - 1 ? -1 : d.ri === 0 ? 1 : (d.left ? -1 : 1);   // задняя дверь едет за соседнюю, крайняя — внутрь шкафа, не наружу
         doorsAnim.push({ key, apply: f => { grp.position.x = d.x + (layer === 1 ? (d.w - 2.5) * f * sdir : 0); } });
