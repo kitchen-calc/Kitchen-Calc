@@ -1452,7 +1452,7 @@ function ownerToPro() {
 async function ownerDraw() {
   if (!OWNER_ON) return;
   const body = $('ownerBody');
-  if (!proMods) proMods = Promise.all([import('/static/js/shkaf-pro-core.js?v=50'), import('/static/js/shkaf-pro-draw.js?v=58')]);
+  if (!proMods) proMods = Promise.all([import('/static/js/shkaf-pro-core.js?v=51'), import('/static/js/shkaf-pro-draw.js?v=59')]);
   let core, draw; try { [core, draw] = await proMods; } catch (e) { proMods = null; body.innerHTML = '<div class="hint">Не удалось загрузить модуль чертежей. Обновите страницу.</div>'; return; }
   if (!OWNER_ON) return;
   let r; try { r = draw.buildSheets(core.sanitize(proState())); } catch (e) { console.error(e); body.innerHTML = '<div class="hint" style="color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '</div>'; ownerSheets = []; return; }
