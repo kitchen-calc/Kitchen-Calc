@@ -467,14 +467,16 @@ export function colSplits(S, g, ci) {   // перегородки «у кажд�
   const bb = doorBounds(col, n, cw); for (let k = 1; k < n; k++) out.push(L + bb[k]);
   return out;
 }
-export const SLIDE_PLANK = 6;   // купе: верхняя планка 60 мм закрывает верхний рельс, двери ниже на её высоту
+export const SLIDE_PLANK = 6;   // купе: верхняя планка 60 мм под крышкой закрывает верхний рельс
+export const SLIDE_K = 10;      // купе: двери внутри корпуса — зона рельсов 100 мм спереди, перегородки и полки мельче на неё
+export function slideK(S) { return S.doors && S.doors.kind === 'sliding' ? SLIDE_K : 0; }
 export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, left, hinge:'L'|'R'|'U'|'D', n, sliding}]
   const g = geom(S), d = S.doors, out = [], t = S.t;
   if (d.kind !== 'none' && g.runs.length) {
     const hh = (g.runs[0] ? g.runs[0].H : S.H) - S.plinth - .4, tot = g.runs.reduce((a, r) => a + (r.x1 - r.x0), 0), sliding = d.kind === 'sliding' && g.runs.length === 1; let idx = 0;
     g.runs.forEach(r => {
       const rw = r.x1 - r.x0, n = sliding ? d.n : Math.max(1, Math.round(d.n * rw / tot));
-      if (sliding) { const w = (rw + (n - 1) * 2.5) / n; for (let i = 0; i < n; i++) { out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + i * (w - 2.5), w, h: hh - SLIDE_PLANK, y: S.plinth + .2, runX: r.x0, runW: rw, runH: r.H, fill: d.fills[idx] || 'dsp', sliding: true, left: i < n / 2, hinge: 'L', gf: d.gf || 4 }); idx++; } }
+      if (sliding) { const iw = rw - 2 * t, w = (iw + (n - 1) * 2.5) / n, y0 = S.plinth + t + 1.2, h = r.H - t - 2 - y0; for (let i = 0; i < n; i++) { out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + t + i * (w - 2.5), w, h, y: y0, runX: r.x0 + t, runW: iw, runH: r.H, runD: r.D, fill: d.fills[idx] || 'dsp', sliding: true, left: i < n / 2, hinge: 'L', gf: d.gf || 4 }); idx++; } }
       else void 0;
     });
     if (!sliding) {   // распашные: у каждого отсека свои двери (0, 1 или 2), своё заполнение и открывание
@@ -528,7 +530,7 @@ export function buildParts(S) {
     const ri2 = runInfo(S, g, r), nSides = 2 - (ri2.noL ? 1 : 0) - (ri2.noR ? 1 : 0), nPart = k - 1 - ri2.rmPart;
     if (nSides > 0) add('Корпус', 'Боковина' + lbl, nSides, hs - t, D, t, body, (hs - t) / 100, 'стоит на дне; кромка по переднему торцу');
     add('Корпус', 'Крышка (верх)' + lbl, 1, rw - 2 * t, D, t, body, (rw - 2 * t) / 100, 'между боковинами');
-    if (nPart > 0) add('Корпус', 'Перегородка отсека' + lbl, nPart, hs - 2 * t, D, t, body, (hs - 2 * t) / 100, 'стоит на дне, под крышкой');
+    if (nPart > 0) add('Корпус', 'Перегородка отсека' + lbl, nPart, hs - 2 * t, D - slideK(S), t, body, (hs - 2 * t) / 100, 'стоит на дне, под крышкой');
     ri2.segs.forEach((sg, si) => add('Корпус', 'Задняя стенка' + lbl + (ri2.segs.length > 1 ? ' (часть ' + (si + 1) + ')' : ''), 1, sg[1] - sg[0], hs - 2 * t, .3, 'ХДФ 3 мм', 0, 'ставится на дно между боковин', 'hdf'));
     bsg.forEach(sg => { const L = (sg[1] - sg[0]) - (sg[0] <= r.x0 + .1 ? t : 0) - (sg[1] >= r.x1 - .1 ? t : 0); if (L > 1) add('Корпус', 'Цоколь' + lbl, 1, L, ph, t, body, L / 100, 'кромка по верхней длинной стороне'); });
     joints += k * 8 + 8; feet += Math.max(2, Math.ceil(rw / 60) * 2);
@@ -704,7 +706,7 @@ export function buildParts(S) {
   S.cols.forEach((c, ci) => {
     if (c.gap) return;
     curCat = c.cat || '';
-    const lbl = ' (отсек ' + (ci + 1) + ')', D = g.cols[ci].D, splitsN = colSplits(S, g, ci).length;
+    const lbl = ' (отсек ' + (ci + 1) + ')', D = g.cols[ci].D - slideK(S), splitsN = colSplits(S, g, ci).length;
     if (splitsN) { add('Наполнение', 'Перегородка под двери' + lbl, splitsN, g.cols[ci].y1 - g.y0 - S.plinth * 0 - 2 * t, D - .3, t, body, (g.cols[ci].y1 - g.y0 - 2 * t) / 100, 'у каждой двери своя секция; кромка по переднему торцу'); joints_u += splitsN * 4; }
     c.items.forEach(it => {
       if (it.type === 'shelf') {
@@ -768,7 +770,7 @@ export function buildParts(S) {
   addHw('Двери', HDN, handles + handles0, 'шт.', HDP);
   { const tp = typeof KIS !== 'undefined' && KIS.open && KIS.open.tipon_s; addHw('Двери', tp ? tp.ru : 'Толкатель push-to-open (без ручки)', push0, 'шт.', tp ? tp.price : 40000); }
   if (slidingN) {
-    { const sd = doors.find(d => d.sliding); curCat = catId(S.doors.cat) || ''; add('Двери', 'Планка верхняя купе (закрывает рельс)', 1, sd.runW, SLIDE_PLANK, t, body, (sd.runW + 2 * SLIDE_PLANK) / 100, 'крепится к крышке спереди, в цвет фасадов'); curCat = ''; }
+    { const sd = doors.find(d => d.sliding); curCat = catId(S.doors.cat) || ''; add('Двери', 'Планка верхняя купе (закрывает рельс)', 1, sd.runW, SLIDE_PLANK, t, body, sd.runW / 100, 'между боковинами под крышкой, заподлицо с фасадом, в цвет фасадов'); curCat = ''; }
     let kit = T.doorKit * Math.pow(slidingN / 3, .9); const rw = g.runs[0].x1 - g.runs[0].x0;
     if (sSel) kit = slidingN <= 2 ? sSel.p2 : (slidingN === 3 ? sSel.p3 : sSel.p3 * slidingN / 3); else if (rw > 270) kit += (rw / 100 - 2.7) * 2 * T.rail;
     addHw('Двери', (sSel ? sSel.ru : 'Система купе (направляющие, ролики, профили)') + ' на ' + slidingN + ' двери', 1, 'комплект', kit);
