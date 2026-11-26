@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=52';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB } from '/static/js/shkaf-pro-core.js?v=52';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=53';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=53';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -289,6 +289,16 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       if (b.lg > 0) [[0, 0], [W - 5, 0], [0, L - 5], [W - 5, L - 5]].forEach(([lx, lz]) => B(5, b.lg, 5, M.plinth, lx, 0, lz));
       B(t, b.sh, L - 2 * t, bB, 0, b.lg, t); B(t, b.sh, L - 2 * t, bB, W - t, b.lg, t);
       B(W, b.hh - b.lg, t, bB, 0, b.lg, 0); B(W, b.fh - b.lg, t, bB, 0, b.lg, L - t);
+      if (b.softbase) {   // мягкий низ: скруглённые вертикальные полосы (поролон 40 + ткань) снаружи на боковинах и изножье
+        const sd = BED_SOFT, SM = M.cushion, pillG = (w, h) => { const r = Math.min(sd * .45, w / 2 - .05, h / 2 - .05, 2), sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(w - 2 * r, 0); sh.lineTo(w - 2 * r, h - 2 * r); sh.lineTo(0, h - 2 * r); sh.lineTo(0, 0);
+          return { g: new THREE.ExtrudeGeometry(sh, { depth: Math.max(.05, sd - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r, bevelSegments: 6, curveSegments: 4 }), r }; };
+        const strip = (w, h, px, py, pz, ry) => { const q = pillG(w, h), m = new THREE.Mesh(q.g, SM), gr = new THREE.Group(); m.position.set(q.r, q.r, q.r); m.castShadow = m.receiveShadow = true; m.userData.sel = base; picks.push(m); gr.add(m); gr.position.set(px, py, pz); gr.rotation.y = ry; bg.add(gr); };
+        const row = (len, cb) => { const n = Math.max(1, Math.round(len / 21)), sg = .5, sw = (len - (n - 1) * sg) / n; for (let k = 0; k < n; k++) cb(k * (sw + sg), sw); };
+        const hs = b.sh, hf = b.fh - b.lg;
+        row(W + 2 * sd, (o, sw) => strip(sw, hf, -sd + o, b.lg, L, 0));                              // изножье
+        row(L - t, (o, sw) => strip(sw, hs, W, b.lg, t + o + sw, Math.PI / 2));                       // правая боковина
+        row(L - t, (o, sw) => strip(sw, hs, 0, b.lg, t + o, -Math.PI / 2));                          // левая боковина
+      }
       if (b.soft) B(W - 2, Math.max(2, b.hh - (b.lg + b.sh) - 4), 6, stdMat(fabric, { roughness: .95 }), 1, b.lg + b.sh + 2, t);
       B(3, 4, L - 2 * t, wood, t, dd.slatTop - 2.8, t); B(3, 4, L - 2 * t, wood, W - t - 3, dd.slatTop - 2.8, t);   // бруски вдоль боковин — под основанием (учитывая опускание ddrop)
       const deckParts = (y0, lift, keyPrefix) => {

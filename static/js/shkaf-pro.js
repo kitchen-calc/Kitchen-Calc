@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=52';
-import { TPL } from '/static/js/shkaf-tpl.js?v=50';
+import * as C from '/static/js/shkaf-pro-core.js?v=53';
+import { TPL } from '/static/js/shkaf-tpl.js?v=51';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=12';
@@ -340,7 +340,7 @@ function sideBed() {
   h += `<div class="r"><span>Цвет чехла</span><div class="sw">${BED_COLORS.map((c, i) => `<button type="button" class="swb ${b.mcol === i ? 'on' : ''}" style="background:${c[1]}" title="${c[0]}" onclick="PRO.bCol(${i})"></button>`).join('')}</div></div>`;
   h += `<div class="sub">Каркас — выше / ниже</div>` + stepper('Высота боковины', 'bd.sh', b.sh, 1) + stepper('Изголовье (от пола)', 'bd.hh', b.hh, 1) + stepper('Изножье (от пола)', 'bd.fh', b.fh, 1) + stepper('Ножки', 'bd.lg', b.lg, 1) + stepper('Основание ниже края', 'bd.ddrop', b.ddrop || 0, 1);
   h += `<div class="r"><span>Боковины</span>${btn(0, 'PRO.nuBed(\'bd.sh\',-5)', '▼ ниже 5')}${btn(0, 'PRO.nuBed(\'bd.sh\',5)', '▲ выше 5')}</div><div class="r"><span>Изголовье</span>${btn(0, 'PRO.nuBed(\'bd.hh\',-5)', '▼ ниже 5')}${btn(0, 'PRO.nuBed(\'bd.hh\',5)', '▲ выше 5')}</div>`;
-  h += `<div class="sub">Опции</div>` + stepper('Ящики под кроватью', 'bd.drw', b.drw, 1, 'шт') + `<div class="r">${btn(!!b.lift, 'PRO.bFlag(\'lift\')', '⤴ Подъёмное основание')}${btn(!!b.soft, 'PRO.bFlag(\'soft\')', '🛋 Мягкое изголовье')}${btn(!!b.bedding, 'PRO.bFlag(\'bedding\')', '🛏 Постель (для вида)')}${btn(!!b.nomat, 'PRO.bFlag(\'nomat\')', '⬚ Без матраса')}${btn(!!b.dspdeck, 'PRO.bFlag(\'dspdeck\')', '▦ Основание: 4 щита ДСП')}</div>`;
+  h += `<div class="sub">Опции</div>` + stepper('Ящики под кроватью', 'bd.drw', b.drw, 1, 'шт') + `<div class="r">${btn(!!b.lift, 'PRO.bFlag(\'lift\')', '⤴ Подъёмное основание')}${btn(!!b.soft, 'PRO.bFlag(\'soft\')', '🛋 Мягкое изголовье')}${btn(!!b.bedding, 'PRO.bFlag(\'bedding\')', '🛏 Постель (для вида)')}${btn(!!b.nomat, 'PRO.bFlag(\'nomat\')', '⬚ Без матраса')}${btn(!!b.dspdeck, 'PRO.bFlag(\'dspdeck\')', '▦ Основание: 4 щита ДСП')}${btn(!!b.softbase, 'PRO.bFlag(\'softbase\')', '🛋 Мягкий низ (боковины, изножье)')}</div>`;
   if (bunk) h += `<div class="sub">Второй ярус</div>` + stepper('Высота 2-го яруса (от пола до реек)', 'bd.lv2', b.lv2, 1) + stepper('Бортик над матрасом', 'bd.rail', b.rail, 1) + `<div class="r"><span>Лестница</span>${btn(b.ladder === 'end', "PRO.bLadder('end')", 'С торца')}${btn(b.ladder === 'side', "PRO.bLadder('side')", 'Сбоку')}</div>` + stepper('Ступеней', 'bd.steps', b.steps, 1, 'шт');
   h += `<div class="sub">Положение</div>` + stepper('От левого края шкафа', 'bd.x', b.x, 1) + stepper('От стены', 'bd.pz', b.pz || 0, 1) + `<div class="r"><span>Поворот</span>${btn(b.rot !== 90, "PRO.bRot(0)", 'Изголовьем к стене')}${btn(b.rot === 90, "PRO.bRot(90)", 'Боком к стене')}</div>`;
   h += `<div class="r">${btn(0, 'PRO.bMove(-10)', '◀ 10')}${btn(0, 'PRO.bMove(-1)', '◀ 1')}${btn(0, 'PRO.bMove(1)', '1 ▶')}${btn(0, 'PRO.bMove(10)', '10 ▶')}</div>`;
@@ -490,7 +490,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=62');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=63');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -634,7 +634,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=60');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=61');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
