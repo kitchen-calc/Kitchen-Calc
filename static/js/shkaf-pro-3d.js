@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=55';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=55';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=56';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=56';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -222,6 +222,13 @@ export function createPro3D(container, hooks = {}, opts = {}) {
             const geo = new THREE.ExtrudeGeometry(sh, { depth: Math.max(.05, sd - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r * .9, bevelSegments: 5, curveSegments: 3 }), m = new THREE.Mesh(geo, sm);
             m.position.set(ccx, ccy, z + r); m.castShadow = m.receiveShadow = true; m.userData.sel = meta; picks.push(m); wg.add(m);
           }
+        } else if (p.kind === 'soft' && p.so === 'm') {   // «мозаика»: дизайнерская раскладка — прямоугольники разной ширины и высоты, стыки не совпадают
+          const gap = .4, ROWS = [[.34, [.42, .33, .25]], [.30, [.2, .5, .3]], [.36, [.3, .22, .48]]];
+          let yy = p.y;
+          ROWS.forEach(([hf, ws]) => { const rh = p.h * hf; let xx = p.x; ws.forEach(wf => { const w = p.w * wf - gap, h = rh - gap;
+            const r = Math.min(sd * .45, w / 2 - .05, h / 2 - .05, 2), shp = new THREE.Shape(); shp.moveTo(0, 0); shp.lineTo(w - 2 * r, 0); shp.lineTo(w - 2 * r, h - 2 * r); shp.lineTo(0, h - 2 * r); shp.lineTo(0, 0);
+            const m = new THREE.Mesh(new THREE.ExtrudeGeometry(shp, { depth: Math.max(.05, sd - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r, bevelSegments: 6, curveSegments: 4 }), sm);
+            m.position.set(xx + gap / 2 + r, yy + gap / 2 + r, z + r); m.castShadow = m.receiveShadow = true; m.userData.sel = meta; picks.push(m); wg.add(m); xx += p.w * wf; }); yy += rh; });
         } else if (p.kind === 'soft' && p.so === 'b') {   // «кирпичик»: мягкие прямоугольные плитки рядами, каждый второй ряд сдвинут на полплитки
           const tw = Math.max(10, (p.sw || 500) / 10), th = p.gp >= 8 ? p.gp : 25, gap = .35, nr = Math.max(1, Math.round(p.h / th)), rh = p.h / nr;
           for (let j = 0; j < nr; j++) {
