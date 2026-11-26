@@ -551,8 +551,9 @@ export function buildParts(S) {
     const body = 'ЛДСП ' + mm(t) + ' мм' + (p.cat ? ' · ' + catName(p.cat) : (S.cat ? ' · ' + catName(S.cat) : ''));
     const where = p.mount === 'front' ? 'на фасад' : (p.mount === 'free' ? 'отдельно стоящая' : 'на стену'), per = (2 * (p.h + p.w)) / 100;
     if (p.kind === 'soft' && p.so === 'g') {   // прострочка с ушками: центральная мягкая спинка с прострочкой + 2 «ушка» по краям
-      const sd = p.sd || 32, ww = p.sw || 90;
-      parts.push({ grp: 'Панели', name: 'Мягкая спинка с вертикальной прострочкой (панель ' + (i + 1) + ')', qty: 1, L: Math.round(Math.max(p.h * 10, p.w * 10 - 2 * ww)), W: Math.round(Math.min(p.h * 10, p.w * 10 - 2 * ww)), t: Math.round(sd), mat: 'Основа ДСП + поролон + мебельная ткань, 2 группы по 3 строчки', kind: 'soft', edgeM: 0, edgeT: '', edgeDesc: '—', note: where });
+      const sd = p.sd || 32, ww = p.sw || 90, cw = p.w * 10 - 2 * ww, nsw = (p.gp >= 3 && p.gp <= 15 ? p.gp : 6) * 10, gw = 3 * nsw, g1 = cw * .36 - gw / 2, g2 = cw * .64 - gw / 2, H = Math.round(p.h * 10 - 15);
+      [[g1, 'левая'], [g2 - g1 - gw, 'центральная'], [cw - g2 - gw, 'правая']].forEach(([w, nm]) => parts.push({ grp: 'Панели', name: 'Мягкая панель ' + nm + ' (изголовье ' + (i + 1) + ')', qty: 1, L: Math.max(H, Math.round(w)), W: Math.min(H, Math.round(w)), t: Math.round(sd), mat: 'Основа ДВП/ДСП + поролон + мебельная ткань', kind: 'soft', edgeM: 0, edgeT: '', edgeDesc: '—', note: where }));
+      parts.push({ grp: 'Панели', name: 'Мягкая узкая полоса (изголовье ' + (i + 1) + ')', qty: 6, L: H, W: Math.round(nsw), t: Math.round(sd), mat: 'Основа ДВП + поролон + мебельная ткань', kind: 'soft', edgeM: 0, edgeT: '', edgeDesc: '—', note: '2 группы по 3, отдельными деталями' });
       parts.push({ grp: 'Панели', name: 'Мягкое «ушко» по краю (панель ' + (i + 1) + ')', qty: 2, L: Math.round(p.h * 10), W: Math.round(ww), t: Math.round(sd + 30), mat: 'Основа ДСП + поролон + мебельная ткань', kind: 'soft', edgeM: 0, edgeT: '', edgeDesc: '—', note: 'выступает вперёд на 30 мм' });
       addHw('Крепёж', 'Крепёж мягких панелей ' + (i + 1), 1, 'комплект', 40000);
       return;
