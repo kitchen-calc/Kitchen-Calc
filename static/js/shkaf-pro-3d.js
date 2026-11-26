@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=48';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK } from '/static/js/shkaf-pro-core.js?v=48';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=49';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK } from '/static/js/shkaf-pro-core.js?v=49';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -290,9 +290,9 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         const dk = new THREE.Group(); dk.position.set(0, y0, t); bg.add(dk);
         const dm = lift ? Object.assign({ key: keyPrefix + '.lift' }, base) : base, bx = (w, h, d2, mat, x, y, z) => box(w, h, d2, mat, x, y, z, dm, dk), n = dd.n, span = (b.ml + 1) - 6.8;
         for (let k = 0; k < n; k++) bx(W - 2 * t, .8, 6.8, wood, t, 0, n > 1 ? k * span / (n - 1) : 0);
-        bx(b.mw, b.mt, b.ml, mMat, t + .5, .8, .5);
-        for (let k = 0; k < 3; k++) bx(b.mw - 1, .3, .5, stdMat(new THREE.Color(fabric).multiplyScalar(.8).getStyle()), t + 1, .8 + b.mt + .05, 20 + k * (b.ml - 40) / 2);
-        if (b.bedding) { const pw = Math.min(55, b.mw / 2 - 3); bx(pw, 12, 38, pill, t + 2, .8 + b.mt, 3); if (b.mw >= 110) bx(pw, 12, 38, pill, t + b.mw - pw - 1, .8 + b.mt, 3); bx(b.mw + 3, 5, b.ml * .62, duv, t - 1, .8 + b.mt - 2, 42); }
+        if (!b.nomat) bx(b.mw, b.mt, b.ml, mMat, t + .5, .8, .5);   // без матраса — только каркас с ламелями
+        if (!b.nomat) for (let k = 0; k < 3; k++) bx(b.mw - 1, .3, .5, stdMat(new THREE.Color(fabric).multiplyScalar(.8).getStyle()), t + 1, .8 + b.mt + .05, 20 + k * (b.ml - 40) / 2);
+        if (b.bedding && !b.nomat) { const pw = Math.min(55, b.mw / 2 - 3); bx(pw, 12, 38, pill, t + 2, .8 + b.mt, 3); if (b.mw >= 110) bx(pw, 12, 38, pill, t + b.mw - pw - 1, .8 + b.mt, 3); bx(b.mw + 3, 5, b.ml * .62, duv, t - 1, .8 + b.mt - 2, 42); }
         if (lift) doorsAnim.push({ key: keyPrefix + '.lift', apply: f => { dk.rotation.x = -55 * DEG * f; } });
       };
       deckParts(dd.slatTop, !!b.lift && b.kind !== 'bunk', 'b' + b.id);
