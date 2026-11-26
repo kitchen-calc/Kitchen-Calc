@@ -330,7 +330,8 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         const layer = d.ri % 2, z = D + .4 + layer * 3.4, grp = new THREE.Group(); grp.position.set(d.x, 0, z); wg.add(grp);
         face(grp, 0, d.y);
         if (d.fill !== 'dsp' && !gl) { box(d.w, 2.2, th + .4, M.steel, 0, d.y, -.2, null, grp); box(d.w, 2.2, th + .4, M.steel, 0, d.y + d.h - 2.2, -.2, null, grp); }
-        doorsAnim.push({ key, apply: f => { grp.position.x = d.x + (layer === 1 ? (d.w - 2.5) * f * (d.left ? -1 : 1) : 0); } });
+        const sdir = d.ri === d.n - 1 ? -1 : d.ri === 0 ? 1 : (d.left ? -1 : 1);   // задняя дверь едет за соседнюю, крайняя — внутрь шкафа, не наружу
+        doorsAnim.push({ key, apply: f => { grp.position.x = d.x + (layer === 1 ? (d.w - 2.5) * f * sdir : 0); } });
       } else {
         const hg = d.hinge || (d.left ? 'L' : 'R'), pv = new THREE.Group(); wg.add(pv);
         if (hg === 'L' || hg === 'R') {
