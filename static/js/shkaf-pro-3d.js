@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=47';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK } from '/static/js/shkaf-pro-core.js?v=47';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=48';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK } from '/static/js/shkaf-pro-core.js?v=48';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -122,7 +122,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       ri.segs.forEach(sg => box(sg[1] - sg[0], H - ph - 2 * t, .3, M.back, sg[0], ph + t, 0));
       bsg.forEach(sg => { const a = sg[0] + (sg[0] <= r.x0 + .1 ? t : 0), b = sg[1] - (sg[1] >= r.x1 - .1 ? t : 0); if (b - a > 1) box(b - a, ph - .2, t, M.plinth, a, 0, D - 6); });
     }));
-    g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === n) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap || R.split || (S.cols[k] && S.cols[k].nl)) return; box(t, L.y1 - g.y0, L.D - z0, M.body, b.x, g.y0, z0, { k: 'col', i: k - 1 }); });
+    g.bnd.forEach((b, k) => { if (!b.has || k === 0 || k === n) return; const L = g.cols[k - 1], R = g.cols[k]; if (L.gap || R.gap || R.split || (S.cols[k] && S.cols[k].nl)) return; box(t, L.y1 - g.y0, L.D - slideK(S) - z0, M.body, b.x, g.y0, z0, { k: 'col', i: k - 1 }); });
     g.cols.forEach((c, i) => inCol(i, () => {
       const pl = new THREE.Mesh(new THREE.PlaneGeometry(c.w, c.y1 - g.y0), new THREE.MeshBasicMaterial({ visible: false })); pl.position.set(c.xa + c.w / 2, (g.y0 + c.y1) / 2, 1); pl.userData.sel = { k: 'col', i }; picks.push(pl); wg.add(pl);
     }));
@@ -139,7 +139,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     S.cols.forEach((col, ci) => inCol(ci, () => {
       const CB = (col.cat && catM(col.cat)) || M.body;   // цвет этого отсека изнутри (полки, ящики, перегородки)
       const c = g.cols[ci]; if (col.gap) return;
-      const D = c.D;
+      const D = c.D - slideK(S);   // у купе спереди 100 мм под двери и рельсы
       colSplits(S, g, ci).forEach(x => box(t, c.y1 - g.y0 - 2 * t, D - z0, CB, x - t / 2, g.y0 + t, z0, { k: 'col', i: ci }));
       col.items.forEach(it => {
         const meta = { k: 'item', id: it.id, col: ci };
@@ -327,13 +327,13 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       const face = (par, dx, dy) => { if (!gl) { box(d.w, d.h, th, mat, dx, dy, 0, meta, par); if (d.fill === 'mdf') grooves(dx, dy, d.w, d.h, th, (S.doors.mp || 'frame'), (MILL_PITCH[S.doors.mp || 'frame'] || 10), meta, par); if (!mz && d.ci != null && S.cols[d.ci] && S.cols[d.ci].dmir) mirrorBox(d.w - 1, d.h - 1, .4, dx + .5, dy + .5, th, meta, par); return; } const f = Math.min(Math.max(1, S.doors.gf || 4), d.w / 2 - .6, d.h / 2 - .6); box(d.w - 2 * f, d.h - 2 * f, .5, M.glassClear, dx + f, dy + f, .5, meta, par); box(d.w, f, 1.8, M.alu, dx, dy, 0, meta, par); box(d.w, f, 1.8, M.alu, dx, dy + d.h - f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx, dy + f, 0, meta, par); box(f, d.h - 2 * f, 1.8, M.alu, dx + d.w - f, dy + f, 0, meta, par); };
       const key = mz ? 'm' + d.mi + '.' + d.i : 'd' + d.i, meta = mz ? { k: 'mezz', i: d.mi, key } : (d.ci != null ? { k: 'col', i: d.ci, key } : { k: 'doors', key });
       if (d.sliding) {
-        const layer = d.ri % 2, z = D + .4 + layer * 3.4, grp = new THREE.Group(); grp.position.set(d.x, 0, z); wg.add(grp);
+        const layer = d.ri % 2, z = (d.runD || D) - 7.8 + layer * 4, grp = new THREE.Group(); grp.position.set(d.x, 0, z); wg.add(grp);
         face(grp, 0, d.y);
         if (d.ri === 0 && d.runW) {   // рельсы купе: нижний у пола перед цоколем, верхний под планкой; планка в цвет фасадов
-          const zr = D + .2, dr = 7.4, PL = SLIDE_PLANK;
-          box(d.runW, .8, dr, M.alu, d.runX, Math.max(0, d.y - 1), zr, null, wg);
-          box(d.runW, PL - .4, dr, M.alu, d.runX, d.runH - PL, zr, null, wg);
-          box(d.runW, PL, 1.6, (S.doors.cat && catM(S.doors.cat)) || M.body, d.runX, d.runH - PL, zr + dr, meta, wg);
+          const RD = d.runD || D, zr = RD - 9, dr = 8.4, PL = SLIDE_PLANK, tp = d.runH - t;   // рельсы накладные: нижний на дне, верхний под крышкой — внутри корпуса
+          box(d.runW, 1, dr, M.alu, d.runX, d.y - 1.2, zr, null, wg);
+          box(d.runW, 1.4, dr, M.alu, d.runX, tp - 1.4, zr, null, wg);
+          box(d.runW, PL, t, (S.doors.cat && catM(S.doors.cat)) || M.body, d.runX, tp - PL, RD - t, meta, wg);   // планка заподлицо с фасадом корпуса
         }
         if (d.fill !== 'dsp' && !gl) { box(d.w, 2.2, th + .4, M.steel, 0, d.y, -.2, null, grp); box(d.w, 2.2, th + .4, M.steel, 0, d.y + d.h - 2.2, -.2, null, grp); }
         // каждая дверь едет по рельсу за соседнюю (крайние — внутрь шкафа); если открыта дверь правее, левая остаётся на месте — как у настоящего купе
