@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=57';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=57';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=58';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=58';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -223,7 +223,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
             m.position.set(ccx, ccy, z + r); m.castShadow = m.receiveShadow = true; m.userData.sel = meta; picks.push(m); wg.add(m);
           }
         } else if (p.kind === 'soft' && p.so === 'e') {   // «края полосами»: по 2 узкие полосы слева и справа, в центре широкая гладкая панель
-          const nw = Math.max(6, (p.sw || 140) / 10), gap = .4, ws = [nw, nw, Math.max(10, p.w - 4 * nw), nw, nw]; let xx = p.x;
+          const nw = Math.max(6, (p.sw || 140) / 10), gap = .4, ne = p.gp >= 1 && p.gp <= 6 ? Math.round(p.gp) : 2, side = Array(ne).fill(nw), ws = side.concat([Math.max(10, p.w - 2 * ne * nw)], side); let xx = p.x;   // gp — полос у каждого края
           ws.forEach(w0 => { const w = w0 - gap, h = p.h - gap, r = Math.min(sd * .45, w / 2 - .05, h / 2 - .05, 2.2), shp = new THREE.Shape(); shp.moveTo(0, 0); shp.lineTo(w - 2 * r, 0); shp.lineTo(w - 2 * r, h - 2 * r); shp.lineTo(0, h - 2 * r); shp.lineTo(0, 0);
             const m = new THREE.Mesh(new THREE.ExtrudeGeometry(shp, { depth: Math.max(.05, sd - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r, bevelSegments: 6, curveSegments: 4 }), sm);
             m.position.set(xx + gap / 2 + r, p.y + gap / 2 + r, z + r); m.castShadow = m.receiveShadow = true; m.userData.sel = meta; picks.push(m); wg.add(m); xx += w0; });
@@ -334,7 +334,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         const row = (len, cb) => { const n = Math.max(1, Math.round(len / 21)), sg = .5, sw = (len - (n - 1) * sg) / n; for (let k = 0; k < n; k++) cb(k * (sw + sg), sw); };
         const hs = b.sh, hf = b.fh - b.lg;
         { const FW = b.softside ? W + 2 * sd : W, fx = b.softside ? -sd : 0;
-          if (b.footpat === 'e') { const nw = 14, ws = [nw, nw, Math.max(10, FW - 4 * nw), nw, nw]; let o = 0; ws.forEach(w0 => { strip(w0 - .5, hf, fx + o + .25, b.lg, L, 0); o += w0; }); }   // изножье: края полосами, центр гладкий
+          if (b.footpat === 'e') { const nw = 14, ne = b.footn || 2, side = Array(ne).fill(nw), ws = side.concat([Math.max(10, FW - 2 * ne * nw)], side); let o = 0; ws.forEach(w0 => { strip(w0 - .5, hf, fx + o + .25, b.lg, L, 0); o += w0; }); }   // изножье: края полосами, центр гладкий
           else row(FW, (o, sw) => strip(sw, hf, fx + o, b.lg, L, 0)); }                              // изножье
         if (b.softside) { row(L - t, (o, sw) => strip(sw, hs, W, b.lg, t + o + sw, Math.PI / 2)); row(L - t, (o, sw) => strip(sw, hs, 0, b.lg, t + o, -Math.PI / 2)); }   // боковины — только по желанию
       }
