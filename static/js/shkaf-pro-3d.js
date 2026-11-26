@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=53';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=53';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=54';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=54';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -207,7 +207,33 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       const meta = { k: 'panel', i: pi }, z = p.mount === 'front' ? D + 3.8 : (p.mount === 'free' ? Math.max(.5, p.pz || 30) : .5);
       if (p.kind === 'slats' || p.kind === 'soft') {   // рейки или мягкие полосы (ткань)
         const sw = (p.sw || 100) / 10, sd = (p.sd || 32) / 10, sg = (p.sg || 20) / 10, vert = p.so !== 'h', span = vert ? p.w : p.h, cnt = Math.max(1, Math.floor((span + sg) / (sw + sg))), sm = p.kind === 'soft' ? ((p.cat && catM(p.cat)) || M.cushion) : pB;
-        if (p.kind === 'soft') {   // мягкие полосы: скруглённые края, как настоящая обивка (поролон + ткань)
+        if (p.kind === 'soft' && p.so === 'd') {   // стёжка ромбом: мягкие ромбы-подушки, у краёв обрезаны по прямоугольнику панели
+          const dw = Math.max(10, (p.sw || 400) / 10), dh = dw, gap = .35, X0 = p.x, X1 = p.x + p.w, Y0 = p.y, Y1 = p.y + p.h;
+          const clip = (poly, a, b, c) => { const out = []; for (let i = 0; i < poly.length; i++) { const P = poly[i], Q = poly[(i + 1) % poly.length], dp = a * P[0] + b * P[1] + c, dq = a * Q[0] + b * Q[1] + c; if (dp >= 0) out.push(P); if ((dp >= 0) !== (dq >= 0)) { const k = dp / (dp - dq); out.push([P[0] + (Q[0] - P[0]) * k, P[1] + (Q[1] - P[1]) * k]); } } return out; };
+          const r = Math.min(sd * .4, 1.6);
+          for (let j = -1; j * dh / 2 <= p.h + dh; j++) for (let i = -1; i * dw <= p.w + dw; i++) {
+            const cx = X0 + i * dw + (j & 1 ? dw / 2 : 0), cy = Y0 + j * dh / 2, hw = dw / 2 - gap, hh = dh / 2 - gap;
+            let poly = [[cx, cy - hh], [cx + hw, cy], [cx, cy + hh], [cx - hw, cy]];
+            poly = clip(poly, 1, 0, -(X0 + gap / 2)); poly = clip(poly, -1, 0, X1 - gap / 2); poly = clip(poly, 0, 1, -(Y0 + gap / 2)); poly = clip(poly, 0, -1, Y1 - gap / 2);
+            if (poly.length < 3) continue;
+            const ar = Math.abs(poly.reduce((a, P, k) => { const Q = poly[(k + 1) % poly.length]; return a + P[0] * Q[1] - Q[0] * P[1]; }, 0)) / 2; if (ar < 4) continue;
+            const ccx = poly.reduce((a, P) => a + P[0], 0) / poly.length, ccy = poly.reduce((a, P) => a + P[1], 0) / poly.length, sh = new THREE.Shape();
+            poly.forEach((P, k) => { const x = ccx + (P[0] - ccx) * (1 - 2 * r / Math.max(dw, 8)) - ccx, y = ccy + (P[1] - ccy) * (1 - 2 * r / Math.max(dh, 8)) - ccy; if (k) sh.lineTo(x, y); else sh.moveTo(x, y); });
+            const geo = new THREE.ExtrudeGeometry(sh, { depth: Math.max(.05, sd - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r * .9, bevelSegments: 5, curveSegments: 3 }), m = new THREE.Mesh(geo, sm);
+            m.position.set(ccx, ccy, z + r); m.castShadow = m.receiveShadow = true; m.userData.sel = meta; picks.push(m); wg.add(m);
+          }
+        } else if (p.kind === 'soft' && p.so === 'b') {   // «кирпичик»: мягкие прямоугольные плитки рядами, каждый второй ряд сдвинут на полплитки
+          const tw = Math.max(10, (p.sw || 500) / 10), th = p.gp >= 8 ? p.gp : 25, gap = .35, nr = Math.max(1, Math.round(p.h / th)), rh = p.h / nr;
+          for (let j = 0; j < nr; j++) {
+            const y0 = p.y + j * rh, sh0 = j & 1 ? tw / 2 : 0;
+            for (let xa = p.x - sh0; xa < p.x + p.w - .5; xa += tw) {
+              const a = Math.max(p.x, xa), b = Math.min(p.x + p.w, xa + tw), w = b - a - gap, h = rh - gap; if (w < 3) continue;
+              const r = Math.min(sd * .45, w / 2 - .05, h / 2 - .05, 2), shp = new THREE.Shape(); shp.moveTo(0, 0); shp.lineTo(w - 2 * r, 0); shp.lineTo(w - 2 * r, h - 2 * r); shp.lineTo(0, h - 2 * r); shp.lineTo(0, 0);
+              const m = new THREE.Mesh(new THREE.ExtrudeGeometry(shp, { depth: Math.max(.05, sd - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r, bevelSegments: 6, curveSegments: 4 }), sm);
+              m.position.set(a + gap / 2 + r, y0 + gap / 2 + r, z + r); m.castShadow = m.receiveShadow = true; m.userData.sel = meta; picks.push(m); wg.add(m);
+            }
+          }
+        } else if (p.kind === 'soft') {   // мягкие полосы: скруглённые края, как настоящая обивка (поролон + ткань)
           const pill = (w, h) => { const r = Math.min(sd * .45, w / 2 - .05, h / 2 - .05, 2.2), sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(w - 2 * r, 0); sh.lineTo(w - 2 * r, h - 2 * r); sh.lineTo(0, h - 2 * r); sh.lineTo(0, 0);
             const g = new THREE.ExtrudeGeometry(sh, { depth: Math.max(.05, sd - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r, bevelSegments: 6, curveSegments: 4 }); return { g, r }; };
           for (let k = 0; k < cnt; k++) { const o = k * (sw + sg), w = vert ? sw : p.w, h = vert ? p.h : sw, px = vert ? p.x + o : p.x, py = vert ? p.y : p.y + o, q = pill(w, h), m = new THREE.Mesh(q.g, sm);
@@ -290,7 +316,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       B(t, b.sh, L - 2 * t, bB, 0, b.lg, t); B(t, b.sh, L - 2 * t, bB, W - t, b.lg, t);
       B(W, b.hh - b.lg, t, bB, 0, b.lg, 0); B(W, b.fh - b.lg, t, bB, 0, b.lg, L - t);
       if (b.softbase) {   // мягкий низ: скруглённые вертикальные полосы (поролон 40 + ткань) снаружи на боковинах и изножье
-        const sd = BED_SOFT, SM = M.cushion, pillG = (w, h) => { const r = Math.min(sd * .45, w / 2 - .05, h / 2 - .05, 2), sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(w - 2 * r, 0); sh.lineTo(w - 2 * r, h - 2 * r); sh.lineTo(0, h - 2 * r); sh.lineTo(0, 0);
+        const sd = BED_SOFT, SM = (b.scat && catM(b.scat)) || M.cushion, pillG = (w, h) => { const r = Math.min(sd * .45, w / 2 - .05, h / 2 - .05, 2), sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(w - 2 * r, 0); sh.lineTo(w - 2 * r, h - 2 * r); sh.lineTo(0, h - 2 * r); sh.lineTo(0, 0);
           return { g: new THREE.ExtrudeGeometry(sh, { depth: Math.max(.05, sd - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r, bevelSegments: 6, curveSegments: 4 }), r }; };
         const strip = (w, h, px, py, pz, ry) => { const q = pillG(w, h), m = new THREE.Mesh(q.g, SM), gr = new THREE.Group(); m.position.set(q.r, q.r, q.r); m.castShadow = m.receiveShadow = true; m.userData.sel = base; picks.push(m); gr.add(m); gr.position.set(px, py, pz); gr.rotation.y = ry; bg.add(gr); };
         const row = (len, cb) => { const n = Math.max(1, Math.round(len / 21)), sg = .5, sw = (len - (n - 1) * sg) / n; for (let k = 0; k < n; k++) cb(k * (sw + sg), sw); };
