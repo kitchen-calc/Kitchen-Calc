@@ -320,7 +320,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       }
     }));
     // двери: основные (по секциям) и антресолей (каждая своими)
-    const dl = doorList(S);
+    const dl = doorList(S), slideSt = {};
     dl.forEach(d => inCol(d.zone === 'main' && d.ci != null ? d.ci : -1, () => {
       const D = d.ci != null && g.cols[d.ci] ? g.cols[d.ci].D : S.D;
       const mz = d.zone === 'mezz', gl = d.fill === 'glass', mat = (d.fill === 'dsp' || d.fill === 'mdf') ? ((d.ci != null && S.cols[d.ci] && S.cols[d.ci].dcat && catM(S.cols[d.ci].dcat)) || (S.doors.cat && catM(S.doors.cat)) || M.body) : (d.fill === 'laco' ? M.glass(S.doors.laco) : (gl ? M.glassClear : M.mirror)), th = (d.fill === 'dsp' || d.fill === 'mdf') ? 1.6 : .8;
@@ -336,8 +336,9 @@ export function createPro3D(container, hooks = {}, opts = {}) {
           box(d.runW, PL, 1.6, (S.doors.cat && catM(S.doors.cat)) || M.body, d.runX, d.runH - PL, zr + dr, meta, wg);
         }
         if (d.fill !== 'dsp' && !gl) { box(d.w, 2.2, th + .4, M.steel, 0, d.y, -.2, null, grp); box(d.w, 2.2, th + .4, M.steel, 0, d.y + d.h - 2.2, -.2, null, grp); }
-        const sdir = d.ri === d.n - 1 ? -1 : d.ri === 0 ? 1 : (d.left ? -1 : 1);   // задняя дверь едет за соседнюю, крайняя — внутрь шкафа, не наружу
-        doorsAnim.push({ key, apply: f => { grp.position.x = d.x + (layer === 1 ? (d.w - 2.5) * f * sdir : 0); } });
+        // каждая дверь едет по рельсу за соседнюю (крайние — внутрь шкафа); если открыта дверь правее, левая остаётся на месте — как у настоящего купе
+        const st = slideSt[d.runX] || (slideSt[d.runX] = { f: [], g: [], d: [] }); st.f[d.ri] = 0; st.g[d.ri] = grp; st.d[d.ri] = d;
+        doorsAnim.push({ key, apply: f => { st.f[d.ri] = f; st.d.forEach((dd, i) => { if (!dd || !st.g[i]) return; const dir = i === dd.n - 1 ? -1 : i === 0 ? 1 : (dd.left ? -1 : 1), later = st.f.slice(i + 1).reduce((a, v) => Math.max(a, v || 0), 0); st.g[i].position.x = dd.x + (dd.w - 2.5) * (st.f[i] || 0) * (1 - later) * dir; }); } });
       } else {
         const hg = d.hinge || (d.left ? 'L' : 'R'), pv = new THREE.Group(); wg.add(pv);
         if (hg === 'L' || hg === 'R') {
