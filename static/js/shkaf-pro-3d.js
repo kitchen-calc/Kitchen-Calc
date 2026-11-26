@@ -207,7 +207,12 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       const meta = { k: 'panel', i: pi }, z = p.mount === 'front' ? D + 3.8 : (p.mount === 'free' ? Math.max(.5, p.pz || 30) : .5);
       if (p.kind === 'slats' || p.kind === 'soft') {   // рейки или мягкие полосы (ткань)
         const sw = (p.sw || 100) / 10, sd = (p.sd || 32) / 10, sg = (p.sg || 20) / 10, vert = p.so !== 'h', span = vert ? p.w : p.h, cnt = Math.max(1, Math.floor((span + sg) / (sw + sg))), sm = p.kind === 'soft' ? ((p.cat && catM(p.cat)) || M.cushion) : pB;
-        for (let k = 0; k < cnt; k++) { const o = k * (sw + sg); if (vert) box(sw, p.h, sd, sm, p.x + o, p.y, z, meta); else box(p.w, sw, sd, sm, p.x, p.y + o, z, meta); }
+        if (p.kind === 'soft') {   // мягкие полосы: скруглённые края, как настоящая обивка (поролон + ткань)
+          const pill = (w, h) => { const r = Math.min(sd * .45, w / 2 - .05, h / 2 - .05, 2.2), sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(w - 2 * r, 0); sh.lineTo(w - 2 * r, h - 2 * r); sh.lineTo(0, h - 2 * r); sh.lineTo(0, 0);
+            const g = new THREE.ExtrudeGeometry(sh, { depth: Math.max(.05, sd - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r, bevelSegments: 6, curveSegments: 4 }); return { g, r }; };
+          for (let k = 0; k < cnt; k++) { const o = k * (sw + sg), w = vert ? sw : p.w, h = vert ? p.h : sw, px = vert ? p.x + o : p.x, py = vert ? p.y : p.y + o, q = pill(w, h), m = new THREE.Mesh(q.g, sm);
+            m.position.set(px + q.r, py + q.r, z + q.r); m.castShadow = m.receiveShadow = true; m.userData.sel = meta; picks.push(m); wg.add(m); }
+        } else for (let k = 0; k < cnt; k++) { const o = k * (sw + sg); if (vert) box(sw, p.h, sd, sm, p.x + o, p.y, z, meta); else box(p.w, sw, sd, sm, p.x, p.y + o, z, meta); }
         return;
       }
       const th = (p.kind === 'dsp' || p.kind === 'mdf') ? 1.6 : .7;
