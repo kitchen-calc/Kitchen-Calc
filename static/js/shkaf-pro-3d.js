@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=50';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB } from '/static/js/shkaf-pro-core.js?v=50';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=51';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB } from '/static/js/shkaf-pro-core.js?v=51';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -289,7 +289,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       const deckParts = (y0, lift, keyPrefix) => {
         const dk = new THREE.Group(); dk.position.set(0, y0, t); bg.add(dk);
         const dm = lift ? Object.assign({ key: keyPrefix + '.lift' }, base) : base, bx = (w, h, d2, mat, x, y, z) => box(w, h, d2, mat, x, y, z, dm, dk), n = dd.n, span = (b.ml + 1) - 6.8;
-        if (b.dspdeck) { const hw2 = (W - 2 * t) / 2, hl = (b.ml + 1) / 2; for (let i = 0; i < 2; i++) for (let k = 0; k < 2; k++) bx(hw2 - .2, t, hl - .2, bB, t + i * hw2 + .1, 1.2, k * hl + .1); }   // 4 щита ДСП
+        if (b.dspdeck) { const ql = (b.ml + 1) / 4; for (let k = 0; k < 4; k++) bx(W - 2 * t - .2, t, ql - .2, bB, t + .1, 1.2, k * ql + .1); }   // 4 щита ДСП на всю ширину, один за другим
         else for (let k = 0; k < n; k++) bx(W - 2 * t, .8, 6.8, wood, t, 0, n > 1 ? k * span / (n - 1) : 0);
         const my = b.dspdeck ? 1.2 + t : .8;   // матрас лежит на щитах ДСП или на ламелях
         if (!b.nomat) bx(b.mw, b.mt, b.ml, mMat, t + .5, my, .5);   // без матраса — только каркас с ламелями
