@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
 import * as C from '/static/js/shkaf-pro-core.js?v=47';
-import { TPL } from '/static/js/shkaf-tpl.js?v=35';
+import { TPL } from '/static/js/shkaf-tpl.js?v=36';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=12';
