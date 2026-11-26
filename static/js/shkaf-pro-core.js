@@ -297,7 +297,7 @@ export function mkBed(x, kind) {
 }
 export const BED_RIB = 12;   // высота поперечины / ребра под ДСП-основанием кровати, см
 export function bedDims(b, t) {   // габариты кровати, см (t — толщина ЛДСП)
-  const W = b.mw + 1 + 2 * t, L = b.ml + 1 + 2 * t, slatTop = b.lg + b.sh - 3.2;
+  const W = b.mw + 1 + 2 * t, L = b.ml + 1 + 2 * t, slatTop = b.lg + b.sh - 3.2 - (b.ddrop || 0);   // ddrop — основание ниже края боковин, см
   const postH = b.kind === 'bunk' ? b.lv2 + b.mt + b.rail : 0;
   return { W, L, slatTop, mTop: slatTop + b.mt, postH, H: Math.max(b.hh, b.kind === 'bunk' ? postH + 2 : b.lg + b.sh + b.mt), n: Math.max(1, Math.floor((b.ml + 1) / 10.8)) };
 }
@@ -619,7 +619,7 @@ export function buildParts(S) {
       add(gr, 'Ламель ортопедическая' + lbl, n, b.mw + 1, 6.8, .8, 'Бук 68×8', 0, 'шаг ' + Math.round((b.ml + 1) / n * 10) + ' мм', 'metal');
       addHw('Основание', 'Ламеледержатель (пара)', n, 'пар', 1800);
     }
-    addHw('Крепёж', 'Ножка кровати ' + mm(b.lg) + ' мм', b.mw >= 140 ? 6 : 4, 'шт.', 16000);
+    if (b.lg > 0) addHw('Крепёж', 'Ножка кровати ' + mm(b.lg) + ' мм', b.mw >= 140 ? 6 : 4, 'шт.', 16000); else addHw('Крепёж', 'Подпятник (кровать стоит на полу без ножек)', 4, 'шт.', 2000);
     addHw('Крепёж', 'Кроватный замок / угловая стяжка', 4, 'шт.', 9000);
     joints_u += 16;
     const mp = Math.round(BED_STYLES[b.style].price * (b.mw * b.ml / 10000));
@@ -882,7 +882,7 @@ export function sanitize(S) {
   { const rm = S.room || {}, P = Array.isArray(rm.poly) ? rm.poly.map(p => [Number(p[0]), Number(p[1])]) : null;
     o.room = { W: r1(n(rm.W, 100, 1500, 400)), D: r1(n(rm.D, 100, 1500, 300)), H: r1(n(rm.H, 180, 400, 260)), ox: r1(n(rm.ox, -500, 1500, 0)), oz: r1(n(rm.oz, -500, 1500, 0)), rot: [0, 90, 180, 270].includes(rm.rot) ? rm.rot : 0, mag: rm.mag !== false, poly: P && P.every(p => p.every(v => isFinite(v))) && rpValid(P) ? P : null, set: !!rm.set, view: rm.view === 'room' ? 'room' : '', fin: (() => { const f = rm.fin || {}, r = {}; ['floor', 'wall'].forEach(k => { const a = f[k]; if (Array.isArray(a) && ROOM_FINISH[k][a[0]]) r[k] = [a[0], /^#[0-9a-f]{6}$/i.test(a[1] || '') ? a[1] : '']; }); return Object.keys(r).length ? r : null; })() }; }
   o.units = (Array.isArray(S.units) ? S.units : []).slice(0, 24).map(u => ({ id: uid(), x: r1(n(u && u.x, -600, 1600, 0)), pz: r1(n(u && u.pz, 0, 400, 0)), w: r1(n(u && u.w, 25, 300, 80)), h: r1(n(u && u.h, 30, 200, 100)), d: r1(n(u && u.d, 15, 80, 35)), kind: UNIT_KINDS[u && u.kind] ? u.kind : 'flap', n: n(u && u.n, 1, 8, 2) | 0, fill: ['dsp', 'mdf', 'glass', 'mirror'].includes(u && u.fill) ? u.fill : 'dsp', seat: !!(u && u.seat), legs: r1(n(u && u.legs, 0, (u && u.hang) ? 200 : 20, 8)), hang: !!(u && u.hang), led: !!(u && u.led), fp: fpOf(u), cat: catId(u && u.cat) }));
-  o.beds = (Array.isArray(S.beds) ? S.beds : []).slice(0, 12).map(b => { const k = b && b.kind === 'bunk' ? 'bunk' : 'single', d = mkBed(0, k); return { id: uid(), x: r1(n(b && b.x, -800, 1800, 0)), pz: r1(n(b && b.pz, 0, 500, 0)), rot: b && b.rot === 90 ? 90 : 0, kind: k, mw: r1(n(b && b.mw, 50, 220, d.mw)), ml: r1(n(b && b.ml, 100, 240, d.ml)), mt: r1(n(b && b.mt, 5, 40, d.mt)), style: BED_STYLES[b && b.style] ? b.style : d.style, mcol: n(b && b.mcol, 0, 5, 0) | 0, sh: r1(n(b && b.sh, 10, 60, d.sh)), hh: r1(n(b && b.hh, 20, 220, d.hh)), fh: r1(n(b && b.fh, 10, 220, d.fh)), lg: r1(n(b && b.lg, 0, 40, d.lg)), drw: n(b && b.drw, 0, 4, 0) | 0, lift: !!(b && b.lift), soft: !!(b && b.soft), bedding: !(b && b.bedding === false), nomat: !!(b && b.nomat), dspdeck: !!(b && b.dspdeck), lv2: r1(n(b && b.lv2, 80, 200, 150)), rail: r1(n(b && b.rail, 10, 60, 28)), ladder: b && b.ladder === 'side' ? 'side' : 'end', steps: n(b && b.steps, 3, 9, 5) | 0, fp: fpOf(b), cat: catId(b && b.cat) }; });
+  o.beds = (Array.isArray(S.beds) ? S.beds : []).slice(0, 12).map(b => { const k = b && b.kind === 'bunk' ? 'bunk' : 'single', d = mkBed(0, k); return { id: uid(), x: r1(n(b && b.x, -800, 1800, 0)), pz: r1(n(b && b.pz, 0, 500, 0)), rot: b && b.rot === 90 ? 90 : 0, kind: k, mw: r1(n(b && b.mw, 50, 220, d.mw)), ml: r1(n(b && b.ml, 100, 240, d.ml)), mt: r1(n(b && b.mt, 5, 40, d.mt)), style: BED_STYLES[b && b.style] ? b.style : d.style, mcol: n(b && b.mcol, 0, 5, 0) | 0, sh: r1(n(b && b.sh, 10, 60, d.sh)), hh: r1(n(b && b.hh, 20, 220, d.hh)), fh: r1(n(b && b.fh, 10, 220, d.fh)), lg: r1(n(b && b.lg, 0, 40, d.lg)), drw: n(b && b.drw, 0, 4, 0) | 0, lift: !!(b && b.lift), soft: !!(b && b.soft), bedding: !(b && b.bedding === false), nomat: !!(b && b.nomat), dspdeck: !!(b && b.dspdeck), ddrop: r1(n(b && b.ddrop, 0, 25, 0)), lv2: r1(n(b && b.lv2, 80, 200, 150)), rail: r1(n(b && b.rail, 10, 60, 28)), ladder: b && b.ladder === 'side' ? 'side' : 'end', steps: n(b && b.steps, 3, 9, 5) | 0, fp: fpOf(b), cat: catId(b && b.cat) }; });
   o.opens = sanitizeOpens(S.opens, roomPoly(o));
   o.objs = (Array.isArray(S.objs) ? S.objs : []).slice(0, 80).map(q => {
     const kind = q && OBJ_KINDS[q.kind] ? q.kind : 'book', d = mkObj(kind, 0, 0), poly = kind === 'custom' && Array.isArray(q.poly) && q.poly.length >= 3 && q.poly.length <= 40 && q.poly.every(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1])) ? q.poly.map(p => [r1(n(p[0], -2000, 2000, 0)), r1(n(p[1], -2000, 2000, 0))]) : (kind === 'custom' ? CORNER_L.map(p => p.slice()) : null);

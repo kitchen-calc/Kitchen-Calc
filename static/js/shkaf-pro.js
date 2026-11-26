@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=51';
-import { TPL } from '/static/js/shkaf-tpl.js?v=44';
+import * as C from '/static/js/shkaf-pro-core.js?v=52';
+import { TPL } from '/static/js/shkaf-tpl.js?v=45';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=12';
@@ -44,7 +44,7 @@ function findItem(id) { for (let ci = 0; ci < S.cols.length; ci++) { const it = 
 const toast = (t) => { const e = $('toast'); if (!e) return; e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2600); };
 
 /* ---------- ввод чисел ---------- */
-const RANGE = { 'op.off': [0, 3000], 'op.w': [2, 600], 'op.h': [2, 400], 'op.y': [0, 400], 'op.d': [0, 200], 'dt.x': [-800, 2500], 'dt.z': [-800, 2500], 'dt.rot': [-90, 450], 'fp.x': [-800, 2500], 'fp.z': [-800, 2500], 'fp.rot': [-90, 450], 'ob.x': [-800, 2500], 'ob.z': [-800, 2500], 'ob.y': [0, 300], 'ob.w': [.5, 600], 'ob.d': [5, 120], 'ob.h': [1, 320], 'ob.n': [0, 12], 'ob.dn': [0, 4], 'ob.dh': [0, 320], 'ob.rot': [-90, 450], W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [8, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [6, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.dz': [0, 80], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [8, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 6], 'col.H': [60, 320], 'col.D': [25, 90], 'room.W': [100, 1500], 'room.D': [100, 1500], 'room.H': [180, 400], 'room.oz': [-500, 1500], 'room.rot': [-90, 450], 'room.ox': [-500, 1500], 'pn.sw': [10, 400], 'pn.sd': [6, 100], 'pn.sg': [0, 200], 'pn.pz': [0, 400], 'pn.gp': [3, 60], 'bd.x': [-800, 1800], 'bd.pz': [0, 500], 'bd.mw': [50, 220], 'bd.ml': [100, 240], 'bd.mt': [5, 40], 'bd.sh': [10, 60], 'bd.hh': [20, 220], 'bd.fh': [10, 220], 'bd.lg': [0, 40], 'bd.drw': [0, 4], 'bd.lv2': [80, 200], 'bd.rail': [10, 60], 'bd.steps': [3, 9], 'un.x': [-600, 1600], 'un.pz': [0, 400], 'un.w': [25, 300], 'un.h': [30, 200], 'un.d': [15, 80], 'un.n': [1, 8], 'un.legs': [0, 200] };
+const RANGE = { 'op.off': [0, 3000], 'op.w': [2, 600], 'op.h': [2, 400], 'op.y': [0, 400], 'op.d': [0, 200], 'dt.x': [-800, 2500], 'dt.z': [-800, 2500], 'dt.rot': [-90, 450], 'fp.x': [-800, 2500], 'fp.z': [-800, 2500], 'fp.rot': [-90, 450], 'ob.x': [-800, 2500], 'ob.z': [-800, 2500], 'ob.y': [0, 300], 'ob.w': [.5, 600], 'ob.d': [5, 120], 'ob.h': [1, 320], 'ob.n': [0, 12], 'ob.dn': [0, 4], 'ob.dh': [0, 320], 'ob.rot': [-90, 450], W: [60, 800], H: [100, 320], D: [25, 90], plinth: [0, 20], 'mezz.h': [8, 90], 'mezz.n': [0, 8], 'mezz.shelves': [0, 3], 'doors.n': [1, 8], 'col.w': [15, 200], 'item.y': [0, 330], 'item.d': [15, 85], 'item.n': [1, 8], 'item.fh': [6, 40], 'item.h': [10, 40], 'item.y1': [0, 330], 'item.dz': [0, 80], 'item.x': [0, 200], 'mz.x': [-100, 900], 'mz.w': [20, 900], 'mz.h': [8, 120], 'mz.y': [0, 340], 'mz.n': [0, 10], 'mz.shelves': [0, 3], 'doors.gf': [2, 30], 'pn.x': [-300, 1200], 'pn.y': [0, 340], 'pn.w': [10, 400], 'pn.h': [10, 340], 'pn.fw': [1, 15], 'item.w': [8, 250], 'col.dn': [0, 6], 'col.H': [60, 320], 'col.D': [25, 90], 'room.W': [100, 1500], 'room.D': [100, 1500], 'room.H': [180, 400], 'room.oz': [-500, 1500], 'room.rot': [-90, 450], 'room.ox': [-500, 1500], 'pn.sw': [10, 400], 'pn.sd': [6, 100], 'pn.sg': [0, 200], 'pn.pz': [0, 400], 'pn.gp': [3, 60], 'bd.x': [-800, 1800], 'bd.pz': [0, 500], 'bd.mw': [50, 220], 'bd.ml': [100, 240], 'bd.mt': [5, 40], 'bd.sh': [10, 60], 'bd.ddrop': [0, 25], 'bd.hh': [20, 220], 'bd.fh': [10, 220], 'bd.lg': [0, 40], 'bd.drw': [0, 4], 'bd.lv2': [80, 200], 'bd.rail': [10, 60], 'bd.steps': [3, 9], 'un.x': [-600, 1600], 'un.pz': [0, 400], 'un.w': [25, 300], 'un.h': [30, 200], 'un.d': [15, 80], 'un.n': [1, 8], 'un.legs': [0, 200] };
 function stepper(label, path, val, step, unit) {
   return `<div class="r"><span>${esc(label)}</span><span class="stp"><button type="button" onpointerdown="PRO.hold(event,'${path}',${-step})">−</button><input type="number" step="any" value="${r1(val)}" onfocus="this.select()" onchange="PRO.set('${path}',this.value)"><button type="button" onpointerdown="PRO.hold(event,'${path}',${step})">+</button><small>${esc(unit || 'см')}</small></span></div>`;
 }
@@ -338,7 +338,7 @@ function sideBed() {
   h += stepper('Ширина матраса', 'bd.mw', b.mw, 1) + stepper('Длина матраса', 'bd.ml', b.ml, 1) + stepper('Толщина матраса', 'bd.mt', b.mt, 1);
   h += `<div class="r"><span>Стиль</span><select onchange="PRO.bStyle(this.value)">${Object.keys(BED_STYLES).map(k => `<option value="${k}" ${b.style === k ? 'selected' : ''}>${BED_STYLES[k].ru}</option>`).join('')}</select></div>`;
   h += `<div class="r"><span>Цвет чехла</span><div class="sw">${BED_COLORS.map((c, i) => `<button type="button" class="swb ${b.mcol === i ? 'on' : ''}" style="background:${c[1]}" title="${c[0]}" onclick="PRO.bCol(${i})"></button>`).join('')}</div></div>`;
-  h += `<div class="sub">Каркас — выше / ниже</div>` + stepper('Высота боковины', 'bd.sh', b.sh, 1) + stepper('Изголовье (от пола)', 'bd.hh', b.hh, 1) + stepper('Изножье (от пола)', 'bd.fh', b.fh, 1) + stepper('Ножки', 'bd.lg', b.lg, 1);
+  h += `<div class="sub">Каркас — выше / ниже</div>` + stepper('Высота боковины', 'bd.sh', b.sh, 1) + stepper('Изголовье (от пола)', 'bd.hh', b.hh, 1) + stepper('Изножье (от пола)', 'bd.fh', b.fh, 1) + stepper('Ножки', 'bd.lg', b.lg, 1) + stepper('Основание ниже края', 'bd.ddrop', b.ddrop || 0, 1);
   h += `<div class="r"><span>Боковины</span>${btn(0, 'PRO.nuBed(\'bd.sh\',-5)', '▼ ниже 5')}${btn(0, 'PRO.nuBed(\'bd.sh\',5)', '▲ выше 5')}</div><div class="r"><span>Изголовье</span>${btn(0, 'PRO.nuBed(\'bd.hh\',-5)', '▼ ниже 5')}${btn(0, 'PRO.nuBed(\'bd.hh\',5)', '▲ выше 5')}</div>`;
   h += `<div class="sub">Опции</div>` + stepper('Ящики под кроватью', 'bd.drw', b.drw, 1, 'шт') + `<div class="r">${btn(!!b.lift, 'PRO.bFlag(\'lift\')', '⤴ Подъёмное основание')}${btn(!!b.soft, 'PRO.bFlag(\'soft\')', '🛋 Мягкое изголовье')}${btn(!!b.bedding, 'PRO.bFlag(\'bedding\')', '🛏 Постель (для вида)')}${btn(!!b.nomat, 'PRO.bFlag(\'nomat\')', '⬚ Без матраса')}${btn(!!b.dspdeck, 'PRO.bFlag(\'dspdeck\')', '▦ Основание: 4 щита ДСП')}</div>`;
   if (bunk) h += `<div class="sub">Второй ярус</div>` + stepper('Высота 2-го яруса (от пола до реек)', 'bd.lv2', b.lv2, 1) + stepper('Бортик над матрасом', 'bd.rail', b.rail, 1) + `<div class="r"><span>Лестница</span>${btn(b.ladder === 'end', "PRO.bLadder('end')", 'С торца')}${btn(b.ladder === 'side', "PRO.bLadder('side')", 'Сбоку')}</div>` + stepper('Ступеней', 'bd.steps', b.steps, 1, 'шт');
@@ -490,7 +490,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=60');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=61');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -634,7 +634,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=59');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=60');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
