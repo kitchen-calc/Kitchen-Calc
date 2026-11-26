@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=51';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB } from '/static/js/shkaf-pro-core.js?v=51';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=52';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB } from '/static/js/shkaf-pro-core.js?v=52';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -281,11 +281,11 @@ export function createPro3D(container, hooks = {}, opts = {}) {
       wg.add(bg);
       const fabric = (BED_COLORS[b.mcol] || BED_COLORS[0])[1], B = (w, h, d2, mat, x, y, z, meta) => box(w, h, d2, mat, x, y, z, meta || base, bg);
       const mMat = stdMat(fabric, { roughness: .95 }), pill = stdMat('#f4f1ec', { roughness: .95 }), duv = stdMat(new THREE.Color(fabric).lerp(new THREE.Color('#ffffff'), .55).getStyle(), { roughness: .97 }), wood = stdMat('#c9a273', { roughness: .6 });
-      [[0, 0], [W - 5, 0], [0, L - 5], [W - 5, L - 5]].forEach(([lx, lz]) => B(5, b.lg, 5, M.plinth, lx, 0, lz));
+      if (b.lg > 0) [[0, 0], [W - 5, 0], [0, L - 5], [W - 5, L - 5]].forEach(([lx, lz]) => B(5, b.lg, 5, M.plinth, lx, 0, lz));
       B(t, b.sh, L - 2 * t, bB, 0, b.lg, t); B(t, b.sh, L - 2 * t, bB, W - t, b.lg, t);
       B(W, b.hh - b.lg, t, bB, 0, b.lg, 0); B(W, b.fh - b.lg, t, bB, 0, b.lg, L - t);
       if (b.soft) B(W - 2, Math.max(2, b.hh - (b.lg + b.sh) - 4), 6, stdMat(fabric, { roughness: .95 }), 1, b.lg + b.sh + 2, t);
-      B(3, 4, L - 2 * t, wood, t, b.lg + b.sh - 6, t); B(3, 4, L - 2 * t, wood, W - t - 3, b.lg + b.sh - 6, t);
+      B(3, 4, L - 2 * t, wood, t, dd.slatTop - 2.8, t); B(3, 4, L - 2 * t, wood, W - t - 3, dd.slatTop - 2.8, t);   // бруски вдоль боковин — под основанием (учитывая опускание ddrop)
       const deckParts = (y0, lift, keyPrefix) => {
         const dk = new THREE.Group(); dk.position.set(0, y0, t); bg.add(dk);
         const dm = lift ? Object.assign({ key: keyPrefix + '.lift' }, base) : base, bx = (w, h, d2, mat, x, y, z) => box(w, h, d2, mat, x, y, z, dm, dk), n = dd.n, span = (b.ml + 1) - 6.8;
