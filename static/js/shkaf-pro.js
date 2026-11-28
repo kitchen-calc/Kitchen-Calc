@@ -1,5 +1,5 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=61';
+import * as C from '/static/js/shkaf-pro-core.js?v=62';
 import { TPL } from '/static/js/shkaf-tpl.js?v=62';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
@@ -178,6 +178,7 @@ function sideGlobal() {
     h += `<div class="r">${btn(moveOn, 'PRO.moveMode()', '✋ Двигать шкаф мышью: ' + (moveOn ? 'вкл (обычный режим: выкл)' : 'выкл'))}</div>`;
     h += `<div class="r">${btn(S.room.mag, 'PRO.magnet()', '🧲 Магнит к стенам: ' + (S.room.mag ? 'вкл' : 'выкл'))}${btn(0, 'PRO.rotW(-90)', '↺ 90°')}${btn(0, 'PRO.rotW(90)', '↻ 90°')}</div>`;
     h += stepper('Шкаф: от левой стены, см', 'room.ox', S.room.ox, 5) + stepper('Шкаф: от дальней стены, см', 'room.oz', S.room.oz || 0, 5) + stepper('Поворот шкафа, °', 'room.rot', S.room.rot || 0, 90) + `<div class="r">${btn(0, 'PRO.centerWall()', 'По центру стены')}${btn(0, 'PRO.leftWall()', 'К левому углу')}${btn(0, 'PRO.rightWall()', 'К правому углу')}</div>`; }
+  h += `<div class="sub">Задняя стенка ХДФ — цвет</div><div class="r">${btn(S.hdf === 'w', "PRO.hdfCol('w')", '⬜ Белая')}${btn(S.hdf === 'g', "PRO.hdfCol('g')", '◻ Серая')}${btn(S.hdf === 'c', "PRO.hdfCol('c')", '🎨 В цвет корпуса')}</div>`;
   h += `<div class="sub">Убрать часть корпуса</div><div class="r">${btn(S.nb, 'PRO.flag(\'nb\')', S.nb ? '✔ Без спинки' : 'Убрать спинку')}${btn(S.nsl, 'PRO.flag(\'nsl\')', S.nsl ? '✔ Без левого бока' : 'Убрать левый бок')}${btn(S.nsr, 'PRO.flag(\'nsr\')', S.nsr ? '✔ Без правого бока' : 'Убрать правый бок')}</div><div class="note">Нужно, когда шкаф встаёт между стен или в нишу: боковины и спинка берутся из стены. Раскрой пересчитывается. Спинку и перегородку можно убирать и у отдельного отсека.</div>`;
   h += `<div class="sub">Размеры шкафа</div>` + stepper('Ширина', 'W', g.W, 1) + stepper('Высота корпуса', 'H', S.H, 1) + stepper('Глубина', 'D', S.D, 1) + stepper('Цоколь', 'plinth', S.plinth, 1);
   h += `<div class="r"><span>ЛДСП</span>${btn(S.t === 1.6, 'PRO.t(1.6)', '16 мм')}${btn(S.t === 1.8, 'PRO.t(1.8)', '18 мм')}</div>`;
@@ -491,7 +492,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=71');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=72');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -858,6 +859,7 @@ window.PRO = {
   newProject: () => { if (confirm('Сохранить текущий проект в файл перед новым?\n\nОК — скачать файл и начать новый\nОтмена — выбор дальше')) window.PRO.saveFile(); if (confirm('Начать новый проект с шаблона?')) mutate(() => { S = defState(); sel = { k: 'global' }; }); },
   exportSheets: kind => { if (!lastSheets.length) { toast('Чертежи ещё строятся — подождите секунду'); return; } window.exportSheets(lastSheets, kind, S.name, toast); },
   flag: f => mutate(() => { S[f] = !S[f]; }),
+  hdfCol: v => mutate(() => { S.hdf = v; }),
   colFlag: f => mutate(() => { const c = S.cols[sel.i]; if (c) { if (c[f]) delete c[f]; else c[f] = true; } }),
   pickCat: t => {
     const cur = t === 'col' ? (S.cols[sel.i] || {}).cat : t === 'cold' ? (S.cols[sel.i] || {}).dcat : t === 'colr' ? (S.cols[sel.i] || {}).rcat : t === 's' ? S.cat : t === 'doors' ? S.doors.cat : t === 'unit' ? (S.units[sel.ui] || {}).cat : t === 'bed' ? (S.beds[sel.bi] || {}).cat : t === 'obj' ? (S.objs[sel.oi] || {}).cat : (S.panels[sel.pi] || {}).cat;

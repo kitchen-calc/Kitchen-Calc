@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=61';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=61';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=62';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=62';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -64,7 +64,7 @@ export function createPro3D(container, hooks = {}, opts = {}) {
     root = new THREE.Group(); scene.add(root); picks = []; doorsAnim = []; selBox = null;
     const g = geom(S), t = S.t, W = g.W, H = S.H, D = S.D, ph = S.plinth, hex = S.cat && window.KCCAT && window.KCCAT.find(S.cat) ? window.KCCAT.find(S.cat).hex : bodyHex(S);
     const M = {
-      body: (S.cat && catM(S.cat)) || stdMat(hex), bodyDark: stdMat(new THREE.Color(hex).multiplyScalar(.82).getStyle()), back: stdMat(new THREE.Color(hex).multiplyScalar(.9).getStyle(), { roughness: .8 }),
+      body: (S.cat && catM(S.cat)) || stdMat(hex), bodyDark: stdMat(new THREE.Color(hex).multiplyScalar(.82).getStyle()), back: stdMat(S.hdf === 'c' ? new THREE.Color(hex).multiplyScalar(.9).getStyle() : S.hdf === 'g' ? '#b4b7ba' : '#f2f2ef', { roughness: .8 }),   // задняя стенка ХДФ: белая (по умолчанию), серая или в цвет корпуса
       plinth: stdMat('#2d2b29', { roughness: .7 }), chrome: stdMat('#e8ecef', { roughness: .15, metalness: 1 }), steel: stdMat('#9aa0a6', { roughness: .35, metalness: .7 }),
       led: new THREE.MeshStandardMaterial({ color: '#fff3c4', emissive: '#ffe29a', emissiveIntensity: 2 }), cushion: stdMat('#8b8f94', { roughness: .9 }), glowMat: mkGlow(), glowR: mkGlowR(), groove: stdMat(new THREE.Color(hex).multiplyScalar(.55).getStyle(), { roughness: .8 }), inner: stdMat('#efefec', { roughness: .8 }), black: stdMat('#1a1b1d', { roughness: .3, metalness: .4 }),
       mirror: new THREE.MeshStandardMaterial({ color: '#eef5f9', roughness: .06, metalness: .8, envMapIntensity: 2.4 }),
