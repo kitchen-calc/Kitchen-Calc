@@ -19,7 +19,7 @@ function load() {
   if (m) { const s = decodeState(m[1]); if (s) return s; }
   const tn = new URLSearchParams(location.search).get('t');   // короткая ссылка на готовый проект
   if (tn && !TPL[tn]) setTimeout(() => toast('Проект «' + tn + '» не найден — показан шкаф по умолчанию'), 900);
-  if (tn && TPL[tn]) { const s = decodeState(TPL[tn]); if (s) { try { history.replaceState(null, '', location.pathname); } catch (e) {} return s; } }
+  if (tn && TPL[tn]) { const s = decodeState(TPL[tn]); if (s) { const hc = { w: 'w', bel: 'w', g: 'g', ser: 'g', c: 'c', kor: 'c' }[new URLSearchParams(location.search).get('hdf')]; if (hc) s.hdf = hc; try { history.replaceState(null, '', location.pathname); } catch (e) {} return s; } }
   if (!VIEW) { try { const j = localStorage.getItem('kc_pro'); if (j) { const s = sanitize(JSON.parse(j)); if (s) return s; } } catch (e) {} }
   return defState();
 }
