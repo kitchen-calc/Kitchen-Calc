@@ -470,6 +470,7 @@ export function colSplits(S, g, ci) {   // перегородки «у кажд�
   return out;
 }
 export const SLIDE_PLANK = 6;   // купе: верхняя планка 60 мм под крышкой закрывает верхний рельс
+// Lucido LC 75 AY (doors.sl = 'lucido'): безрамочная система, дверь = проём − 12 мм, без верхней планки
 export const SLIDE_K = 10;      // купе: двери внутри корпуса — зона рельсов 100 мм спереди, перегородки и полки мельче на неё
 export function slideK(S) { return S.doors && S.doors.kind === 'sliding' ? SLIDE_K : 0; }
 export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, left, hinge:'L'|'R'|'U'|'D', n, sliding}]
@@ -478,7 +479,7 @@ export function doorList(S) {   // [{zone:'main'|'mezz', i, x, w, h, y, fill, le
     const hh = (g.runs[0] ? g.runs[0].H : S.H) - S.plinth - .4, tot = g.runs.reduce((a, r) => a + (r.x1 - r.x0), 0), sliding = d.kind === 'sliding' && g.runs.length === 1; let idx = 0;
     g.runs.forEach(r => {
       const rw = r.x1 - r.x0, n = sliding ? d.n : Math.max(1, Math.round(d.n * rw / tot));
-      if (sliding) { const iw = rw - 2 * t, w = (iw + (n - 1) * 2.5) / n, y0 = S.plinth + t + 1.2, h = r.H - t - 2 - y0; for (let i = 0; i < n; i++) { out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + t + i * (w - 2.5), w, h, y: y0, runX: r.x0 + t, runW: iw, runH: r.H, runD: r.D, fill: d.fills[idx] || 'dsp', sliding: true, left: i < n / 2, hinge: 'L', gf: d.gf || 4 }); idx++; } }
+      if (sliding) { const luc = d.sl === 'lucido', iw = rw - 2 * t, w = (iw + (n - 1) * 2.5) / n, y0 = S.plinth + t + (luc ? .8 : 1.2), h = luc ? (r.H - t) - (S.plinth + t) - 1.2 : r.H - t - 2 - y0; for (let i = 0; i < n; i++) { out.push({ zone: 'main', i: idx, ri: i, n, x: r.x0 + t + i * (w - 2.5), w, h, y: y0, runX: r.x0 + t, runW: iw, runH: r.H, runD: r.D, fill: d.fills[idx] || 'dsp', sliding: true, left: i < n / 2, hinge: 'L', gf: d.gf || 4 }); idx++; } }
       else void 0;
     });
     if (!sliding) {   // распашные: у каждого отсека свои двери (0, 1 или 2), своё заполнение и открывание
@@ -810,10 +811,10 @@ export function buildParts(S) {
   addHw('Двери', HDN, handles + handles0, 'шт.', HDP);
   { const tp = typeof KIS !== 'undefined' && KIS.open && KIS.open.tipon_s; addHw('Двери', tp ? tp.ru : 'Толкатель push-to-open (без ручки)', push0, 'шт.', tp ? tp.price : 40000); }
   if (slidingN) {
-    { const sd = doors.find(d => d.sliding); curCat = catId(S.doors.cat) || ''; add('Двери', 'Планка верхняя купе (закрывает рельс)', 1, sd.runW, SLIDE_PLANK, t, body, sd.runW / 100, 'между боковинами под крышкой, заподлицо с фасадом, в цвет фасадов'); curCat = ''; }
+    if (S.doors.sl !== 'lucido') { const sd = doors.find(d => d.sliding); curCat = catId(S.doors.cat) || ''; add('Двери', 'Планка верхняя купе (закрывает рельс)', 1, sd.runW, SLIDE_PLANK, t, body, sd.runW / 100, 'между боковинами под крышкой, заподлицо с фасадом, в цвет фасадов'); curCat = ''; }
     let kit = T.doorKit * Math.pow(slidingN / 3, .9); const rw = g.runs[0].x1 - g.runs[0].x0;
     if (sSel) kit = slidingN <= 2 ? sSel.p2 : (slidingN === 3 ? sSel.p3 : sSel.p3 * slidingN / 3); else if (rw > 270) kit += (rw / 100 - 2.7) * 2 * T.rail;
-    addHw('Двери', (sSel ? sSel.ru : 'Система купе (направляющие, ролики, профили)') + ' на ' + slidingN + ' двери', 1, 'комплект', kit);
+    addHw('Двери', (S.doors.sl === 'lucido' ? 'Lucido LC 75 AY (безрамочная): ' + 4 * slidingN + ' роликов, 2 рельса, стопоры' : (sSel ? sSel.ru : 'Система купе (направляющие, ролики, профили)')) + ' на ' + slidingN + ' двери', 1, 'комплект', kit);
   }
   return { parts, hw, doors, g };
 }
@@ -869,7 +870,7 @@ export function sanitize(S) {
   const D = defState(), n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? clamp(v, a, b) : d; };
   const o = { v: 2, W: n(S.W, 60, 800, 240), H: n(S.H, 100, 320, 200), D: n(S.D, 25, 90, 60), t: S.t === 1.8 ? 1.8 : 1.6, plinth: n(S.plinth, 0, 20, 8), tier: n(S.tier, 0, 2, 1) | 0, color: n(S.color, 0, 99, 0) | 0, custom: /^#[0-9a-f]{6}$/i.test(S.custom || '') ? S.custom : null,
     mezzes: [],
-    doors: { mp: MILLS[S.doors && S.doors.mp] ? S.doors.mp : 'frame', kind: ['none', 'swing', 'sliding'].includes(S.doors && S.doors.kind) ? S.doors.kind : 'none', n: n(S.doors && S.doors.n, 1, 8, 3) | 0, fills: (S.doors && Array.isArray(S.doors.fills) ? S.doors.fills : D.doors.fills).map(f => FILLS[f] ? f : 'dsp').slice(0, 8), laco: n(S.doors && S.doors.laco, 0, 5, 0) | 0, handles: !(S.doors && S.doors.handles === false), gf: n(S.doors && S.doors.gf, 2, 30, 4), cat: catId(S.doors && S.doors.cat), dir: (S.doors && Array.isArray(S.doors.dir) ? S.doors.dir : []).slice(0, 8).map(v => ['auto', 'L', 'R', 'U', 'D'].includes(v) ? v : 'auto') },
+    doors: { mp: MILLS[S.doors && S.doors.mp] ? S.doors.mp : 'frame', kind: ['none', 'swing', 'sliding'].includes(S.doors && S.doors.kind) ? S.doors.kind : 'none', n: n(S.doors && S.doors.n, 1, 8, 3) | 0, fills: (S.doors && Array.isArray(S.doors.fills) ? S.doors.fills : D.doors.fills).map(f => FILLS[f] ? f : 'dsp').slice(0, 8), laco: n(S.doors && S.doors.laco, 0, 5, 0) | 0, handles: !(S.doors && S.doors.handles === false), gf: n(S.doors && S.doors.gf, 2, 30, 4), cat: catId(S.doors && S.doors.cat), sl: S.doors && S.doors.sl === 'lucido' ? 'lucido' : '', dir: (S.doors && Array.isArray(S.doors.dir) ? S.doors.dir : []).slice(0, 8).map(v => ['auto', 'L', 'R', 'U', 'D'].includes(v) ? v : 'auto') },
     cat: catId(S.cat), hw: (() => { const K = typeof KIS !== 'undefined' ? KIS : null, h = S.hw || {}, ok = (g, k) => (K && K[g] && typeof k === 'string' && K[g][k] && k !== 'tier') ? k : ''; return { hinge: ok('hinges', h.hinge), open: ok('open', h.open), drawer: ok('drawerSys', h.drawer), lift: ok('lifts', h.lift), slide: ok('sliding', h.slide), pant: ok('pantSel', h.pant), rod: ok('rodSel', h.rod) }; })(), led: !!S.led, nb: !!S.nb, nsl: !!S.nsl, nsr: !!S.nsr, name: String(S.name || 'Мой шкаф').slice(0, 60), cols: [] };
   while (o.doors.fills.length < 8) o.doors.fills.push('dsp');
   S.cols.slice(0, 14).forEach(c => {
