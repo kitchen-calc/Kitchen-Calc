@@ -1,6 +1,6 @@
 /* Конструктор шкафа PRO: интерфейс. Модель и расчёт — shkaf-pro-core.js, 3D — shkaf-pro-3d.js, чертежи мастера — shkaf-pro-draw.js */
-import * as C from '/static/js/shkaf-pro-core.js?v=60';
-import { TPL } from '/static/js/shkaf-tpl.js?v=61';
+import * as C from '/static/js/shkaf-pro-core.js?v=61';
+import { TPL } from '/static/js/shkaf-tpl.js?v=62';
 const { LED_MODES, uid, MILLS, SPLITTABLE, BED_STYLES, BED_SIZES, BED_KINDS, BED_COLORS, mkBed, bedDims, UNIT_KINDS, mkUnit, PANEL_KINDS, MIRROR_KINDS, SLAT_PRESETS, MIRROR_SIZES, PANEL_PATTERNS, rpRectIn, roomPoly, wfoot, wardrobeRect, wardrobeMagnet, OBJ_KINDS, mkObj, placeAtWall, colFoot, colRect, detachPos, rectMagnet, itemFoot, itemRect, itemMagnet, freeItem, objFoot, objRect, objMagnet, objPoly, objBox, rpEdgeLen, levels, doorList, geom, ext, mkItem, mkMezz, mkPanel, presetP, freeY, warnings, buildParts, pricing, PALETTE, LACO, FILLS, ITEM_TYPES, ITEM_ICON, DRAWER_SYS, P, r1, clamp, fitWidth, recalcW, defState, encodeState, decodeState, sanitize } = C;
 
 import { OPEN_KINDS, OPEN_VARIANTS, OPEN_COLORS, ROOM_FINISH, FINISH_TINTS, mkOpen, roomEdges, openRect2D } from '/static/js/room-open-core.js?v=12';
@@ -200,6 +200,7 @@ function sideGlobal() {
   if (S.doors.kind !== 'none') {
     if (S.doors.kind === 'swing') h += `<div class="note">Распашные двери настраиваются в каждом отсеке отдельно: нажмите на отсек в 3D. Новый отсек — кнопка «＋ Отсек».</div><div class="r"><span>Все двери</span>${['dsp', 'glass', 'mirror', 'laco'].map(k => btn(0, `PRO.allDf('${k}')`, FILLS[k].split(' ')[0])).join('')}</div>`;
     if (S.doors.kind === 'sliding') h += stepper('Количество', 'doors.n', S.doors.n, 1, 'шт');
+    if (S.doors.kind === 'sliding') h += `<div class="r">${btn(S.doors.sl !== 'lucido', "PRO.slSys('')", 'Профильная + планка')}${btn(S.doors.sl === 'lucido', "PRO.slSys('lucido')", 'Lucido LC 75 AY (без планки)')}</div>`;
     h += `<div class="r"><span>Фрезеровка МДФ-фасадов</span><select onchange="PRO.mill(this.value)">${Object.keys(MILLS).map(k => `<option value="${k}" ${(S.doors.mp || 'frame') === k ? 'selected' : ''}>${MILLS[k].charAt(0).toUpperCase() + MILLS[k].slice(1)}</option>`).join('')}</select></div><div class="note">Действует на двери, ящики, тумбы и изделия с материалом «Фрезерованный МДФ».</div>`;
     if (S.doors.kind === 'sliding') for (let i = 0; i < S.doors.n; i++) h += `<div class="r"><span>Дверь ${i + 1}</span><select onchange="PRO.fill(${i},this.value)">${Object.keys(FILLS).map(k => `<option value="${k}" ${S.doors.fills[i] === k ? 'selected' : ''}>${FILLS[k]}</option>`).join('')}</select>${S.doors.kind === 'swing' ? `<select onchange="PRO.ddir(${i},this.value)" title="Как открывается">${[['auto', 'открывание: авто'], ['L', '◀ влево'], ['R', 'вправо ▶'], ['U', '▲ вверх'], ['D', '▼ вниз']].map(([k, t]) => `<option value="${k}" ${((S.doors.dir && S.doors.dir[i]) || 'auto') === k ? 'selected' : ''}>${t}</option>`).join('')}</select>` : ''}</div>`;
     if (S.cols.some(c => c.df === 'glass') || (S.doors.kind === 'sliding' && S.doors.fills.slice(0, S.doors.n).includes('glass'))) { const gd = doorList(S).find(d => d.fill === 'glass' && d.zone === 'main'); h += stepper('Рамка вокруг стекла', 'doors.gf', S.doors.gf || 4, 1) + `<div class="note">Меньше рамка — больше стекло.${gd ? ' Стекло одной двери: ' + mm(gd.w - 2 * (S.doors.gf || 4)) + '×' + mm(gd.h - 2 * (S.doors.gf || 4)) + ' мм.' : ''}</div>`; }
@@ -490,7 +491,7 @@ function refresh(full) {
 
 /* ---------- 3D ---------- */
 async function init3D() {
-  const mod = await import('/static/js/shkaf-pro-3d.js?v=70');
+  const mod = await import('/static/js/shkaf-pro-3d.js?v=71');
   K = mod.createPro3D($('p3d'), VIEW ? {} : {
     onSelect: (s, mod) => {
       const key = !s ? null : s.k === 'obj' ? 'o:' + s.id : keyOfSel(s);
@@ -634,7 +635,7 @@ function ownerApply(on) { OWNER = !!on && !VIEW; setTimeout(() => { try { render
 let drawMod = null, lastSheets = [];
 async function renderOwner() {
   if (!OWNER) return;
-  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=68');
+  if (!drawMod) drawMod = await import('/static/js/shkaf-pro-draw.js?v=69');
   let r; try { r = drawMod.buildSheets(S); } catch (e) { console.error(e); $('ownerBody').innerHTML = '<div class="note" style="padding:14px;color:#b3261e">Не удалось построить чертежи: ' + esc(String(e && e.message || e)) + '. Проверьте проект: «Что добавлено» — удалите лишнее.</div>'; return; }
   lastSheets = r.sheets;
   $('ownerBody').innerHTML = r.sheets.map(s => `<div class="od-sheet">${s}</div>`).join('');
@@ -743,7 +744,7 @@ window.PRO = {
   mfill: v => mutate(() => { const m = S.mezzes[sel.mi]; if (m) m.fill = v; }), delMezzAt: i => mutate(() => { S.mezzes.splice(i, 1); sel = { k: 'global' }; }), delPanelAt: i => mutate(() => { S.panels.splice(i, 1); sel = { k: 'global' }; }), addGapAt: side => mutate(() => { const at = sel.k === 'col' ? sel.i + (side > 0 ? 1 : 0) : S.cols.length; S.cols.splice(at, 0, { id: C.uid(), w: 60, gap: true, items: [] }); sel = { k: 'col', i: at }; }), addMezz, delMezz, dupMezz, mezzFull, mezzOver, mezzMove, selMezz: selectMezz, addGap, toggleGap, tpl: loadTemplate, doors: setDoors, fill: setFill, laco: i => mutate(() => { S.doors.laco = i; }),
   handles: () => mutate(() => { S.doors.handles = S.doors.handles === false; }), led: () => mutate(() => { S.led = !S.led; }),
   sys: v => mutate(() => { const f = findItem(sel.id); if (f) f.it.sys = v; }),
-  toggleDoors: () => { if (K) { K.toggleDoors(); setTimeout(renderSide, 50); } }, openAll: on => { if (K) { K.toggleDoors(on); setTimeout(renderSide, 50); } },
+  toggleDoors: () => { if (K) { K.toggleDoors(); setTimeout(renderSide, 50); } }, openAll: on => { if (K) { K.toggleDoors(on); setTimeout(renderSide, 50); } }, slSys: v => mutate(() => { S.doors.sl = v; }),
   cdf: v => mutate(() => { const c = S.cols[sel.i]; if (c) { if (v === 'dsp') delete c.df; else c.df = v; } }), cdd: v => mutate(() => { const c = S.cols[sel.i]; if (c) { if (v === 'auto') delete c.dd; else c.dd = v; } }), allDf: v => mutate(() => { S.cols.forEach(c => { if (!c.gap) { if (v === 'dsp') delete c.df; else c.df = v; } }); }),
   room: () => openRoomEditor({ poly: S.room.poly, W: S.room.W, D: S.room.D, onApply: P => mutate(() => { if (P) { S.room.poly = P; S.room.W = Math.round(rpEdgeLen(P, 0)); S.room.D = Math.round(Math.max(...P.map(p => p[1]))); } else S.room.poly = null; S.room.set = true; }) }),
   addObj: kind => { const P = roomPoly(S); mutate(() => { const o = mkObj(kind, 0, 0), f = objFoot(o), bb = P.reduce((a, p) => [Math.max(a[0], p[0]), Math.max(a[1], p[1])], [0, 0]); o.x = r1(Math.max(0, bb[0] / 2 - f.w / 2)); o.z = r1(Math.max(0, bb[1] / 2 - f.d / 2)); if (S.room.mag) { const m = objMagnet(S, o, o.x, o.z, 9999); if (m) { o.x = m.ox; o.z = m.oz; o.rot = m.rot; } } S.objs.push(o); sel = { k: 'obj', oi: S.objs.length - 1 }; }); if (K) K.frame(); },

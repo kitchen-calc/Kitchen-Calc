@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildOpenings, pickWall, finishMat } from '/static/js/room-open.js?v=12';
-import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=60';
-import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=60';
+import { MILL_PITCH, ledStrips } from '/static/js/shkaf-pro-core.js?v=61';
+import { runInfo, bottomSegs, geom, doorList, shelfSpans, itemSpans, idoorSpan, SPLITTABLE, colSplits, colFoot, itemFoot, objFoot, objEdges, objPoly, PALETTE, LACO, roomPoly, wfoot, MIRROR_KINDS, bedDims, BED_COLORS, SLIDE_PLANK, slideK, BED_RIB, BED_SOFT } from '/static/js/shkaf-pro-core.js?v=61';
 
 const DEG = Math.PI / 180, ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -402,9 +402,10 @@ export function createPro3D(container, hooks = {}, opts = {}) {
         face(grp, 0, d.y);
         if (d.ri === 0 && d.runW) {   // рельсы купе: нижний у пола перед цоколем, верхний под планкой; планка в цвет фасадов
           const RD = d.runD || D, zr = RD - 9, dr = 8.4, PL = SLIDE_PLANK, tp = d.runH - t;   // рельсы накладные: нижний на дне, верхний под крышкой — внутри корпуса
-          box(d.runW, 1, dr, M.alu, d.runX, d.y - 1.2, zr, null, wg);
-          box(d.runW, 1.4, dr, M.alu, d.runX, tp - 1.4, zr, null, wg);
-          box(d.runW, PL, t, (S.doors.cat && catM(S.doors.cat)) || M.body, d.runX, tp - PL, RD - t, meta, wg);   // планка заподлицо с фасадом корпуса
+          const luc = S.doors.sl === 'lucido';   // Lucido: тонкие рельсы сверху и снизу, планки нет
+          box(d.runW, luc ? .8 : 1, dr, M.alu, d.runX, d.y - (luc ? .8 : 1.2), zr, null, wg);
+          box(d.runW, luc ? .8 : 1.4, dr, M.alu, d.runX, tp - (luc ? .8 : 1.4), zr, null, wg);
+          if (!luc) box(d.runW, PL, t, (S.doors.cat && catM(S.doors.cat)) || M.body, d.runX, tp - PL, RD - t, meta, wg);   // планка заподлицо с фасадом корпуса
         }
         if (d.fill !== 'dsp' && !gl) { box(d.w, 2.2, th + .4, M.steel, 0, d.y, -.2, null, grp); box(d.w, 2.2, th + .4, M.steel, 0, d.y + d.h - 2.2, -.2, null, grp); }
         // каждая дверь едет по рельсу за соседнюю (крайние — внутрь шкафа); если открыта дверь правее, левая остаётся на месте — как у настоящего купе
