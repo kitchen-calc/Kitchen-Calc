@@ -375,7 +375,7 @@
               <th>Кол-во</th>
               <th>Материал</th>
               <th class="c" title="Можно поворачивать деталь на листе">Поворот</th>
-              <th class="c" title="Сколько длинных сторон в кромке">Кромка Д</th>
+              <th class="c" title="Сколько длинных сторон в кромке (Д — всегда большая сторона детали)">Кромка Д</th>
               <th class="c" title="Сколько коротких сторон в кромке">Кромка Ш</th>
               <th class="c" title="Толщина кромки">Толщ., мм</th>
               <th></th>
@@ -441,7 +441,7 @@
 
     // Шаблоны шкафов. W/H/D — габариты шкафа (глубина вместе с дверьми),
     // t — толщина корпуса, ft — толщина двери, doors — число дверей.
-    // L детали — сторона, вдоль которой идёт текстура и считается «Кромка Д».
+    // L детали — сторона, вдоль которой идёт текстура. «Кромка Д» считается по длинной стороне детали, «Кромка Ш» — по короткой.
     var half = function (v) { return Math.round(v * 2) / 2; };
 
     // Корпус нижнего шкафа: общий для шкафа с дверьми и ящичного
@@ -855,7 +855,7 @@
         if (!(p.L > 0 && p.W > 0) || !(p.eL || p.eW)) return;
         var r = rows[p.et] || (rows[p.et] = { t: p.et, lines: 0, net: 0, gross: 0 });
         var lines = (p.eL + p.eW) * p.qty;
-        var net = (p.eL * p.L + p.eW * p.W) * p.qty;
+        var net = (p.eL * Math.max(p.L, p.W) + p.eW * Math.min(p.L, p.W)) * p.qty;   // Д — длинная сторона, Ш — короткая
         r.lines += lines; r.net += net; r.gross += net + lines * allow;
       });
       var list = EDGE_T.filter(function (t) { return rows[t]; }).map(function (t) {
@@ -871,6 +871,8 @@
       return total;
     }
 
+    // Шаблоны ставят кромку по столбцу «Д». Теперь «Д» — длинная сторона: если в шаблоне Д < Ш, меняем числа кромки местами.
+    function edgeLong(p) { return p.L >= p.W ? { eL: p.eL || 0, eW: p.eW || 0 } : { eL: p.eW || 0, eW: p.eL || 0 }; }
     function tLabel(t) { return String(t).replace('.', ',') + ' мм'; }
 
     // ------------------------------------------------------------- calculate
@@ -945,8 +947,10 @@
           if (count >= 1) lines.push(alongX ? 'top' : 'left');
           if (count >= 2) lines.push(alongX ? 'bottom' : 'right');
         }
-        edgeSides(part.eL, lAlongX);
-        edgeSides(part.eW, !lAlongX);
+        // «Кромка Д» — на длинную сторону детали, «Кромка Ш» — на короткую (в каком бы столбце ни стояло большее число)
+        var longAlongX = (part.L >= part.W) === lAlongX;
+        edgeSides(part.eL, longAlongX);
+        edgeSides(part.eW, !longAlongX);
         lines.forEach(function (side) {
           var x = p.x, y = p.y, w = p.w, h = p.h;
           if (side === 'top') parts.push('<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + t + '" fill="#dc2626"/>');
@@ -1063,7 +1067,7 @@
         if (p.eL) edge.push(p.eL + '×Д');
         if (p.eW) edge.push(p.eW + '×Ш');
         if (edge.length) edge = [edge.join(', ') + ' · ' + tLabel(p.et)];
-        var em = ((p.eL || 0) * p.L + (p.eW || 0) * p.W) * p.qty / 1000;
+        var em = ((p.eL || 0) * Math.max(p.L, p.W) + (p.eW || 0) * Math.min(p.L, p.W)) * p.qty / 1000;
         html.push('<tr><td>' + p._n + '</td><td>' + esc(p.name || '—') + '</td><td>' + esc(mat ? mat.name : '') + '</td><td class="r">' + p.L + '×' + p.W + '</td><td class="r">' + p.qty + '</td><td>' + (p.rot ? 'можно' : 'по рисунку') + '</td><td>' + (edge.join(', ') || '—') + '</td><td class="r">' + (em > 0 ? fmt(em, 2) : '—') + '</td></tr>');
       });
       // итог кромки — прямо под списком (попадает и в PDF «только список деталей»)
@@ -1387,6 +1391,16 @@
             else if (k === 'eL' || k === 'eW') p[k] = +inp.value;
             changed(k !== 'name');
           });
+          if (k === 'L' || k === 'W') {
+            // когда размер введён (уход из поля / Enter): большее число — в «Д», меньшее — в «Ш»
+            inp.addEventListener('change', function () {
+              if (p.L > 0 && p.W > 0 && p.L < p.W) {
+                var t = p.L; p.L = p.W; p.W = t;
+                tr.querySelector('[data-k=L]').value = p.L; tr.querySelector('[data-k=W]').value = p.W;
+                changed(true);
+              }
+            });
+          }
           if (k === 'qty') {
             inp.addEventListener('keydown', function (e) {
               if (e.key === 'Enter' && i === state.parts.length - 1) { e.preventDefault(); addPart(); }
@@ -1609,8 +1623,8 @@
       box.innerHTML = note + '<b>' + c.W + '×' + c.H + '×' + c.D + '</b>: ' + total + ' ' + plural(total, 'деталь', 'детали', 'деталей') + ' на шкаф' +
         (q > 1 ? ', всего ' + total * q : '') + '<ul>' +
         parts.map(function (p) {
-          var e = [];
-          if (p.eL) e.push(p.eL + '×Д'); if (p.eW) e.push(p.eW + '×Ш');
+          var e = [], el = edgeLong(p);
+          if (el.eL) e.push(el.eL + '×Д'); if (el.eW) e.push(el.eW + '×Ш');
           return '<li>' + esc(p.name) + ' — ' + p.L + '×' + p.W + ' · ' + (p.qty * q) + ' шт' + (e.length ? ' · кромка ' + e.join(' ') : '') + '</li>';
         }).join('') + '</ul>';
     }
@@ -1637,8 +1651,8 @@
       parts.forEach(function (p) {
         var mid = p.mat === 'facade' ? tpl.facadeMat : tpl.bodyMat;
         state.parts.push({
-          id: uid(), name: T.short + c.W + ' · ' + p.name, L: p.L, W: p.W, qty: p.qty * q,
-          mat: mid, rot: p.rot, eL: p.eL, eW: p.eW, grp: g.id, et: (matById(mid) || state.materials[0]).et
+          id: uid(), name: T.short + c.W + ' · ' + p.name, L: p.rot ? Math.max(p.L, p.W) : p.L, W: p.rot ? Math.min(p.L, p.W) : p.W, qty: p.qty * q,
+          mat: mid, rot: p.rot, eL: edgeLong(p).eL, eW: edgeLong(p).eW, grp: g.id, et: (matById(mid) || state.materials[0]).et
         });
       });
       renderMaterials(); renderParts(); renderTemplates(); changed(true);
@@ -1711,7 +1725,7 @@
           if (m) { name = m[1].trim(); L = num(m[2], 0); W = num(m[3], 0); qty = m[4] ? parseInt(m[4], 10) : 1; }
         }
         if (L > 0 && W > 0) {
-          state.parts.push({ id: uid(), name: name || '', L: L, W: W, qty: Math.max(1, qty || 1), mat: matId, rot: true, eL: 0, eW: 0, et: (matById(matId) || state.materials[0]).et });
+          state.parts.push({ id: uid(), name: name || '', L: Math.max(L, W), W: Math.min(L, W), qty: Math.max(1, qty || 1), mat: matId, rot: true, eL: 0, eW: 0, et: (matById(matId) || state.materials[0]).et });
           added++;
         } else skipped++;
       });
@@ -2023,7 +2037,7 @@
         c.parts.forEach(function (p) {
           var mat = p.mat === 'facade' ? facade : (p.mat === 'hdf' ? hdf : body);
           if (!(p.L > 0 && p.W > 0)) return;
-          state.parts.push({ id: uid(), name: p.name, L: p.L, W: p.W, qty: p.qty, mat: mat.id, rot: p.rot, eL: p.eL, eW: p.eW, grp: g.id, et: mat.et });
+          state.parts.push({ id: uid(), name: p.name, L: p.rot ? Math.max(p.L, p.W) : p.L, W: p.rot ? Math.min(p.L, p.W) : p.W, qty: p.qty, mat: mat.id, rot: p.rot, eL: edgeLong(p).eL, eW: edgeLong(p).eW, grp: g.id, et: mat.et });
           count += p.qty;
         });
       });
