@@ -117,6 +117,8 @@
     .sheet-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; }
     .sheet-head span { color: var(--text-muted); font-weight: 600; }
     .sheet svg { width: 100%; height: auto; display: block; border-radius: 6px; }
+    .cut-plan { font-size: 0.82rem; line-height: 1.45; margin-top: 6px; color: #1f2937; background: #eff4ff; border: 1px solid #c7d6fb; border-radius: 8px; padding: 6px 9px; }
+    .cut-plan .rest { color: #166534; font-weight: 700; }
     .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
     .legend i { display: inline-block; width: 18px; height: 4px; background: var(--edge); vertical-align: middle; margin-right: 5px; border-radius: 2px; }
 
@@ -220,8 +222,15 @@
         <label class="f">Отступ по краям листа, мм
           <input type="number" id="trim" min="0" max="50" step="1">
         </label>
+        <label class="f">Первый рез (полосы)
+          <select id="firstCut">
+            <option value="auto">Авто — где меньше листов</option>
+            <option value="along">Вдоль листа (по длине 2750)</option>
+            <option value="across">Поперёк листа (по ширине 1830)</option>
+          </select>
+        </label>
       </div>
-      <p class="hint" style="margin-top:8px">Отступ срезает заводской край листа (обычно 10–15 мм с каждой стороны). Текстура листа считается идущей вдоль длинной стороны.</p>
+      <p class="hint" style="margin-top:8px">Отступ срезает заводской край листа (обычно 10–15 мм с каждой стороны). Текстура листа считается идущей вдоль длинной стороны.<br>Раскрой — полосами, как в программах распиловочных цехов: 1) лист распускается на полосы резами через весь лист; 2) полосы режутся поперёк на детали; 3) при необходимости кусок дорезается. Ни один рез не останавливается посередине листа.</p>
     </section>
 
     <section class="card no-print">
@@ -597,6 +606,7 @@
         name: '',
         kerf: 4,
         trim: 10,
+        firstCut: 'auto',
         edgeAllow: 5,
         edgePrices: { '0.4': 0, '2': 0, '4': 0 },
         sheetPrices: {},
@@ -625,7 +635,7 @@
 
     function normalize(s) {
       if (!s || !Array.isArray(s.materials) || !Array.isArray(s.parts)) return defaultState();
-      s.kerf = num(s.kerf, 4); s.trim = num(s.trim, 10); s.name = String(s.name || '');
+      s.kerf = num(s.kerf, 4); s.trim = num(s.trim, 10); s.firstCut = ['along', 'across'].indexOf(s.firstCut) >= 0 ? s.firstCut : 'auto'; s.name = String(s.name || '');
       s.tplT = num(s.tplT, 16); s.tplFT = num(s.tplFT, 16);
       s.edgeAllow = Math.max(0, num(s.edgeAllow, 5));
       var ep = s.edgePrices || {};
@@ -679,7 +689,7 @@
     // ------------------------------------------------------------- share link
     function encodeState(s) {
       var compact = {
-        n: s.name, k: s.kerf, t: s.trim, ea: s.edgeAllow,
+        n: s.name, k: s.kerf, t: s.trim, fc: s.firstCut, ea: s.edgeAllow,
         ep: EDGE_T.map(function (t) { return s.edgePrices[t]; }),
         sp: s.sheetPrices, mp: s.matPrices,
         cp: CUT_TIERS.map(function (c) { return s.cutPrices[c.k]; }),
@@ -697,7 +707,7 @@
       while (b64.length % 4) b64 += '=';
       var c = JSON.parse(decodeURIComponent(escape(atob(b64))));
       return normalize({
-        name: c.n, kerf: c.k, trim: c.t, edgeAllow: c.ea,
+        name: c.n, kerf: c.k, trim: c.t, firstCut: c.fc, edgeAllow: c.ea,
         edgePrices: (function () { var o = {}; EDGE_T.forEach(function (t, i) { o[t] = (c.ep || [])[i]; }); return o; })(),
         sheetPrices: c.sp, matPrices: c.mp,
         cutPrices: (function () { var o = {}; CUT_TIERS.forEach(function (t, i) { o[t.k] = (c.cp || [])[i]; }); return o; })(),
@@ -710,32 +720,23 @@
     function shareUrl() { return location.origin + location.pathname + '#r=' + encodeState(state); }
 
     // -------------------------------------------------------------- packing
-    // Guillotine packing: every placement splits the free rectangle with one
-    // straight edge-to-edge cut, which is what a panel saw can actually do.
-    function packMaterial(instances, mat, kerf, trim) {
-      var usableX = mat.L - 2 * trim;
-      var usableY = mat.W - 2 * trim;
-      var sorts = [
-        function (a, b) { return b.L * b.W - a.L * a.W; },
-        function (a, b) { return Math.max(b.L, b.W) - Math.max(a.L, a.W) || b.L * b.W - a.L * a.W; },
-        function (a, b) { return (b.L + b.W) - (a.L + a.W); },
-        function (a, b) { return b.L - a.L || b.W - a.W; },
-        function (a, b) { return b.W - a.W || b.L - a.L; },
-        function (a, b) { return Math.min(b.L, b.W) - Math.min(a.L, a.W) || b.L * b.W - a.L * a.W; }
-      ];
-      var fits = ['area', 'short', 'long'];
-      var splits = ['sas', 'las', 'maxarea', 'minarea', 'h', 'v'];
-
+    // Раскрой полосами, как в программах распиловочных цехов (3 стадии):
+    //  1) лист распускается на полосы — каждый рез через ВЕСЬ лист (вдоль или поперёк);
+    //  2) каждая полоса режется поперёк на куски — рез через всю полосу;
+    //  3) кусок при необходимости дорезается вдоль (2–3 детали друг над другом) — рез через весь кусок.
+    // Ни один рез не останавливается на середине: пильщику не нужно перекладывать лист «по-другому».
+    function packMaterial(instances, mat, kerf, trim, firstCut) {
+      var X = mat.L - 2 * trim, Y = mat.W - 2 * trim;
+      var dirs = firstCut === 'across' ? ['across'] : firstCut === 'along' ? ['along'] : ['along', 'across'];
       var best = null;
-      for (var si = 0; si < sorts.length; si++) {
-        var ordered = instances.slice().sort(sorts[si]);
-        for (var fi = 0; fi < fits.length; fi++) {
-          for (var pi = 0; pi < splits.length; pi++) {
-            var res = runPack(ordered, usableX, usableY, kerf, fits[fi], splits[pi]);
+      dirs.forEach(function (dir) {
+        ['narrow', 'wide', 'flex'].forEach(function (orient) {
+          ['b', 'area', 'a', 'max'].forEach(function (sortK) {
+            var res = stripPack(instances, X, Y, kerf, dir, orient, sortK);
             if (!best || better(res, best)) best = res;
-          }
-        }
-      }
+          });
+        });
+      });
       best.sheets.forEach(function (sh) {
         sh.placed.forEach(function (p) { p.x += trim; p.y += trim; });
       });
@@ -745,100 +746,103 @@
     function better(a, b) {
       if (a.unplaced.length !== b.unplaced.length) return a.unplaced.length < b.unplaced.length;
       if (a.sheets.length !== b.sheets.length) return a.sheets.length < b.sheets.length;
-      return a.fill > b.fill + 1e-9;
+      if (Math.abs(a.fill - b.fill) > 1e-6) return a.fill > b.fill;
+      if (a.strips !== b.strips) return a.strips < b.strips;          // меньше перестановок упора
+      return a.dir === 'along' && b.dir !== 'along';                   // при равенстве — первый рез вдоль листа
     }
 
-    function runPack(items, X, Y, kerf, fitRule, splitRule) {
-      var sheets = [];
-      var unplaced = [];
-
-      function newSheet() { var s = { free: [{ x: 0, y: 0, w: X, h: Y }], placed: [], used: 0 }; sheets.push(s); return s; }
-
-      function orientations(it) {
-        var o = [{ w: it.L, h: it.W, rot: false }];
-        if (it.rot && it.L !== it.W) o.push({ w: it.W, h: it.L, rot: true });
-        return o;
+    // dir 'along': полосы во всю длину листа (X), ширина полосы — по Y. 'across': полосы во всю ширину листа (Y).
+    function stripPack(items, X, Y, kerf, dir, orient, sortK) {
+      var SA = dir === 'along' ? X : Y, SB = dir === 'along' ? Y : X;
+      function opts(it) {   // a — вдоль полосы, b — поперёк (ширина полосы)
+        var o = [dir === 'along' ? { a: it.L, b: it.W, rot: false } : { a: it.W, b: it.L, rot: false }];
+        if (it.rot && it.L !== it.W) o.push({ a: o[0].b, b: o[0].a, rot: true });
+        return o.filter(function (q) { return q.a <= SA + 1e-9 && q.b <= SB + 1e-9; });
       }
-
-      function score(fr, o) {
-        var dw = fr.w - o.w, dh = fr.h - o.h;
-        if (fitRule === 'area') return [fr.w * fr.h - o.w * o.h, Math.min(dw, dh)];
-        if (fitRule === 'short') return [Math.min(dw, dh), Math.max(dw, dh)];
-        return [Math.max(dw, dh), Math.min(dw, dh)];
+      function pref(it) {
+        var o = opts(it); if (!o.length) return null;
+        if (o.length === 1 || orient === 'flex') return o;
+        return [o.slice().sort(function (p, q) { return orient === 'narrow' ? p.b - q.b : q.b - p.b; })[0]];
       }
+      var list = items.map(function (it) { return { it: it, o: pref(it) }; });
+      var key = function (x) {
+        if (!x.o) return [0, 0];
+        var o = x.o[0];
+        if (sortK === 'b') return [o.b, o.a];
+        if (sortK === 'a') return [o.a, o.b];
+        if (sortK === 'max') return [Math.max(o.a, o.b), o.a * o.b];
+        return [o.a * o.b, o.b];
+      };
+      list.sort(function (p, q) { var kp = key(p), kq = key(q); return kq[0] - kp[0] || kq[1] - kp[1]; });
 
-      function findIn(sheet, it) {
-        var bestFit = null;
-        var os = orientations(it);
-        for (var i = 0; i < sheet.free.length; i++) {
-          var fr = sheet.free[i];
-          for (var j = 0; j < os.length; j++) {
-            var o = os[j];
-            if (o.w <= fr.w && o.h <= fr.h) {
-              var sc = score(fr, o);
-              if (!bestFit || sc[0] < bestFit.sc[0] || (sc[0] === bestFit.sc[0] && sc[1] < bestFit.sc[1])) {
-                bestFit = { idx: i, o: o, sc: sc };
+      var sheets = [], unplaced = [];
+      list.forEach(function (x) {
+        if (!x.o) { unplaced.push(x.it); return; }
+        var bestC = null;
+        sheets.forEach(function (sh) {
+          sh.strips.forEach(function (st) {
+            x.o.forEach(function (o) {
+              if (o.b > st.w) return;
+              // дорезка: деталь встаёт в уже отрезанный кусок рядом с другой
+              st.pieces.forEach(function (pc) {
+                if (o.a <= pc.a && pc.used + kerf + o.b <= st.w) {
+                  var sc = (pc.a - o.a) * o.b;
+                  if (!bestC || sc < bestC.sc) bestC = { sc: sc, kind: 'stack', st: st, pc: pc, o: o };
+                }
+              });
+              // новый кусок в полосе
+              var need = st.usedA + (st.pieces.length ? kerf : 0) + o.a;
+              if (need <= SA) {
+                var sc2 = (st.w - o.b) * o.a + 1;
+                if (!bestC || sc2 < bestC.sc) bestC = { sc: sc2, kind: 'piece', st: st, o: o };
               }
-            }
-          }
+            });
+          });
+        });
+        if (!bestC) {
+          // новая полоса: на листе, где после неё останется меньше всего места
+          var os = x.o.slice().sort(function (p, q) { return orient === 'wide' ? q.b - p.b : p.b - q.b; });
+          sheets.forEach(function (sh) {
+            os.forEach(function (o) {
+              var need = sh.usedB + (sh.strips.length ? kerf : 0) + o.b;
+              if (need <= SB) { var sc = SB - need; if (!bestC || sc < bestC.sc) bestC = { sc: sc, kind: 'strip', sh: sh, o: o }; }
+            });
+          });
+          if (!bestC) { var sh = { strips: [], usedB: 0 }; sheets.push(sh); bestC = { kind: 'strip', sh: sh, o: os[0] }; }
+          var shp = bestC.sh, pos = shp.usedB + (shp.strips.length ? kerf : 0);
+          var st = { pos: pos, w: bestC.o.b, pieces: [], usedA: 0 };
+          shp.strips.push(st); shp.usedB = pos + st.w;
+          bestC = { kind: 'piece', st: st, o: bestC.o };
         }
-        return bestFit;
-      }
-
-      function place(sheet, fit, it) {
-        var fr = sheet.free[fit.idx];
-        var w = fit.o.w, h = fit.o.h;
-        sheet.free.splice(fit.idx, 1);
-        sheet.placed.push({ x: fr.x, y: fr.y, w: w, h: h, rot: fit.o.rot, item: it });
-        sheet.used += w * h;
-
-        var rw = fr.w - w - kerf;
-        var rh = fr.h - h - kerf;
-        var horizontal; // true: first cut runs across the full width under the part
-        if (splitRule === 'h') horizontal = true;
-        else if (splitRule === 'v') horizontal = false;
-        else if (splitRule === 'sas') horizontal = fr.w <= fr.h;
-        else if (splitRule === 'las') horizontal = fr.w > fr.h;
-        else {
-          var aH = Math.max(rw * h, fr.w * rh);
-          var aV = Math.max(rw * fr.h, w * rh);
-          horizontal = splitRule === 'maxarea' ? aH >= aV : aH < aV;
-        }
-        var right, bottom;
-        if (horizontal) {
-          right = { x: fr.x + w + kerf, y: fr.y, w: rw, h: h };
-          bottom = { x: fr.x, y: fr.y + h + kerf, w: fr.w, h: rh };
+        var o = bestC.o, st2 = bestC.st;
+        if (bestC.kind === 'piece') {
+          var ap = st2.usedA + (st2.pieces.length ? kerf : 0);
+          var pc = { pos: ap, a: o.a, used: o.b, parts: [{ off: 0, o: o, it: x.it }] };
+          st2.pieces.push(pc); st2.usedA = ap + o.a;
         } else {
-          right = { x: fr.x + w + kerf, y: fr.y, w: rw, h: fr.h };
-          bottom = { x: fr.x, y: fr.y + h + kerf, w: w, h: rh };
+          var pc2 = bestC.pc, off = pc2.used + kerf;
+          pc2.parts.push({ off: off, o: o, it: x.it }); pc2.used = off + o.b;
         }
-        if (right.w > 0 && right.h > 0) sheet.free.push(right);
-        if (bottom.w > 0 && bottom.h > 0) sheet.free.push(bottom);
-      }
+      });
 
-      for (var n = 0; n < items.length; n++) {
-        var it = items[n];
-        var bestSheet = null, bestFit = null;
-        for (var s = 0; s < sheets.length; s++) {
-          var f = findIn(sheets[s], it);
-          if (f && (!bestFit || f.sc[0] < bestFit.sc[0] || (f.sc[0] === bestFit.sc[0] && f.sc[1] < bestFit.sc[1]))) {
-            bestFit = f; bestSheet = sheets[s];
-          }
-        }
-        if (!bestFit) {
-          var fresh = { free: [{ x: 0, y: 0, w: X, h: Y }] };
-          var f2 = findIn(fresh, it);
-          if (!f2) { unplaced.push(it); continue; }
-          bestSheet = newSheet();
-          bestFit = findIn(bestSheet, it);
-        }
-        place(bestSheet, bestFit, it);
-      }
-
-      // Prefer layouts that pack earlier sheets fuller and leave waste on the last one.
-      var area = X * Y, fill = 0;
-      sheets.forEach(function (sh) { var u = sh.used / area; fill += u * u; });
-      return { sheets: sheets, unplaced: unplaced, fill: fill };
+      var area = X * Y, fill = 0, nStrips = 0;
+      var out = sheets.map(function (sh) {
+        var placed = [], used = 0;
+        sh.strips.forEach(function (st) {
+          nStrips++;
+          st.pieces.forEach(function (pc) {
+            pc.parts.forEach(function (pt) {
+              var A0 = pc.pos, B0 = st.pos + pt.off, o = pt.o;
+              var r = dir === 'along' ? { x: A0, y: B0, w: o.a, h: o.b } : { x: B0, y: A0, w: o.b, h: o.a };
+              r.rot = o.rot; r.item = pt.it; placed.push(r); used += o.a * o.b;
+            });
+          });
+        });
+        var rest = SB - sh.usedB - kerf;
+        return { placed: placed, used: used, dir: dir, strips: sh.strips.map(function (st) { return { pos: st.pos, w: st.w }; }), rest: rest > 0 ? rest : 0, SA: SA };
+      });
+      out.forEach(function (sh) { var u = sh.used / area; fill += u * u; });
+      return { sheets: out, unplaced: unplaced, fill: fill, strips: nStrips, dir: dir };
     }
 
     // ------------------------------------------------------------- edge
@@ -884,7 +888,7 @@
           for (var q = 0; q < p.qty; q++) inst.push({ L: p.L, W: p.W, rot: p.rot, part: p });
           out.partsCount += p.qty;
         });
-        var res = packMaterial(inst, mat, kerf, trim);
+        var res = packMaterial(inst, mat, kerf, trim, state.firstCut);
         var partArea = 0;
         res.sheets.forEach(function (sh) { partArea += sh.used; });
         var sheetArea = mat.L * mat.W;
@@ -924,7 +928,7 @@
       parts.push('<text x="' + (L / 2) + '" y="-18" text-anchor="middle" font-size="40" fill="#6b7280" font-weight="700">' + L + '</text>');
       parts.push('<text x="-18" y="' + (W / 2) + '" text-anchor="middle" font-size="40" fill="#6b7280" font-weight="700" transform="rotate(-90 -18 ' + (W / 2) + ')">' + W + '</text>');
       // grain direction
-      parts.push('<text x="' + (L - 10) + '" y="' + (W + 44) + '" text-anchor="end" font-size="32" fill="#9ca3af">текстура ⟷</text>');
+      parts.push('<text x="' + (L - 10) + '" y="-18" text-anchor="end" font-size="32" fill="#9ca3af">текстура ⟷</text>');
 
       sh.placed.forEach(function (p) {
         var it = p.item, part = it.part;
@@ -967,8 +971,33 @@
         }
         parts.push('</g></g>');
       });
+      // первые резы: границы полос — линия через весь лист; ширина полосы — на поле листа
+      var kerf = Math.max(0, num(state.kerf, 4));
+      (sh.strips || []).forEach(function (st, i) {
+        var c = trim + st.pos + st.w + kerf / 2, m = trim + st.pos + st.w / 2, last = i === sh.strips.length - 1;
+        if (sh.dir === 'along') {
+          if (!last || sh.rest > 0) parts.push('<line x1="-30" y1="' + c + '" x2="' + (L + 30) + '" y2="' + c + '" stroke="#1d4ed8" stroke-width="5" stroke-dasharray="26 12"/>');
+          parts.push('<text x="' + (L + 30) + '" y="' + m + '" text-anchor="middle" font-size="26" font-weight="800" fill="#1d4ed8" transform="rotate(-90 ' + (L + 30) + ' ' + m + ')">' + (i + 1) + ': ' + st.w + '</text>');
+        } else {
+          if (!last || sh.rest > 0) parts.push('<line x1="' + c + '" y1="-30" x2="' + c + '" y2="' + (W + 30) + '" stroke="#1d4ed8" stroke-width="5" stroke-dasharray="26 12"/>');
+          parts.push('<text x="' + m + '" y="' + (W + 42) + '" text-anchor="middle" font-size="26" font-weight="800" fill="#1d4ed8">' + (i + 1) + ': ' + st.w + '</text>');
+        }
+      });
       parts.push('</svg>');
       return parts.join('');
+    }
+
+    // порядок резов под картой листа — для пильщика
+    function cutPlan(sh, mat, trim) {
+      if (!sh.strips || !sh.strips.length) return '';
+      var along = sh.dir === 'along', len = along ? mat.L - 2 * trim : mat.W - 2 * trim;
+      var w = sh.strips.map(function (st) { return st.w; });
+      var h = '<div class="cut-plan"><b>Порядок резов:</b> ' +
+        (trim > 0 ? 'обпил листа ' + trim + ' мм с каждой стороны → ' : '') +
+        '<b>1)</b> ' + (along ? 'вдоль листа' : 'поперёк листа') + ' на полосы: <b>' + w.join(' · ') + '</b> мм (каждый рез — через весь лист) → ' +
+        '<b>2)</b> каждую полосу поперёк на детали → <b>3)</b> дорезка кусков, где 2–3 детали стоят рядом.';
+      if (sh.rest >= 50) h += ' <span class="rest">Деловой остаток: ' + (along ? len + '×' + Math.floor(sh.rest) : Math.floor(sh.rest) + '×' + len) + ' мм.</span>';
+      return h + '</div>';
     }
 
     var lastResult = null;
@@ -1005,7 +1034,7 @@
       html.push('</div>');
       html.push(costTable(cost));
       html.push(edgeTable(r.edge));
-      html.push('<div class="legend"><span><i></i>кромка</span><span>↻ — деталь повёрнута</span><span>пунктир — отступ по краю ' + r.trim + ' мм</span><span>пропил ' + r.kerf + ' мм</span></div>');
+      html.push('<div class="legend"><span><i></i>кромка</span><span>↻ — деталь повёрнута</span><span><b style="color:#1d4ed8">синий пунктир</b> — первые резы через весь лист (полосы)</span><span>пунктир — отступ по краю ' + r.trim + ' мм</span><span>пропил ' + r.kerf + ' мм</span></div>');
 
       r.blocks.forEach(function (b) {
         var n = b.res.sheets.length;
@@ -1015,6 +1044,7 @@
           var u = sh.used / (b.mat.L * b.mat.W) * 100;
           html.push('<div class="sheet"><div class="sheet-head">Лист ' + (i + 1) + ' из ' + n + ' <span>' + sh.placed.length + ' ' + plural(sh.placed.length, 'деталь', 'детали', 'деталей') + ' · заполнен на ' + fmt(u, 0) + '%</span></div>');
           html.push(sheetSvg(sh, b.mat, r.trim));
+          html.push(cutPlan(sh, b.mat, r.trim));
           html.push('</div>');
         });
         html.push('</div>');
@@ -1375,6 +1405,7 @@
       document.getElementById('projName').value = state.name;
       document.getElementById('kerf').value = state.kerf;
       document.getElementById('trim').value = state.trim;
+      document.getElementById('firstCut').value = state.firstCut;
     }
 
     var EDGE_IDS = [{ id: 'edgePrice04', t: '0.4' }, { id: 'edgePrice2', t: '2' }, { id: 'edgePrice4', t: '4' }];
@@ -2061,6 +2092,7 @@
       document.getElementById('projName').addEventListener('input', function (e) { state.name = e.target.value; persistCurrent(); });
       document.getElementById('kerf').addEventListener('input', function (e) { state.kerf = Math.max(0, num(e.target.value, 4)); changed(true); });
       document.getElementById('trim').addEventListener('input', function (e) { state.trim = Math.max(0, num(e.target.value, 0)); changed(true); });
+      document.getElementById('firstCut').addEventListener('change', function (e) { state.firstCut = e.target.value; changed(true); });
       document.getElementById('edgeAllow').addEventListener('input', function (e) { state.edgeAllow = Math.max(0, num(e.target.value, 0)); changed(true); });
       EDGE_IDS.forEach(function (x) {
         document.getElementById(x.id).addEventListener('input', function (e) { state.edgePrices[x.t] = Math.max(0, num(e.target.value, 0)); changed(true); });
