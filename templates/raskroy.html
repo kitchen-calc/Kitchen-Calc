@@ -399,12 +399,14 @@
       <h2 class="no-print"><span class="step">6</span> Раскрой</h2>
       <div id="result"><div class="empty">Добавьте детали — раскрой появится здесь.</div></div>
       <div class="actions no-print" id="resultActions" style="margin-top:14px; display:none">
-        <button class="btn primary" id="btnPrint">🖨 Печать / PDF</button>
+        <button class="btn primary" id="btnPdfFull">📄 PDF: карты листов + список</button>
+        <button class="btn primary" id="btnPdfList">📄 PDF: только список деталей</button>
+        <button class="btn" id="btnPrint">🖨 Печать</button>
         <button class="btn tg" id="btnTg">✈ Отправить в Telegram</button>
         <button class="btn" id="btnCopyLink">🔗 Скопировать ссылку</button>
         <button class="btn" id="btnCopyText">📋 Список текстом</button>
       </div>
-      <p class="hint no-print" style="margin-top:8px">В PDF попадут карты листов и список деталей. В окне печати выберите «Сохранить как PDF».</p>
+      <p class="hint no-print" style="margin-top:8px">Кнопки «PDF» сразу скачивают файл A4 — без ссылок и адреса сайта на листе. «Только список деталей» — одна таблица, без карт листов.</p>
     </section>
   </main>
 
@@ -1040,6 +1042,96 @@
 
       document.getElementById('printTitle').textContent = state.name || 'Раскрой листов';
       document.getElementById('printMeta').textContent = new Date().toLocaleDateString('ru-RU') + ' · пропил ' + r.kerf + ' мм · отступ ' + r.trim + ' мм';
+    }
+
+
+    // ------------------------------------------------------------- PDF файлом (без окна печати: нет ссылок и адреса на листе)
+    var pdfLibs = {};
+    function loadLib(url, test) {
+      if (pdfLibs[url]) return pdfLibs[url];
+      pdfLibs[url] = new Promise(function (res, rej) {
+        if (test()) return res();
+        var s = document.createElement('script'); s.src = url; s.onload = res;
+        s.onerror = function () { delete pdfLibs[url]; rej(new Error('lib')); };
+        document.head.appendChild(s);
+      });
+      return pdfLibs[url];
+    }
+    async function savePdf(listOnly, btn) {
+      if (!document.querySelector('#result table.list')) { toast('Сначала добавьте детали'); return; }
+      var old = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Готовлю PDF…';
+      var box = null;
+      try {
+        await Promise.all([
+          loadLib('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', function () { return window.jspdf && window.jspdf.jsPDF; }),
+          loadLib('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', function () { return !!window.html2canvas; })
+        ]);
+        var PX = 760, MM = 190 / PX, PAGE_H = 277, GAP = 4;   // ширина колонки 760px = 190 мм (A4, поля 10 мм)
+        box = document.createElement('div');
+        box.style.cssText = 'position:absolute;left:-12000px;top:0;width:' + PX + 'px;background:#fff;color:#1f2937';
+        document.body.appendChild(box);
+        var atoms = [];   // {el} или {table, rows}
+        var add = function (el) { box.appendChild(el); atoms.push({ el: el }); };
+        var head = document.createElement('div');
+        head.innerHTML = '<h2 style="font-size:1.35rem;margin:0 0 4px">' + esc(state.name || 'Раскрой листов') + (listOnly ? ' — список деталей' : '') + '</h2><p style="margin:0;color:#6b7280;font-size:.9rem">' + esc(document.getElementById('printMeta').textContent) + '</p>';
+        add(head);
+        var addTable = function (wrap) {
+          var t = wrap.querySelector('table'); if (!t) { add(wrap.cloneNode(true)); return; }
+          var tc = t.cloneNode(true); box.appendChild(tc);
+          atoms.push({ table: tc });
+        };
+        var res = document.getElementById('result');
+        var blocks = Array.prototype.slice.call(res.children);
+        var partsBlock = blocks.filter(function (c) { return c.classList.contains('mat-block') && c.querySelector('table.list'); }).pop();
+        blocks.forEach(function (c) {
+          if (listOnly && c !== partsBlock) return;
+          if (!c.classList.contains('mat-block')) { if (c.querySelector('table')) addTable(c); else add(c.cloneNode(true)); return; }
+          Array.prototype.forEach.call(c.children, function (cc) {
+            if (cc.querySelector && cc.querySelector('table')) addTable(cc);
+            else if (!listOnly || cc.tagName === 'H3') add(cc.cloneNode(true));
+          });
+        });
+        var pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        var y = 10, first = true;
+        var shot = async function (el) { return await window.html2canvas(el, { scale: 2, backgroundColor: '#ffffff', logging: false }); };
+        var place = function (cv, hmm) {
+          if (y + hmm > 10 + PAGE_H && y > 10) { pdf.addPage('a4', 'portrait'); y = 10; }
+          pdf.addImage(cv.toDataURL('image/jpeg', 0.92), 'JPEG', 10, y, 190, hmm, undefined, 'FAST');
+          y += hmm + GAP;
+        };
+        for (var i = 0; i < atoms.length; i++) {
+          var a = atoms[i];
+          if (a.el) { var cv = await shot(a.el); place(cv, a.el.offsetHeight * MM); continue; }
+          // таблицу режем по строкам: на каждой новой странице повторяется шапка
+          var t = a.table, rows = Array.prototype.slice.call(t.tBodies[0] ? t.tBodies[0].rows : []);
+          var hh = (t.tHead ? t.tHead.offsetHeight : 0) * MM, k = 0;
+          while (k < rows.length) {
+            var room = 10 + PAGE_H - y - hh - 4, take = 0, sum = 0;   // 4 мм запаса на рамки таблицы
+            for (var j = k; j < rows.length; j++) { var rh = rows[j].offsetHeight * MM; if (sum + rh > room && take) break; sum += rh; take++; }
+            if (sum > room && y > 10) { pdf.addPage('a4', 'portrait'); y = 10; continue; }
+            var part = t.cloneNode(false); if (t.tHead) part.appendChild(t.tHead.cloneNode(true));
+            var tb = document.createElement('tbody'); rows.slice(k, k + take).forEach(function (r) { tb.appendChild(r.cloneNode(true)); }); part.appendChild(tb);
+            box.appendChild(part);
+            var cv2 = await shot(part), ph = part.offsetHeight * MM;
+            if (y + ph > 10 + PAGE_H + 6 && y > 10) { pdf.addPage('a4', 'portrait'); y = 10; }
+            pdf.addImage(cv2.toDataURL('image/jpeg', 0.92), 'JPEG', 10, y, 190, ph, undefined, 'FAST'); y += ph + GAP;
+            box.removeChild(part);
+            k += take;
+          }
+        }
+        var n = pdf.getNumberOfPages();
+        for (var pg = 1; pg <= n; pg++) { pdf.setPage(pg); pdf.setFontSize(8); pdf.setTextColor(150); pdf.text(pg + ' / ' + n, 200, 292, { align: 'right' }); }
+        var fname = String(state.name || '').replace(/[\/:*?"<>|]+/g, ' ').trim().slice(0, 50);
+        var a = document.createElement('a'); a.href = URL.createObjectURL(pdf.output('blob')); a.download = (fname ? fname + (listOnly ? ' — список деталей' : ' — раскрой') : (listOnly ? 'Список деталей' : 'Раскрой листов')) + '.pdf';
+        document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        toast('PDF сохранён');
+      } catch (e) {
+        toast(e && e.message === 'lib' ? 'Нет интернета — не удалось подготовить PDF' : 'Не получилось сделать PDF');
+        if (window.console) console.error(e);
+      } finally {
+        if (box) box.remove();
+        btn.disabled = false; btn.textContent = old;
+      }
     }
 
     // ------------------------------------------------------------- prices
@@ -1993,6 +2085,8 @@
 
       document.getElementById('btnCalc').addEventListener('click', function () { renderResult(); document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' }); });
       document.getElementById('btnPrint').addEventListener('click', function () { window.print(); });
+      document.getElementById('btnPdfFull').addEventListener('click', function () { savePdf(false, this); });
+      document.getElementById('btnPdfList').addEventListener('click', function () { savePdf(true, this); });
       document.getElementById('btnCopyLink').addEventListener('click', function () { copy(shareUrl(), 'Ссылка скопирована'); });
       document.getElementById('btnCopyText').addEventListener('click', function () { copy(textSummary(), 'Список скопирован'); });
       document.getElementById('btnTg').addEventListener('click', function () {
