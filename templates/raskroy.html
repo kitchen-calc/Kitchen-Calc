@@ -117,6 +117,7 @@
     .sheet-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; }
     .sheet-head span { color: var(--text-muted); font-weight: 600; }
     .sheet svg { width: 100%; height: auto; display: block; border-radius: 6px; }
+    table.list tr.edge-total td { background: #fdf8ec; border-top: 2px solid var(--accent-gold); }
     .cut-plan { font-size: 0.82rem; line-height: 1.45; margin-top: 6px; color: #1f2937; background: #eff4ff; border: 1px solid #c7d6fb; border-radius: 8px; padding: 6px 9px; }
     .cut-plan .rest { color: #166534; font-weight: 700; }
     .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
@@ -1026,7 +1027,7 @@
       html.push(stat(r.sheets, plural(r.sheets, 'лист', 'листа', 'листов')));
       html.push(stat(r.partsCount, plural(r.partsCount, 'деталь', 'детали', 'деталей')));
       html.push(stat(fmt(totalSheetArea ? totalArea / totalSheetArea * 100 : 0, 0) + '%', 'использование листов'));
-      html.push(stat(fmt(r.edge.gross, 1) + ' м', 'кромки с запасом'));
+      html.push(stat(fmt(r.edge.net, 1) + ' м', 'кромки всего' + (r.edge.net ? ', с запасом ' + fmt(r.edge.gross, 1) + ' м' : '')));
       var cost = costStats(r);
       r.cost = cost;
       html.push('<div class="stat total"><div class="v">' + (cost.total ? fmt(cost.total, 0) + ' сум' : '—') + '</div><div class="l">' +
@@ -1054,7 +1055,7 @@
         html.push('<div class="mat-block"><h3>Не из листа ЛДСП (стекло, зеркала, фурнитура)</h3><ul class="hint" style="margin:4px 0 0 18px;font-size:0.9rem">' + state.notes.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>');
       }
       // parts list for the saw shop
-      html.push('<div class="mat-block"><h3>Список деталей</h3><div class="table-wrap"><table class="list"><thead><tr><th>№</th><th>Название</th><th>Материал</th><th>Д×Ш, мм</th><th>Шт</th><th>Поворот</th><th>Кромка</th></tr></thead><tbody>');
+      html.push('<div class="mat-block"><h3>Список деталей</h3><div class="table-wrap"><table class="list"><thead><tr><th>№</th><th>Название</th><th>Материал</th><th>Д×Ш, мм</th><th>Шт</th><th>Поворот</th><th>Кромка</th><th>Кромка, м</th></tr></thead><tbody>');
       state.parts.forEach(function (p) {
         if (!(p.L > 0 && p.W > 0)) return;
         var mat = matById(p.mat);
@@ -1062,8 +1063,13 @@
         if (p.eL) edge.push(p.eL + '×Д');
         if (p.eW) edge.push(p.eW + '×Ш');
         if (edge.length) edge = [edge.join(', ') + ' · ' + tLabel(p.et)];
-        html.push('<tr><td>' + p._n + '</td><td>' + esc(p.name || '—') + '</td><td>' + esc(mat ? mat.name : '') + '</td><td class="r">' + p.L + '×' + p.W + '</td><td class="r">' + p.qty + '</td><td>' + (p.rot ? 'можно' : 'по рисунку') + '</td><td>' + (edge.join(', ') || '—') + '</td></tr>');
+        var em = ((p.eL || 0) * p.L + (p.eW || 0) * p.W) * p.qty / 1000;
+        html.push('<tr><td>' + p._n + '</td><td>' + esc(p.name || '—') + '</td><td>' + esc(mat ? mat.name : '') + '</td><td class="r">' + p.L + '×' + p.W + '</td><td class="r">' + p.qty + '</td><td>' + (p.rot ? 'можно' : 'по рисунку') + '</td><td>' + (edge.join(', ') || '—') + '</td><td class="r">' + (em > 0 ? fmt(em, 2) : '—') + '</td></tr>');
       });
+      // итог кромки — прямо под списком (попадает и в PDF «только список деталей»)
+      var eg = r.edge, eAllow = fmt(num(state.edgeAllow, 0), 1);
+      var eTot = eg.rows.length ? eg.rows.map(function (x) { return tLabel(x.t) + ': <b>' + fmt(x.net, 2) + ' м</b> (с запасом ' + fmt(x.gross, 2) + ' м, линий ' + x.lines + ')'; }).join(' · ') : 'кромка не отмечена — укажите в деталях, сколько сторон кромить по Д и по Ш';
+      html.push('<tr class="edge-total"><td colspan="7"><b>Кромка всего</b>' + (eg.rows.length > 1 ? ' — <b>' + fmt(eg.net, 2) + ' м</b>, с запасом <b>' + fmt(eg.gross, 2) + ' м</b>' : '') + '<br><span style="font-weight:500">' + eTot + (eg.rows.length ? '. Запас ' + eAllow + ' см на каждую линию.' : '') + '</span></td><td class="r"><b>' + (eg.net > 0 ? fmt(eg.net, 2) : '—') + '</b></td></tr>');
       html.push('</tbody></table></div></div>');
 
       el.innerHTML = html.join('');
